@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Code, Image, File, Download, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import { FileText, Code, ImageIcon, File, Download, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ArtifactRef, ArtifactContent } from '@/lib/types';
 import { api } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
@@ -60,7 +60,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
     if (contentType.includes('json')) return <Code className="h-4 w-4" />;
     if (contentType.includes('html')) return <FileText className="h-4 w-4" />;
     if (contentType.includes('markdown')) return <FileText className="h-4 w-4" />;
-    if (contentType.includes('image')) return <Image className="h-4 w-4" />;
+    if (contentType.includes('image')) return <ImageIcon className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
 

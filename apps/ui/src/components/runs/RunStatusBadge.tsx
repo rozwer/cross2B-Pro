@@ -1,43 +1,162 @@
 'use client';
 
+import { CheckCircle, XCircle, Clock, Loader2, Pause, Ban, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RunStatus, StepStatus } from '@/lib/types';
-import { getStatusColor, getStatusIcon } from '@/lib/types';
 
 interface RunStatusBadgeProps {
   status: RunStatus | StepStatus;
   showIcon?: boolean;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
+  pulse?: boolean;
 }
 
-const statusLabels: Record<RunStatus | StepStatus, string> = {
-  pending: '待機中',
-  running: '実行中',
-  waiting_approval: '承認待ち',
-  completed: '完了',
-  failed: '失敗',
-  cancelled: 'キャンセル',
-  skipped: 'スキップ',
+const statusConfig: Record<RunStatus | StepStatus, {
+  label: string;
+  bgColor: string;
+  textColor: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = {
+  pending: {
+    label: '待機中',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-600',
+    icon: Clock,
+  },
+  running: {
+    label: '実行中',
+    bgColor: 'bg-accent-100',
+    textColor: 'text-accent-700',
+    icon: Loader2,
+  },
+  waiting_approval: {
+    label: '承認待ち',
+    bgColor: 'bg-warning-100',
+    textColor: 'text-warning-700',
+    icon: Pause,
+  },
+  completed: {
+    label: '完了',
+    bgColor: 'bg-success-100',
+    textColor: 'text-success-700',
+    icon: CheckCircle,
+  },
+  failed: {
+    label: '失敗',
+    bgColor: 'bg-error-100',
+    textColor: 'text-error-700',
+    icon: XCircle,
+  },
+  cancelled: {
+    label: 'キャンセル',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-500',
+    icon: Ban,
+  },
+  skipped: {
+    label: 'スキップ',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-500',
+    icon: SkipForward,
+  },
+};
+
+const sizeConfig = {
+  sm: {
+    container: 'px-2 py-0.5 text-xs gap-1',
+    icon: 'h-3 w-3',
+  },
+  md: {
+    container: 'px-2.5 py-1 text-xs gap-1.5',
+    icon: 'h-3.5 w-3.5',
+  },
+  lg: {
+    container: 'px-3 py-1.5 text-sm gap-2',
+    icon: 'h-4 w-4',
+  },
 };
 
 export function RunStatusBadge({
   status,
   showIcon = true,
   size = 'md',
+  pulse = false,
 }: RunStatusBadgeProps) {
-  const colorClass = getStatusColor(status);
-  const icon = getStatusIcon(status);
+  const config = statusConfig[status];
+  const sizeClass = sizeConfig[size];
+  const IconComponent = config.icon;
+  const shouldAnimate = status === 'running';
+  const shouldPulse = pulse || status === 'waiting_approval';
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full font-medium',
-        colorClass,
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'
+        'inline-flex items-center rounded-full font-medium transition-all',
+        config.bgColor,
+        config.textColor,
+        sizeClass.container,
+        shouldPulse && 'animate-pulse-soft'
       )}
     >
-      {showIcon && <span className="flex-shrink-0">{icon}</span>}
-      <span>{statusLabels[status]}</span>
+      {showIcon && (
+        <IconComponent
+          className={cn(
+            sizeClass.icon,
+            'flex-shrink-0',
+            shouldAnimate && 'animate-spin'
+          )}
+        />
+      )}
+      <span>{config.label}</span>
+    </span>
+  );
+}
+
+// Compact dot indicator for tight spaces
+export function StatusDot({
+  status,
+  size = 'md',
+  pulse = false,
+}: {
+  status: RunStatus | StepStatus;
+  size?: 'sm' | 'md' | 'lg';
+  pulse?: boolean;
+}) {
+  const dotColors: Record<RunStatus | StepStatus, string> = {
+    pending: 'bg-gray-400',
+    running: 'bg-accent-500',
+    waiting_approval: 'bg-warning-500',
+    completed: 'bg-success-500',
+    failed: 'bg-error-500',
+    cancelled: 'bg-gray-400',
+    skipped: 'bg-gray-400',
+  };
+
+  const dotSizes = {
+    sm: 'w-1.5 h-1.5',
+    md: 'w-2 h-2',
+    lg: 'w-2.5 h-2.5',
+  };
+
+  const shouldPulse = pulse || status === 'running' || status === 'waiting_approval';
+
+  return (
+    <span className="relative inline-flex">
+      <span
+        className={cn(
+          'rounded-full',
+          dotColors[status],
+          dotSizes[size]
+        )}
+      />
+      {shouldPulse && (
+        <span
+          className={cn(
+            'absolute inset-0 rounded-full animate-ping opacity-75',
+            dotColors[status]
+          )}
+        />
+      )}
     </span>
   );
 }
