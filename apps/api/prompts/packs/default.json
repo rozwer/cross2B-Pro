@@ -1,0 +1,147 @@
+{
+  "pack_id": "default",
+  "version": 1,
+  "description": "SEO記事生成用デフォルトプロンプトパック",
+  "prompts": {
+    "step0": {
+      "step": "step0",
+      "version": 1,
+      "content": "以下のキーワードを分析してください: {{keyword}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"keyword\": \"対象キーワード\",\n  \"search_intent\": \"検索意図の分析\",\n  \"difficulty\": \"難易度（low/medium/high）\",\n  \"suggested_topics\": [\"関連トピック1\", \"関連トピック2\"],\n  \"target_audience\": \"ターゲット読者層\"\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string", "description": "分析対象キーワード"}
+      }
+    },
+    "step1": {
+      "step": "step1",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」で検索上位の競合を分析してください。",
+      "variables": {
+        "keyword": {"required": true, "type": "string"}
+      }
+    },
+    "step2": {
+      "step": "step2",
+      "version": 1,
+      "content": "収集したデータを検証してください。",
+      "variables": {}
+    },
+    "step3a": {
+      "step": "step3a",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」のクエリ分析を行ってください。\nキーワード分析: {{keyword_analysis}}\n競合数: {{competitor_count}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"query_type\": \"クエリタイプ（informational/transactional/navigational）\",\n  \"user_intent\": \"ユーザーの意図\",\n  \"related_queries\": [\"関連クエリ1\", \"関連クエリ2\"],\n  \"content_format_suggestion\": \"推奨コンテンツ形式\"\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "keyword_analysis": {"required": false, "type": "string", "default": ""},
+        "competitor_count": {"required": false, "type": "number", "default": 0}
+      }
+    },
+    "step3b": {
+      "step": "step3b",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」の共起語分析を行ってください。\n競合サマリー: {{competitor_summaries}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"cooccurrence_keywords\": [\"共起語1\", \"共起語2\"],\n  \"semantic_clusters\": [{\"cluster\": \"クラスタ名\", \"keywords\": []}],\n  \"content_gaps\": [\"ギャップ1\"]\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "competitor_summaries": {"required": false, "type": "array", "default": []}
+      }
+    },
+    "step3c": {
+      "step": "step3c",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」の競合分析を行ってください。\n競合情報: {{competitors}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"competitor_analysis\": [{\"url\": \"\", \"strengths\": [], \"weaknesses\": []}],\n  \"differentiation_opportunities\": [\"差別化ポイント\"],\n  \"recommended_word_count\": 3000\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "competitors": {"required": false, "type": "array", "default": []}
+      }
+    },
+    "step4": {
+      "step": "step4",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」の戦略的アウトライン（構成案）を作成してください。\n分析結果: {{analysis_summary}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"title\": \"記事タイトル案\",\n  \"outline\": [\n    {\"heading\": \"H2見出し\", \"subheadings\": [\"H3見出し1\", \"H3見出し2\"], \"key_points\": []}\n  ],\n  \"target_word_count\": 3000,\n  \"cta_positions\": [\"導入後\", \"結論前\"]\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "analysis_summary": {"required": false, "type": "string", "default": ""}
+      }
+    },
+    "step5": {
+      "step": "step5",
+      "version": 1,
+      "content": "キーワード「{{keyword}}」に関する一次情報を収集してください。",
+      "variables": {
+        "keyword": {"required": true, "type": "string"}
+      }
+    },
+    "step6": {
+      "step": "step6",
+      "version": 1,
+      "content": "アウトラインを一次情報で強化してください。\nキーワード: {{keyword}}\n基本アウトライン: {{outline}}\n一次情報: {{sources}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"enhanced_outline\": [\n    {\"heading\": \"\", \"subheadings\": [], \"sources\": [], \"key_points\": []}\n  ],\n  \"source_count\": 0,\n  \"coverage_score\": 0.8\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "outline": {"required": true, "type": "object"},
+        "sources": {"required": false, "type": "array", "default": []}
+      }
+    },
+    "step6_5": {
+      "step": "step6_5",
+      "version": 1,
+      "content": "統合パッケージを作成してください。\nキーワード: {{keyword}}\nキーワード分析: {{keyword_analysis}}\nクエリ分析: {{query_analysis}}\n共起語分析: {{cooccurrence_analysis}}\n競合分析: {{competitor_analysis}}\n戦略的アウトライン: {{strategic_outline}}\n一次情報: {{sources}}\n強化アウトライン: {{enhanced_outline}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"integration_package\": \"統合パッケージ全文（Markdown形式の文字列）\",\n  \"outline_summary\": \"構成の概要\",\n  \"section_count\": 0,\n  \"total_sources\": 0\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "keyword_analysis": {"required": false, "type": "object", "default": {}},
+        "query_analysis": {"required": false, "type": "object", "default": {}},
+        "cooccurrence_analysis": {"required": false, "type": "object", "default": {}},
+        "competitor_analysis": {"required": false, "type": "object", "default": {}},
+        "strategic_outline": {"required": false, "type": "object", "default": {}},
+        "sources": {"required": false, "type": "array", "default": []},
+        "enhanced_outline": {"required": false, "type": "object", "default": {}}
+      }
+    },
+    "step7a": {
+      "step": "step7a",
+      "version": 1,
+      "content": "記事の初稿を作成してください。\nキーワード: {{keyword}}\n統合パッケージ:\n{{integration_package}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"draft\": \"記事本文（Markdown形式）\",\n  \"word_count\": 0,\n  \"section_count\": 0,\n  \"cta_positions\": []\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "integration_package": {"required": true, "type": "string"}
+      }
+    },
+    "step7b": {
+      "step": "step7b",
+      "version": 1,
+      "content": "初稿をブラッシュアップしてください。\nキーワード: {{keyword}}\n初稿:\n{{draft}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"polished\": \"ブラッシュアップ後の記事本文（Markdown形式）\",\n  \"word_count\": 0,\n  \"changes_made\": [\"変更点1\", \"変更点2\"]\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "draft": {"required": true, "type": "string"}
+      }
+    },
+    "step8": {
+      "step": "step8",
+      "version": 1,
+      "content": "ファクトチェックを行ってください。\nキーワード: {{keyword}}\n記事:\n{{polished}}\n\n矛盾や誤りがあれば指摘してください。",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "polished": {"required": true, "type": "string"}
+      }
+    },
+    "step9": {
+      "step": "step9",
+      "version": 1,
+      "content": "最終リライトを行ってください。\nキーワード: {{keyword}}\nブラッシュアップ後の記事:\n{{polished_content}}\nFAQ:\n{{faq}}\n検証メモ:\n{{verification_notes}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"final_content\": \"最終記事本文（Markdown形式）\",\n  \"word_count\": 0,\n  \"meta_description\": \"メタディスクリプション（120-160文字）\",\n  \"internal_link_suggestions\": [\"内部リンク候補1\"]\n}\n```",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "polished_content": {"required": true, "type": "string"},
+        "faq": {"required": false, "type": "string", "default": ""},
+        "verification_notes": {"required": false, "type": "string", "default": ""}
+      }
+    },
+    "step10": {
+      "step": "step10",
+      "version": 1,
+      "content": "最終記事をHTML形式で出力してください。\nキーワード: {{keyword}}\n記事本文:\n{{final_content}}\nメタディスクリプション: {{meta_description}}\n\n完全なHTMLドキュメントを出力してください。",
+      "variables": {
+        "keyword": {"required": true, "type": "string"},
+        "final_content": {"required": true, "type": "string"},
+        "meta_description": {"required": false, "type": "string", "default": ""}
+      }
+    }
+  }
+}

@@ -72,13 +72,12 @@ class GeminiClient(LLMInterface):
     PROVIDER_NAME = "gemini"
 
     AVAILABLE_MODELS = [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
+        "gemini-3-pro-preview",
         "gemini-2.5-pro",
         "gemini-2.5-flash",
     ]
 
-    DEFAULT_MODEL = "gemini-2.0-flash"
+    DEFAULT_MODEL = "gemini-2.5-flash"
 
     def __init__(
         self,
@@ -156,6 +155,16 @@ class GeminiClient(LLMInterface):
         """Groundingが有効かどうか"""
         return self._gemini_config.grounding.enabled
 
+    @property
+    def url_context_enabled(self) -> bool:
+        """URL Contextが有効かどうか"""
+        return self._gemini_config.url_context.enabled
+
+    @property
+    def code_execution_enabled(self) -> bool:
+        """Code Executionが有効かどうか"""
+        return self._gemini_config.code_execution.enabled
+
     def enable_grounding(
         self,
         enabled: bool = True,
@@ -177,6 +186,77 @@ class GeminiClient(LLMInterface):
             extra={
                 "provider": self.PROVIDER_NAME,
                 "threshold": dynamic_retrieval_threshold,
+            },
+        )
+
+    def enable_url_context(self, enabled: bool = True) -> None:
+        """URL Contextの有効/無効を切り替え
+
+        URLからコンテンツを取得してコンテキストとして使用。
+        最大20 URL、単一URL最大34MB。
+
+        Args:
+            enabled: URL Contextを有効にするかどうか
+        """
+        self._gemini_config.url_context.enabled = enabled
+        logger.info(
+            f"URL Context {'enabled' if enabled else 'disabled'}",
+            extra={"provider": self.PROVIDER_NAME},
+        )
+
+    def enable_code_execution(self, enabled: bool = True) -> None:
+        """Code Executionの有効/無効を切り替え
+
+        Pythonコードを生成・実行して計算や問題解決を行う。
+
+        Args:
+            enabled: Code Executionを有効にするかどうか
+        """
+        self._gemini_config.code_execution.enabled = enabled
+        logger.info(
+            f"Code Execution {'enabled' if enabled else 'disabled'}",
+            extra={"provider": self.PROVIDER_NAME},
+        )
+
+    def configure_thinking(
+        self,
+        enabled: bool = True,
+        thinking_budget: int | None = None,
+        thinking_level: str | None = None,
+    ) -> None:
+        """Thinking（推論）設定を変更
+
+        Gemini 2.5/3モデルのAdaptive Thinking機能を制御。
+
+        Args:
+            enabled: Thinkingを有効にするかどうか
+            thinking_budget: トークン数（0-24576）。Gemini 2.5向け。
+            thinking_level: 'low' or 'high'。Gemini 3向け推奨。
+
+        Note:
+            thinking_budget と thinking_level を同時に指定するとAPIエラーになります。
+        """
+        if thinking_budget is not None and thinking_level is not None:
+            raise LLMConfigurationError(
+                message="Cannot specify both thinking_budget and thinking_level",
+                provider=self.PROVIDER_NAME,
+                missing_config=[],
+            )
+
+        self._gemini_config.thinking.enabled = enabled
+        if thinking_budget is not None:
+            self._gemini_config.thinking.thinking_budget = thinking_budget
+            self._gemini_config.thinking.thinking_level = None
+        if thinking_level is not None:
+            self._gemini_config.thinking.thinking_level = thinking_level
+            self._gemini_config.thinking.thinking_budget = None
+
+        logger.info(
+            f"Thinking {'enabled' if enabled else 'disabled'}",
+            extra={
+                "provider": self.PROVIDER_NAME,
+                "thinking_budget": thinking_budget,
+                "thinking_level": thinking_level,
             },
         )
 
@@ -211,21 +291,23 @@ class GeminiClient(LLMInterface):
             # Gemini用のコンテンツを構築
             contents = self._build_contents(normalized_messages)
 
-            # 生成設定を構築
-            generation_config = self._build_generation_config(config)
-
             # システムプロンプト設定
             system_instruction = system_prompt if system_prompt else None
 
             # grounding設定
             tools = self._build_tools() if self._gemini_config.grounding.enabled else None
 
+            # 生成設定を構築（system_instruction と tools を含める）
+            generation_config = self._build_generation_config(
+                config,
+                system_instruction=system_instruction,
+                tools=tools,
+            )
+
             # API呼び出し（リトライ付き）
             response = await self._call_with_retry(
                 contents=contents,
                 generation_config=generation_config,
-                system_instruction=system_instruction,
-                tools=tools,
                 metadata=metadata,
             )
 
@@ -276,13 +358,6 @@ class GeminiClient(LLMInterface):
             # Gemini用のコンテンツを構築
             contents = self._build_contents(normalized_messages)
 
-            # JSON出力用の生成設定
-            generation_config = self._build_generation_config(
-                config,
-                response_mime_type="application/json",
-                response_schema=schema,
-            )
-
             # システムプロンプトにJSON出力指示を追加
             json_system_prompt = f"""{system_prompt}
 
@@ -290,12 +365,19 @@ class GeminiClient(LLMInterface):
 以下のスキーマに従ってJSONを出力してください:
 {json.dumps(schema, ensure_ascii=False, indent=2)}"""
 
+            # JSON出力用の生成設定（system_instruction を含む、tools は無効化）
+            generation_config = self._build_generation_config(
+                config,
+                response_mime_type="application/json",
+                response_schema=schema,
+                system_instruction=json_system_prompt,
+                tools=None,  # JSON出力時はgroundingを無効化
+            )
+
             # API呼び出し（リトライ付き）
             response = await self._call_with_retry(
                 contents=contents,
                 generation_config=generation_config,
-                system_instruction=json_system_prompt,
-                tools=None,  # JSON出力時はgroundingを無効化
                 metadata=metadata,
             )
 
@@ -386,6 +468,8 @@ class GeminiClient(LLMInterface):
         config: LLMRequestConfig,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
+        system_instruction: str | None = None,
+        tools: list[Any] | None = None,
     ) -> types.GenerateContentConfig:
         """生成設定を構築"""
         kwargs: dict[str, Any] = {
@@ -405,36 +489,70 @@ class GeminiClient(LLMInterface):
         if response_schema:
             kwargs["response_schema"] = response_schema
 
+        # system_instruction は GenerateContentConfig の中に含める
+        if system_instruction:
+            kwargs["system_instruction"] = system_instruction
+
+        # tools も GenerateContentConfig の中に含める
+        if tools:
+            kwargs["tools"] = tools
+
+        # Thinking設定（Gemini 2.5/3向け）
+        thinking_cfg = self._gemini_config.thinking
+        if thinking_cfg.enabled:
+            # thinking_level と thinking_budget は排他的
+            if thinking_cfg.thinking_level is not None:
+                # thinking_level を enum に変換
+                level_map = {
+                    "low": types.ThinkingLevel.LOW,
+                    "high": types.ThinkingLevel.HIGH,
+                }
+                thinking_level_enum = level_map.get(
+                    thinking_cfg.thinking_level.lower(),
+                    types.ThinkingLevel.HIGH,
+                )
+                kwargs["thinking_config"] = types.ThinkingConfig(
+                    thinking_level=thinking_level_enum,
+                )
+            elif thinking_cfg.thinking_budget is not None:
+                kwargs["thinking_config"] = types.ThinkingConfig(
+                    thinking_budget=thinking_cfg.thinking_budget,
+                )
+            # enabled=True だがbudget/levelともにNoneなら、デフォルト動作（モデル任せ）
+        else:
+            # Thinking無効化：budget=0で無効化
+            kwargs["thinking_config"] = types.ThinkingConfig(
+                thinking_budget=0,
+            )
+
         return types.GenerateContentConfig(**kwargs)
 
-    def _build_tools(self) -> list[types.Tool] | None:
-        """Grounding用のツールを構築"""
-        if not self._gemini_config.grounding.enabled:
-            return None
+    def _build_tools(self) -> list[Any] | None:
+        """全ツールを構築（google_search, url_context, code_execution）"""
+        tools: list[Any] = []
 
-        threshold = self._gemini_config.grounding.dynamic_retrieval_threshold
-
-        if threshold is not None:
-            # Dynamic retrieval with threshold
-            return [
+        # Google Search (Grounding)
+        if self._gemini_config.grounding.enabled:
+            tools.append(
                 types.Tool(
                     google_search=types.GoogleSearch(),
                 )
-            ]
-        else:
-            # Standard grounding
-            return [
-                types.Tool(
-                    google_search=types.GoogleSearch(),
-                )
-            ]
+            )
+
+        # URL Context
+        if self._gemini_config.url_context.enabled:
+            tools.append({"url_context": {}})
+
+        # Code Execution
+        if self._gemini_config.code_execution.enabled:
+            tools.append({"code_execution": {}})
+
+        return tools if tools else None
 
     async def _call_with_retry(
         self,
         contents: list[types.Content],
         generation_config: types.GenerateContentConfig,
-        system_instruction: str | None,
-        tools: list[types.Tool] | None,
         metadata: LLMCallMetadata,
     ) -> Any:
         """リトライ付きでAPI呼び出し
@@ -459,19 +577,13 @@ class GeminiClient(LLMInterface):
                 )
 
                 # API呼び出し（タイムアウト付き）
-                sys_instr_kwargs = (
-                    {"system_instruction": system_instruction}
-                    if system_instruction else {}
-                )
-                tools_kwargs = {"tools": tools} if tools else {}
+                # system_instruction と tools は generation_config に含まれている
                 response = await asyncio.wait_for(
                     asyncio.to_thread(
                         self._client.models.generate_content,
                         model=self._model,
                         contents=contents,
                         config=generation_config,
-                        **sys_instr_kwargs,
-                        **tools_kwargs,
                     ),
                     timeout=self._timeout,
                 )
