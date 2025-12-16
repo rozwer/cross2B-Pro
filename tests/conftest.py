@@ -91,8 +91,16 @@ def mock_event_emitter():
 # Environment configuration
 def pytest_configure(config):
     """Configure pytest environment."""
+    # Register custom markers
+    config.addinivalue_line("markers", "smoke: mark test as smoke test")
+    config.addinivalue_line("markers", "slow: mark test as slow (may take > 30s)")
+    config.addinivalue_line("markers", "docker: mark test as requiring Docker")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "e2e: mark test as end-to-end test")
+
     # Set test environment variables
     os.environ.setdefault("USE_MOCK_LLM", "true")
     os.environ.setdefault("MOCK_PACK_ID", "mock_pack")
     os.environ.setdefault("TEMPORAL_HOST", "localhost")
     os.environ.setdefault("TEMPORAL_PORT", "7233")
+    os.environ.setdefault("ENVIRONMENT", "test")

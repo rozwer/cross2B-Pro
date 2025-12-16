@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, Clock, Loader2, Pause, RotateCcw, Play } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Loader2, Pause, RotateCcw, Play, AlertTriangle } from 'lucide-react';
 import type { Step, StepStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +8,7 @@ interface StepNodeProps {
   stepName: string;
   label: string;
   step?: Step;
+  index: number;
   isCurrent: boolean;
   isWaitingApproval: boolean;
   isLast: boolean;
@@ -15,29 +16,61 @@ interface StepNodeProps {
   onResume?: (stepName: string) => void;
 }
 
-function getStatusIcon(status: StepStatus | undefined, isCurrent: boolean, isWaitingApproval: boolean) {
-  if (isWaitingApproval) {
-    return <Pause className="h-4 w-4 text-yellow-500" />;
-  }
-
-  switch (status) {
-    case 'completed':
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    case 'failed':
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    case 'running':
-      return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
-    case 'skipped':
-      return <Clock className="h-4 w-4 text-gray-400" />;
-    default:
-      return <div className="h-4 w-4 rounded-full border-2 border-gray-300" />;
-  }
-}
+const statusConfig: Record<StepStatus | 'waiting' | 'default', {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  lineColor: string;
+}> = {
+  completed: {
+    icon: CheckCircle,
+    iconBg: 'bg-success-100',
+    iconColor: 'text-success-600',
+    lineColor: 'bg-success-300',
+  },
+  failed: {
+    icon: XCircle,
+    iconBg: 'bg-error-100',
+    iconColor: 'text-error-600',
+    lineColor: 'bg-error-300',
+  },
+  running: {
+    icon: Loader2,
+    iconBg: 'bg-accent-100',
+    iconColor: 'text-accent-600',
+    lineColor: 'bg-accent-300',
+  },
+  skipped: {
+    icon: Clock,
+    iconBg: 'bg-gray-100',
+    iconColor: 'text-gray-400',
+    lineColor: 'bg-gray-200',
+  },
+  pending: {
+    icon: Clock,
+    iconBg: 'bg-gray-100',
+    iconColor: 'text-gray-400',
+    lineColor: 'bg-gray-200',
+  },
+  waiting: {
+    icon: Pause,
+    iconBg: 'bg-warning-100',
+    iconColor: 'text-warning-600',
+    lineColor: 'bg-warning-300',
+  },
+  default: {
+    icon: Clock,
+    iconBg: 'bg-gray-100',
+    iconColor: 'text-gray-300',
+    lineColor: 'bg-gray-200',
+  },
+};
 
 export function StepNode({
   stepName,
   label,
   step,
+  index,
   isCurrent,
   isWaitingApproval,
   isLast,
@@ -48,82 +81,112 @@ export function StepNode({
   const attempts = step?.attempts || [];
   const lastAttempt = attempts[attempts.length - 1];
 
+  const configKey = isWaitingApproval ? 'waiting' : (status || 'default');
+  const config = statusConfig[configKey];
+  const IconComponent = config.icon;
+  const isRunning = status === 'running';
+
   return (
-    <div className="relative">
-      {/* 接続線 */}
+    <div
+      className={cn(
+        'relative group animate-fade-in',
+      )}
+      style={{ animationDelay: `${index * 30}ms` }}
+    >
+      {/* Connector line */}
       {!isLast && (
         <div
           className={cn(
-            'absolute left-[7px] top-6 w-0.5 h-6',
-            status === 'completed' ? 'bg-green-300' : 'bg-gray-200'
+            'absolute left-[15px] top-[32px] w-0.5 h-[calc(100%-8px)] transition-colors duration-300',
+            status === 'completed' ? config.lineColor : 'bg-gray-200'
           )}
         />
       )}
 
       <div
         className={cn(
-          'flex items-start gap-3 p-2 rounded-md transition-colors',
-          isCurrent && 'bg-blue-50',
-          status === 'failed' && 'bg-red-50'
+          'flex items-start gap-3 p-2 rounded-lg transition-all duration-200',
+          isCurrent && !isWaitingApproval && 'bg-accent-50',
+          isWaitingApproval && 'bg-warning-50',
+          status === 'failed' && 'bg-error-50',
+          !isCurrent && !status && 'opacity-60 group-hover:opacity-100'
         )}
       >
-        {/* ステータスアイコン */}
-        <div className="flex-shrink-0 mt-0.5">
-          {getStatusIcon(status, isCurrent, isWaitingApproval)}
+        {/* Icon */}
+        <div
+          className={cn(
+            'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all',
+            config.iconBg
+          )}
+        >
+          <IconComponent
+            className={cn(
+              'h-4 w-4 transition-all',
+              config.iconColor,
+              isRunning && 'animate-spin'
+            )}
+          />
         </div>
 
-        {/* コンテンツ */}
-        <div className="flex-1 min-w-0">
+        {/* Content */}
+        <div className="flex-1 min-w-0 pt-1">
           <div className="flex items-center justify-between gap-2">
             <span
               className={cn(
-                'text-sm font-medium',
-                status === 'completed' && 'text-green-700',
-                status === 'failed' && 'text-red-700',
-                status === 'running' && 'text-blue-700',
+                'text-sm font-medium transition-colors',
+                status === 'completed' && 'text-success-700',
+                status === 'failed' && 'text-error-700',
+                status === 'running' && 'text-accent-700',
+                isWaitingApproval && 'text-warning-700',
                 !status && 'text-gray-500'
               )}
             >
               {label}
             </span>
 
-            {/* アクションボタン */}
+            {/* Action buttons */}
             {status === 'failed' && (
-              <div className="flex gap-1">
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 {onRetry && (
                   <button
                     onClick={() => onRetry(stepName)}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-error-600 hover:text-error-700 hover:bg-error-100 rounded-md transition-all"
                     title="リトライ"
                   >
                     <RotateCcw className="h-3 w-3" />
-                    リトライ
                   </button>
                 )}
                 {onResume && (
                   <button
                     onClick={() => onResume(stepName)}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-accent-600 hover:text-accent-700 hover:bg-accent-100 rounded-md transition-all"
                     title="ここから再実行"
                   >
                     <Play className="h-3 w-3" />
-                    再実行
                   </button>
                 )}
               </div>
             )}
           </div>
 
-          {/* 追加情報 */}
+          {/* Additional info */}
           {attempts.length > 1 && (
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
               {attempts.length}回目の試行
             </p>
           )}
 
           {lastAttempt?.error && (
-            <p className="text-xs text-red-600 mt-1 truncate">
+            <p className="text-xs text-error-600 mt-1 line-clamp-1">
               {lastAttempt.error.message}
+            </p>
+          )}
+
+          {isWaitingApproval && (
+            <p className="text-xs text-warning-600 mt-1 flex items-center gap-1">
+              <Pause className="h-3 w-3" />
+              承認待ち
             </p>
           )}
         </div>

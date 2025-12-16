@@ -1,5 +1,5 @@
 ---
-description: 実装ルール統合版（API/Temporal/LangGraph/Storage/Security）
+description: 実装ルール統合版（API/Temporal/LangGraph/Storage/Security/テスト/Docker）
 ---
 
 # 実装ルール
@@ -148,16 +148,105 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 
 ---
 
-## 7. テスト戦略
+## 7. 環境構築・Docker
+
+### 必要条件
+
+| 項目 | 最小バージョン | 確認コマンド |
+|------|---------------|-------------|
+| Docker | 24.0+ | `docker --version` |
+| Docker Compose | 2.20+ | `docker compose version` |
+| Python | 3.11+ | `python3 --version` |
+| Node.js | 20+ | `node --version` |
+| uv | 0.4+ | `uv --version` |
+
+### 環境確認スクリプト
+
+```bash
+# 全チェック
+./scripts/check-env.sh
+
+# 最小限チェック（CI用）
+./scripts/check-env.sh --quick
+
+# 個別チェック
+./scripts/check-env.sh --docker   # Docker関連のみ
+./scripts/check-env.sh --python   # Python関連のみ
+./scripts/check-env.sh --node     # Node.js関連のみ
+```
+
+### Docker Compose サービス
+
+| サービス | ポート | 説明 |
+|----------|--------|------|
+| postgres | 5432 | PostgreSQL データベース |
+| minio | 9000, 9001 | オブジェクトストレージ |
+| temporal | 7233 | ワークフローエンジン |
+| temporal-ui | 8080 | Temporal 管理UI |
+| api | 8000 | FastAPI バックエンド |
+| worker | - | Temporal Worker |
+| ui | 3000 | Next.js フロントエンド |
+
+### 起動コマンド
+
+```bash
+# 初回起動（推奨）
+./scripts/bootstrap.sh
+
+# 通常起動
+docker compose up -d
+
+# インフラのみ起動（開発時）
+docker compose up -d postgres minio temporal temporal-ui
+
+# ログ確認
+docker compose logs -f api worker
+
+# 停止
+docker compose down
+
+# 完全リセット（データ削除）
+./scripts/reset.sh
+```
+
+### 環境変数
+
+必須の環境変数は `.env.example` を参照。
+最低限必要な設定：
+
+```bash
+# LLM APIキー（少なくとも1つ）
+GEMINI_API_KEY=xxx
+# または
+OPENAI_API_KEY=xxx
+# または
+ANTHROPIC_API_KEY=xxx
+# または
+USE_MOCK_LLM=true  # モックモード
+```
+
+---
+
+## 8. テスト戦略
 
 ### テストレベル
 
 | レベル | 対象 | 実行タイミング | コマンド |
 |--------|------|---------------|----------|
-| smoke | 依存/構文/起動 | commit前 | `/dev:smoke` |
-| unit | 関数単位 | push前 | `pytest apps/*/tests/unit/` |
-| integration | API/DB/Temporal | PR前 | `pytest apps/*/tests/integration/` |
-| e2e | 全工程通し | merge前 | `pytest tests/e2e/` |
+| env-check | 環境要件 | 作業開始前 | `./scripts/check-env.sh` |
+| smoke | 依存/構文/起動 | commit前 | `uv run pytest tests/smoke/ -v` |
+| unit | 関数単位 | push前 | `uv run pytest tests/unit/ -v` |
+| integration | API/DB/Temporal | PR前 | `uv run pytest tests/integration/ -v` |
+| e2e | 全工程通し | merge前 | `uv run pytest tests/e2e/ -v` |
+
+### smoke テスト内容
+
+1. **環境確認**: `./scripts/check-env.sh --quick`
+2. **依存チェック**: `uv sync --frozen`, `npm audit`
+3. **型チェック**: `uv run mypy apps/`, `tsc --noEmit`
+4. **構文チェック**: `uv run ruff check apps/`
+5. **インポートテスト**: モジュールが正常にインポートできること
+6. **Docker設定検証**: `docker compose config --quiet`
 
 ### テストルール
 
@@ -165,13 +254,6 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 - カバレッジ目標: 80%以上（クリティカルパスは100%）
 - モックは最小限（外部API/DB接続のみ）
 - **フォールバックテスト禁止**：正常系のみテスト
-
-### smoke テスト内容
-
-1. **依存チェック**: `pip check`, `npm audit`
-2. **型チェック**: `mypy apps/`, `tsc --noEmit`
-3. **構文チェック**: `ruff check apps/`
-4. **起動チェック**: `docker compose up -d --wait`
 
 ### Activity テスト
 
@@ -206,4 +288,100 @@ def test_llm_failure_raises():
     with patch("llm.call", side_effect=Exception):
         with pytest.raises(ActivityError):
             activity(input)  # 失敗が正しい挙動
+```
+
+### pytest マーカー
+
+```python
+import pytest
+
+@pytest.mark.smoke      # smoke テスト
+@pytest.mark.slow       # 30秒以上かかるテスト
+@pytest.mark.docker     # Docker が必要なテスト
+@pytest.mark.integration  # 統合テスト
+@pytest.mark.e2e        # E2E テスト
+```
+
+---
+
+## 9. CI/CD パイプライン
+
+### ローカル実行（推奨順序）
+
+```bash
+# 1. 環境確認
+./scripts/check-env.sh
+
+# 2. smoke テスト
+uv run pytest tests/smoke/ -v
+
+# 3. ユニットテスト
+uv run pytest tests/unit/ -v
+
+# 4. 型チェック + リント
+uv run mypy apps/ --ignore-missing-imports
+uv run ruff check apps/
+
+# 5. 統合テスト（Docker必須）
+docker compose up -d
+uv run pytest tests/integration/ -v
+```
+
+### GitHub Actions（例）
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Install dependencies
+        run: uv sync
+      - name: Environment check
+        run: ./scripts/check-env.sh --quick
+      - name: Smoke tests
+        run: uv run pytest tests/smoke/ -v
+      - name: Unit tests
+        run: uv run pytest tests/unit/ -v
+      - name: Type check
+        run: uv run mypy apps/
+```
+
+---
+
+## 10. トラブルシューティング
+
+### よくある問題
+
+| 症状 | 原因 | 解決策 |
+|------|------|--------|
+| `ModuleNotFoundError` | 依存関係未インストール | `uv sync` |
+| Docker接続エラー | Docker未起動 | Docker Desktop を起動 |
+| ポート競合 | 既存プロセス | `.env` でポート変更 or `lsof -i :PORT` で確認 |
+| 型エラー | mypy 設定 | `--ignore-missing-imports` を使用 |
+| インポートエラー | パス設定 | `PYTHONPATH=.` を設定 |
+
+### デバッグコマンド
+
+```bash
+# Docker ログ確認
+docker compose logs -f api worker
+
+# コンテナ状態確認
+docker compose ps
+
+# DB 接続確認
+docker compose exec postgres psql -U seo -d seo_articles
+
+# MinIO 接続確認
+docker compose exec minio mc ls local
+
+# Temporal 状態確認
+docker compose exec temporal tctl cluster health
 ```
