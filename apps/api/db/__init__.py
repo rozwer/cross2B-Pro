@@ -6,6 +6,7 @@ This module provides:
 - Alembic migrations support
 """
 
+from .audit import AuditLogIntegrityError, AuditLogger
 from .models import (
     Artifact,
     AuditLog,
@@ -19,7 +20,7 @@ from .models import (
     StepLLMDefault,
     Tenant,
 )
-from .tenant import TenantDBManager
+from .tenant import TenantDBManager, TenantIdValidationError, validate_tenant_id
 
 __all__ = [
     # Base classes
@@ -38,4 +39,10 @@ __all__ = [
     "Prompt",
     # Manager
     "TenantDBManager",
+    # Audit (VULN-011)
+    "AuditLogger",
+    "AuditLogIntegrityError",
+    # Validation (VULN-004)
+    "validate_tenant_id",
+    "TenantIdValidationError",
 ]
