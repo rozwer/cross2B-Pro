@@ -1,3 +1,12 @@
+/**
+ * API Client for SEO Article Generator
+ *
+ * VULN-005: 認証トークン対応
+ * - Authorization ヘッダー付与
+ * - 401エラー時の自動リフレッシュ
+ * - トークン切れ時のログインリダイレクト
+ */
+
 import type {
   Run,
   RunSummary,
@@ -7,6 +16,7 @@ import type {
   PaginatedResponse,
   ApiError,
 } from './types';
+import { AuthManager, authenticatedFetch } from './auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -17,7 +27,51 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * 認証付きAPIリクエスト
+   *
+   * セキュリティ要件:
+   * - 全リクエストに Authorization ヘッダー付与
+   * - 401エラー時はトークンリフレッシュ試行
+   * - リフレッシュ失敗時はログインページへリダイレクト
+   */
   private async request<T>(
+    path: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${path}`;
+
+    // 認証ヘッダーを追加
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...AuthManager.getAuthHeaders(),
+      ...options.headers,
+    };
+
+    // 認証付きfetchを使用（401時の自動リフレッシュ対応）
+    const response = await authenticatedFetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      // 認証エラー以外のエラーハンドリング
+      const error: ApiError = await response.json().catch(() => ({
+        error: {
+          code: 'UNKNOWN_ERROR',
+          message: `HTTP ${response.status}: ${response.statusText}`,
+        },
+      }));
+      throw new Error(error.error.message);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * 認証不要のリクエスト（ヘルスチェック等）
+   */
+  private async publicRequest<T>(
     path: string,
     options: RequestInit = {}
   ): Promise<T> {
