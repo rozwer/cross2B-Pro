@@ -5,6 +5,7 @@ This is the critical handoff point before content generation.
 Uses Claude for comprehensive integration.
 """
 
+import json
 from typing import Any
 
 from temporalio import activity
@@ -113,10 +114,26 @@ class Step65IntegrationPackage(BaseActivity):
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
+        # Parse JSON response
+        try:
+            parsed = json.loads(response.content)
+            integration_package = parsed.get("integration_package", "")
+            outline_summary = parsed.get("outline_summary", "")
+            section_count = parsed.get("section_count", 0)
+            total_sources = parsed.get("total_sources", 0)
+        except json.JSONDecodeError as e:
+            raise ActivityError(
+                f"Failed to parse JSON response: {e}",
+                category=ErrorCategory.RETRYABLE,
+            ) from e
+
         return {
             "step": self.step_id,
             "keyword": keyword,
-            "integration_package": response.content,
+            "integration_package": integration_package,
+            "outline_summary": outline_summary,
+            "section_count": section_count,
+            "total_sources": total_sources,
             "inputs_summary": {
                 "has_keyword_analysis": bool(step0_data),
                 "has_query_analysis": bool(step3a_data),

@@ -19,6 +19,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import asyncio
+import json
 from datetime import datetime
 from typing import Any
 
@@ -71,10 +72,16 @@ async def step0_execute(
         metadata=metadata,  # REVIEW-002: metadata 必須
     )
 
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+    except json.JSONDecodeError:
+        parsed = {"raw_content": response.content}
+
     return {
         "step": "step0",
         "keyword": config.get("keyword"),
-        "analysis": response.content,
+        "analysis": parsed,
         "model": response.model,
         "usage": {
             "input_tokens": response.token_usage.input,
@@ -180,9 +187,14 @@ async def step3_parallel_execute(
                 config=llm_config,
                 metadata=metadata,  # REVIEW-002: metadata 必須
             )
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
             return {
                 "step": "step3a",
-                "analysis": response.content,
+                "analysis": parsed,
                 "usage": {"input": response.token_usage.input, "output": response.token_usage.output},
             }
         except Exception as e:
@@ -207,9 +219,14 @@ async def step3_parallel_execute(
                 config=llm_config,
                 metadata=metadata,  # REVIEW-002: metadata 必須
             )
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
             return {
                 "step": "step3b",
-                "analysis": response.content,
+                "analysis": parsed,
                 "usage": {"input": response.token_usage.input, "output": response.token_usage.output},
             }
         except Exception as e:
@@ -234,9 +251,14 @@ async def step3_parallel_execute(
                 config=llm_config,
                 metadata=metadata,  # REVIEW-002: metadata 必須
             )
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
             return {
                 "step": "step3c",
-                "analysis": response.content,
+                "analysis": parsed,
                 "usage": {"input": response.token_usage.input, "output": response.token_usage.output},
             }
         except Exception as e:
