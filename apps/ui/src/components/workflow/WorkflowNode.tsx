@@ -97,6 +97,7 @@ function WorkflowNodeComponent({
           >
             {colors.icon}
             {data.aiProvider === 'gemini' && 'Gemini'}
+            {data.aiProvider === 'openai' && 'GPT'}
             {data.aiProvider === 'claude' && 'Claude'}
             {data.aiProvider === 'manual' && '手動'}
             {data.aiProvider === 'tool' && 'ツール'}

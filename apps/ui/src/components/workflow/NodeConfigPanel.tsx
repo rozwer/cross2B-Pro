@@ -27,6 +27,12 @@ const defaultConfigs: Record<AIProvider, NodeConfig> = {
     maxTokens: 8192,
     grounding: false,
   },
+  openai: {
+    model: 'gpt-4o',
+    temperature: 0.7,
+    maxTokens: 8192,
+    grounding: false,
+  },
   claude: {
     model: 'claude-3-5-sonnet-20241022',
     temperature: 0.7,
@@ -82,7 +88,7 @@ export function NodeConfigPanel({
     onClose();
   };
 
-  const isConfigurable = data.configurable && ['gemini', 'claude'].includes(data.aiProvider);
+  const isConfigurable = data.configurable && ['gemini', 'openai', 'claude'].includes(data.aiProvider);
 
   return (
     <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl border-l border-gray-200 z-50 overflow-y-auto animate-slide-in-right">
@@ -113,6 +119,7 @@ export function NodeConfigPanel({
           <div>
             <p className="text-sm font-medium text-gray-700">
               {data.aiProvider === 'gemini' && 'Google Gemini'}
+              {data.aiProvider === 'openai' && 'OpenAI GPT'}
               {data.aiProvider === 'claude' && 'Anthropic Claude'}
               {data.aiProvider === 'manual' && '手動入力'}
               {data.aiProvider === 'tool' && '外部ツール'}
