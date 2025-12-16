@@ -17,6 +17,7 @@ from anthropic.types import MessageParam, ToolParam, ToolUseBlock
 from .base import LLMInterface
 from .exceptions import NonRetryableLLMError, RetryableLLMError, ValidationLLMError
 from .schemas import (
+    AnthropicConfig,
     LLMCallMetadata,
     LLMMessage,
     LLMRequestConfig,
@@ -27,14 +28,16 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 # Supported models (no fallback - explicit selection only)
+# 最新: claude-opus-4.5, claude-sonnet-4.5
 SUPPORTED_MODELS = [
-    "claude-sonnet-4-20250514",
-    "claude-opus-4-20250514",
-    "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-20241022",
+    "claude-opus-4-5-20251124",  # 最新Opus 4.5
+    "claude-sonnet-4-5-20250929",  # 最新Sonnet 4.5
+    "claude-opus-4-1-20250805",  # Opus 4.1
+    "claude-sonnet-4-20250514",  # Sonnet 4
+    "claude-opus-4-20250514",  # Opus 4
 ]
 
-DEFAULT_MODEL = "claude-sonnet-4-20250514"
+DEFAULT_MODEL = "claude-sonnet-4-5-20250929"
 MAX_RETRIES = 3
 
 
@@ -54,6 +57,7 @@ class AnthropicClient(LLMInterface):
         api_key: str | None = None,
         model: str = DEFAULT_MODEL,
         max_retries: int = MAX_RETRIES,
+        anthropic_config: AnthropicConfig | None = None,
     ):
         """Initialize Anthropic client.
 
@@ -61,6 +65,7 @@ class AnthropicClient(LLMInterface):
             api_key: Anthropic API key. Falls back to ANTHROPIC_API_KEY env var.
             model: Model identifier to use. Must be in SUPPORTED_MODELS.
             max_retries: Maximum retry attempts for retryable errors.
+            anthropic_config: Anthropic固有の設定
 
         Raises:
             NonRetryableLLMError: If model is not in SUPPORTED_MODELS.
@@ -77,7 +82,36 @@ class AnthropicClient(LLMInterface):
         self.client = AsyncAnthropic(api_key=resolved_key)
         self._model = model
         self.max_retries = max_retries
+        self._anthropic_config = anthropic_config or AnthropicConfig()
         logger.info(f"AnthropicClient initialized with model={model}, max_retries={max_retries}")
+
+    def configure_extended_thinking(
+        self,
+        enabled: bool = True,
+        budget_tokens: int | None = None,
+    ) -> None:
+        """Extended Thinkingを設定（Claude 4系向け）
+
+        Args:
+            enabled: Extended Thinkingを有効にするかどうか
+            budget_tokens: Thinking用のトークン予算（最小1024）
+        """
+        self._anthropic_config.extended_thinking.enabled = enabled
+        if budget_tokens is not None:
+            self._anthropic_config.extended_thinking.budget_tokens = budget_tokens
+        logger.info(
+            f"Extended thinking {'enabled' if enabled else 'disabled'}, "
+            f"budget_tokens={budget_tokens}"
+        )
+
+    def set_effort(self, effort: str | None = None) -> None:
+        """Effort levelを設定（Claude Opus 4.5向け）
+
+        Args:
+            effort: low, medium, high
+        """
+        self._anthropic_config.effort = effort
+        logger.info(f"Effort set to: {effort}")
 
     @property
     def provider_name(self) -> str:

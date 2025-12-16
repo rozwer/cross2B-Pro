@@ -28,6 +28,7 @@ from .exceptions import (
     LLMValidationError,
 )
 from .gemini import GeminiClient
+from .nanobanana import ImageGenerationConfig, ImageGenerationResult, NanoBananaClient
 from .openai import OpenAIClient
 from .schemas import (
     GeminiConfig,
@@ -46,7 +47,11 @@ __all__ = [
     # Clients
     "AnthropicClient",
     "GeminiClient",
+    "NanoBananaClient",
     "OpenAIClient",
+    # Image Generation
+    "ImageGenerationConfig",
+    "ImageGenerationResult",
     # Schemas
     "LLMResponse",
     "LLMMessage",

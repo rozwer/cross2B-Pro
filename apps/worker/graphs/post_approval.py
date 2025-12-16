@@ -18,6 +18,7 @@ _PROJECT_ROOT = _THIS_DIR.parent.parent.parent  # apps/worker/graphs -> project 
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -57,9 +58,15 @@ async def step4_execute(
         config=llm_config,
     )
 
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+    except json.JSONDecodeError:
+        parsed = {"raw_content": response.content}
+
     return {
         "step": "step4",
-        "outline": response.content,
+        "outline": parsed,
         "model": response.model,
     }
 
@@ -121,9 +128,15 @@ async def step6_execute(
         config=llm_config,
     )
 
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+    except json.JSONDecodeError:
+        parsed = {"raw_content": response.content}
+
     return {
         "step": "step6",
-        "enhanced_outline": response.content,
+        "enhanced_outline": parsed,
         "model": response.model,
     }
 
@@ -150,9 +163,25 @@ async def step6_5_execute(
         config=llm_config,
     )
 
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+        integration_package = parsed.get("integration_package", "")
+        outline_summary = parsed.get("outline_summary", "")
+        section_count = parsed.get("section_count", 0)
+        total_sources = parsed.get("total_sources", 0)
+    except json.JSONDecodeError:
+        integration_package = response.content
+        outline_summary = ""
+        section_count = 0
+        total_sources = 0
+
     return {
         "step": "step6_5",
-        "integration_package": response.content,
+        "integration_package": integration_package,
+        "outline_summary": outline_summary,
+        "section_count": section_count,
+        "total_sources": total_sources,
         "model": response.model,
     }
 
@@ -179,11 +208,23 @@ async def step7a_execute(
         config=llm_config,
     )
 
-    draft = response.content
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+        draft = parsed.get("draft", "")
+        section_count = parsed.get("section_count", 0)
+        cta_positions = parsed.get("cta_positions", [])
+    except json.JSONDecodeError:
+        draft = response.content
+        section_count = 0
+        cta_positions = []
+
     return {
         "step": "step7a",
         "draft": draft,
         "word_count": len(draft.split()),
+        "section_count": section_count,
+        "cta_positions": cta_positions,
         "model": response.model,
     }
 
@@ -210,11 +251,20 @@ async def step7b_execute(
         config=llm_config,
     )
 
-    polished = response.content
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+        polished = parsed.get("polished", "")
+        changes_made = parsed.get("changes_made", [])
+    except json.JSONDecodeError:
+        polished = response.content
+        changes_made = []
+
     return {
         "step": "step7b",
         "polished": polished,
         "word_count": len(polished.split()),
+        "changes_made": changes_made,
         "model": response.model,
     }
 
@@ -276,11 +326,23 @@ async def step9_execute(
         config=llm_config,
     )
 
-    final_content = response.content
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+        final_content = parsed.get("final_content", "")
+        meta_description = parsed.get("meta_description", "")
+        internal_link_suggestions = parsed.get("internal_link_suggestions", [])
+    except json.JSONDecodeError:
+        final_content = response.content
+        meta_description = ""
+        internal_link_suggestions = []
+
     return {
         "step": "step9",
         "final_content": final_content,
         "word_count": len(final_content.split()),
+        "meta_description": meta_description,
+        "internal_link_suggestions": internal_link_suggestions,
         "model": response.model,
     }
 

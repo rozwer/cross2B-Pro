@@ -2,13 +2,14 @@
 
 IMPORTANT: Auto-execution without explicit pack_id is forbidden.
 All prompt loading requires an explicit pack_id parameter.
+
+Prompts are loaded from JSON files in the packs/ directory.
 """
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
-
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PromptPackError(Exception):
@@ -27,6 +28,10 @@ class PromptNotFoundError(PromptPackError):
     """Prompt for step does not exist in pack."""
 
     pass
+
+
+# Directory containing prompt pack JSON files
+PACKS_DIR = Path(__file__).parent / "packs"
 
 
 @dataclass
@@ -113,28 +118,31 @@ class PromptPack:
 
 
 class PromptPackLoader:
-    """Loads prompt packs from database.
+    """Loads prompt packs from JSON files.
 
     CRITICAL: Auto-execution without explicit pack_id is FORBIDDEN.
     All load operations require a non-None pack_id.
+
+    Packs are loaded from apps/api/prompts/packs/{pack_id}.json
     """
 
-    def __init__(self, session_factory: Any | None = None) -> None:
+    def __init__(self, packs_dir: Path | None = None) -> None:
         """Initialize loader.
 
         Args:
-            session_factory: Async session factory for DB access
+            packs_dir: Directory containing prompt pack JSON files.
+                      Defaults to apps/api/prompts/packs/
         """
-        self._session_factory = session_factory
+        self._packs_dir = packs_dir or PACKS_DIR
         self._cache: dict[str, PromptPack] = {}
 
     def load(self, pack_id: str | None) -> PromptPack:
-        """Load a prompt pack by ID (sync wrapper).
+        """Load a prompt pack by ID from JSON file.
 
         CRITICAL: pack_id is REQUIRED. Auto-execution is forbidden.
 
         Args:
-            pack_id: Prompt pack identifier
+            pack_id: Prompt pack identifier (corresponds to {pack_id}.json)
 
         Returns:
             PromptPack instance
@@ -158,89 +166,68 @@ class PromptPackLoader:
             self._cache[pack_id] = pack
             return pack
 
-        # This is a sync wrapper - actual DB loading happens in async version
-        raise PromptPackNotFoundError(
-            f"Pack '{pack_id}' not found. Use async load_async() for DB access."
-        )
-
-    async def load_async(self, pack_id: str | None) -> PromptPack:
-        """Load a prompt pack by ID from database.
-
-        CRITICAL: pack_id is REQUIRED. Auto-execution is forbidden.
-
-        Args:
-            pack_id: Prompt pack identifier
-
-        Returns:
-            PromptPack instance
-
-        Raises:
-            ValueError: If pack_id is None
-            PromptPackNotFoundError: If pack does not exist
-        """
-        if pack_id is None:
-            raise ValueError(
-                "pack_id is required. Auto-execution without explicit pack_id is forbidden."
-            )
-
-        # Check cache
-        if pack_id in self._cache:
-            return self._cache[pack_id]
-
-        # Handle mock pack for testing
-        if pack_id == "mock_pack":
-            pack = self._load_mock_pack()
-            self._cache[pack_id] = pack
-            return pack
-
-        # Load from database
-        pack = await self._load_from_db(pack_id)
+        # Load from JSON file
+        pack = self._load_from_json(pack_id)
         self._cache[pack_id] = pack
         return pack
 
-    async def _load_from_db(self, pack_id: str) -> PromptPack:
-        """Load prompt pack from database.
+    async def load_async(self, pack_id: str | None) -> PromptPack:
+        """Load a prompt pack by ID (async wrapper).
 
-        Pack ID format: "{tenant_id}:{version}" or just version number.
+        CRITICAL: pack_id is REQUIRED. Auto-execution is forbidden.
+
+        This is an async wrapper for compatibility. JSON file loading
+        is synchronous but wrapped for API consistency.
+
+        Args:
+            pack_id: Prompt pack identifier
+
+        Returns:
+            PromptPack instance
+
+        Raises:
+            ValueError: If pack_id is None
+            PromptPackNotFoundError: If pack does not exist
         """
-        if not self._session_factory:
-            raise PromptPackError("No session factory configured")
+        return self.load(pack_id)
 
-        async with self._session_factory() as session:
-            return await self._load_from_session(pack_id, session)
+    def _load_from_json(self, pack_id: str) -> PromptPack:
+        """Load prompt pack from JSON file.
 
-    async def _load_from_session(
-        self,
-        pack_id: str,
-        session: AsyncSession,
-    ) -> PromptPack:
-        """Load prompt pack using provided session."""
-        # Query active prompts for this pack
-        result = await session.execute(
-            text(
-                """
-                SELECT step, version, content, variables
-                FROM prompts
-                WHERE is_active = true
-                ORDER BY step, version DESC
-            """
+        Args:
+            pack_id: Pack identifier (filename without .json)
+
+        Returns:
+            PromptPack instance
+
+        Raises:
+            PromptPackNotFoundError: If JSON file not found
+            PromptPackError: If JSON is invalid
+        """
+        json_path = self._packs_dir / f"{pack_id}.json"
+
+        if not json_path.exists():
+            raise PromptPackNotFoundError(
+                f"Prompt pack '{pack_id}' not found at {json_path}"
             )
-        )
-        rows = result.fetchall()
 
-        if not rows:
-            raise PromptPackNotFoundError(f"No prompts found for pack '{pack_id}'")
+        try:
+            with open(json_path, encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            raise PromptPackError(f"Invalid JSON in pack '{pack_id}': {e}") from e
 
-        # Build prompt pack - take latest version per step
+        # Parse prompts from JSON
         prompts: dict[str, PromptTemplate] = {}
-        for row in rows:
-            if row.step not in prompts:
-                prompts[row.step] = PromptTemplate(
-                    step=row.step,
-                    version=row.version,
-                    content=row.content,
-                    variables=row.variables or {},
-                )
+        prompts_data = data.get("prompts", {})
+
+        for step_id, prompt_data in prompts_data.items():
+            prompts[step_id] = PromptTemplate(
+                step=prompt_data.get("step", step_id),
+                version=prompt_data.get("version", 1),
+                content=prompt_data.get("content", ""),
+                variables=prompt_data.get("variables", {}),
+            )
 
         return PromptPack(pack_id=pack_id, prompts=prompts)
 
@@ -249,32 +236,86 @@ class PromptPackLoader:
         return PromptPack(
             pack_id="mock_pack",
             prompts={
-                "step_0_keyword_research": PromptTemplate(
-                    step="step_0_keyword_research",
+                "step0": PromptTemplate(
+                    step="step0",
                     version=1,
-                    content="Analyze the keyword: {{keyword}}",
+                    content="Analyze the keyword: {{keyword}}\n\nJSON形式で出力してください。",
                     variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_1_structure": PromptTemplate(
-                    step="step_1_structure",
+                "step3a": PromptTemplate(
+                    step="step3a",
                     version=1,
-                    content="Create article structure for: {{topic}}",
-                    variables={"topic": {"required": True, "type": "string"}},
+                    content="Query analysis for: {{keyword}}\n"
+                    "Analysis: {{keyword_analysis}}\n"
+                    "Competitors: {{competitor_count}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "keyword_analysis": {"required": False, "type": "string"},
+                        "competitor_count": {"required": False, "type": "number"},
+                    },
                 ),
-                "step_2_draft": PromptTemplate(
-                    step="step_2_draft",
+                "step3b": PromptTemplate(
+                    step="step3b",
                     version=1,
-                    content="Write draft based on structure: {{structure}}",
-                    variables={"structure": {"required": True, "type": "string"}},
+                    content="Co-occurrence analysis for: {{keyword}}\n"
+                    "Summaries: {{competitor_summaries}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "competitor_summaries": {"required": False, "type": "array"},
+                    },
                 ),
-                "step_3_review": PromptTemplate(
-                    step="step_3_review",
+                "step3c": PromptTemplate(
+                    step="step3c",
                     version=1,
-                    content="Review draft for quality: {{draft}}",
-                    variables={"draft": {"required": True, "type": "string"}},
+                    content="Competitor analysis for: {{keyword}}\nCompetitors: {{competitors}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "competitors": {"required": False, "type": "array"},
+                    },
+                ),
+                "step6_5": PromptTemplate(
+                    step="step6_5",
+                    version=1,
+                    content="Create integration package for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
+                ),
+                "step7a": PromptTemplate(
+                    step="step7a",
+                    version=1,
+                    content="Generate draft for: {{keyword}}\nPackage: {{integration_package}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "integration_package": {"required": True, "type": "string"},
+                    },
+                ),
+                "step7b": PromptTemplate(
+                    step="step7b",
+                    version=1,
+                    content="Polish draft for: {{keyword}}\nDraft: {{draft}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "draft": {"required": True, "type": "string"},
+                    },
+                ),
+                "step9": PromptTemplate(
+                    step="step9",
+                    version=1,
+                    content="Final rewrite for: {{keyword}}\nPolished: {{polished_content}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "polished_content": {"required": True, "type": "string"},
+                        "faq": {"required": False, "type": "string"},
+                        "verification_notes": {"required": False, "type": "string"},
+                    },
                 ),
             },
         )
+
+    def list_packs(self) -> list[str]:
+        """List available prompt pack IDs."""
+        if not self._packs_dir.exists():
+            return []
+        return [p.stem for p in self._packs_dir.glob("*.json")]
 
     def clear_cache(self) -> None:
         """Clear the prompt pack cache."""

@@ -1,5 +1,9 @@
 """Tests for prompt pack loading."""
 
+import json
+import tempfile
+from pathlib import Path
+
 import pytest
 
 from apps.api.prompts.loader import (
@@ -7,6 +11,7 @@ from apps.api.prompts.loader import (
     PromptPack,
     PromptPackError,
     PromptPackLoader,
+    PromptPackNotFoundError,
     PromptTemplate,
 )
 
@@ -133,14 +138,14 @@ class TestPromptPackLoader:
         loader = PromptPackLoader()
         pack = loader.load("mock_pack")
         assert pack.pack_id == "mock_pack"
-        assert "step_0_keyword_research" in pack.list_steps()
-        assert "step_1_structure" in pack.list_steps()
+        assert "step0" in pack.list_steps()
+        assert "step3a" in pack.list_steps()
 
     def test_mock_pack_renders_correctly(self) -> None:
         """Test that mock pack prompts render correctly."""
         loader = PromptPackLoader()
         pack = loader.load("mock_pack")
-        result = pack.render_prompt("step_0_keyword_research", keyword="Python SEO")
+        result = pack.render_prompt("step0", keyword="Python SEO")
         assert "Python SEO" in result
 
     @pytest.mark.asyncio
@@ -177,3 +182,55 @@ class TestPromptPackLoader:
         loader.load("mock_pack")
         loader.invalidate("mock_pack")
         assert "mock_pack" not in loader._cache
+
+    def test_load_from_json_file(self) -> None:
+        """Test loading pack from JSON file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            packs_dir = Path(tmpdir)
+            pack_data = {
+                "pack_id": "test_pack",
+                "version": 1,
+                "prompts": {
+                    "step0": {
+                        "step": "step0",
+                        "version": 1,
+                        "content": "Analyze keyword: {{keyword}}",
+                        "variables": {"keyword": {"required": True, "type": "string"}},
+                    },
+                },
+            }
+            with open(packs_dir / "test_pack.json", "w", encoding="utf-8") as f:
+                json.dump(pack_data, f)
+
+            loader = PromptPackLoader(packs_dir=packs_dir)
+            pack = loader.load("test_pack")
+
+            assert pack.pack_id == "test_pack"
+            assert "step0" in pack.list_steps()
+            result = pack.render_prompt("step0", keyword="SEO")
+            assert result == "Analyze keyword: SEO"
+
+    def test_load_json_file_not_found(self) -> None:
+        """Test loading non-existent JSON file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            loader = PromptPackLoader(packs_dir=Path(tmpdir))
+            with pytest.raises(PromptPackNotFoundError, match="not found"):
+                loader.load("nonexistent")
+
+    def test_load_default_pack(self) -> None:
+        """Test loading default pack from actual packs directory."""
+        loader = PromptPackLoader()
+        pack = loader.load("default")
+        assert pack.pack_id == "default"
+        # Verify some expected steps exist
+        steps = pack.list_steps()
+        assert "step0" in steps
+        assert "step6_5" in steps
+        assert "step7a" in steps
+        assert "step9" in steps
+
+    def test_list_packs(self) -> None:
+        """Test listing available packs."""
+        loader = PromptPackLoader()
+        packs = loader.list_packs()
+        assert "default" in packs
