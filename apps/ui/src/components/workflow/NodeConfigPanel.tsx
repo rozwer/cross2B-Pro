@@ -24,10 +24,34 @@ interface NodeConfigPanelProps {
   onConfigChange: (stepId: string, config: Partial<StepConfig>) => void;
 }
 
-const PLATFORM_MODELS: Record<LLMPlatform, string[]> = {
-  gemini: ['gemini-2.0-flash', 'gemini-2.5-pro', 'gemini-1.5-pro'],
-  openai: ['gpt-4o', 'gpt-4-turbo', 'o3'],
-  anthropic: ['claude-sonnet-4', 'claude-opus-4'],
+interface ModelOption {
+  id: string;
+  name: string;
+  description?: string;
+  isDefault?: boolean;
+}
+
+const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
+  gemini: [
+    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Exp)', description: '最新・高速', isDefault: true },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '高精度・長文' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: '安定版' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: '軽量・高速' },
+  ],
+  openai: [
+    { id: 'gpt-4o', name: 'GPT-4o', description: '最新・高性能', isDefault: true },
+    { id: 'gpt-4o-mini', name: 'GPT-4o mini', description: '軽量・コスト効率' },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: '高速・128K' },
+    { id: 'o1', name: 'o1', description: '推論特化' },
+    { id: 'o1-mini', name: 'o1 mini', description: '推論・軽量' },
+    { id: 'o3-mini', name: 'o3 mini', description: '次世代推論' },
+  ],
+  anthropic: [
+    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', description: '最新・バランス', isDefault: true },
+    { id: 'claude-opus-4', name: 'Claude Opus 4', description: '最高精度' },
+    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', description: '高速・高精度' },
+    { id: 'claude-3-haiku', name: 'Claude 3 Haiku', description: '軽量・高速' },
+  ],
 };
 
 const PLATFORM_LABELS: Record<LLMPlatform, { name: string; color: string; emoji: string }> = {
@@ -40,9 +64,10 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
   if (!step) return null;
 
   const handlePlatformChange = (platform: LLMPlatform) => {
+    const defaultModel = PLATFORM_MODELS[platform].find(m => m.isDefault) || PLATFORM_MODELS[platform][0];
     onConfigChange(step.stepId, {
       aiModel: platform,
-      modelName: PLATFORM_MODELS[platform][0],
+      modelName: defaultModel.id,
     });
   };
 
@@ -134,11 +159,20 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 {PLATFORM_MODELS[step.aiModel].map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                  <option key={model.id} value={model.id}>
+                    {model.name} {model.description && `- ${model.description}`}
                   </option>
                 ))}
               </select>
+              {/* Model description */}
+              {(() => {
+                const selectedModel = PLATFORM_MODELS[step.aiModel].find(m => m.id === step.modelName);
+                return selectedModel?.description && (
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    {selectedModel.description}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Temperature */}
