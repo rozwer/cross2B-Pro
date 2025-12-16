@@ -8,6 +8,7 @@
 |------|----------|
 | **実装計画** | `仕様書/ROADMAP.md` |
 | **ワークフロー** | `仕様書/workflow.md` |
+| **並列開発** | `仕様書/PARALLEL_DEV_GUIDE.md` |
 | **Backend** | `仕様書/backend/` |
 | **Frontend** | `仕様書/frontend/` |
 
@@ -15,13 +16,31 @@
 
 ## 並列作業（worktree）
 
-### 基本ルール
+> **詳細ガイド**: `仕様書/PARALLEL_DEV_GUIDE.md`
 
-- 機能境界ごとに worktree を分離
-- 同一ファイルへの同時編集を避ける
-- マージ前に `smoke` テストを通す
+### ブランチ戦略
 
-### コマンド
+```
+main (master) ← 本番相当
+  └── develop ← 開発統合ブランチ
+        ├── feat/xxx ← 機能ブランチ（worktree分離）
+        ├── fix/xxx  ← バグ修正
+        └── hotfix/xxx ← 緊急修正（mainから分岐）
+```
+
+### CLIヘルパー
+
+```bash
+# worktree 一括操作
+./scripts/worktree.sh create <topic>   # 新規作成
+./scripts/worktree.sh list             # 一覧表示
+./scripts/worktree.sh remove <topic>   # 削除
+./scripts/worktree.sh batch step1      # Step1の全worktree一括作成
+./scripts/worktree.sh rebase           # 全worktreeをdevelopでリベース
+./scripts/worktree.sh pr <topic>       # PRチェックリスト表示
+```
+
+### スラッシュコマンド
 
 | 操作 | コマンド |
 |------|----------|
@@ -31,14 +50,18 @@
 
 ### 推奨分割（ROADMAP準拠）
 
-```
-worktree-llm-gemini/    # Step1: Gemini クライアント
-worktree-llm-openai/    # Step1: OpenAI クライアント
-worktree-llm-anthropic/ # Step1: Anthropic クライアント
-worktree-tools/         # Step3: SERP/Fetch/Verify
-worktree-validation/    # Step2: JSON/CSV検査
-worktree-contract/      # Step4: State/Context
-```
+| Step | Worktrees |
+|------|-----------|
+| Step1 | `llm-gemini`, `llm-openai`, `llm-anthropic` |
+| Step3 | `tools-search`, `tools-fetch`, `tools-verify`, `tools-registry` |
+| Step4 | `contract-state`, `contract-context`, `contract-adapter` |
+
+### ルール
+
+- **develop/main への直接 push 禁止**（Git hooks で強制）
+- **Conventional Commits 形式必須**（`feat:`, `fix:`, `docs:`...）
+- **PR必須**、マージ前に smoke テスト通過
+- **同一ファイルへの同時編集を避ける**
 
 ---
 
@@ -145,9 +168,14 @@ mypy apps/
 │   ├── rules/              # 詳細ルール
 │   └── skills/             # LangGraph等スキル
 ├── .codex/                 # Codex設定・スキル
+├── .githooks/              # Git hooks（Conventional Commits強制等）
+├── .worktrees/             # 並列開発用worktree格納ディレクトリ
+├── scripts/
+│   └── worktree.sh         # 並列開発CLIヘルパー
 ├── 仕様書/
 │   ├── ROADMAP.md
 │   ├── workflow.md
+│   ├── PARALLEL_DEV_GUIDE.md  # 並列開発ガイド
 │   ├── backend/
 │   └── frontend/
 ├── apps/
