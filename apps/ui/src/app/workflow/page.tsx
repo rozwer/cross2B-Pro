@@ -16,6 +16,7 @@ import {
 const DEFAULT_MODEL_SETTINGS: ModelSettings = {
   geminiModel: 'gemini-2.0-flash-exp',
   claudeModel: 'claude-3-5-sonnet-20241022',
+  gptModel: 'gpt-4o',
   temperature: 0.7,
   maxTokens: 8000,
   groundingEnabled: true,
