@@ -1,0 +1,10 @@
+{
+  "title": "Sample Article",
+  "keywords": ["SEO", "optimization", "content",],
+  "sections": [
+    {
+      "heading": "Introduction",
+      "content": "This is the introduction section.",
+    },
+  ],
+}
