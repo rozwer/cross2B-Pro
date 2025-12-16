@@ -4,6 +4,9 @@
 - page_fetch: ページ取得 + 本文抽出
 - pdf_extract: PDFテキスト抽出
 - primary_collector: 一次情報収集器
+
+Security: SSRF protection implemented via URL validation.
+Internal/private IP addresses and cloud metadata endpoints are blocked.
 """
 
 import hashlib
@@ -19,6 +22,7 @@ import httpx
 from .base import ErrorCategory, ToolInterface
 from .registry import ToolRegistry
 from .schemas import Evidence, ToolResult
+from .security import SSRFError, validate_url_for_ssrf
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +135,11 @@ class PageFetchTool(ToolInterface):
     async def execute(  # type: ignore[override]
         self, url: str, extract_links: bool = False
     ) -> ToolResult:
-        """ページを取得して本文を抽出"""
+        """ページを取得して本文を抽出
+
+        Security: SSRF protection - blocks requests to internal/private IPs,
+        cloud metadata endpoints, and non-whitelisted domains.
+        """
         # URL検証
         if not url or not url.strip():
             return ToolResult(
@@ -146,6 +154,17 @@ class PageFetchTool(ToolInterface):
                 success=False,
                 error_category=ErrorCategory.VALIDATION_FAIL.value,
                 error_message=f"Invalid URL: {url}",
+            )
+
+        # SSRF Protection: Validate URL before making request
+        try:
+            validate_url_for_ssrf(url)
+        except SSRFError as e:
+            logger.warning(f"SSRF blocked for page_fetch: {url} - {e}")
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.VALIDATION_FAIL.value,
+                error_message=f"URL blocked for security reasons: {e}",
             )
 
         headers = {
@@ -328,7 +347,10 @@ class PdfExtractTool(ToolInterface):
         pdf_url: str | None = None,
         max_pages: int = 50,
     ) -> ToolResult:
-        """PDFからテキストを抽出"""
+        """PDFからテキストを抽出
+
+        Security: SSRF protection for PDF URLs, path traversal protection for file paths.
+        """
         if not pdf_path and not pdf_url:
             return ToolResult(
                 success=False,
@@ -352,6 +374,17 @@ class PdfExtractTool(ToolInterface):
 
             # URLからダウンロード
             if pdf_url:
+                # SSRF Protection: Validate URL before making request
+                try:
+                    validate_url_for_ssrf(pdf_url)
+                except SSRFError as e:
+                    logger.warning(f"SSRF blocked for pdf_extract: {pdf_url} - {e}")
+                    return ToolResult(
+                        success=False,
+                        error_category=ErrorCategory.VALIDATION_FAIL.value,
+                        error_message=f"URL blocked for security reasons: {e}",
+                    )
+
                 async with httpx.AsyncClient(timeout=60.0) as client:
                     response = await client.get(pdf_url)
                     if response.status_code != 200:
@@ -365,7 +398,24 @@ class PdfExtractTool(ToolInterface):
 
             # ローカルファイルから読み込み
             elif pdf_path:
-                path = Path(pdf_path)
+                # Path traversal protection: validate path is under allowed directory
+                from .security import validate_file_path
+
+                # Get allowed base directory from environment or use temp directory
+                import os
+                allowed_base = os.getenv("ALLOWED_PDF_DIR", "/tmp/pdf_uploads")
+
+                try:
+                    validated_path = validate_file_path(pdf_path, allowed_base)
+                except ValueError as e:
+                    logger.warning(f"Path traversal blocked for pdf_extract: {pdf_path} - {e}")
+                    return ToolResult(
+                        success=False,
+                        error_category=ErrorCategory.VALIDATION_FAIL.value,
+                        error_message=f"Invalid file path: {e}",
+                    )
+
+                path = Path(validated_path)
                 if not path.exists():
                     return ToolResult(
                         success=False,

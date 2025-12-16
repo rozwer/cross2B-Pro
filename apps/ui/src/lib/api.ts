@@ -7,6 +7,7 @@ import type {
   PaginatedResponse,
   ApiError,
 } from './types';
+import { AuthManager } from './auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -19,7 +20,8 @@ class ApiClient {
 
   private async request<T>(
     path: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retry = true
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: HeadersInit = {
@@ -27,10 +29,29 @@ class ApiClient {
       ...options.headers,
     };
 
+    // Add authentication token if available
+    const token = await AuthManager.getValidToken();
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       ...options,
       headers,
     });
+
+    // Handle 401 Unauthorized - attempt token refresh
+    if (response.status === 401 && retry) {
+      const newToken = await AuthManager.refreshToken();
+      if (newToken) {
+        // Retry the request with the new token
+        return this.request<T>(path, options, false);
+      }
+      // Refresh failed, redirect to login
+      AuthManager.clearToken();
+      AuthManager.redirectToLogin();
+      throw new Error('Authentication required');
+    }
 
     if (!response.ok) {
       const error: ApiError = await response.json().catch(() => ({

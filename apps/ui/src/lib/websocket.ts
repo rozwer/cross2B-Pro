@@ -1,6 +1,7 @@
 import type { ProgressEvent } from './types';
+import { AuthManager } from './auth';
 
-export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'authenticating';
 
 export interface WebSocketOptions {
   onMessage?: (event: ProgressEvent) => void;
@@ -19,6 +20,7 @@ export class RunProgressWebSocket {
   private reconnectCount = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private status: WebSocketStatus = 'disconnected';
+  private authenticated = false;
 
   constructor(runId: string, options: WebSocketOptions = {}) {
     this.runId = runId;
@@ -36,30 +38,62 @@ export class RunProgressWebSocket {
       return;
     }
 
+    // Check for authentication token
+    const token = AuthManager.getToken();
+    if (!token) {
+      console.error('No authentication token available for WebSocket');
+      this.setStatus('error');
+      AuthManager.redirectToLogin();
+      return;
+    }
+
     this.setStatus('connecting');
     const url = `${WS_BASE}/ws/runs/${this.runId}`;
 
     try {
       this.ws = new WebSocket(url);
-      this.setupEventHandlers();
+      this.authenticated = false;
+      this.setupEventHandlers(token);
     } catch (error) {
       this.setStatus('error');
       this.scheduleReconnect();
     }
   }
 
-  private setupEventHandlers(): void {
+  private setupEventHandlers(token: string): void {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      this.reconnectCount = 0;
-      this.setStatus('connected');
+      // Send authentication message after connection
+      this.setStatus('authenticating');
+      this.ws?.send(JSON.stringify({ type: 'auth', token }));
     };
 
     this.ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data) as ProgressEvent;
-        this.options.onMessage(data);
+        const data = JSON.parse(event.data);
+
+        // Handle authentication response
+        if (data.type === 'auth_error') {
+          console.error('WebSocket authentication failed:', data.reason);
+          this.setStatus('error');
+          this.disconnect();
+          AuthManager.clearToken();
+          AuthManager.redirectToLogin();
+          return;
+        }
+
+        if (data.type === 'auth_success') {
+          this.authenticated = true;
+          this.reconnectCount = 0;
+          this.setStatus('connected');
+          return;
+        }
+
+        // Only process messages if authenticated
+        if (this.authenticated) {
+          this.options.onMessage(data as ProgressEvent);
+        }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);
       }
@@ -70,8 +104,18 @@ export class RunProgressWebSocket {
       this.options.onError(event);
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event) => {
+      this.authenticated = false;
       this.setStatus('disconnected');
+
+      // Code 1008 = Policy Violation (auth failure)
+      if (event.code === 1008) {
+        console.error('WebSocket closed due to auth failure');
+        AuthManager.clearToken();
+        AuthManager.redirectToLogin();
+        return;
+      }
+
       this.scheduleReconnect();
     };
   }

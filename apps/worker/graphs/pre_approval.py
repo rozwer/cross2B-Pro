@@ -27,7 +27,7 @@ from langgraph.graph import END, START, StateGraph
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
-from apps.api.llm.schemas import LLMRequestConfig
+from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
 from apps.worker.graphs.wrapper import create_node_function
@@ -53,10 +53,18 @@ async def step0_execute(
         max_tokens=config.get("max_tokens", 2000),
         temperature=config.get("temperature", 0.7),
     )
+    # Metadata is required for traceability
+    metadata = LLMCallMetadata(
+        run_id=ctx.run_id,
+        step_id="step0",
+        attempt=ctx.attempt,
+        tenant_id=ctx.tenant_id,
+    )
     response = await llm.generate(
         messages=[{"role": "user", "content": prompt}],
         system_prompt="You are a keyword analysis assistant.",
         config=llm_config,
+        metadata=metadata,
     )
 
     return {
@@ -152,10 +160,17 @@ async def step3_parallel_execute(
             template = prompt_pack.get_prompt("step3a")
             p = template.render(keyword=keyword, keyword_analysis="", competitor_count=0)
             llm_config = LLMRequestConfig(max_tokens=3000)
+            metadata = LLMCallMetadata(
+                run_id=ctx.run_id,
+                step_id="step3a",
+                attempt=ctx.attempt,
+                tenant_id=ctx.tenant_id,
+            )
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a search query analysis expert.",
                 config=llm_config,
+                metadata=metadata,
             )
             return {"step": "step3a", "analysis": response.content}
         except Exception as e:
@@ -168,10 +183,17 @@ async def step3_parallel_execute(
             template = prompt_pack.get_prompt("step3b")
             p = template.render(keyword=keyword, competitor_summaries=[])
             llm_config = LLMRequestConfig(max_tokens=4000)
+            metadata = LLMCallMetadata(
+                run_id=ctx.run_id,
+                step_id="step3b",
+                attempt=ctx.attempt,
+                tenant_id=ctx.tenant_id,
+            )
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a co-occurrence keyword analysis expert.",
                 config=llm_config,
+                metadata=metadata,
             )
             return {"step": "step3b", "analysis": response.content}
         except Exception as e:
@@ -184,10 +206,17 @@ async def step3_parallel_execute(
             template = prompt_pack.get_prompt("step3c")
             p = template.render(keyword=keyword, competitors=[])
             llm_config = LLMRequestConfig(max_tokens=3000)
+            metadata = LLMCallMetadata(
+                run_id=ctx.run_id,
+                step_id="step3c",
+                attempt=ctx.attempt,
+                tenant_id=ctx.tenant_id,
+            )
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a competitor analysis expert.",
                 config=llm_config,
+                metadata=metadata,
             )
             return {"step": "step3c", "analysis": response.content}
         except Exception as e:

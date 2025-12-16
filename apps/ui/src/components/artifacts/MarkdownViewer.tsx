@@ -1,182 +1,105 @@
 'use client';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import type { Components } from 'react-markdown';
+
 interface MarkdownViewerProps {
   content: string;
 }
 
+/**
+ * Secure Markdown viewer using react-markdown.
+ *
+ * Security:
+ * - react-markdown does NOT use dangerouslySetInnerHTML
+ * - All content is parsed and rendered as React components
+ * - Links are sanitized (no javascript: or data: URIs)
+ * - External links open in new tab with noopener/noreferrer
+ */
 export function MarkdownViewer({ content }: MarkdownViewerProps) {
-  // シンプルなMarkdownレンダリング（見出し、リスト、コード）
-  const renderMarkdown = (text: string) => {
-    const lines = text.split('\n');
-    const elements: React.ReactNode[] = [];
-    let inCodeBlock = false;
-    let codeContent: string[] = [];
-
-    lines.forEach((line, index) => {
-      // コードブロックの開始/終了
-      if (line.startsWith('```')) {
-        if (inCodeBlock) {
-          elements.push(
-            <pre
-              key={`code-${index}`}
-              className="p-3 bg-gray-800 text-gray-100 rounded-lg text-xs overflow-auto my-2"
-            >
-              {codeContent.join('\n')}
-            </pre>
-          );
-          codeContent = [];
-        }
-        inCodeBlock = !inCodeBlock;
-        return;
+  // Custom components for styling and security
+  const components: Components = {
+    // Security: External links open in new tab with proper rel attributes
+    a: ({ href, children, ...props }) => {
+      const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
+      // Block dangerous URI schemes
+      if (href?.startsWith('javascript:') || href?.startsWith('data:')) {
+        return <span>{children}</span>;
       }
-
-      if (inCodeBlock) {
-        codeContent.push(line);
-        return;
-      }
-
-      // 見出し
-      if (line.startsWith('# ')) {
-        elements.push(
-          <h1 key={index} className="text-xl font-bold mt-4 mb-2">
-            {line.slice(2)}
-          </h1>
-        );
-        return;
-      }
-      if (line.startsWith('## ')) {
-        elements.push(
-          <h2 key={index} className="text-lg font-bold mt-3 mb-2">
-            {line.slice(3)}
-          </h2>
-        );
-        return;
-      }
-      if (line.startsWith('### ')) {
-        elements.push(
-          <h3 key={index} className="text-base font-bold mt-2 mb-1">
-            {line.slice(4)}
-          </h3>
-        );
-        return;
-      }
-
-      // リスト
-      if (line.startsWith('- ') || line.startsWith('* ')) {
-        elements.push(
-          <li key={index} className="ml-4 list-disc">
-            {line.slice(2)}
-          </li>
-        );
-        return;
-      }
-
-      // 番号付きリスト
-      const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
-      if (numberedMatch) {
-        elements.push(
-          <li key={index} className="ml-4 list-decimal">
-            {numberedMatch[2]}
-          </li>
-        );
-        return;
-      }
-
-      // 空行
-      if (line.trim() === '') {
-        elements.push(<br key={index} />);
-        return;
-      }
-
-      // 通常のテキスト
-      elements.push(
-        <p key={index} className="my-1">
-          {renderInlineMarkdown(line)}
-        </p>
+      return (
+        <a
+          href={href}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          className="text-primary-600 hover:underline"
+          {...props}
+        >
+          {children}
+        </a>
       );
-    });
-
-    return elements;
-  };
-
-  const renderInlineMarkdown = (text: string) => {
-    // **太字** と *イタリック* と `コード` を処理
-    const parts: React.ReactNode[] = [];
-    let remaining = text;
-    let keyIndex = 0;
-
-    while (remaining.length > 0) {
-      // インラインコード
-      const codeMatch = remaining.match(/`([^`]+)`/);
-      // 太字
-      const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
-      // イタリック
-      const italicMatch = remaining.match(/\*([^*]+)\*/);
-
-      // 最も早く出現するマッチを見つける
-      type MatchType = 'code' | 'bold' | 'italic';
-      let earliestMatch: RegExpMatchArray | null = null;
-      let matchType: MatchType | null = null;
-      let earliestIndex = Infinity;
-
-      if (codeMatch && codeMatch.index !== undefined && codeMatch.index < earliestIndex) {
-        earliestMatch = codeMatch;
-        matchType = 'code';
-        earliestIndex = codeMatch.index;
+    },
+    // Code blocks with syntax highlighting container
+    pre: ({ children, ...props }) => (
+      <pre
+        className="p-3 bg-gray-800 text-gray-100 rounded-lg text-xs overflow-auto my-2"
+        {...props}
+      >
+        {children}
+      </pre>
+    ),
+    // Inline code
+    code: ({ children, className, ...props }) => {
+      // Check if this is a code block (has language class) or inline
+      const isBlock = className?.includes('language-');
+      if (isBlock) {
+        return <code className={className} {...props}>{children}</code>;
       }
-      if (boldMatch && boldMatch.index !== undefined && boldMatch.index < earliestIndex) {
-        earliestMatch = boldMatch;
-        matchType = 'bold';
-        earliestIndex = boldMatch.index;
+      return (
+        <code className="px-1 py-0.5 bg-gray-100 rounded text-xs font-mono" {...props}>
+          {children}
+        </code>
+      );
+    },
+    // Headings
+    h1: ({ children, ...props }) => (
+      <h1 className="text-xl font-bold mt-4 mb-2" {...props}>{children}</h1>
+    ),
+    h2: ({ children, ...props }) => (
+      <h2 className="text-lg font-bold mt-3 mb-2" {...props}>{children}</h2>
+    ),
+    h3: ({ children, ...props }) => (
+      <h3 className="text-base font-bold mt-2 mb-1" {...props}>{children}</h3>
+    ),
+    // Lists
+    ul: ({ children, ...props }) => (
+      <ul className="ml-4 list-disc" {...props}>{children}</ul>
+    ),
+    ol: ({ children, ...props }) => (
+      <ol className="ml-4 list-decimal" {...props}>{children}</ol>
+    ),
+    // Paragraphs
+    p: ({ children, ...props }) => (
+      <p className="my-1" {...props}>{children}</p>
+    ),
+    // Images - sanitize src
+    img: ({ src, alt, ...props }) => {
+      // Only allow https images
+      if (src && !src.startsWith('https://')) {
+        return <span className="text-gray-400">[Image blocked: insecure source]</span>;
       }
-      if (
-        italicMatch &&
-        italicMatch.index !== undefined &&
-        matchType !== 'bold' &&
-        italicMatch.index < earliestIndex
-      ) {
-        earliestMatch = italicMatch;
-        matchType = 'italic';
-        earliestIndex = italicMatch.index;
-      }
-
-      if (!earliestMatch || matchType === null) {
-        parts.push(remaining);
-        break;
-      }
-
-      // マッチ前のテキスト
-      if (earliestIndex > 0) {
-        parts.push(remaining.slice(0, earliestIndex));
-      }
-
-      // マッチしたスタイルを適用
-      if (matchType === 'code') {
-        parts.push(
-          <code
-            key={keyIndex++}
-            className="px-1 py-0.5 bg-gray-100 rounded text-xs font-mono"
-          >
-            {earliestMatch[1]}
-          </code>
-        );
-      } else if (matchType === 'bold') {
-        parts.push(
-          <strong key={keyIndex++}>{earliestMatch[1]}</strong>
-        );
-      } else if (matchType === 'italic') {
-        parts.push(<em key={keyIndex++}>{earliestMatch[1]}</em>);
-      }
-
-      remaining = remaining.slice(earliestIndex + earliestMatch[0].length);
-    }
-
-    return parts;
+      return <img src={src} alt={alt || ''} className="max-w-full h-auto" {...props} />;
+    },
   };
 
   return (
     <div className="prose prose-sm max-w-none p-4 bg-white rounded-lg">
-      {renderMarkdown(content)}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={components}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

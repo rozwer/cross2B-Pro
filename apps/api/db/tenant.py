@@ -4,9 +4,16 @@ TenantDBManager handles:
 - Connection pooling per tenant
 - Database creation for new tenants
 - Migration management
+
+Security:
+- Tenant IDs are validated to prevent SQL injection
+- Database names are sanitized
+- Parameterized queries are used where possible
 """
 
+import logging
 import os
+import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -19,6 +26,27 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from .models import Base, Tenant
+
+logger = logging.getLogger(__name__)
+
+# Valid tenant ID pattern: alphanumeric, hyphens, underscores, 3-64 chars
+TENANT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{2,63}$")
+
+
+def validate_tenant_id(tenant_id: str) -> bool:
+    """Validate tenant ID format for security.
+
+    Prevents SQL injection by ensuring tenant_id contains only safe characters.
+
+    Args:
+        tenant_id: Tenant identifier to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not tenant_id:
+        return False
+    return bool(TENANT_ID_PATTERN.match(tenant_id))
 
 
 class TenantDBError(Exception):
@@ -157,7 +185,7 @@ class TenantDBManager:
         """Create a new tenant database.
 
         Args:
-            tenant_id: Unique tenant identifier
+            tenant_id: Unique tenant identifier (validated for security)
             name: Human-readable tenant name
             db_host: Database host (default from env)
             db_port: Database port (default: 5432)
@@ -168,12 +196,23 @@ class TenantDBManager:
             The database URL for the new tenant
 
         Raises:
-            TenantDBError: If database creation fails
+            TenantDBError: If tenant_id is invalid or database creation fails
         """
+        # Security: Validate tenant_id to prevent SQL injection
+        # Since CREATE DATABASE doesn't support parameterized queries,
+        # we must ensure the tenant_id is safe
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id rejected: {tenant_id}")
+            raise TenantDBError(
+                f"Invalid tenant_id format: must be 3-64 alphanumeric characters, "
+                f"hyphens, or underscores. Got: {tenant_id}"
+            )
+
         db_host = db_host or os.getenv("DB_HOST", "localhost")
         db_user = db_user or os.getenv("DB_USER", "postgres")
         db_password = db_password or os.getenv("DB_PASSWORD", "postgres")
 
+        # db_name is safe because tenant_id is validated above
         db_name = f"seo_gen_tenant_{tenant_id}"
         db_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
@@ -185,12 +224,14 @@ class TenantDBManager:
         sync_engine = create_engine(sync_url, isolation_level="AUTOCOMMIT")
 
         with sync_engine.connect() as conn:
-            # Check if database exists
+            # Check if database exists (parameterized)
             result = conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = :name"),
                 {"name": db_name},
             )
             if not result.fetchone():
+                # CREATE DATABASE cannot be parameterized, but db_name is safe
+                # because tenant_id was validated above to only contain safe chars
                 conn.execute(text(f'CREATE DATABASE "{db_name}"'))
 
         # Run migrations on new database
@@ -226,17 +267,28 @@ class TenantDBManager:
         """Delete a tenant database (GDPR compliance).
 
         Args:
-            tenant_id: Tenant identifier
+            tenant_id: Tenant identifier (validated for security)
             confirm: Must be True to proceed
 
         Raises:
-            TenantDBError: If confirm is False or deletion fails
+            TenantDBError: If confirm is False, tenant_id is invalid, or deletion fails
         """
         if not confirm:
             raise TenantDBError("Must confirm=True to delete tenant database")
 
+        # Security: Validate tenant_id to prevent SQL injection
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id rejected for deletion: {tenant_id}")
+            raise TenantDBError(f"Invalid tenant_id format: {tenant_id}")
+
         db_url = await self._get_tenant_db_url(tenant_id)
         db_name = db_url.split("/")[-1]
+
+        # Additional safety: verify db_name matches expected pattern
+        expected_prefix = "seo_gen_tenant_"
+        if not db_name.startswith(expected_prefix):
+            logger.error(f"Unexpected database name pattern: {db_name}")
+            raise TenantDBError(f"Database name does not match expected pattern: {db_name}")
 
         # Close any existing connections
         if tenant_id in self._engines:
@@ -251,7 +303,7 @@ class TenantDBManager:
         sync_engine = create_engine(sync_url, isolation_level="AUTOCOMMIT")
 
         with sync_engine.connect() as conn:
-            # Terminate existing connections
+            # Terminate existing connections (parameterized)
             conn.execute(
                 text(
                     """
@@ -262,6 +314,7 @@ class TenantDBManager:
                 ),
                 {"name": db_name},
             )
+            # DROP DATABASE cannot be parameterized, but db_name is validated above
             conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
 
         # Mark tenant as inactive (keep audit trail)
