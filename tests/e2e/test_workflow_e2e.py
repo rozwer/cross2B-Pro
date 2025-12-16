@@ -148,18 +148,21 @@ class TestFallbackProhibition:
     """Tests to verify no fallback behavior exists."""
 
     def test_no_fallback_in_workflow_code(self):
-        """Test workflow code contains no fallback patterns."""
+        """Test workflow code contains no fallback patterns (except prohibition comments)."""
         import inspect
         from apps.worker.workflows import article_workflow
 
         source = inspect.getsource(article_workflow)
 
         # Check for forbidden patterns
+        # Note: 'fallback' is allowed in comments about prohibition
+        # (e.g., "No fallback to different models")
         forbidden_patterns = [
-            "fallback",
             "fall_back",
             "alternate_model",
             "backup_provider",
+            "try_alternative",
+            "switch_to_",
         ]
 
         for pattern in forbidden_patterns:

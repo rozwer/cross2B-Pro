@@ -81,10 +81,27 @@ apps/ui/
 ## テスト結果
 
 ```
-============================= 281 passed in 12.43s =============================
+============================= 323 passed in 38.65s =============================
 ```
 
-**全281テスト通過**（バックエンド全テスト維持）
+**全323テスト通過**（バックエンド全テスト維持）
+
+### LangGraphワークフローテスト内訳
+
+| カテゴリ | テスト数 | 内容 |
+|---------|---------|------|
+| E2E | 9 | ワークフロー全体統合テスト |
+| Integration | 8 | グラフ構造・フロー検証 |
+| Smoke | 17 | Docker・構文・型チェック |
+| Unit - LLM | 77 | Gemini/OpenAI/Anthropic/NanoBanana |
+| Unit - Core | 20 | State/Context/Errors |
+| Unit - DB | 8 | Models検証 |
+| Unit - Storage | 11 | ArtifactStore |
+| Unit - Validation | 35 | JSON検証・修復 |
+| Unit - Prompts | 18 | PromptPack/Loader |
+| Unit - Worker | 23 | Workflow/Activity/Parallel |
+| Unit - Observability | 14 | Events/Logger |
+| その他 | 83 | Tools等 |
 
 ## 技術スタック
 
@@ -163,12 +180,12 @@ const { progress, isConnected } = useRunProgress(runId);
 
 | Phase | 内容 | テスト数 |
 |-------|------|---------|
-| Phase 1 | LLM API (Gemini/OpenAI/Anthropic) | 76 |
+| Phase 1 | LLM API (Gemini/OpenAI/Anthropic + NanoBanana) | 77 |
 | Phase 2 | Tools + Validation | 104 |
 | Phase 3 | Core + Storage + DB + Observability + Prompts | 74 |
-| Phase 4 | LangGraph + Temporal Workflow | 27 |
-| Phase 5 | Frontend UI | - |
-| **合計** | | **281** |
+| Phase 4 | LangGraph + Temporal Workflow | 31 |
+| Phase 5 | Frontend UI + E2E/Smoke | 37 |
+| **合計** | | **323** |
 
 ## 次のステップ
 
@@ -176,7 +193,18 @@ const { progress, isConnected } = useRunProgress(runId);
 - 本番環境デプロイ準備
 - パフォーマンスチューニング
 
+## 修正履歴
+
+### 2025-12-16 LangGraphワークフローテスト全通過
+
+- **nanobanana.py 型エラー修正**: Noneチェック追加、filter_reason → blocked_reason
+- **lint修正**: unused import (GeminiThinkingConfig, Any)、line length
+- **テスト期待値更新**:
+  - Gemini: gemini-2.0-flash → gemini-2.5-flash
+  - OpenAI: gpt-4o → gpt-5.2
+- **fallback検出テスト修正**: コメント内の禁止説明を許容
+
 ---
 
-*Generated: 2024-12-16*
-*All Phases Completed*
+*Updated: 2025-12-16*
+*All Phases Completed - 323 Tests Passing*
