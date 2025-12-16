@@ -63,9 +63,41 @@ class AnthropicClient(LLMInterface):
             )
 
         self.client = AsyncAnthropic(api_key=resolved_key)
-        self.model = model
+        self._model = model
         self.max_retries = max_retries
         logger.info(f"AnthropicClient initialized with model={model}, max_retries={max_retries}")
+
+    @property
+    def provider_name(self) -> str:
+        """プロバイダー名を返す"""
+        return "anthropic"
+
+    @property
+    def default_model(self) -> str:
+        """デフォルトモデルIDを返す"""
+        return DEFAULT_MODEL
+
+    @property
+    def available_models(self) -> list[str]:
+        """利用可能なモデル一覧を返す"""
+        return SUPPORTED_MODELS
+
+    @property
+    def model(self) -> str:
+        """現在のモデルを返す"""
+        return self._model
+
+    async def health_check(self) -> bool:
+        """ヘルスチェック"""
+        try:
+            await self.client.messages.create(
+                model=self._model,
+                max_tokens=1,
+                messages=[{"role": "user", "content": "hi"}],
+            )
+            return True
+        except Exception:
+            return False
 
     async def generate(
         self,
@@ -132,14 +164,14 @@ class AnthropicClient(LLMInterface):
                     content=content,
                     token_usage=token_usage,
                     model=response.model,
+                    provider="anthropic",
                 )
 
             except AuthenticationError as e:
                 # Auth errors are non-retryable
                 logger.error(f"Authentication error: {e}")
                 raise NonRetryableLLMError(
-                    f"Authentication failed: {e}",
-                    original_error=e,
+                    f"Authentication failed: {e}"
                 )
 
             except RateLimitError as e:
@@ -148,8 +180,7 @@ class AnthropicClient(LLMInterface):
                 last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
-                        f"Rate limit exceeded after {self.max_retries} attempts: {e}",
-                        original_error=e,
+                        f"Rate limit exceeded after {self.max_retries} attempts: {e}"
                     )
                 # Continue to next attempt
 
@@ -159,8 +190,7 @@ class AnthropicClient(LLMInterface):
                 last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
-                        f"Connection failed after {self.max_retries} attempts: {e}",
-                        original_error=e,
+                        f"Connection failed after {self.max_retries} attempts: {e}"
                     )
                 # Continue to next attempt
 
@@ -171,30 +201,26 @@ class AnthropicClient(LLMInterface):
                     last_error = e
                     if attempt >= self.max_retries:
                         raise RetryableLLMError(
-                            f"Server error after {self.max_retries} attempts: {e}",
-                            original_error=e,
+                            f"Server error after {self.max_retries} attempts: {e}"
                         )
                     # Continue to next attempt
                 else:
                     # Client errors (4xx except rate limit) are non-retryable
                     logger.error(f"API error: {e}")
                     raise NonRetryableLLMError(
-                        f"API error: {e}",
-                        original_error=e,
+                        f"API error: {e}"
                     )
 
             except Exception as e:
                 # Unknown errors are treated as non-retryable
                 logger.error(f"Unexpected error: {e}")
                 raise NonRetryableLLMError(
-                    f"Unexpected error: {e}",
-                    original_error=e,
+                    f"Unexpected error: {e}"
                 )
 
         # Should not reach here, but handle edge case
         raise RetryableLLMError(
-            f"Failed after {self.max_retries} attempts",
-            original_error=last_error,
+            f"Failed after {self.max_retries} attempts"
         )
 
     async def generate_json(
@@ -270,8 +296,7 @@ class AnthropicClient(LLMInterface):
             except AuthenticationError as e:
                 logger.error(f"Authentication error: {e}")
                 raise NonRetryableLLMError(
-                    f"Authentication failed: {e}",
-                    original_error=e,
+                    f"Authentication failed: {e}"
                 )
 
             except RateLimitError as e:
@@ -279,8 +304,7 @@ class AnthropicClient(LLMInterface):
                 last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
-                        f"Rate limit exceeded after {self.max_retries} attempts: {e}",
-                        original_error=e,
+                        f"Rate limit exceeded after {self.max_retries} attempts: {e}"
                     )
 
             except APIConnectionError as e:
@@ -288,8 +312,7 @@ class AnthropicClient(LLMInterface):
                 last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
-                        f"Connection failed after {self.max_retries} attempts: {e}",
-                        original_error=e,
+                        f"Connection failed after {self.max_retries} attempts: {e}"
                     )
 
             except APIStatusError as e:
@@ -298,14 +321,12 @@ class AnthropicClient(LLMInterface):
                     last_error = e
                     if attempt >= self.max_retries:
                         raise RetryableLLMError(
-                            f"Server error after {self.max_retries} attempts: {e}",
-                            original_error=e,
+                            f"Server error after {self.max_retries} attempts: {e}"
                         )
                 else:
                     logger.error(f"API error: {e}")
                     raise NonRetryableLLMError(
-                        f"API error: {e}",
-                        original_error=e,
+                        f"API error: {e}"
                     )
 
             except ValidationLLMError:
@@ -315,20 +336,17 @@ class AnthropicClient(LLMInterface):
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error: {e}")
                 raise ValidationLLMError(
-                    f"Failed to parse JSON response: {e}",
-                    original_error=e,
+                    f"Failed to parse JSON response: {e}"
                 )
 
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
                 raise NonRetryableLLMError(
-                    f"Unexpected error: {e}",
-                    original_error=e,
+                    f"Unexpected error: {e}"
                 )
 
         raise RetryableLLMError(
-            f"Failed after {self.max_retries} attempts",
-            original_error=last_error,
+            f"Failed after {self.max_retries} attempts"
         )
 
     def _convert_messages(self, messages: list[dict[str, Any]]) -> list[MessageParam]:
