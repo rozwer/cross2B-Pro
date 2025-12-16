@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
-import { Sparkles, Plus, LayoutDashboard } from 'lucide-react';
+import { Sparkles, Plus, LayoutDashboard, GitBranch } from 'lucide-react';
 import './globals.css';
 
 const inter = Inter({
@@ -30,7 +30,7 @@ export default function RootLayout({
               <div className="flex justify-between items-center h-16">
                 {/* Logo */}
                 <Link
-                  href="/runs"
+                  href="/workflow"
                   className="flex items-center gap-3 group"
                 >
                   <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-primary shadow-sm group-hover:shadow-md transition-shadow">
@@ -43,6 +43,13 @@ export default function RootLayout({
 
                 {/* Navigation */}
                 <nav className="flex items-center gap-2">
+                  <Link
+                    href="/workflow"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                  >
+                    <GitBranch className="h-4 w-4" />
+                    <span className="hidden sm:inline">Workflow</span>
+                  </Link>
                   <Link
                     href="/runs"
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
