@@ -145,3 +145,65 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 - 画面に表示するデータは tenant スコープ前提
 - URL直打ちでのID差し替えを防ぐ
 - presigned URL は有効期限/権限に注意
+
+---
+
+## 7. テスト戦略
+
+### テストレベル
+
+| レベル | 対象 | 実行タイミング | コマンド |
+|--------|------|---------------|----------|
+| smoke | 依存/構文/起動 | commit前 | `/dev:smoke` |
+| unit | 関数単位 | push前 | `pytest apps/*/tests/unit/` |
+| integration | API/DB/Temporal | PR前 | `pytest apps/*/tests/integration/` |
+| e2e | 全工程通し | merge前 | `pytest tests/e2e/` |
+
+### テストルール
+
+- 新機能には必ずテストを書く
+- カバレッジ目標: 80%以上（クリティカルパスは100%）
+- モックは最小限（外部API/DB接続のみ）
+- **フォールバックテスト禁止**：正常系のみテスト
+
+### smoke テスト内容
+
+1. **依存チェック**: `pip check`, `npm audit`
+2. **型チェック**: `mypy apps/`, `tsc --noEmit`
+3. **構文チェック**: `ruff check apps/`
+4. **起動チェック**: `docker compose up -d --wait`
+
+### Activity テスト
+
+```python
+# 冪等性テスト: 同一入力 → 同一出力
+def test_activity_idempotency():
+    result1 = activity(input_data)
+    result2 = activity(input_data)
+    assert result1.output_digest == result2.output_digest
+```
+
+### Workflow テスト
+
+```python
+# Temporal Replay テスト: 決定性違反の検出
+def test_workflow_determinism():
+    with WorkflowHistory(workflow_id) as history:
+        replayer.replay(history)  # 例外なければOK
+```
+
+### 禁止パターン
+
+```python
+# ❌ フォールバックテスト
+def test_fallback_to_mock():
+    with patch("llm.call", side_effect=Exception):
+        result = activity(input)  # モックにフォールバック
+        assert result.success  # これは禁止
+
+# ✅ 正しいテスト
+def test_llm_failure_raises():
+    with patch("llm.call", side_effect=Exception):
+        with pytest.raises(ActivityError):
+            activity(input)  # 失敗が正しい挙動
+```

@@ -2,6 +2,8 @@
 
 ## エンドポイント
 
+### Run 操作
+
 | メソッド | パス | 用途 |
 |----------|------|------|
 | POST | `/api/runs` | ワークフロー開始 |
@@ -9,10 +11,58 @@
 | POST | `/api/runs/{id}/approve` | 承認 |
 | POST | `/api/runs/{id}/reject` | 却下 |
 | POST | `/api/runs/{id}/retry/{step}` | 工程再実行 |
+| POST | `/api/runs/{id}/resume/{step}` | 特定工程から再開（部分再実行） |
 | DELETE | `/api/runs/{id}` | キャンセル |
 | GET | `/api/runs/{id}/files` | 生成物一覧 |
 | GET | `/api/runs/{id}/files/{step}` | 工程別出力取得 |
 | GET | `/api/runs/{id}/preview` | HTMLプレビュー |
+
+### ヘルスチェック
+
+| メソッド | パス | 用途 |
+|----------|------|------|
+| GET | `/health` | 基本的な生存確認 |
+| GET | `/health/detailed` | 依存サービスの状態詳細 |
+
+#### `/health` レスポンス
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+#### `/health/detailed` レスポンス
+
+```json
+{
+  "status": "healthy",
+  "services": {
+    "postgres_admin": { "status": "healthy", "latency_ms": 5 },
+    "postgres_tenant_pool": { "status": "healthy", "active_connections": 3 },
+    "minio": { "status": "healthy", "bucket_count": 2 },
+    "temporal": {
+      "status": "healthy",
+      "worker_count": 2,
+      "queue_depth": 5
+    },
+    "llm_providers": {
+      "gemini": { "status": "healthy", "last_check": "2024-01-01T00:00:00Z" },
+      "claude": { "status": "healthy", "last_check": "2024-01-01T00:00:00Z" },
+      "openai": { "status": "degraded", "error": "rate_limited" }
+    }
+  },
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+### コスト集計
+
+| メソッド | パス | 用途 |
+|----------|------|------|
+| GET | `/api/runs/{id}/cost` | run 単位のコスト |
+| GET | `/api/costs/summary` | テナント単位のコスト集計 |
 
 ### WebSocket
 
@@ -32,6 +82,38 @@
 | admin | 全操作可能 |
 | operator | 実行・承認・リトライ可能 |
 | viewer | 閲覧・DLのみ |
+
+---
+
+## Rate Limiting
+
+### テナント単位の制限
+
+| 項目 | デフォルト値 | 説明 |
+|------|-------------|------|
+| API リクエスト | 100 req/min | 全エンドポイント合計 |
+| 同時実行 run 数 | 3 | running 状態の run |
+| 1日の run 作成数 | 50 | 暴走防止 |
+
+### LLM API スロットリング
+
+| 項目 | デフォルト値 | 説明 |
+|------|-------------|------|
+| Gemini | 60 req/min | プロバイダ側の制限に準拠 |
+| Claude | 40 req/min | プロバイダ側の制限に準拠 |
+| OpenAI | 60 req/min | プロバイダ側の制限に準拠 |
+
+### レスポンス
+
+制限超過時は `429 Too Many Requests` を返す：
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "limit_type": "concurrent_runs",
+  "retry_after_seconds": 60
+}
+```
 
 ## 監査ログ
 

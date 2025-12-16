@@ -2,13 +2,105 @@
 
 > **このファイルは最高優先度**。他のドキュメントと矛盾がある場合、このファイルを正とする。
 
-## Source of Truth（正となるドキュメント）
+## Source of Truth
 
 | 用途 | ファイル |
 |------|----------|
-| **実装計画（最優先）** | `仕様書/ROADMAP.md` |
-| **工程詳細** | `仕様書/現行ワークフロー概要.md` |
-| **技術仕様（API/DB/UI）** | `仕様書/システム仕様書_技術者向け.md` |
+| **実装計画** | `仕様書/ROADMAP.md` |
+| **ワークフロー** | `仕様書/workflow.md` |
+| **Backend** | `仕様書/backend/` |
+| **Frontend** | `仕様書/frontend/` |
+
+---
+
+## 並列作業（worktree）
+
+### 基本ルール
+
+- 機能境界ごとに worktree を分離
+- 同一ファイルへの同時編集を避ける
+- マージ前に `smoke` テストを通す
+
+### コマンド
+
+| 操作 | コマンド |
+|------|----------|
+| 作成 | `/dev:worktree-new <branch>` |
+| 一覧 | `/dev:worktree-list` |
+| 削除 | `/dev:worktree-remove <branch>` |
+
+### 推奨分割（ROADMAP準拠）
+
+```
+worktree-llm-gemini/    # Step1: Gemini クライアント
+worktree-llm-openai/    # Step1: OpenAI クライアント
+worktree-llm-anthropic/ # Step1: Anthropic クライアント
+worktree-tools/         # Step3: SERP/Fetch/Verify
+worktree-validation/    # Step2: JSON/CSV検査
+worktree-contract/      # Step4: State/Context
+```
+
+---
+
+## Codex 連携
+
+### 呼び出し方法
+
+```bash
+# プロジェクトローカルのCodexを使用
+source .codex/env.sh
+codex
+```
+
+### 使用場面
+
+| 場面 | コマンド例 |
+|------|-----------|
+| コードレビュー | `/review:codex-review` |
+| 設計レビュー | `@architect` で設計案を出す |
+| セキュリティ | `@security-reviewer` で越境チェック |
+
+### Codex Skills
+
+`.codex/skills/` に専用スキルあり：
+- `codex-reviewer` - コードレビュー
+- `langgraph-*` - LangGraph実装パターン
+
+---
+
+## テスト
+
+### テスト戦略
+
+| レベル | 対象 | 実行タイミング |
+|--------|------|---------------|
+| smoke | 依存/構文/起動 | commit前 |
+| unit | 関数単位 | push前 |
+| integration | API/DB/Temporal | PR前 |
+| e2e | 全工程通し | merge前 |
+
+### コマンド
+
+```bash
+# smoke（最低限チェック）
+/dev:smoke
+
+# pytest
+pytest apps/api/tests/
+pytest apps/worker/tests/
+
+# 型チェック
+mypy apps/
+```
+
+### テストルール
+
+- 新機能には必ずテストを書く
+- カバレッジ目標: 80%以上（クリティカルパスは100%）
+- モックは最小限（外部API/DB接続のみ）
+- フォールバックテスト禁止（正常系のみテスト）
+
+---
 
 ## 重要ルール
 
@@ -21,57 +113,69 @@
 
 ### アーキテクチャ原則
 
-- **Temporal = 実行の正**：待機/再開/リトライ/タイムアウトは Temporal に寄せる
-- **LangGraph = 工程ロジック**：プロンプト、整形、検証。重い副作用は Activity 側
-- **重い成果物は storage**：DB/State/Temporal履歴には `path/digest` 参照のみ
-- **マルチテナント越境禁止**：DB/Storage/WS すべて `tenant_id` でスコープ
-- **ローカル運用固定**：Postgres + MinIO + Temporal（docker-compose）
+- **Temporal = 実行の正**：待機/再開/リトライ/タイムアウト
+- **LangGraph = 工程ロジック**：プロンプト、整形、検証
+- **重い成果物は storage**：path/digest 参照のみ
+- **マルチテナント越境禁止**：全て tenant_id スコープ
+- **ローカル運用固定**：Postgres + MinIO + Temporal
 
-### 承認フロー
+---
 
-- 工程3完了後は **承認待ち**（Temporal signal で待機/再開）
-- approve/reject は `audit_logs` に必ず記録
+## サブエージェント
+
+| エージェント | 用途 |
+|-------------|------|
+| `@architect` | 設計判断・分割方針 |
+| `@backend-implementer` | BE実装 |
+| `@frontend-implementer` | FE実装 |
+| `@prompt-engineer` | プロンプト設計 |
+| `@security-reviewer` | セキュリティレビュー |
+| `@temporal-debugger` | Temporalデバッグ |
+
+---
 
 ## リポジトリ構造
 
 ```
 .
 ├── .claude/
-│   ├── CLAUDE.md           # ← このファイル（最高優先）
-│   ├── agents/             # サブエージェント定義
+│   ├── CLAUDE.md           # ← このファイル
+│   ├── agents/             # サブエージェント
 │   ├── commands/           # スラッシュコマンド
-│   ├── rules/              # 詳細ルール（import用）
-│   └── skills/             # プロジェクト固有スキル
+│   ├── rules/              # 詳細ルール
+│   └── skills/             # LangGraph等スキル
+├── .codex/                 # Codex設定・スキル
 ├── 仕様書/
-│   ├── ROADMAP.md          # 実装計画（正）
-│   ├── 現行ワークフロー概要.md
-│   └── システム仕様書_技術者向け.md
-├── langgraph-example/      # LangGraph サンプル実装
-└── ref/                    # 生成物/中間出力の参照置き場
+│   ├── ROADMAP.md
+│   ├── workflow.md
+│   ├── backend/
+│   └── frontend/
+├── apps/
+│   ├── api/                # FastAPI
+│   └── worker/             # Temporal Worker
+├── langgraph-example/      # サンプル実装
+└── ref/                    # 生成物参照
 ```
 
-## よく使う操作
+---
+
+## クイックリファレンス
+
+### よく使うコマンド
 
 | 操作 | コマンド |
 |------|----------|
-| ローカル起動 | `/dev:up` |
-| ローカル停止 | `/dev:down` |
-| 並列実装（worktree作成） | `/dev:worktree-new` |
-| worktree一覧 | `/dev:worktree-list` |
-| worktree削除 | `/dev:worktree-remove` |
+| 起動 | `/dev:up` |
+| 停止 | `/dev:down` |
+| smoke | `/dev:smoke` |
 | run開始 | `/workflow:new-run` |
 | 承認 | `/workflow:approve-run` |
-| 生成物取得 | `/workflow:fetch-artifacts` |
 
-## コーディング規約
+### 仕様参照
 
-- Python 3.12、FastAPI、Temporal Python SDK、LangGraph
-- 4スペースインデント、型ヒント必須
-- snake_case（関数/変数）、PascalCase（クラス）
-- `.env` にAPIキー等を保存、コミット禁止
-
-## 詳細ルール（import）
-
-詳細は以下を参照：
-- @rules/implementation.md（実装ルール）
-- @rules/workflow-contract.md（工程・成果物・承認待ち）
+```
+@仕様書/ROADMAP.md              → 実装計画
+@仕様書/workflow.md             → 工程フロー
+@仕様書/backend/temporal.md#approval → 承認フロー
+@仕様書/backend/api.md#tools    → ツール仕様
+```
