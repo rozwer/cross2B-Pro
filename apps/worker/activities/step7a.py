@@ -5,6 +5,7 @@ This is the longest step (600s timeout) due to long-form content generation.
 Uses Claude for high-quality content generation.
 """
 
+import json
 from typing import Any
 
 from temporalio import activity
@@ -105,8 +106,20 @@ class Step7ADraftGeneration(BaseActivity):
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
-        # Calculate content stats
-        draft_content = response.content
+        # Parse JSON response
+        try:
+            parsed = json.loads(response.content)
+            draft_content = parsed.get("draft", "")
+            llm_word_count = parsed.get("word_count", 0)
+            section_count = parsed.get("section_count", 0)
+            cta_positions = parsed.get("cta_positions", [])
+        except json.JSONDecodeError as e:
+            raise ActivityError(
+                f"Failed to parse JSON response: {e}",
+                category=ErrorCategory.RETRYABLE,
+            ) from e
+
+        # Calculate actual content stats
         word_count = len(draft_content.split())
         char_count = len(draft_content)
 
@@ -114,9 +127,12 @@ class Step7ADraftGeneration(BaseActivity):
             "step": self.step_id,
             "keyword": keyword,
             "draft": draft_content,
+            "section_count": section_count,
+            "cta_positions": cta_positions,
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
+                "llm_reported_word_count": llm_word_count,
             },
             "model": response.model,
             "usage": {

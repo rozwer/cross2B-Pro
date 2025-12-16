@@ -137,7 +137,7 @@ class TestGeminiClientInitialization:
             with patch("apps.api.llm.gemini.genai", mock_genai_module):
                 client = GeminiClient(api_key=mock_gemini_api_key)
                 assert client.provider_name == "gemini"
-                assert client.model == "gemini-2.0-flash"
+                assert client.model == "gemini-2.5-flash"
 
     def test_custom_model(
         self, mock_gemini_api_key: str, mock_genai_module: MagicMock
@@ -171,7 +171,7 @@ class TestGeminiClientProperties:
         with patch("apps.api.llm.gemini.GENAI_AVAILABLE", True):
             with patch("apps.api.llm.gemini.genai", mock_genai_module):
                 client = GeminiClient(api_key=mock_gemini_api_key)
-                assert client.default_model == "gemini-2.0-flash"
+                assert client.default_model == "gemini-2.5-flash"
 
     def test_available_models(
         self, mock_gemini_api_key: str, mock_genai_module: MagicMock
@@ -181,7 +181,7 @@ class TestGeminiClientProperties:
             with patch("apps.api.llm.gemini.genai", mock_genai_module):
                 client = GeminiClient(api_key=mock_gemini_api_key)
                 models = client.available_models
-                assert "gemini-2.0-flash" in models
+                assert "gemini-2.5-flash" in models
                 assert "gemini-2.5-pro" in models
 
 

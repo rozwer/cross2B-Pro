@@ -19,6 +19,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import asyncio
+import json
 from datetime import datetime
 from typing import Any
 
@@ -59,10 +60,16 @@ async def step0_execute(
         config=llm_config,
     )
 
+    # Parse JSON response
+    try:
+        parsed = json.loads(response.content)
+    except json.JSONDecodeError:
+        parsed = {"raw_content": response.content}
+
     return {
         "step": "step0",
         "keyword": config.get("keyword"),
-        "analysis": response.content,
+        "analysis": parsed,
         "model": response.model,
     }
 
@@ -157,7 +164,12 @@ async def step3_parallel_execute(
                 system_prompt="You are a search query analysis expert.",
                 config=llm_config,
             )
-            return {"step": "step3a", "analysis": response.content}
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
+            return {"step": "step3a", "analysis": parsed}
         except Exception as e:
             return {"step": "step3a", "error": str(e)}
 
@@ -173,7 +185,12 @@ async def step3_parallel_execute(
                 system_prompt="You are a co-occurrence keyword analysis expert.",
                 config=llm_config,
             )
-            return {"step": "step3b", "analysis": response.content}
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
+            return {"step": "step3b", "analysis": parsed}
         except Exception as e:
             return {"step": "step3b", "error": str(e)}
 
@@ -189,7 +206,12 @@ async def step3_parallel_execute(
                 system_prompt="You are a competitor analysis expert.",
                 config=llm_config,
             )
-            return {"step": "step3c", "analysis": response.content}
+            # Parse JSON response
+            try:
+                parsed = json.loads(response.content)
+            except json.JSONDecodeError:
+                parsed = {"raw_content": response.content}
+            return {"step": "step3c", "analysis": parsed}
         except Exception as e:
             return {"step": "step3c", "error": str(e)}
 

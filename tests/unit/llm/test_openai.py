@@ -21,14 +21,14 @@ class TestOpenAIClientInit:
         """環境変数からAPIキーを取得できる."""
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
         client = OpenAIClient()
-        assert client.model == "gpt-4o"
+        assert client.model == "gpt-5.2"
         assert client.max_retries == 3
 
     def test_init_with_explicit_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """明示的にAPIキーを指定できる."""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         client = OpenAIClient(api_key="explicit-key")
-        assert client.model == "gpt-4o"
+        assert client.model == "gpt-5.2"
 
     def test_init_with_custom_model(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """カスタムモデルを指定できる."""

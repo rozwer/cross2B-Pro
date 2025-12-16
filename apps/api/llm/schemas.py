@@ -114,7 +114,7 @@ class LLMRequestConfig(BaseModel):
 
 
 class GeminiGroundingConfig(BaseModel):
-    """Gemini Grounding設定"""
+    """Gemini Grounding設定（Google Search）"""
 
     enabled: bool = Field(default=False, description="Groundingを有効化")
     dynamic_retrieval_threshold: float | None = Field(
@@ -125,16 +125,165 @@ class GeminiGroundingConfig(BaseModel):
     )
 
 
+class GeminiUrlContextConfig(BaseModel):
+    """Gemini URL Context設定
+
+    URLからコンテンツを取得してコンテキストとして使用。
+    最大20 URL、単一URL最大34MB。
+    """
+
+    enabled: bool = Field(default=False, description="URL Contextを有効化")
+
+
+class GeminiCodeExecutionConfig(BaseModel):
+    """Gemini Code Execution設定
+
+    Pythonコードを生成・実行して計算や問題解決を行う。
+    """
+
+    enabled: bool = Field(default=False, description="Code Executionを有効化")
+
+
+class GeminiThinkingConfig(BaseModel):
+    """Gemini Thinking設定
+
+    Gemini 2.5/3モデルの推論（thinking）機能を制御。
+
+    - thinking_budget: トークン数で制御（0-24576）。0=無効、大きいほど深い推論。
+    - thinking_level: "low" または "high"。Gemini 3向け推奨。
+    - 両方同時に指定するとエラーになるため、いずれか一方のみ設定すること。
+    """
+
+    enabled: bool = Field(default=True, description="Thinkingを有効化（デフォルト有効）")
+    thinking_budget: int | None = Field(
+        default=None,
+        ge=0,
+        le=24576,
+        description="Thinking budget（トークン数、0-24576）",
+    )
+    thinking_level: str | None = Field(
+        default=None,
+        pattern="^(low|high)$",
+        description="Thinking level（Gemini 3向け: 'low' or 'high'）",
+    )
+
+
 class GeminiConfig(BaseModel):
-    """Gemini固有の設定"""
+    """Gemini固有の設定
+
+    利用可能なツール:
+    - grounding (google_search): Google検索でGrounding
+    - url_context: URLからコンテンツを取得
+    - code_execution: Pythonコード実行
+
+    推論設定:
+    - thinking: Adaptive thinking（Gemini 2.5/3）
+    """
 
     grounding: GeminiGroundingConfig = Field(
         default_factory=GeminiGroundingConfig,
-        description="Grounding設定",
+        description="Grounding設定（Google Search）",
+    )
+    url_context: GeminiUrlContextConfig = Field(
+        default_factory=GeminiUrlContextConfig,
+        description="URL Context設定",
+    )
+    code_execution: GeminiCodeExecutionConfig = Field(
+        default_factory=GeminiCodeExecutionConfig,
+        description="Code Execution設定",
+    )
+    thinking: GeminiThinkingConfig = Field(
+        default_factory=GeminiThinkingConfig,
+        description="Thinking設定（Gemini 2.5/3）",
     )
     safety_settings: dict[str, str] | None = Field(
         default=None,
         description="Safety settings",
+    )
+
+
+class OpenAIReasoningConfig(BaseModel):
+    """OpenAI Reasoning設定（GPT-5系向け）
+
+    reasoning_effort: 推論の深さを制御
+    - none: 推論なし（低レイテンシ）
+    - low: 軽い推論
+    - medium: 中程度の推論
+    - high: 深い推論
+    - xhigh: 最も深い推論（GPT-5.2+）
+    """
+
+    effort: str | None = Field(
+        default=None,
+        pattern="^(none|low|medium|high|xhigh)$",
+        description="Reasoning effort level",
+    )
+
+
+class OpenAIWebSearchConfig(BaseModel):
+    """OpenAI Web Search設定
+
+    GPT-5系でWeb検索を有効化。
+    """
+
+    enabled: bool = Field(default=False, description="Web Searchを有効化")
+
+
+class OpenAIConfig(BaseModel):
+    """OpenAI固有の設定
+
+    利用可能なオプション:
+    - reasoning: 推論の深さを制御（GPT-5系）
+    - web_search: Web検索機能
+    - verbosity: 出力の詳細度（concise/detailed）
+    """
+
+    reasoning: OpenAIReasoningConfig = Field(
+        default_factory=OpenAIReasoningConfig,
+        description="Reasoning設定",
+    )
+    web_search: OpenAIWebSearchConfig = Field(
+        default_factory=OpenAIWebSearchConfig,
+        description="Web Search設定",
+    )
+    verbosity: str | None = Field(
+        default=None,
+        pattern="^(concise|detailed)$",
+        description="出力の詳細度",
+    )
+
+
+class AnthropicExtendedThinkingConfig(BaseModel):
+    """Anthropic Extended Thinking設定
+
+    Claude 4系のExtended Thinking機能。
+    - budget_tokens: Thinking用のトークン予算（最小1024）
+    """
+
+    enabled: bool = Field(default=False, description="Extended Thinkingを有効化")
+    budget_tokens: int | None = Field(
+        default=None,
+        ge=1024,
+        description="Thinking budget（最小1024トークン）",
+    )
+
+
+class AnthropicConfig(BaseModel):
+    """Anthropic固有の設定
+
+    利用可能なオプション:
+    - extended_thinking: Extended Thinking（Claude 4系）
+    - effort: 推論の深さ（Claude Opus 4.5向け、low/medium/high）
+    """
+
+    extended_thinking: AnthropicExtendedThinkingConfig = Field(
+        default_factory=AnthropicExtendedThinkingConfig,
+        description="Extended Thinking設定",
+    )
+    effort: str | None = Field(
+        default=None,
+        pattern="^(low|medium|high)$",
+        description="Effort level（Claude Opus 4.5向け）",
     )
 
 

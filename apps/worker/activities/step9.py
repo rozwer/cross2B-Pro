@@ -4,6 +4,7 @@ Performs the final rewrite incorporating fact check results and FAQ.
 Uses Claude for high-quality final refinement.
 """
 
+import json
 from typing import Any
 
 from temporalio import activity
@@ -110,8 +111,20 @@ class Step9FinalRewrite(BaseActivity):
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
-        # Calculate content stats
-        final_content = response.content
+        # Parse JSON response
+        try:
+            parsed = json.loads(response.content)
+            final_content = parsed.get("final_content", "")
+            llm_word_count = parsed.get("word_count", 0)
+            meta_description = parsed.get("meta_description", "")
+            internal_link_suggestions = parsed.get("internal_link_suggestions", [])
+        except json.JSONDecodeError as e:
+            raise ActivityError(
+                f"Failed to parse JSON response: {e}",
+                category=ErrorCategory.RETRYABLE,
+            ) from e
+
+        # Calculate actual content stats
         word_count = len(final_content.split())
         char_count = len(final_content)
 
@@ -119,9 +132,12 @@ class Step9FinalRewrite(BaseActivity):
             "step": self.step_id,
             "keyword": keyword,
             "final_content": final_content,
+            "meta_description": meta_description,
+            "internal_link_suggestions": internal_link_suggestions,
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
+                "llm_reported_word_count": llm_word_count,
             },
             "model": response.model,
             "usage": {
