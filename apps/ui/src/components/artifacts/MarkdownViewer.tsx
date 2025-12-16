@@ -1,7 +1,32 @@
 'use client';
 
+/**
+ * Markdown Viewer Component
+ *
+ * VULN-007: セキュリティ改善
+ * - 入力のサニタイズ（HTMLエンティティエスケープ）
+ * - dangerouslySetInnerHTML 不使用
+ *
+ * TODO: react-markdown + rehype-sanitize に置き換えることを推奨
+ *   npm install react-markdown rehype-sanitize
+ */
+
 interface MarkdownViewerProps {
   content: string;
+}
+
+/**
+ * HTMLエンティティをエスケープ（VULN-007: XSS対策）
+ */
+function escapeHtml(text: string): string {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char);
 }
 
 export function MarkdownViewer({ content }: MarkdownViewerProps) {
@@ -35,11 +60,11 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
         return;
       }
 
-      // 見出し
+      // 見出し（VULN-007: エスケープ）
       if (line.startsWith('# ')) {
         elements.push(
           <h1 key={index} className="text-xl font-bold mt-4 mb-2">
-            {line.slice(2)}
+            {escapeHtml(line.slice(2))}
           </h1>
         );
         return;
@@ -47,7 +72,7 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
       if (line.startsWith('## ')) {
         elements.push(
           <h2 key={index} className="text-lg font-bold mt-3 mb-2">
-            {line.slice(3)}
+            {escapeHtml(line.slice(3))}
           </h2>
         );
         return;
@@ -55,28 +80,28 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
       if (line.startsWith('### ')) {
         elements.push(
           <h3 key={index} className="text-base font-bold mt-2 mb-1">
-            {line.slice(4)}
+            {escapeHtml(line.slice(4))}
           </h3>
         );
         return;
       }
 
-      // リスト
+      // リスト（VULN-007: エスケープ）
       if (line.startsWith('- ') || line.startsWith('* ')) {
         elements.push(
           <li key={index} className="ml-4 list-disc">
-            {line.slice(2)}
+            {escapeHtml(line.slice(2))}
           </li>
         );
         return;
       }
 
-      // 番号付きリスト
+      // 番号付きリスト（VULN-007: エスケープ）
       const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
       if (numberedMatch) {
         elements.push(
           <li key={index} className="ml-4 list-decimal">
-            {numberedMatch[2]}
+            {escapeHtml(numberedMatch[2])}
           </li>
         );
         return;
