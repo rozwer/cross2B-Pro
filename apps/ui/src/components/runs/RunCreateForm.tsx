@@ -29,9 +29,9 @@ const createRunSchema = z.object({
 type FormData = z.infer<typeof createRunSchema>;
 
 const PLATFORM_MODELS: Record<LLMPlatform, string[]> = {
-  gemini: ['gemini-2.0-flash', 'gemini-2.5-pro', 'gemini-1.5-pro'],
-  openai: ['gpt-4o', 'gpt-4-turbo', 'o3'],
-  anthropic: ['claude-sonnet-4', 'claude-opus-4'],
+  gemini: ['gemini-2.0-flash-exp', 'gemini-2.5-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini', 'o3-mini'],
+  anthropic: ['claude-sonnet-4', 'claude-opus-4', 'claude-3-5-sonnet', 'claude-3-haiku'],
 };
 
 export function RunCreateForm() {
@@ -53,7 +53,7 @@ export function RunCreateForm() {
       target_audience: '',
       additional_requirements: '',
       platform: 'gemini',
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-exp',
       grounding: true,
       temperature: 0.7,
       retry_limit: 3,
