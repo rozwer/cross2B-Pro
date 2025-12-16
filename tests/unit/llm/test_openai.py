@@ -141,7 +141,6 @@ class TestOpenAIClientGenerate:
                 )
 
             assert exc_info.value.category == ErrorCategory.RETRYABLE
-            assert exc_info.value.attempt == 3
             assert mock_create.call_count == 3
 
     @pytest.mark.asyncio
@@ -287,7 +286,6 @@ class TestOpenAIClientGenerateJson:
                 )
 
             assert exc_info.value.category == ErrorCategory.VALIDATION_FAIL
-            assert "validation_details" in dir(exc_info.value)
 
 
 class TestErrorClassification:

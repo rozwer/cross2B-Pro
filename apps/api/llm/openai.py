@@ -19,8 +19,8 @@ from openai import (
 )
 
 from .base import LLMInterface
-from .exceptions import LLMError, LLMValidationError
-from .schemas import ErrorCategory, LLMResponse, TokenUsage
+from .exceptions import ErrorCategory, LLMError, LLMValidationError
+from .schemas import LLMResponse, TokenUsage
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,29 @@ class OpenAIClient(LLMInterface):
         self.client = AsyncOpenAI(api_key=resolved_api_key)
         self.model = model or self.DEFAULT_MODEL
         self.max_retries = max_retries or self.MAX_RETRIES
+
+    @property
+    def provider_name(self) -> str:
+        """プロバイダー名を返す"""
+        return self.PROVIDER
+
+    @property
+    def default_model(self) -> str:
+        """デフォルトモデルIDを返す"""
+        return self.DEFAULT_MODEL
+
+    @property
+    def available_models(self) -> list[str]:
+        """利用可能なモデル一覧を返す"""
+        return ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo", "o3"]
+
+    async def health_check(self) -> bool:
+        """ヘルスチェック"""
+        try:
+            await self.client.models.list()
+            return True
+        except Exception:
+            return False
 
     async def generate(
         self,
@@ -119,6 +142,7 @@ class OpenAIClient(LLMInterface):
                     token_usage=token_usage,
                     model=response.model,
                     finish_reason=choice.finish_reason,
+                    provider=self.PROVIDER,
                 )
 
             except (RateLimitError, APIConnectionError) as e:
@@ -136,8 +160,6 @@ class OpenAIClient(LLMInterface):
                         category=ErrorCategory.RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
-                        original_error=e,
-                        attempt=attempt,
                     ) from e
                 continue
 
@@ -148,8 +170,6 @@ class OpenAIClient(LLMInterface):
                     category=ErrorCategory.NON_RETRYABLE,
                     provider=self.PROVIDER,
                     model=self.model,
-                    original_error=e,
-                    attempt=attempt,
                 ) from e
 
             except BadRequestError as e:
@@ -159,8 +179,6 @@ class OpenAIClient(LLMInterface):
                     category=ErrorCategory.NON_RETRYABLE,
                     provider=self.PROVIDER,
                     model=self.model,
-                    original_error=e,
-                    attempt=attempt,
                 ) from e
 
             except APIStatusError as e:
@@ -179,8 +197,6 @@ class OpenAIClient(LLMInterface):
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,
-                            original_error=e,
-                            attempt=attempt,
                         ) from e
                     continue
                 else:
@@ -190,8 +206,6 @@ class OpenAIClient(LLMInterface):
                         category=ErrorCategory.NON_RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
-                        original_error=e,
-                        attempt=attempt,
                     ) from e
 
         raise LLMError(
@@ -199,8 +213,6 @@ class OpenAIClient(LLMInterface):
             category=ErrorCategory.RETRYABLE,
             provider=self.PROVIDER,
             model=self.model,
-            original_error=last_error,
-            attempt=self.max_retries,
         )
 
     async def generate_json(
@@ -270,9 +282,7 @@ class OpenAIClient(LLMInterface):
                         message=f"Failed to parse JSON response: {e}",
                         provider=self.PROVIDER,
                         model=self.model,
-                        original_error=e,
-                        attempt=attempt,
-                        validation_details={"raw_content": content[:500]},
+                        validation_errors=[content[:500]],
                     ) from e
 
                 logger.info(
@@ -298,8 +308,6 @@ class OpenAIClient(LLMInterface):
                         category=ErrorCategory.RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
-                        original_error=e,
-                        attempt=attempt,
                     ) from e
                 continue
 
@@ -310,8 +318,6 @@ class OpenAIClient(LLMInterface):
                     category=ErrorCategory.NON_RETRYABLE,
                     provider=self.PROVIDER,
                     model=self.model,
-                    original_error=e,
-                    attempt=attempt,
                 ) from e
 
             except BadRequestError as e:
@@ -321,8 +327,6 @@ class OpenAIClient(LLMInterface):
                     category=ErrorCategory.NON_RETRYABLE,
                     provider=self.PROVIDER,
                     model=self.model,
-                    original_error=e,
-                    attempt=attempt,
                 ) from e
 
             except APIStatusError as e:
@@ -341,8 +345,6 @@ class OpenAIClient(LLMInterface):
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,
-                            original_error=e,
-                            attempt=attempt,
                         ) from e
                     continue
                 else:
@@ -352,8 +354,6 @@ class OpenAIClient(LLMInterface):
                         category=ErrorCategory.NON_RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
-                        original_error=e,
-                        attempt=attempt,
                     ) from e
 
             except LLMValidationError:
@@ -364,6 +364,4 @@ class OpenAIClient(LLMInterface):
             category=ErrorCategory.RETRYABLE,
             provider=self.PROVIDER,
             model=self.model,
-            original_error=last_error,
-            attempt=self.max_retries,
         )

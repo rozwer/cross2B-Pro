@@ -220,3 +220,9 @@ class LLMConfigurationError(LLMError):
             model=model,
             details={"missing_config": missing_config or []},
         )
+
+
+# Anthropicクライアント互換用エイリアス
+RetryableLLMError = LLMRateLimitError
+NonRetryableLLMError = LLMAuthenticationError
+ValidationLLMError = LLMValidationError

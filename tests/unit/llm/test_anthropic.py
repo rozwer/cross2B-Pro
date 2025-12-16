@@ -6,8 +6,9 @@ from anthropic import APIConnectionError, RateLimitError, AuthenticationError, A
 from anthropic.types import ToolUseBlock
 
 from apps.api.llm.anthropic import AnthropicClient, SUPPORTED_MODELS, DEFAULT_MODEL
-from apps.api.llm.schemas import LLMResponse, TokenUsage, ErrorCategory
+from apps.api.llm.schemas import LLMResponse, TokenUsage
 from apps.api.llm.exceptions import (
+    ErrorCategory,
     RetryableLLMError,
     NonRetryableLLMError,
     ValidationLLMError,
@@ -367,10 +368,9 @@ class TestNoAutoSwitching:
             client = AnthropicClient(api_key="test-key", model="claude-sonnet-4-20250514")
             original_model = client.model
 
-            # Attempt to change model (should have no effect on behavior)
-            client.model = "different-model"
+            # model is a read-only property, attempting to set should raise AttributeError
+            with pytest.raises(AttributeError):
+                client.model = "different-model"
 
-            # The model attribute can be changed, but there's no auto-switching logic
-            # This test documents that behavior - the client always uses the model it was initialized with
-            # in the actual API calls (which we verify through mocking in other tests)
-            assert original_model == "claude-sonnet-4-20250514"
+            # Model should remain unchanged
+            assert client.model == original_model == "claude-sonnet-4-20250514"
