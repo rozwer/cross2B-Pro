@@ -40,6 +40,13 @@ from .schemas import (
     RetryConfig,
     TokenUsage,
 )
+from .sanitizer import (
+    UserInputSanitized,
+    create_safe_user_message,
+    escape_for_prompt,
+    sanitize_user_input,
+    validate_system_prompt,
+)
 
 __all__ = [
     # Base
@@ -61,6 +68,12 @@ __all__ = [
     "RetryConfig",
     "GeminiConfig",
     "GeminiGroundingConfig",
+    # Sanitizer (VULN-010)
+    "sanitize_user_input",
+    "escape_for_prompt",
+    "UserInputSanitized",
+    "create_safe_user_message",
+    "validate_system_prompt",
     # Exceptions
     "ErrorCategory",
     "LLMError",

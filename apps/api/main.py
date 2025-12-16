@@ -6,6 +6,8 @@ SEO Article Generator API server with endpoints for:
 - WebSocket progress streaming
 """
 
+import asyncio
+import json
 import logging
 import os
 from collections.abc import AsyncGenerator
@@ -14,10 +16,28 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from jose import JWTError, jwt
 from pydantic import BaseModel, Field
+
+from apps.api.auth import get_current_tenant, get_current_user
+from apps.api.auth.middleware import (
+    JWT_ALGORITHM,
+    JWT_SECRET_KEY,
+    AuthError,
+    create_access_token,
+    create_refresh_token,
+    verify_token,
+)
+from apps.api.auth.schemas import (
+    AuthUser,
+    LoginRequest,
+    LoginResponse,
+    RefreshRequest,
+    RefreshResponse,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -330,14 +350,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware (VULN-008: 許可オリジンを明示的に指定)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+# 空文字列を除去
+cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
+if not cors_origins:
+    cors_origins = ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    max_age=3600,
 )
 
 
@@ -390,27 +416,80 @@ async def detailed_health_check() -> DetailedHealthResponse:
 
 
 # =============================================================================
-# Helper Functions
+# Authentication Endpoints (VULN-005)
 # =============================================================================
 
 
-def get_tenant_id_from_request(request: Request) -> str:
-    """Extract tenant_id from request (JWT auth in production).
+@app.post("/api/auth/login", response_model=LoginResponse)
+async def login(request: LoginRequest) -> LoginResponse:
+    """ログイン処理
 
-    For now, returns a default tenant for development.
-    TODO: Implement proper JWT authentication.
+    TODO: 実際のユーザー認証ロジックを実装
+    現在はスタブ実装
     """
-    # In production, this would extract from JWT token
-    # For development, use header or default
-    tenant_id = request.headers.get("X-Tenant-ID", "default-tenant")
-    return tenant_id
+    if os.getenv("ENVIRONMENT") == "development":
+        user = AuthUser(
+            user_id="dev-user",
+            tenant_id="dev-tenant",
+            email=request.email,
+            roles=["user"],
+        )
+        access_token = create_access_token(user.user_id, user.tenant_id, user.roles)
+        refresh_token = create_refresh_token(user.user_id, user.tenant_id)
+
+        return LoginResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=15 * 60,
+            user=user,
+        )
+
+    raise HTTPException(status_code=501, detail="Not implemented")
 
 
-def datetime_to_iso(dt: datetime | None) -> str | None:
-    """Convert datetime to ISO string."""
-    if dt is None:
-        return None
-    return dt.isoformat()
+@app.post("/api/auth/refresh", response_model=RefreshResponse)
+async def refresh_token_endpoint(request: RefreshRequest) -> RefreshResponse:
+    """トークンリフレッシュ"""
+    try:
+        token_data = verify_token(request.refresh_token, expected_type="refresh")
+
+        new_access_token = create_access_token(
+            token_data.sub,
+            token_data.tenant_id,
+            token_data.roles,
+        )
+
+        new_refresh_token = create_refresh_token(
+            token_data.sub,
+            token_data.tenant_id,
+        )
+
+        return RefreshResponse(
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+            expires_in=15 * 60,
+        )
+
+    except AuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+        ) from e
+
+
+@app.post("/api/auth/logout")
+async def logout(user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
+    """ログアウト処理
+
+    TODO: トークンの無効化リストへの追加（Redis等）
+    """
+    logger.info(f"User logged out: {user.user_id}")
+    return {"success": True}
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
 
 
 # =============================================================================
@@ -419,9 +498,9 @@ def datetime_to_iso(dt: datetime | None) -> str | None:
 
 
 @app.post("/api/runs", response_model=RunResponse)
-async def create_run(request: Request, data: CreateRunInput) -> RunResponse:
-    """Create a new workflow run."""
-    tenant_id = get_tenant_id_from_request(request)
+async def create_run(data: CreateRunInput, user: AuthUser = Depends(get_current_user)) -> RunResponse:
+    """Create a new workflow run (認証必須)."""
+    tenant_id = user.tenant_id
 
     # TODO: Implement with Temporal workflow start
     # For now, return a mock response showing the correct structure
@@ -450,43 +529,54 @@ async def create_run(request: Request, data: CreateRunInput) -> RunResponse:
 
 @app.get("/api/runs")
 async def list_runs(
-    request: Request,
     status: str | None = None,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=100),
+    user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """List runs with optional filtering."""
-    tenant_id = get_tenant_id_from_request(request)
+    tenant_id = user.tenant_id
     offset = (page - 1) * limit
 
     # TODO: Implement with database query filtered by tenant_id
-    logger.debug(f"Listing runs for tenant {tenant_id}, status={status}, page={page}")
+    logger.debug(
+        "Listing runs",
+        extra={"tenant_id": tenant_id, "status": status, "page": page, "user_id": user.user_id},
+    )
 
     return {"runs": [], "total": 0, "limit": limit, "offset": offset}
 
 
 @app.get("/api/runs/{run_id}", response_model=RunResponse)
-async def get_run(request: Request, run_id: str) -> RunResponse:
+async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> RunResponse:
     """Get run details."""
-    tenant_id = get_tenant_id_from_request(request)
+    tenant_id = user.tenant_id
 
     # TODO: Implement with database query
     # Ensure tenant_id matches (prevent cross-tenant access)
-    logger.debug(f"Getting run {run_id} for tenant {tenant_id}")
+    logger.debug(
+        "Getting run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     raise HTTPException(status_code=404, detail="Run not found")
 
 
 @app.post("/api/runs/{run_id}/approve")
 async def approve_run(
-    request: Request, run_id: str, comment: str | None = None
+    run_id: str,
+    comment: str | None = None,
+    user: AuthUser = Depends(get_current_user),
 ) -> dict[str, bool]:
     """Approve a run waiting for approval.
 
     Sends approval signal to Temporal workflow.
     """
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Approving run {run_id} for tenant {tenant_id}, comment={comment}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Approving run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "comment": comment, "user_id": user.user_id},
+    )
 
     # TODO: Implement with Temporal signal
     # 1. Verify run exists and belongs to tenant
@@ -499,14 +589,19 @@ async def approve_run(
 
 @app.post("/api/runs/{run_id}/reject")
 async def reject_run(
-    request: Request, run_id: str, reason: str = ""
+    run_id: str,
+    reason: str = "",
+    user: AuthUser = Depends(get_current_user),
 ) -> dict[str, bool]:
     """Reject a run waiting for approval.
 
     Sends rejection signal to Temporal workflow.
     """
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Rejecting run {run_id} for tenant {tenant_id}, reason={reason}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Rejecting run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "reason": reason, "user_id": user.user_id},
+    )
 
     # TODO: Implement with Temporal signal
 
@@ -515,14 +610,19 @@ async def reject_run(
 
 @app.post("/api/runs/{run_id}/retry/{step}")
 async def retry_step(
-    request: Request, run_id: str, step: str
+    run_id: str,
+    step: str,
+    user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Retry a failed step.
 
     Same conditions only - no fallback to different model/tool.
     """
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Retrying step {step} of run {run_id} for tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Retrying step",
+        extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement with Temporal signal
     # Return: { success: bool, new_attempt_id: str }
@@ -532,14 +632,19 @@ async def retry_step(
 
 @app.post("/api/runs/{run_id}/resume/{step}")
 async def resume_from_step(
-    request: Request, run_id: str, step: str
+    run_id: str,
+    step: str,
+    user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Resume/restart workflow from a specific step.
 
     Creates a new run starting from the specified step.
     """
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Resuming from step {step} of run {run_id} for tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Resuming run",
+        extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement
     # 1. Verify original run exists and belongs to tenant
@@ -552,11 +657,16 @@ async def resume_from_step(
 
 @app.post("/api/runs/{run_id}/clone", response_model=RunResponse)
 async def clone_run(
-    request: Request, run_id: str, overrides: dict[str, Any] | None = None
+    run_id: str,
+    overrides: dict[str, Any] | None = None,
+    user: AuthUser = Depends(get_current_user),
 ) -> RunResponse:
     """Clone an existing run with optional config overrides."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Cloning run {run_id} for tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Cloning run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement
     # 1. Verify original run exists and belongs to tenant
@@ -567,10 +677,13 @@ async def clone_run(
 
 
 @app.delete("/api/runs/{run_id}")
-async def cancel_run(request: Request, run_id: str) -> dict[str, bool]:
+async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
     """Cancel a running workflow."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.info(f"Cancelling run {run_id} for tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.info(
+        "Cancelling run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement with Temporal cancellation
     # Return: { success: bool }
@@ -584,10 +697,13 @@ async def cancel_run(request: Request, run_id: str) -> dict[str, bool]:
 
 
 @app.get("/api/runs/{run_id}/files", response_model=list[ArtifactRef])
-async def list_artifacts(request: Request, run_id: str) -> list[ArtifactRef]:
+async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)) -> list[ArtifactRef]:
     """List all artifacts for a run."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.debug(f"Listing artifacts for run {run_id}, tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Listing artifacts",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement with database/storage query
     return []
@@ -595,11 +711,16 @@ async def list_artifacts(request: Request, run_id: str) -> list[ArtifactRef]:
 
 @app.get("/api/runs/{run_id}/files/{step}", response_model=list[ArtifactRef])
 async def get_step_artifacts(
-    request: Request, run_id: str, step: str
+    run_id: str,
+    step: str,
+    user: AuthUser = Depends(get_current_user),
 ) -> list[ArtifactRef]:
     """Get artifacts for a specific step."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.debug(f"Getting artifacts for run {run_id}, step {step}, tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Getting step artifacts",
+        extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement with storage retrieval
     raise HTTPException(status_code=404, detail="Artifact not found")
@@ -607,12 +728,15 @@ async def get_step_artifacts(
 
 @app.get("/api/runs/{run_id}/files/{artifact_id}/content", response_model=ArtifactContent)
 async def get_artifact_content(
-    request: Request, run_id: str, artifact_id: str
+    run_id: str,
+    artifact_id: str,
+    user: AuthUser = Depends(get_current_user),
 ) -> ArtifactContent:
     """Get artifact content by ID."""
-    tenant_id = get_tenant_id_from_request(request)
+    tenant_id = user.tenant_id
     logger.debug(
-        f"Getting artifact content {artifact_id} for run {run_id}, tenant {tenant_id}"
+        "Getting artifact content",
+        extra={"run_id": run_id, "artifact_id": artifact_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
     # TODO: Implement with storage retrieval
@@ -620,10 +744,13 @@ async def get_artifact_content(
 
 
 @app.get("/api/runs/{run_id}/preview", response_class=HTMLResponse)
-async def get_run_preview(request: Request, run_id: str) -> HTMLResponse:
+async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user)) -> HTMLResponse:
     """Get HTML preview of generated article."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.debug(f"Getting preview for run {run_id}, tenant {tenant_id}")
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Getting preview",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
 
     # TODO: Implement - return generated HTML from final step
     raise HTTPException(status_code=404, detail="Preview not available")
@@ -636,22 +763,28 @@ async def get_run_preview(request: Request, run_id: str) -> HTMLResponse:
 
 @app.get("/api/runs/{run_id}/events", response_model=list[EventResponse])
 async def list_events(
-    request: Request,
     run_id: str,
     step: str | None = None,
     limit: int = Query(default=100, ge=1, le=500),
+    user: AuthUser = Depends(get_current_user),
 ) -> list[EventResponse]:
     """List events/audit logs for a run."""
-    tenant_id = get_tenant_id_from_request(request)
-    logger.debug(f"Listing events for run {run_id}, tenant {tenant_id}, step={step}")
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Listing events",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "step": step, "user_id": user.user_id},
+    )
 
     # TODO: Implement with audit_logs query
     return []
 
 
 # =============================================================================
-# WebSocket Progress Streaming
+# WebSocket Progress Streaming (VULN-006: 認証対応)
 # =============================================================================
+
+# 認証タイムアウト（秒）
+WS_AUTH_TIMEOUT = 10.0
 
 
 class ConnectionManager:
@@ -661,12 +794,11 @@ class ConnectionManager:
         self.active_connections: dict[str, list[WebSocket]] = {}
 
     async def connect(self, run_id: str, websocket: WebSocket) -> None:
-        """Accept and track a WebSocket connection."""
-        await websocket.accept()
+        """Track a WebSocket connection (acceptは呼び出し側で実施済み)."""
         if run_id not in self.active_connections:
             self.active_connections[run_id] = []
         self.active_connections[run_id].append(websocket)
-        logger.info(f"WebSocket connected for run {run_id}")
+        logger.info("WebSocket connected", extra={"run_id": run_id})
 
     def disconnect(self, run_id: str, websocket: WebSocket) -> None:
         """Remove a WebSocket connection."""
@@ -675,7 +807,7 @@ class ConnectionManager:
                 self.active_connections[run_id].remove(websocket)
             if not self.active_connections[run_id]:
                 del self.active_connections[run_id]
-        logger.info(f"WebSocket disconnected for run {run_id}")
+        logger.info("WebSocket disconnected", extra={"run_id": run_id})
 
     async def broadcast(self, run_id: str, message: dict[str, Any]) -> None:
         """Broadcast message to all connections for a run."""
@@ -686,7 +818,6 @@ class ConnectionManager:
                     await websocket.send_json(message)
                 except Exception:
                     disconnected.append(websocket)
-            # Clean up disconnected
             for ws in disconnected:
                 self.disconnect(run_id, ws)
 
@@ -695,39 +826,70 @@ class ConnectionManager:
 ws_manager = ConnectionManager()
 
 
-def convert_event_type(be_type: str) -> str:
-    """Convert BE event type to UI format.
-
-    BE: step.started, step.succeeded, step.failed
-    UI: step_started, step_completed, step_failed
-    """
-    # Replace dots with underscores
-    ui_type = be_type.replace(".", "_")
-    # Map succeeded to completed
-    ui_type = ui_type.replace("_succeeded", "_completed")
-    return ui_type
-
-
 @app.websocket("/ws/runs/{run_id}")
 async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
-    """WebSocket endpoint for real-time progress updates."""
-    await ws_manager.connect(run_id, websocket)
+    """WebSocket endpoint for real-time progress updates with JWT auth."""
+    await websocket.accept()
 
     try:
-        # Send connected confirmation
-        await websocket.send_json({
-            "type": "connected",
-            "run_id": run_id,
-            "timestamp": datetime.now().isoformat(),
-        })
+        # 認証メッセージを待機（タイムアウト付き）
+        try:
+            data = await asyncio.wait_for(
+                websocket.receive_text(),
+                timeout=WS_AUTH_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("WebSocket auth timeout", extra={"run_id": run_id})
+            await websocket.close(code=1008, reason="Auth timeout")
+            return
+
+        try:
+            auth_msg = json.loads(data)
+        except json.JSONDecodeError:
+            await websocket.send_json({"type": "auth_error", "reason": "Invalid message format"})
+            await websocket.close(code=1008, reason="Invalid auth message")
+            return
+
+        if auth_msg.get("type") != "auth":
+            await websocket.send_json({"type": "auth_error", "reason": "Authentication required"})
+            await websocket.close(code=1008, reason="Auth required")
+            return
+
+        token = auth_msg.get("token")
+        if not token:
+            await websocket.send_json({"type": "auth_error", "reason": "Missing token"})
+            await websocket.close(code=1008, reason="Missing token")
+            return
+
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            tenant_id = payload.get("tenant_id")
+            user_id = payload.get("sub")
+
+            if not tenant_id:
+                await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+
+        except JWTError as e:
+            logger.warning("WebSocket JWT error", extra={"run_id": run_id, "error": str(e)})
+            await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+
+        # TODO: データベースから run の tenant_id を取得して比較（テナント越境防止）
+
+        await websocket.send_json({"type": "auth_success"})
+        await ws_manager.connect(run_id, websocket)
+        logger.info(
+            "WebSocket authenticated",
+            extra={"run_id": run_id, "user_id": user_id, "tenant_id": tenant_id},
+        )
 
         while True:
-            # Wait for messages (keep connection alive)
-            # Client can send ping messages
             data = await websocket.receive_text()
-            logger.debug(f"WebSocket received from {run_id}: {data}")
+            logger.debug("WebSocket received", extra={"run_id": run_id, "payload": data})
 
-            # Echo back pong for ping
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
 
@@ -736,21 +898,44 @@ async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
 
 
 # =============================================================================
-# Error Handlers
+# Error Handlers (VULN-009: 内部情報を隠蔽)
 # =============================================================================
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Global exception handler."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    """Global exception handler with request correlation."""
+    import uuid
+
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())[:8]
+
+    logger.error(
+        f"Unhandled exception [request_id={request_id}]: {exc}",
+        exc_info=True,
+        extra={
+            "request_id": request_id,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+
+    is_development = os.getenv("ENVIRONMENT", "development") == "development"
+
+    if is_development:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": str(exc),
+                "type": type(exc).__name__,
+                "request_id": request_id,
+            },
+        )
+
     return JSONResponse(
         status_code=500,
         content={
-            "error": {
-                "code": "INTERNAL_ERROR",
-                "message": "Internal server error",
-            }
+            "detail": "Internal server error",
+            "request_id": request_id,
         },
     )
 
