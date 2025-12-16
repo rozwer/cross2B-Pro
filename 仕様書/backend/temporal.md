@@ -80,7 +80,7 @@ POST /api/runs/{id}/reject   → Temporal signal
 
 ---
 
-## 並列実行
+## 並列実行 {#parallel}
 
 工程3A/3B/3Cは Temporal の並列実行：
 
@@ -92,6 +92,45 @@ results = await asyncio.gather(
     return_exceptions=True
 )
 # 失敗分のみリトライ
+```
+
+### 並列工程エラーハンドリング詳細
+
+| ケース | 挙動 |
+|--------|------|
+| 3A成功、3B失敗、3C成功 | 3Bのみリトライ（最大3回） |
+| 3A/3B/3C全失敗 | 全リトライ。全再失敗でrun失敗 |
+| 3Aが3回失敗後 | 3B/3C続行せず即座に停止（3つ揃わないと承認待ちに進めない） |
+
+### 実装パターン
+
+```python
+async def run_parallel_steps():
+    MAX_RETRIES = 3
+    completed = {}
+
+    for attempt in range(MAX_RETRIES):
+        pending = [s for s in ["step3a", "step3b", "step3c"] if s not in completed]
+        if not pending:
+            break
+
+        results = await asyncio.gather(
+            *[workflow.execute_activity(s, ...) for s in pending],
+            return_exceptions=True
+        )
+
+        for step, result in zip(pending, results):
+            if not isinstance(result, Exception):
+                completed[step] = result
+            else:
+                # ログ記録
+                logger.warning(f"{step} failed (attempt {attempt + 1}): {result}")
+
+    if len(completed) < 3:
+        failed = [s for s in ["step3a", "step3b", "step3c"] if s not in completed]
+        raise WorkflowFailedError(f"Parallel steps failed: {failed}")
+
+    return completed
 ```
 
 ---
@@ -123,3 +162,63 @@ results = await asyncio.gather(
 | リトライ | 同一条件で再試行（最大3回） |
 | 並列失敗時 | 失敗した工程のみリトライ |
 | JSON破損 | バリデーション失敗時は再実行 |
+
+---
+
+## 部分再実行（Resume）機能 {#resume}
+
+### 概要
+
+失敗した run を特定工程から再開する機能。全 run やり直しの非効率を解消。
+
+### 設計方針
+
+> Temporal Workflow の決定性を保つため、再実行は「新しい run_id で開始し、既存成果物を参照する」方式を採用
+
+### API
+
+```
+POST /api/runs/{id}/resume/{step}
+```
+
+### 実装
+
+```python
+@workflow.defn
+class ArticleWorkflow:
+    @workflow.run
+    async def run(self, tenant_id: str, run_id: str, resume_from: str | None = None):
+        # resume_from が指定されている場合、その工程までスキップ
+        steps = ["step0", "step1", "step2", "step3", "step4", ...]
+
+        for step in steps:
+            if resume_from and steps.index(step) < steps.index(resume_from):
+                # 既存成果物の存在 + digest 検証
+                artifact = await self.verify_existing_artifact(step)
+                if not artifact:
+                    raise WorkflowFailedError(f"Missing artifact for {step}")
+                continue
+
+            # 通常実行
+            await workflow.execute_activity(step, ...)
+```
+
+### 検証事項
+
+| チェック項目 | 説明 |
+|--------------|------|
+| 依存成果物存在確認 | 再開工程より前の成果物がすべて存在すること |
+| digest 検証 | 成果物が改ざんされていないこと |
+| tenant_id 一致 | 元 run と同一テナントであること |
+
+### 新規 run_id 生成
+
+```python
+# 元 run との関連を記録
+new_run = Run(
+    id=generate_uuid(),
+    parent_run_id=original_run_id,
+    resume_from_step=resume_from,
+    # ...
+)
+```

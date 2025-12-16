@@ -471,6 +471,106 @@ Step 3 (Tools) ←── Step 2 (Validation) ※3の後に2
 
 ---
 
+## テスト戦略
+
+### テストレベル
+
+| レベル | LLM | 頻度 | 目的 |
+|--------|-----|------|------|
+| ユニット | モック | 毎commit | ロジック検証 |
+| 統合 | モック | 毎PR | ワークフロー構造検証 |
+| E2E（smoke） | モック | 毎PR | 起動・疎通確認 |
+| E2E（本番） | 実LLM | 毎週 | 実運用相当の検証 |
+| カオステスト | 実LLM | 毎月 | JSON破損、タイムアウト等の異常系 |
+
+### 特殊テスト
+
+| テスト種別 | 目的 | 実行頻度 |
+|-----------|------|---------|
+| 決定性テスト | 同一入力で複数回実行、digest一致確認 | 毎PR |
+| フォールバック不在テスト | コードに `fallback` 文字列がないことを静的検証 | 毎commit |
+| マルチテナント分離テスト | tenant_id 越境が発生しないことを確認 | 毎PR |
+| Temporal Replay テスト | Workflow の決定性違反を検出 | 毎PR |
+
+### テストカバレッジ目標
+
+| 対象 | 目標 |
+|------|------|
+| クリティカルパス | 100% |
+| 全体 | 80%以上 |
+
+---
+
+## モックLLM実装方針
+
+### 概要
+
+`mock_pack` 明示指定時のみ動作するモックLLMを提供。
+
+### 実装方式
+
+#### 1. ファイルベースモック
+
+```
+mocks/
+├── llm_responses/
+│   ├── step0_keyword.json
+│   ├── step3a_query.json
+│   ├── step3b_keywords.json
+│   └── ...
+└── llm_variants/
+    ├── step0_keyword_v1.json
+    ├── step0_keyword_v2.json
+    └── ...
+```
+
+#### 2. 決定論的生成
+
+```python
+class MockLLM:
+    def __init__(self, run_id: str):
+        # run_id からシード値を生成
+        self.seed = hash(run_id) % 1000
+
+    def generate(self, step: str) -> str:
+        # シード値に基づいてバリエーション選択
+        variants = self.load_variants(step)
+        index = self.seed % len(variants)
+        return variants[index]
+```
+
+#### 3. 遅延シミュレーション
+
+```python
+class MockLLM:
+    LATENCY_MAP = {
+        "step0": (1.0, 3.0),   # 1-3秒
+        "step7a": (5.0, 15.0), # 5-15秒（長文生成）
+    }
+
+    async def generate(self, step: str) -> str:
+        min_lat, max_lat = self.LATENCY_MAP.get(step, (1.0, 2.0))
+        await asyncio.sleep(random.uniform(min_lat, max_lat))
+        return self._get_response(step)
+```
+
+### モック有効化
+
+```python
+# 環境変数で制御
+USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "false") == "true"
+
+# または run 設定で制御
+run_config = {"use_mock_llm": True, "mock_pack_id": "v1"}
+```
+
+### 禁止事項
+
+- モックへの**自動フォールバック禁止**
+- 本番環境でのモック有効化禁止（ENV で制限）
+
+---
+
 ## 禁止事項チェックリスト（全 Step 共通）
 
 | 禁止事項 | 確認項目 |

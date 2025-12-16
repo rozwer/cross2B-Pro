@@ -9,6 +9,48 @@
 - 顧客単位のバックアップ/削除が容易
 - オンプレ移行時に顧客DBを切り出し可能
 
+---
+
+## テナントDB運用ツール
+
+### CLI コマンド
+
+```bash
+# テナント作成（DB作成 + マイグレーション + 接続情報登録）
+seo-gen tenant create --name "customer-a"
+
+# 全テナントに一括マイグレーション
+seo-gen tenant migrate --all
+
+# 特定テナントのみマイグレーション
+seo-gen tenant migrate --tenant-id "xxx"
+
+# バックアップ
+seo-gen tenant backup --tenant-id "xxx" --output "/backups/"
+
+# リストア（PITR対応）
+seo-gen tenant restore --tenant-id "xxx" --backup-file "/backups/xxx.sql"
+
+# テナント削除（GDPR対応、完全削除）
+seo-gen tenant delete --tenant-id "xxx" --confirm
+```
+
+### 運用フロー
+
+1. **新規テナント追加**
+   - `tenant create` でDB作成
+   - 接続情報が `tenants` テーブルに自動登録
+   - 最新マイグレーションが自動適用
+
+2. **スキーマ更新**
+   - `tenant migrate --all` で全テナントに適用
+   - 失敗したテナントはスキップせず**即座に停止**
+   - 部分適用は許容しない
+
+3. **テナント解約**
+   - `tenant delete` で Storage + DB を完全削除
+   - 監査ログは共通管理DBに残る（削除不可）
+
 ## 共通管理DB
 
 ```sql
@@ -35,6 +77,8 @@ CREATE TABLE llm_models (
     provider_id TEXT REFERENCES llm_providers(id),
     model_name TEXT NOT NULL,
     model_class TEXT NOT NULL,  -- 'pro', 'standard'
+    cost_per_1k_input_tokens DECIMAL(10, 6),   -- コスト追跡用
+    cost_per_1k_output_tokens DECIMAL(10, 6),  -- コスト追跡用
     is_active BOOLEAN DEFAULT true
 );
 
@@ -85,7 +129,7 @@ CREATE TABLE artifacts (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 監査ログ
+-- 監査ログ（改ざん防止）
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -95,6 +139,18 @@ CREATE TABLE audit_logs (
     details JSONB,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 監査ログ改ざん防止トリガー
+CREATE OR REPLACE FUNCTION prevent_audit_log_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'audit_logs table does not allow UPDATE or DELETE';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_audit_log_modification
+BEFORE UPDATE OR DELETE ON audit_logs
+FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_modification();
 
 -- プロンプト
 CREATE TABLE prompts (
@@ -106,6 +162,21 @@ CREATE TABLE prompts (
     is_active BOOLEAN DEFAULT true,
     UNIQUE (step, version)
 );
+
+-- コスト追跡用ビュー（run単位）
+CREATE VIEW run_costs AS
+SELECT
+    r.id AS run_id,
+    SUM(
+        (s.token_usage->>'input')::INTEGER * m.cost_per_1k_input_tokens / 1000 +
+        (s.token_usage->>'output')::INTEGER * m.cost_per_1k_output_tokens / 1000
+    ) AS total_llm_cost,
+    SUM((s.token_usage->>'input')::INTEGER) AS total_input_tokens,
+    SUM((s.token_usage->>'output')::INTEGER) AS total_output_tokens
+FROM runs r
+JOIN steps s ON r.id = s.run_id
+LEFT JOIN llm_models m ON s.llm_model = m.model_name
+GROUP BY r.id;
 ```
 
 ---
