@@ -11,7 +11,7 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.validation.csv_validator import CSVValidator
+from apps.api.validation.csv_validator import CsvValidator
 from apps.api.validation.schemas import ValidationSeverity
 
 from .base import ActivityError, BaseActivity, ValidationError
@@ -58,7 +58,7 @@ class Step2CSVValidation(BaseActivity):
             )
 
         # Validate competitor data structure
-        validator = CSVValidator()
+        validator = CsvValidator()
         validated_records = []
         validation_issues = []
 

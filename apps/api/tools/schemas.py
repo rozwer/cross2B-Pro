@@ -58,3 +58,14 @@ class ToolResult(BaseModel):
     def is_validation_error(self) -> bool:
         """検証エラーかどうか"""
         return self.error_category == "validation_fail"
+
+
+class ToolRequest(BaseModel):
+    """
+    ツール実行リクエスト
+
+    ツールを呼び出す際のパラメータを保持する。
+    """
+
+    tool_name: str = Field(..., description="ツール名")
+    params: dict[str, Any] = Field(default_factory=dict, description="ツールパラメータ")
