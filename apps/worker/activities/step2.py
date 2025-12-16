@@ -11,10 +11,9 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.validation.csv_validator import CsvValidator
 from apps.api.validation.schemas import ValidationSeverity
 
-from .base import ActivityError, BaseActivity, ValidationError
+from .base import ActivityError, BaseActivity
 
 
 class Step2CSVValidation(BaseActivity):
@@ -58,14 +57,15 @@ class Step2CSVValidation(BaseActivity):
             )
 
         # Validate competitor data structure
-        validator = CsvValidator()
-        validated_records = []
-        validation_issues = []
+        # Note: CsvValidator() is available but we use inline validation for this step
+        # Future: Use validator = CsvValidator() for more complex CSV validation
+        validated_records: list[dict[str, Any]] = []
+        validation_issues: list[dict[str, Any]] = []
 
         required_fields = ["url", "title", "content"]
 
         for idx, competitor in enumerate(competitors):
-            record_issues = []
+            record_issues: list[dict[str, Any]] = []
 
             # Check required fields
             for field in required_fields:

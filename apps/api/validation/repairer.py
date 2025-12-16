@@ -8,7 +8,7 @@ import hashlib
 import logging
 import re
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .exceptions import RepairError, UnrepairableError
 from .schemas import RepairAction, ValidationIssue, ValidationSeverity
@@ -49,8 +49,8 @@ class Repairer:
 
     def __init__(self) -> None:
         """Initialize the repairer."""
-        RepairHandler = Callable[[str, ValidationIssue], tuple[str, str, str]]
-        self._repair_handlers: dict[str, RepairHandler] = {
+        repair_handler_type = Callable[[str, ValidationIssue], tuple[str, str, str]]
+        self._repair_handlers: dict[str, repair_handler_type] = {
             "REMOVE_TRAILING_COMMA": self._repair_trailing_comma,
             "FIX_UNESCAPED_QUOTES": self._repair_unescaped_quotes,
             "NORMALIZE_LINE_ENDINGS": self._repair_line_endings,
@@ -126,7 +126,7 @@ class Repairer:
                 action = RepairAction(
                     code=repair_code,
                     description=f"Applied {repair_code} for issue {issue.code}",
-                    applied_at=datetime.now(timezone.utc),
+                    applied_at=datetime.now(UTC),
                     before=before_snippet,
                     after=after_snippet,
                 )

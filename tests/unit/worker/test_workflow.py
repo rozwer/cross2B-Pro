@@ -118,7 +118,7 @@ class TestWorkflowPackIdValidation:
             )
 
         assert result["status"] == "failed"
-        assert "pack_id is required" in result["error"]
+        assert "pack_id required" in result["error"]
 
     @pytest.mark.asyncio
     async def test_pack_id_provided_continues(self):

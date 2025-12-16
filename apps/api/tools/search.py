@@ -10,19 +10,13 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
 
 from .base import ErrorCategory, ToolInterface
-from .exceptions import (
-    NonRetryableError,
-    RateLimitError,
-    RetryableError,
-    ValidationError,
-)
 from .registry import ToolRegistry
 from .schemas import Evidence, ToolResult
 
@@ -81,7 +75,7 @@ class SerpFetchTool(ToolInterface):
 
     tool_id = "serp_fetch"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.api_key = os.getenv("SERP_API_KEY")
         # SerpApi のエンドポイント
         self.base_url = "https://serpapi.com/search"
@@ -227,7 +221,7 @@ class SerpFetchTool(ToolInterface):
                 evidences.append(
                     Evidence(
                         url=url,
-                        fetched_at=datetime.now(timezone.utc),
+                        fetched_at=datetime.now(UTC),
                         excerpt=snippet[:200] if snippet else title[:200],
                         content_hash=_compute_hash(content_for_hash),
                     )
@@ -265,7 +259,7 @@ class SearchVolumeTool(ToolInterface):
 
     tool_id = "search_volume"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.use_mock = os.getenv("USE_MOCK_GOOGLE_ADS", "true").lower() == "true"
         if self.use_mock:
             logger.warning(
@@ -343,7 +337,7 @@ class RelatedKeywordsTool(ToolInterface):
 
     tool_id = "related_keywords"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.use_mock = os.getenv("USE_MOCK_GOOGLE_ADS", "true").lower() == "true"
         if self.use_mock:
             logger.warning(

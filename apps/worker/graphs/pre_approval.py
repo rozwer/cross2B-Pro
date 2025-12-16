@@ -7,6 +7,17 @@ Graph flow:
     step0 → step1 → step2 → step3_parallel → END (waiting_approval state)
 """
 
+# NOTE: LangGraph Studio loads this file directly, so we need to ensure
+# the project root is on sys.path for absolute imports to work.
+# ruff: noqa: E402
+import sys
+from pathlib import Path
+
+_THIS_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _THIS_DIR.parent.parent.parent  # apps/worker/graphs -> project root
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 import asyncio
 from datetime import datetime
 from typing import Any
@@ -16,11 +27,10 @@ from langgraph.graph import END, START, StateGraph
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
-
-from .wrapper import create_node_function, step_wrapper
-
+from apps.worker.graphs.wrapper import create_node_function
 
 # ============================================================
 # Step Node Functions
@@ -39,10 +49,14 @@ async def step0_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 2000),
         temperature=config.get("temperature", 0.7),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are a keyword analysis assistant.",
+        config=llm_config,
     )
 
     return {
@@ -63,38 +77,28 @@ async def step1_execute(
     registry = ToolRegistry()
 
     # SERP fetch
-    serp_tool = registry.get_tool("serp_fetch")
+    serp_tool = registry.get("serp_fetch")
     keyword = config.get("keyword", "")
 
     if not serp_tool:
         return {"step": "step1", "error": "serp_fetch tool not available", "competitors": []}
 
-    from apps.api.tools.schemas import ToolRequest
-
-    serp_request = ToolRequest(
-        tool_id="serp_fetch",
-        input_data={"query": keyword, "num_results": 10},
-    )
-    serp_result = await serp_tool.execute(serp_request)
-    urls = serp_result.output_data.get("urls", []) if serp_result.success else []
+    serp_result = await serp_tool.execute(query=keyword, num_results=10)
+    urls = serp_result.data.get("urls", []) if serp_result.success and serp_result.data else []
 
     # Fetch pages
-    page_tool = registry.get_tool("page_fetch")
-    competitors = []
+    page_tool = registry.get("page_fetch")
+    competitors: list[dict[str, Any]] = []
 
     if page_tool:
         for url in urls[:5]:  # Limit to top 5
             try:
-                fetch_request = ToolRequest(
-                    tool_id="page_fetch",
-                    input_data={"url": url},
-                )
-                result = await page_tool.execute(fetch_request)
-                if result.success:
+                result = await page_tool.execute(url=url)
+                if result.success and result.data:
                     competitors.append({
                         "url": url,
-                        "title": result.output_data.get("title", ""),
-                        "content": result.output_data.get("content", "")[:1000],
+                        "title": result.data.get("title", ""),
+                        "content": result.data.get("content", "")[:1000],
                     })
             except Exception:
                 continue
@@ -113,7 +117,8 @@ async def step2_execute(
     ctx: ExecutionContext,
 ) -> dict[str, Any]:
     """Execute step 2: CSV Validation."""
-    step1_output = state.get("step_outputs", {}).get("step1")
+    # step1_output will be used for validation once artifact loading is implemented
+    _ = state.get("step_outputs", {}).get("step1")  # Mark as future use
 
     # In a real implementation, we'd load the artifact content
     # For now, mark as validated
@@ -146,7 +151,12 @@ async def step3_parallel_execute(
         try:
             template = prompt_pack.get_prompt("step3a")
             p = template.render(keyword=keyword, keyword_analysis="", competitor_count=0)
-            response = await llm.generate(prompt=p, max_tokens=3000)
+            llm_config = LLMRequestConfig(max_tokens=3000)
+            response = await llm.generate(
+                messages=[{"role": "user", "content": p}],
+                system_prompt="You are a search query analysis expert.",
+                config=llm_config,
+            )
             return {"step": "step3a", "analysis": response.content}
         except Exception as e:
             return {"step": "step3a", "error": str(e)}
@@ -157,7 +167,12 @@ async def step3_parallel_execute(
         try:
             template = prompt_pack.get_prompt("step3b")
             p = template.render(keyword=keyword, competitor_summaries=[])
-            response = await llm.generate(prompt=p, max_tokens=4000, grounding=True)
+            llm_config = LLMRequestConfig(max_tokens=4000)
+            response = await llm.generate(
+                messages=[{"role": "user", "content": p}],
+                system_prompt="You are a co-occurrence keyword analysis expert.",
+                config=llm_config,
+            )
             return {"step": "step3b", "analysis": response.content}
         except Exception as e:
             return {"step": "step3b", "error": str(e)}
@@ -168,7 +183,12 @@ async def step3_parallel_execute(
         try:
             template = prompt_pack.get_prompt("step3c")
             p = template.render(keyword=keyword, competitors=[])
-            response = await llm.generate(prompt=p, max_tokens=3000)
+            llm_config = LLMRequestConfig(max_tokens=3000)
+            response = await llm.generate(
+                messages=[{"role": "user", "content": p}],
+                system_prompt="You are a competitor analysis expert.",
+                config=llm_config,
+            )
             return {"step": "step3c", "analysis": response.content}
         except Exception as e:
             return {"step": "step3c", "error": str(e)}
@@ -182,9 +202,12 @@ async def step3_parallel_execute(
     )
 
     # Process results
-    step3a_result = results[0] if not isinstance(results[0], Exception) else {"error": str(results[0])}
-    step3b_result = results[1] if not isinstance(results[1], Exception) else {"error": str(results[1])}
-    step3c_result = results[2] if not isinstance(results[2], Exception) else {"error": str(results[2])}
+    def result_or_error(r: Any) -> dict[str, Any]:
+        return r if not isinstance(r, Exception) else {"error": str(r)}
+
+    step3a_result = result_or_error(results[0])
+    step3b_result = result_or_error(results[1])
+    step3c_result = result_or_error(results[2])
 
     # Check for failures
     failures = []
@@ -210,13 +233,13 @@ async def step3_parallel_execute(
 # ============================================================
 
 
-def build_pre_approval_graph() -> StateGraph:
+def build_pre_approval_graph() -> Any:
     """Build the pre-approval LangGraph graph.
 
     Returns:
         Compiled StateGraph ready for execution
     """
-    graph = StateGraph(GraphState)
+    graph: StateGraph[Any, Any, Any, Any] = StateGraph(GraphState)
 
     # Create node functions with wrapper
     step0_node = create_node_function("step0", step0_execute)
@@ -225,10 +248,10 @@ def build_pre_approval_graph() -> StateGraph:
     step3_parallel_node = create_node_function("step3_parallel", step3_parallel_execute)
 
     # Add nodes
-    graph.add_node("step0", step0_node)
-    graph.add_node("step1", step1_node)
-    graph.add_node("step2", step2_node)
-    graph.add_node("step3_parallel", step3_parallel_node)
+    graph.add_node("step0", step0_node)  # type: ignore[call-overload]
+    graph.add_node("step1", step1_node)  # type: ignore[call-overload]
+    graph.add_node("step2", step2_node)  # type: ignore[call-overload]
+    graph.add_node("step3_parallel", step3_parallel_node)  # type: ignore[call-overload]
 
     # Add edges (linear flow)
     graph.add_edge(START, "step0")

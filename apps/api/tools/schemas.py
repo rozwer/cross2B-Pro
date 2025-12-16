@@ -5,7 +5,7 @@ Evidence型: 取得結果の証拠（追跡可能性確保）
 ToolResult型: ツール実行結果
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 def _utc_now() -> datetime:
     """UTC現在時刻を返す"""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Evidence(BaseModel):

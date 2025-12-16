@@ -22,7 +22,8 @@ class ToolError(Exception):
         self.tool_id = tool_id
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(tool_id={self.tool_id}, category={self.category}, message={self.message})>"
+        cls_name = self.__class__.__name__
+        return f"<{cls_name}(tool_id={self.tool_id}, cat={self.category}, msg={self.message})>"
 
 
 class RetryableError(ToolError):

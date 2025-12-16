@@ -1,4 +1,4 @@
-version: "3.8"
+name: seo-article-generator
 
 services:
   # =============================================================================
@@ -61,12 +61,11 @@ services:
     image: temporalio/auto-setup:latest
     container_name: seo-temporal
     environment:
-      - DB=postgresql
+      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=${POSTGRES_USER:-seo}
       - POSTGRES_PWD=${POSTGRES_PASSWORD:-seo_password}
       - POSTGRES_SEEDS=postgres
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     depends_on:
       postgres:
         condition: service_healthy

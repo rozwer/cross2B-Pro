@@ -36,9 +36,10 @@ export function RunList() {
     try {
       const params = statusFilter !== 'all' ? { status: statusFilter } : {};
       const response = await api.runs.list(params);
-      setRuns(response.items);
+      setRuns(response?.items ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch runs');
+      setRuns([]);
     } finally {
       setLoading(false);
       setRefreshing(false);

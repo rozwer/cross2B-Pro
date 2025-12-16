@@ -5,12 +5,24 @@ import logging
 import os
 from typing import Any, cast
 
-from anthropic import AsyncAnthropic, APIError, APIConnectionError, RateLimitError, AuthenticationError, APIStatusError
+from anthropic import (
+    APIConnectionError,
+    APIStatusError,
+    AsyncAnthropic,
+    AuthenticationError,
+    RateLimitError,
+)
 from anthropic.types import MessageParam, ToolParam, ToolUseBlock
 
 from .base import LLMInterface
-from .schemas import LLMResponse, TokenUsage
-from .exceptions import RetryableLLMError, NonRetryableLLMError, ValidationLLMError
+from .exceptions import NonRetryableLLMError, RetryableLLMError, ValidationLLMError
+from .schemas import (
+    LLMCallMetadata,
+    LLMMessage,
+    LLMRequestConfig,
+    LLMResponse,
+    TokenUsage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +113,10 @@ class AnthropicClient(LLMInterface):
 
     async def generate(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[dict[str, str]] | list[LLMMessage],
         system_prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int = 4096,
+        config: LLMRequestConfig | None = None,
+        metadata: LLMCallMetadata | None = None,
     ) -> LLMResponse:
         """Generate text response from Claude.
 
@@ -112,8 +124,8 @@ class AnthropicClient(LLMInterface):
             messages: List of message dicts with 'role' and 'content' keys.
                      Supported roles: 'user', 'assistant'
             system_prompt: System-level instructions for the model
-            temperature: Sampling temperature (0.0-1.0)
-            max_tokens: Maximum tokens in response
+            config: リクエスト設定
+            metadata: 追跡用メタデータ
 
         Returns:
             LLMResponse with content, token_usage, and model info
@@ -122,26 +134,34 @@ class AnthropicClient(LLMInterface):
             RetryableLLMError: For temporary failures
             NonRetryableLLMError: For permanent failures
         """
+        config = config or LLMRequestConfig()
+        normalized_messages = self._normalize_messages(messages)
+
+        self._log_request("generate", self.model, metadata)
+
         attempt = 0
-        last_error: Exception | None = None
 
         while attempt < self.max_retries:
             attempt += 1
             try:
                 logger.info(
-                    f"Anthropic API call attempt {attempt}/{self.max_retries}, "
-                    f"model={self.model}, temperature={temperature}, max_tokens={max_tokens}"
+                    "Anthropic API call attempt %d/%d, model=%s, temp=%s, max=%d",
+                    attempt,
+                    self.max_retries,
+                    self.model,
+                    config.temperature,
+                    config.max_tokens,
                 )
 
                 # Convert messages to Anthropic format
-                anthropic_messages = self._convert_messages(messages)
+                anthropic_messages = self._convert_messages(normalized_messages)
 
                 response = await self.client.messages.create(
                     model=self.model,
-                    max_tokens=max_tokens,
+                    max_tokens=config.max_tokens,
                     system=system_prompt,
                     messages=anthropic_messages,
-                    temperature=temperature,
+                    temperature=config.temperature,
                 )
 
                 # Extract content from response
@@ -177,7 +197,6 @@ class AnthropicClient(LLMInterface):
             except RateLimitError as e:
                 # Rate limit is retryable
                 logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
-                last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
                         f"Rate limit exceeded after {self.max_retries} attempts: {e}"
@@ -187,7 +206,6 @@ class AnthropicClient(LLMInterface):
             except APIConnectionError as e:
                 # Connection errors are retryable
                 logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
-                last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
                         f"Connection failed after {self.max_retries} attempts: {e}"
@@ -198,7 +216,6 @@ class AnthropicClient(LLMInterface):
                 # Check if the error is retryable based on status code
                 if e.status_code >= 500:
                     logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
-                    last_error = e
                     if attempt >= self.max_retries:
                         raise RetryableLLMError(
                             f"Server error after {self.max_retries} attempts: {e}"
@@ -225,9 +242,11 @@ class AnthropicClient(LLMInterface):
 
     async def generate_json(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[dict[str, str]] | list[LLMMessage],
         system_prompt: str,
         schema: dict[str, Any],
+        config: LLMRequestConfig | None = None,
+        metadata: LLMCallMetadata | None = None,
     ) -> dict[str, Any]:
         """Generate JSON output from Claude with schema validation.
 
@@ -237,6 +256,8 @@ class AnthropicClient(LLMInterface):
             messages: List of message dicts with 'role' and 'content' keys
             system_prompt: System-level instructions for the model
             schema: JSON Schema for output validation
+            config: リクエスト設定
+            metadata: 追跡用メタデータ
 
         Returns:
             Parsed and validated JSON dict
@@ -246,8 +267,10 @@ class AnthropicClient(LLMInterface):
             NonRetryableLLMError: For permanent failures
             ValidationLLMError: For JSON parsing/validation failures
         """
+        config = config or LLMRequestConfig()
+        normalized_messages = self._normalize_messages(messages)
+
         attempt = 0
-        last_error: Exception | None = None
 
         # Create a tool definition from the schema
         tool_name = "json_output"
@@ -268,7 +291,7 @@ class AnthropicClient(LLMInterface):
                 )
 
                 # Convert messages to Anthropic format
-                anthropic_messages = self._convert_messages(messages)
+                anthropic_messages = self._convert_messages(normalized_messages)
 
                 response = await self.client.messages.create(
                     model=self.model,
@@ -301,7 +324,6 @@ class AnthropicClient(LLMInterface):
 
             except RateLimitError as e:
                 logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
-                last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
                         f"Rate limit exceeded after {self.max_retries} attempts: {e}"
@@ -309,7 +331,6 @@ class AnthropicClient(LLMInterface):
 
             except APIConnectionError as e:
                 logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
-                last_error = e
                 if attempt >= self.max_retries:
                     raise RetryableLLMError(
                         f"Connection failed after {self.max_retries} attempts: {e}"
@@ -318,7 +339,6 @@ class AnthropicClient(LLMInterface):
             except APIStatusError as e:
                 if e.status_code >= 500:
                     logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
-                    last_error = e
                     if attempt >= self.max_retries:
                         raise RetryableLLMError(
                             f"Server error after {self.max_retries} attempts: {e}"

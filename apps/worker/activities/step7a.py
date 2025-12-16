@@ -13,6 +13,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
 from .base import ActivityError, BaseActivity
@@ -89,10 +90,14 @@ class Step7ADraftGeneration(BaseActivity):
 
         # Execute LLM call with higher token limit for long-form content
         try:
-            response = await llm.generate(
-                prompt=prompt,
+            llm_config = LLMRequestConfig(
                 max_tokens=config.get("max_tokens", 8000),
                 temperature=config.get("temperature", 0.7),
+            )
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt}],
+                system_prompt="You are an SEO content writer.",
+                config=llm_config,
             )
         except Exception as e:
             raise ActivityError(
@@ -115,8 +120,8 @@ class Step7ADraftGeneration(BaseActivity):
             },
             "model": response.model,
             "usage": {
-                "input_tokens": response.input_tokens,
-                "output_tokens": response.output_tokens,
+                "input_tokens": response.token_usage.input,
+                "output_tokens": response.token_usage.output,
             },
         }
 

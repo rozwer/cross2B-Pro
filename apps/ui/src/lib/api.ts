@@ -61,9 +61,21 @@ class ApiClient {
       if (params?.status) searchParams.set('status', params.status);
 
       const query = searchParams.toString();
-      return this.request<PaginatedResponse<RunSummary>>(
-        `/api/runs${query ? `?${query}` : ''}`
-      );
+      // Backend returns { runs, total, limit, offset } but we need { items, total, ... }
+      const response = await this.request<{
+        runs: RunSummary[];
+        total: number;
+        limit: number;
+        offset: number;
+      }>(`/api/runs${query ? `?${query}` : ''}`);
+
+      return {
+        items: response.runs ?? [],
+        total: response.total ?? 0,
+        page: Math.floor((response.offset ?? 0) / (response.limit ?? 50)) + 1,
+        limit: response.limit ?? 50,
+        has_more: (response.offset ?? 0) + (response.runs?.length ?? 0) < (response.total ?? 0),
+      };
     },
 
     get: async (id: string): Promise<Run> => {
