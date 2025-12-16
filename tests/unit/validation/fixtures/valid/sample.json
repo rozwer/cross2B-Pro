@@ -1,0 +1,18 @@
+{
+  "title": "Sample Article",
+  "keywords": ["SEO", "optimization", "content"],
+  "sections": [
+    {
+      "heading": "Introduction",
+      "content": "This is the introduction section."
+    },
+    {
+      "heading": "Main Content",
+      "content": "This is the main content section."
+    }
+  ],
+  "metadata": {
+    "author": "System",
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+}
