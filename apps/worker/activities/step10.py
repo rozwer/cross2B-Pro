@@ -13,6 +13,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
 from .base import ActivityError, BaseActivity
@@ -75,16 +76,21 @@ class Step10FinalOutput(BaseActivity):
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Step 10.1: Generate final HTML
+        checklist_response = None
         try:
             html_prompt = prompt_pack.get_prompt("step10_html")
             html_request = html_prompt.render(
                 keyword=keyword,
                 content=final_content,
             )
-            html_response = await llm.generate(
-                prompt=html_request,
+            html_config = LLMRequestConfig(
                 max_tokens=config.get("max_tokens", 8000),
                 temperature=0.3,  # Low for consistent formatting
+            )
+            html_response = await llm.generate(
+                messages=[{"role": "user", "content": html_request}],
+                system_prompt="You are an HTML formatting expert.",
+                config=html_config,
             )
             html_content = html_response.content
         except Exception as e:
@@ -106,19 +112,24 @@ class Step10FinalOutput(BaseActivity):
         try:
             checklist_prompt = prompt_pack.get_prompt("step10_checklist")
             checklist_request = checklist_prompt.render(keyword=keyword)
+            checklist_config = LLMRequestConfig(max_tokens=1000, temperature=0.3)
             checklist_response = await llm.generate(
-                prompt=checklist_request,
-                max_tokens=1000,
-                temperature=0.3,
+                messages=[{"role": "user", "content": checklist_request}],
+                system_prompt="You are a publication checklist expert.",
+                config=checklist_config,
             )
             checklist = checklist_response.content
-        except Exception as e:
+        except Exception:
             # Checklist is nice-to-have, continue if fails
             checklist = "Publication checklist generation failed."
 
         # Calculate final stats
         word_count = len(final_content.split())
         char_count = len(final_content)
+
+        checklist_tokens = 0
+        if checklist_response:
+            checklist_tokens = checklist_response.token_usage.output
 
         return {
             "step": self.step_id,
@@ -135,8 +146,8 @@ class Step10FinalOutput(BaseActivity):
             },
             "model": html_response.model,
             "usage": {
-                "html_tokens": html_response.output_tokens,
-                "checklist_tokens": checklist_response.output_tokens if checklist_response else 0,
+                "html_tokens": html_response.token_usage.output,
+                "checklist_tokens": checklist_tokens,
             },
         }
 

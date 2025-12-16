@@ -12,6 +12,7 @@
     )
 """
 
+from .anthropic import AnthropicClient
 from .base import LLMInterface
 from .exceptions import (
     ErrorCategory,
@@ -26,7 +27,6 @@ from .exceptions import (
     LLMTimeoutError,
     LLMValidationError,
 )
-from .anthropic import AnthropicClient
 from .gemini import GeminiClient
 from .openai import OpenAIClient
 from .schemas import (

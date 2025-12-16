@@ -7,6 +7,17 @@ Graph flow:
     step4 → step5 → step6 → step6_5 → step7a → step7b → step8 → step9 → step10 → END
 """
 
+# NOTE: LangGraph Studio loads this file directly, so we need to ensure
+# the project root is on sys.path for absolute imports to work.
+# ruff: noqa: E402
+import sys
+from pathlib import Path
+
+_THIS_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _THIS_DIR.parent.parent.parent  # apps/worker/graphs -> project root
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from datetime import datetime
 from typing import Any
 
@@ -15,11 +26,9 @@ from langgraph.graph import END, START, StateGraph
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
-from apps.api.prompts.loader import PromptPackLoader
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.tools.registry import ToolRegistry
-
-from .wrapper import create_node_function
-
+from apps.worker.graphs.wrapper import create_node_function
 
 # ============================================================
 # Step Node Functions
@@ -38,10 +47,14 @@ async def step4_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 4000),
         temperature=config.get("temperature", 0.6),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are an SEO content strategist.",
+        config=llm_config,
     )
 
     return {
@@ -62,12 +75,10 @@ async def step5_execute(
     keyword = config.get("keyword", "")
 
     # Try to collect primary sources
-    collector = registry.get_tool("primary_collector")
-    sources = []
+    collector = registry.get("primary_collector")
+    sources: list[dict[str, Any]] = []
 
     if collector:
-        from apps.api.tools.schemas import ToolRequest
-
         queries = [
             f"{keyword} research statistics",
             f"{keyword} official data",
@@ -75,13 +86,9 @@ async def step5_execute(
 
         for query in queries:
             try:
-                request = ToolRequest(
-                    tool_id="primary_collector",
-                    input_data={"query": query},
-                )
-                result = await collector.execute(request)
-                if result.success:
-                    sources.extend(result.output_data.get("evidence_refs", []))
+                result = await collector.execute(query=query)
+                if result.success and result.data:
+                    sources.extend(result.data.get("evidence_refs", []))
             except Exception:
                 continue
 
@@ -104,10 +111,14 @@ async def step6_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 5000),
         temperature=config.get("temperature", 0.6),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are an SEO content outline specialist.",
+        config=llm_config,
     )
 
     return {
@@ -129,10 +140,14 @@ async def step6_5_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 6000),
         temperature=config.get("temperature", 0.5),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are an SEO content integration specialist.",
+        config=llm_config,
     )
 
     return {
@@ -154,10 +169,14 @@ async def step7a_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
         temperature=config.get("temperature", 0.7),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are an SEO content writer.",
+        config=llm_config,
     )
 
     draft = response.content
@@ -181,10 +200,14 @@ async def step7b_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
         temperature=config.get("temperature", 0.8),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are a content polishing expert.",
+        config=llm_config,
     )
 
     polished = response.content
@@ -208,12 +231,15 @@ async def step8_execute(
         model=config.get("llm_model"),
     )
 
-    # Fact check with grounding
-    response = await llm.generate(
-        prompt=prompt,
+    # Fact check
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 4000),
         temperature=0.3,
-        grounding=True,
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are a fact-checking expert.",
+        config=llm_config,
     )
 
     verification = response.content
@@ -240,10 +266,14 @@ async def step9_execute(
         model=config.get("llm_model"),
     )
 
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
         temperature=config.get("temperature", 0.6),
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are a content rewriting expert.",
+        config=llm_config,
     )
 
     final_content = response.content
@@ -268,10 +298,14 @@ async def step10_execute(
     )
 
     # Generate HTML
-    response = await llm.generate(
-        prompt=prompt,
+    llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
         temperature=0.3,
+    )
+    response = await llm.generate(
+        messages=[{"role": "user", "content": prompt}],
+        system_prompt="You are an HTML content generator.",
+        config=llm_config,
     )
 
     html_content = response.content
@@ -297,13 +331,13 @@ async def step10_execute(
 # ============================================================
 
 
-def build_post_approval_graph() -> StateGraph:
+def build_post_approval_graph() -> Any:
     """Build the post-approval LangGraph graph.
 
     Returns:
         Compiled StateGraph ready for execution
     """
-    graph = StateGraph(GraphState)
+    graph: StateGraph[Any, Any, Any, Any] = StateGraph(GraphState)
 
     # Create node functions with wrapper
     step4_node = create_node_function("step4", step4_execute)
@@ -317,15 +351,15 @@ def build_post_approval_graph() -> StateGraph:
     step10_node = create_node_function("step10", step10_execute)
 
     # Add nodes
-    graph.add_node("step4", step4_node)
-    graph.add_node("step5", step5_node)
-    graph.add_node("step6", step6_node)
-    graph.add_node("step6_5", step6_5_node)
-    graph.add_node("step7a", step7a_node)
-    graph.add_node("step7b", step7b_node)
-    graph.add_node("step8", step8_node)
-    graph.add_node("step9", step9_node)
-    graph.add_node("step10", step10_node)
+    graph.add_node("step4", step4_node)  # type: ignore[call-overload]
+    graph.add_node("step5", step5_node)  # type: ignore[call-overload]
+    graph.add_node("step6", step6_node)  # type: ignore[call-overload]
+    graph.add_node("step6_5", step6_5_node)  # type: ignore[call-overload]
+    graph.add_node("step7a", step7a_node)  # type: ignore[call-overload]
+    graph.add_node("step7b", step7b_node)  # type: ignore[call-overload]
+    graph.add_node("step8", step8_node)  # type: ignore[call-overload]
+    graph.add_node("step9", step9_node)  # type: ignore[call-overload]
+    graph.add_node("step10", step10_node)  # type: ignore[call-overload]
 
     # Add edges (linear flow)
     graph.add_edge(START, "step4")

@@ -6,7 +6,7 @@ from anthropic import APIConnectionError, RateLimitError, AuthenticationError, A
 from anthropic.types import ToolUseBlock
 
 from apps.api.llm.anthropic import AnthropicClient, SUPPORTED_MODELS, DEFAULT_MODEL
-from apps.api.llm.schemas import LLMResponse, TokenUsage
+from apps.api.llm.schemas import LLMRequestConfig, LLMResponse, TokenUsage
 from apps.api.llm.exceptions import (
     ErrorCategory,
     RetryableLLMError,
@@ -79,8 +79,7 @@ class TestAnthropicClientGenerate:
         result = await client.generate(
             messages=[{"role": "user", "content": "Hello"}],
             system_prompt="You are helpful.",
-            temperature=0.7,
-            max_tokens=1000,
+            config=LLMRequestConfig(temperature=0.7, max_tokens=1000),
         )
 
         assert isinstance(result, LLMResponse)

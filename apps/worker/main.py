@@ -24,8 +24,8 @@ from .activities import (
     step3c_competitor_analysis,
     step4_strategic_outline,
     step5_primary_collection,
-    step6_enhanced_outline,
     step6_5_integration_package,
+    step6_enhanced_outline,
     step7a_draft_generation,
     step7b_brush_up,
     step8_fact_check,
@@ -141,7 +141,7 @@ def main() -> NoReturn:
     logger.info("=" * 60)
 
     # Validate required environment variables
-    required_env = []
+    required_env: list[str] = []
     missing = [var for var in required_env if not os.getenv(var)]
 
     if missing:
@@ -149,7 +149,7 @@ def main() -> NoReturn:
         sys.exit(1)
 
     # Log configuration
-    logger.info(f"Configuration:")
+    logger.info("Configuration:")
     logger.info(f"  TEMPORAL_HOST: {TEMPORAL_HOST}")
     logger.info(f"  TEMPORAL_PORT: {TEMPORAL_PORT}")
     logger.info(f"  TEMPORAL_NAMESPACE: {TEMPORAL_NAMESPACE}")

@@ -8,10 +8,10 @@ SEO Article Generator API server with endpoints for:
 
 import logging
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -125,8 +125,8 @@ async def health_check() -> HealthResponse:
 class RunCreateRequest(BaseModel):
     """Request to create a new run."""
     tenant_id: str
-    input_data: dict
-    config: dict | None = None
+    input_data: dict[str, object]
+    config: dict[str, object] | None = None
 
 
 class RunResponse(BaseModel):
@@ -135,7 +135,7 @@ class RunResponse(BaseModel):
     tenant_id: str
     status: str
     current_step: str | None
-    config: dict
+    config: dict[str, object]
     created_at: str
 
 
@@ -152,7 +152,7 @@ async def list_runs(
     status: str | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> dict:
+) -> dict[str, object]:
     """List runs with optional filtering."""
     # TODO: Implement with database query
     return {"runs": [], "total": 0, "limit": limit, "offset": offset}
@@ -166,7 +166,7 @@ async def get_run(run_id: str) -> RunResponse:
 
 
 @app.post("/api/runs/{run_id}/approve")
-async def approve_run(run_id: str, comment: str | None = None) -> dict:
+async def approve_run(run_id: str, comment: str | None = None) -> dict[str, object]:
     """Approve a run waiting for approval.
 
     Sends approval signal to Temporal workflow.
@@ -176,7 +176,7 @@ async def approve_run(run_id: str, comment: str | None = None) -> dict:
 
 
 @app.post("/api/runs/{run_id}/reject")
-async def reject_run(run_id: str, reason: str) -> dict:
+async def reject_run(run_id: str, reason: str) -> dict[str, object]:
     """Reject a run waiting for approval.
 
     Sends rejection signal to Temporal workflow.
@@ -186,7 +186,7 @@ async def reject_run(run_id: str, reason: str) -> dict:
 
 
 @app.post("/api/runs/{run_id}/retry/{step}")
-async def retry_step(run_id: str, step: str) -> dict:
+async def retry_step(run_id: str, step: str) -> dict[str, object]:
     """Retry a failed step.
 
     Same conditions only - no fallback to different model/tool.
@@ -196,7 +196,7 @@ async def retry_step(run_id: str, step: str) -> dict:
 
 
 @app.delete("/api/runs/{run_id}")
-async def cancel_run(run_id: str) -> dict:
+async def cancel_run(run_id: str) -> dict[str, object]:
     """Cancel a running workflow."""
     # TODO: Implement with Temporal cancellation
     raise HTTPException(status_code=501, detail="Not implemented")
@@ -207,14 +207,14 @@ async def cancel_run(run_id: str) -> dict:
 # =============================================================================
 
 @app.get("/api/runs/{run_id}/files")
-async def list_artifacts(run_id: str) -> dict:
+async def list_artifacts(run_id: str) -> dict[str, object]:
     """List all artifacts for a run."""
     # TODO: Implement with database/storage query
     return {"artifacts": []}
 
 
 @app.get("/api/runs/{run_id}/files/{step}")
-async def get_step_artifact(run_id: str, step: str) -> dict:
+async def get_step_artifact(run_id: str, step: str) -> dict[str, object]:
     """Get artifact for a specific step."""
     # TODO: Implement with storage retrieval
     raise HTTPException(status_code=404, detail="Artifact not found")
@@ -250,7 +250,7 @@ async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
 # =============================================================================
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc: Exception) -> JSONResponse:
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Global exception handler."""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(

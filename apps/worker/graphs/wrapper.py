@@ -11,8 +11,9 @@ Provides consistent handling for all graph nodes:
 
 import json
 import time
+from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory, StepError
@@ -21,9 +22,8 @@ from apps.api.observability.events import Event, EventEmitter, EventType
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.storage.artifact_store import ArtifactStore
 from apps.api.storage.schemas import ArtifactRef
-from apps.api.validation.base import BaseValidator
-from apps.api.validation.json_validator import JSONValidator
-from apps.api.validation.schemas import ValidationReport, ValidationSeverity
+from apps.api.validation.base import ValidatorInterface
+from apps.api.validation.json_validator import JsonValidator
 
 
 class StepWrapperError(Exception):
@@ -45,7 +45,7 @@ async def step_wrapper(
     ctx: ExecutionContext,
     state: GraphState,
     config: dict[str, Any],
-    validator: BaseValidator | None = None,
+    validator: ValidatorInterface | None = None,
     store: ArtifactStore | None = None,
     emitter: EventEmitter | None = None,
 ) -> GraphState:
@@ -76,7 +76,7 @@ async def step_wrapper(
     """
     store = store or ArtifactStore()
     emitter = emitter or EventEmitter()
-    validator = validator or JSONValidator()
+    validator = validator or JsonValidator()
 
     start_time = time.time()
 
@@ -123,8 +123,9 @@ async def step_wrapper(
             if not validation_report.valid:
                 # Check if errors are critical
                 if validation_report.has_errors():
+                    err_count = validation_report.error_count()
                     raise StepWrapperError(
-                        f"Validation failed for {ctx.step_id}: {validation_report.error_count()} errors",
+                        f"Validation failed for {ctx.step_id}: {err_count} errors",
                         category=ErrorCategory.VALIDATION_FAIL,
                         details={"issues": [i.model_dump() for i in validation_report.issues]},
                     )

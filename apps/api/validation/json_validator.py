@@ -3,11 +3,11 @@
 import hashlib
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import jsonschema
-from jsonschema import Draft7Validator, ValidationError as JsonSchemaValidationError
+from jsonschema import Draft7Validator
 
 from .base import ValidatorInterface
 from .schemas import ValidationIssue, ValidationReport, ValidationSeverity
@@ -71,7 +71,7 @@ class JsonValidator(ValidatorInterface):
             format="json",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=original_hash,
             repaired_hash=None,
         )
@@ -139,7 +139,7 @@ class JsonValidator(ValidatorInterface):
             format="json",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=original_hash,
             repaired_hash=None,
         )
@@ -226,7 +226,7 @@ class JsonValidator(ValidatorInterface):
             format="json",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=self._compute_hash(content) if content else "",
             repaired_hash=None,
         )

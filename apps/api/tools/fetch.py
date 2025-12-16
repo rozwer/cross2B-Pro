@@ -8,9 +8,8 @@
 
 import hashlib
 import logging
-import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -18,7 +17,6 @@ from urllib.parse import urljoin, urlparse
 import httpx
 
 from .base import ErrorCategory, ToolInterface
-from .exceptions import ContentExtractionError
 from .registry import ToolRegistry
 from .schemas import Evidence, ToolResult
 
@@ -126,7 +124,7 @@ class PageFetchTool(ToolInterface):
 
     tool_id = "page_fetch"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.timeout = DEFAULT_TIMEOUT
         self.max_content_length = MAX_CONTENT_LENGTH
 
@@ -190,7 +188,7 @@ class PageFetchTool(ToolInterface):
                     # Evidence作成
                     evidence = Evidence(
                         url=str(response.url),  # リダイレクト後のURL
-                        fetched_at=datetime.now(timezone.utc),
+                        fetched_at=datetime.now(UTC),
                         excerpt=extracted["body_text"][:200],
                         content_hash=_compute_hash(html),
                     )
@@ -237,7 +235,10 @@ class PageFetchTool(ToolInterface):
                     )
                 elif response.status_code >= 500:
                     logger.warning(
-                        f"page_fetch: Server error {response.status_code} (attempt {attempt + 1}/{MAX_RETRIES})"
+                        "page_fetch: Server error %d (attempt %d/%d)",
+                        response.status_code,
+                        attempt + 1,
+                        MAX_RETRIES,
                     )
                     if attempt < MAX_RETRIES - 1:
                         import asyncio
@@ -377,6 +378,13 @@ class PdfExtractTool(ToolInterface):
             # PDF解析
             import io
 
+            if pdf_data is None:
+                return ToolResult(
+                    success=False,
+                    error_category=ErrorCategory.NON_RETRYABLE.value,
+                    error_message="Failed to read PDF data",
+                )
+
             reader = PdfReader(io.BytesIO(pdf_data))
             total_pages = len(reader.pages)
             pages_to_extract = min(total_pages, max_pages)
@@ -391,7 +399,7 @@ class PdfExtractTool(ToolInterface):
 
             evidence = Evidence(
                 url=source_url,
-                fetched_at=datetime.now(timezone.utc),
+                fetched_at=datetime.now(UTC),
                 excerpt=full_text[:200],
                 content_hash=_compute_hash(pdf_data if pdf_data else b""),
             )
@@ -482,7 +490,8 @@ class PrimaryCollectorTool(ToolInterface):
                 error_message=f"SERP fetch failed: {serp_result.error_message}",
             )
 
-        results = serp_result.data.get("results", [])
+        data = serp_result.data or {}
+        results = data.get("results", [])
         if not results:
             return ToolResult(
                 success=True,

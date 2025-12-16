@@ -13,9 +13,8 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
-from apps.api.tools.registry import ToolRegistry
-from apps.api.tools.schemas import ToolRequest
 
 from .base import ActivityError, BaseActivity
 
@@ -80,10 +79,11 @@ class Step8FactCheck(BaseActivity):
         try:
             claims_prompt = prompt_pack.get_prompt("step8_claims")
             claims_request = claims_prompt.render(content=polished_content)
+            claims_config = LLMRequestConfig(max_tokens=2000, temperature=0.3)
             claims_response = await llm.generate(
-                prompt=claims_request,
-                max_tokens=2000,
-                temperature=0.3,  # Low temperature for precise extraction
+                messages=[{"role": "user", "content": claims_request}],
+                system_prompt="Extract claims from the provided content.",
+                config=claims_config,
             )
             extracted_claims = claims_response.content
         except Exception as e:
@@ -93,18 +93,18 @@ class Step8FactCheck(BaseActivity):
             ) from e
 
         # Step 8.2: Verify claims using grounding
-        verification_results = []
+        verification_results: str = ""
         try:
             verify_prompt = prompt_pack.get_prompt("step8_verify")
             verify_request = verify_prompt.render(
                 claims=extracted_claims,
                 keyword=keyword,
             )
+            verify_config = LLMRequestConfig(max_tokens=3000, temperature=0.3)
             verify_response = await llm.generate(
-                prompt=verify_request,
-                max_tokens=3000,
-                temperature=0.3,
-                grounding=True,  # Enable Gemini grounding for verification
+                messages=[{"role": "user", "content": verify_request}],
+                system_prompt="Verify the claims using available knowledge.",
+                config=verify_config,
             )
             verification_results = verify_response.content
         except Exception as e:
@@ -120,10 +120,11 @@ class Step8FactCheck(BaseActivity):
                 keyword=keyword,
                 verification=verification_results,
             )
+            faq_config = LLMRequestConfig(max_tokens=2000, temperature=0.6)
             faq_response = await llm.generate(
-                prompt=faq_request,
-                max_tokens=2000,
-                temperature=0.6,
+                messages=[{"role": "user", "content": faq_request}],
+                system_prompt="Generate FAQ based on the verification results.",
+                config=faq_config,
             )
             faq_content = faq_response.content
         except Exception as e:
@@ -145,9 +146,9 @@ class Step8FactCheck(BaseActivity):
             "recommend_rejection": has_contradictions,  # Flag for UI
             "model": llm_model or "default",
             "usage": {
-                "claims_tokens": claims_response.output_tokens,
-                "verify_tokens": verify_response.output_tokens,
-                "faq_tokens": faq_response.output_tokens,
+                "claims_tokens": claims_response.token_usage.output,
+                "verify_tokens": verify_response.token_usage.output,
+                "faq_tokens": faq_response.token_usage.output,
             },
         }
 

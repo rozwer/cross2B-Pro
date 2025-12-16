@@ -212,7 +212,7 @@ class LLMInterface(ABC):
 LLMClient = LLMInterface
 
 
-def get_llm_client(provider: str, **kwargs) -> LLMInterface:
+def get_llm_client(provider: str, **kwargs: Any) -> LLMInterface:
     """プロバイダ名からLLMクライアントを取得
 
     Args:

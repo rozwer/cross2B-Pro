@@ -12,7 +12,6 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.tools.registry import ToolRegistry
-from apps.api.tools.schemas import ToolRequest
 
 from .base import ActivityError, BaseActivity
 
@@ -51,27 +50,27 @@ class Step1CompetitorFetch(BaseActivity):
         registry = ToolRegistry()
 
         # Step 1.1: SERP fetch to get competitor URLs
-        serp_tool = registry.get_tool("serp_fetch")
-        if not serp_tool:
+        try:
+            serp_tool = registry.get("serp_fetch")
+        except Exception as e:
             raise ActivityError(
-                "serp_fetch tool not found in registry",
+                f"serp_fetch tool not found in registry: {e}",
                 category=ErrorCategory.NON_RETRYABLE,
-            )
+            ) from e
 
         try:
-            serp_request = ToolRequest(
-                tool_id="serp_fetch",
-                input_data={"query": keyword, "num_results": config.get("num_competitors", 10)},
+            serp_result = await serp_tool.execute(
+                query=keyword,
+                num_results=config.get("num_competitors", 10),
             )
-            serp_result = await serp_tool.execute(serp_request)
 
             if not serp_result.success:
                 raise ActivityError(
-                    f"SERP fetch failed: {serp_result.error}",
+                    f"SERP fetch failed: {serp_result.error_message}",
                     category=ErrorCategory.RETRYABLE,
                 )
 
-            urls = serp_result.output_data.get("urls", [])
+            urls = serp_result.data.get("urls", []) if serp_result.data else []
 
         except ActivityError:
             raise
@@ -89,33 +88,30 @@ class Step1CompetitorFetch(BaseActivity):
             )
 
         # Step 1.2: Fetch each competitor page
-        page_fetch_tool = registry.get_tool("page_fetch")
-        if not page_fetch_tool:
+        try:
+            page_fetch_tool = registry.get("page_fetch")
+        except Exception as e:
             raise ActivityError(
-                "page_fetch tool not found in registry",
+                f"page_fetch tool not found in registry: {e}",
                 category=ErrorCategory.NON_RETRYABLE,
-            )
+            ) from e
 
         competitors = []
         failed_urls = []
 
         for url in urls:
             try:
-                fetch_request = ToolRequest(
-                    tool_id="page_fetch",
-                    input_data={"url": url},
-                )
-                fetch_result = await page_fetch_tool.execute(fetch_request)
+                fetch_result = await page_fetch_tool.execute(url=url)
 
-                if fetch_result.success:
+                if fetch_result.success and fetch_result.data:
                     competitors.append({
                         "url": url,
-                        "title": fetch_result.output_data.get("title", ""),
-                        "content": fetch_result.output_data.get("content", ""),
-                        "fetched_at": fetch_result.output_data.get("fetched_at"),
+                        "title": fetch_result.data.get("title", ""),
+                        "content": fetch_result.data.get("content", ""),
+                        "fetched_at": fetch_result.data.get("fetched_at"),
                     })
                 else:
-                    failed_urls.append({"url": url, "error": fetch_result.error})
+                    failed_urls.append({"url": url, "error": fetch_result.error_message})
 
             except Exception as e:
                 failed_urls.append({"url": url, "error": str(e)})

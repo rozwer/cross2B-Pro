@@ -5,7 +5,8 @@ Tool Registry (Manifest)
 何が呼べるか / 必要なENVは何か / 何が返るか を一意に定義。
 """
 
-from typing import Any, Callable, Type
+from collections.abc import Callable
+from typing import Any
 
 from .base import ToolInterface
 from .exceptions import ToolNotFoundError
@@ -45,7 +46,7 @@ class ToolRegistry:
     全ツールを登録し、tool_idで取得可能にする。
     """
 
-    _tools: dict[str, Type[ToolInterface]] = {}
+    _tools: dict[str, type[ToolInterface]] = {}
     _manifests: dict[str, ToolManifest] = {}
 
     @classmethod
@@ -56,17 +57,20 @@ class ToolRegistry:
         required_env: list[str] | None = None,
         input_schema: dict[str, Any] | None = None,
         output_description: str | None = None,
-    ) -> Callable[[Type[ToolInterface]], Type[ToolInterface]]:
+    ) -> Callable[[type[ToolInterface]], type[ToolInterface]]:
         """
         ツールを登録するデコレータ
 
-        Usage:
-            @ToolRegistry.register("serp_fetch", description="SERP取得", required_env=["SERP_API_KEY"])
+        Usage::
+
+            @ToolRegistry.register(
+                "serp_fetch", description="SERP取得", required_env=["SERP_API_KEY"]
+            )
             class SerpFetchTool(ToolInterface):
                 ...
         """
 
-        def decorator(tool_class: Type[ToolInterface]) -> Type[ToolInterface]:
+        def decorator(tool_class: type[ToolInterface]) -> type[ToolInterface]:
             tool_class.tool_id = tool_id
             cls._tools[tool_id] = tool_class
             cls._manifests[tool_id] = ToolManifest(

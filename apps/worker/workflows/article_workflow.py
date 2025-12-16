@@ -12,7 +12,7 @@ IMPORTANT:
 """
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
@@ -118,7 +118,7 @@ class ArticleWorkflow:
         if not pack_id:
             return {
                 "status": "failed",
-                "error": "pack_id is required. Auto-execution without explicit pack_id is forbidden.",
+                "error": "pack_id required. Auto-execution without pack_id is forbidden.",
             }
 
         # Build activity args (passed to all activities)
@@ -332,4 +332,4 @@ class ArticleWorkflow:
             start_to_close_timeout=timedelta(seconds=timeout),
             retry_policy=DEFAULT_RETRY_POLICY,
         )
-        return result
+        return cast(dict[str, Any], result)

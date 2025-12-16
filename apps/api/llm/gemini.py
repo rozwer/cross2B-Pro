@@ -108,7 +108,10 @@ class GeminiClient(LLMInterface):
         self._api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self._api_key:
             raise LLMConfigurationError(
-                message="Gemini API key is required. Set GEMINI_API_KEY environment variable or pass api_key parameter.",
+                message=(
+                    "Gemini API key is required. "
+                    "Set GEMINI_API_KEY env var or pass api_key parameter."
+                ),
                 provider=self.PROVIDER_NAME,
                 missing_config=["GEMINI_API_KEY"],
             )
@@ -456,21 +459,26 @@ class GeminiClient(LLMInterface):
                 )
 
                 # API呼び出し（タイムアウト付き）
+                sys_instr_kwargs = (
+                    {"system_instruction": system_instruction}
+                    if system_instruction else {}
+                )
+                tools_kwargs = {"tools": tools} if tools else {}
                 response = await asyncio.wait_for(
                     asyncio.to_thread(
                         self._client.models.generate_content,
                         model=self._model,
                         contents=contents,
                         config=generation_config,
-                        **({"system_instruction": system_instruction} if system_instruction else {}),
-                        **({"tools": tools} if tools else {}),
+                        **sys_instr_kwargs,
+                        **tools_kwargs,
                     ),
                     timeout=self._timeout,
                 )
 
                 return response
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_error = LLMTimeoutError(
                     message=f"Request timed out after {self._timeout}s",
                     provider=self.PROVIDER_NAME,

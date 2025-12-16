@@ -58,11 +58,12 @@ SEO最適化された記事を自動生成するワークフローシステム�
 │   │   ├── activities/# Activity実装
 │   │   └── graphs/    # LangGraph定義
 │   └── ui/            # Next.js フロントエンド
-├── docker/            # Dockerfiles
+├── docs/
+│   ├── guides/        # RUN.md, TEST.md 等の実行ガイド
+│   ├── prompts/       # プロンプト設計ドキュメント
+│   └── summaries/     # フェーズ完了サマリー
 ├── scripts/           # ユーティリティスクリプト
 ├── tests/             # テストスイート
-├── langgraph-example/ # LangGraph サンプル実装
-├── prompts/           # プロンプトテンプレート
 └── 仕様書/            # 設計ドキュメント
 ```
 

@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "pre_approval": "./apps/worker/graphs/pre_approval.py:pre_approval_graph",
+    "post_approval": "./apps/worker/graphs/post_approval.py:post_approval_graph"
+  },
+  "env": ".env"
+}
