@@ -169,6 +169,16 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
   );
 }
 
+// Markdownコンテンツを含むフィールド名
+const MARKDOWN_FIELDS = [
+  'draft',
+  'polished',
+  'final_content',
+  'integration_package',
+  'markdown',
+  'content',
+];
+
 function ContentRenderer({
   content,
   contentType,
@@ -178,9 +188,67 @@ function ContentRenderer({
   contentType: string;
   encoding: 'utf-8' | 'base64';
 }) {
+  const [viewMode, setViewMode] = useState<'json' | 'markdown'>('json');
   const decodedContent = encoding === 'base64' ? atob(content) : content;
 
+  // JSONの場合、Markdownフィールドを検出
   if (contentType.includes('json')) {
+    let markdownContent: string | null = null;
+    let markdownFieldName: string | null = null;
+
+    try {
+      const parsed = JSON.parse(decodedContent);
+      if (typeof parsed === 'object' && parsed !== null) {
+        for (const field of MARKDOWN_FIELDS) {
+          if (field in parsed && typeof parsed[field] === 'string' && parsed[field].length > 100) {
+            markdownContent = parsed[field];
+            markdownFieldName = field;
+            break;
+          }
+        }
+      }
+    } catch {
+      // JSONパースエラーは無視
+    }
+
+    // Markdownフィールドが見つかった場合、表示切り替えUI
+    if (markdownContent && markdownFieldName) {
+      return (
+        <div>
+          <div className="flex items-center gap-2 mb-3 border-b border-gray-200 pb-2">
+            <span className="text-xs text-gray-500">表示モード:</span>
+            <button
+              onClick={() => setViewMode('json')}
+              className={cn(
+                'px-2 py-1 text-xs rounded transition-colors',
+                viewMode === 'json'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              )}
+            >
+              JSON
+            </button>
+            <button
+              onClick={() => setViewMode('markdown')}
+              className={cn(
+                'px-2 py-1 text-xs rounded transition-colors',
+                viewMode === 'markdown'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              )}
+            >
+              {markdownFieldName} (Markdown)
+            </button>
+          </div>
+          {viewMode === 'json' ? (
+            <JsonViewer content={decodedContent} />
+          ) : (
+            <MarkdownViewer content={markdownContent} />
+          )}
+        </div>
+      );
+    }
+
     return <JsonViewer content={decodedContent} />;
   }
 

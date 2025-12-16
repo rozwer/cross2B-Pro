@@ -1,0 +1,174 @@
+{
+  "migration_id": "md-to-json-2025-12",
+  "description": "Markdown形式でのデータ受け渡しをJSON形式に統一する移行計画",
+  "status": "completed",
+  "completed_at": "2025-12-16",
+  "priority_order": ["P1", "P2", "P3", "P4"],
+  "tasks": {
+    "P1_prompt_templates": {
+      "priority": 1,
+      "description": "プロンプトテンプレートの出力形式をJSON統一",
+      "status": "completed",
+      "files": [
+        {
+          "path": "apps/api/prompts/loader.py",
+          "changes": [
+            {
+              "step": "step6.5",
+              "line": 561,
+              "current": "Markdown形式で統合パッケージを出力",
+              "target": "JSON形式 {integration_package: string, outline_summary: string, section_count: number, total_sources: number}",
+              "status": "completed"
+            },
+            {
+              "step": "step7a",
+              "line": 598,
+              "current": "Markdown形式で本文初稿を出力",
+              "target": "JSON形式 {draft: string, word_count: number, section_count: number, cta_positions: string[]}",
+              "status": "completed"
+            },
+            {
+              "step": "step7b",
+              "line": 624,
+              "current": "Markdown形式でブラッシュアップ版を出力",
+              "target": "JSON形式 {polished: string, word_count: number, changes_made: string[]}",
+              "status": "completed"
+            },
+            {
+              "step": "step9",
+              "line": 689,
+              "current": "Markdown形式で最終版本文を出力",
+              "target": "JSON形式 {final_content: string, word_count: number, meta_description: string, internal_link_suggestions: string[]}",
+              "status": "completed"
+            }
+          ]
+        }
+      ]
+    },
+    "P2_activities": {
+      "priority": 2,
+      "description": "アクティビティの出力をJSON構造化",
+      "status": "completed",
+      "files": [
+        {
+          "path": "apps/worker/activities/step6_5.py",
+          "change": "json.loads(response.content) でパース、各フィールド抽出",
+          "status": "completed"
+        },
+        {
+          "path": "apps/worker/activities/step7a.py",
+          "change": "json.loads(response.content) でパース、draft/section_count/cta_positions 抽出",
+          "status": "completed"
+        },
+        {
+          "path": "apps/worker/activities/step7b.py",
+          "change": "json.loads(response.content) でパース、polished/changes_made 抽出",
+          "status": "completed"
+        },
+        {
+          "path": "apps/worker/activities/step9.py",
+          "change": "json.loads(response.content) でパース、final_content/meta_description/internal_link_suggestions 抽出",
+          "status": "completed"
+        }
+      ]
+    },
+    "P3_graph_nodes": {
+      "priority": 3,
+      "description": "LangGraphノード間データ受け渡しの構造化",
+      "status": "completed",
+      "files": [
+        {
+          "path": "apps/worker/graphs/pre_approval.py",
+          "nodes": [
+            {"name": "step0", "change": "json.loads + fallback to raw_content"},
+            {"name": "step3a", "change": "json.loads + fallback to raw_content"},
+            {"name": "step3b", "change": "json.loads + fallback to raw_content"},
+            {"name": "step3c", "change": "json.loads + fallback to raw_content"}
+          ],
+          "status": "completed"
+        },
+        {
+          "path": "apps/worker/graphs/post_approval.py",
+          "nodes": [
+            {"name": "step4", "change": "json.loads + fallback to raw_content"},
+            {"name": "step6", "change": "json.loads + fallback to raw_content"},
+            {"name": "step6_5", "change": "json.loads + 個別フィールド抽出"},
+            {"name": "step7a", "change": "json.loads + 個別フィールド抽出"},
+            {"name": "step7b", "change": "json.loads + 個別フィールド抽出"},
+            {"name": "step9", "change": "json.loads + 個別フィールド抽出"}
+          ],
+          "status": "completed"
+        }
+      ]
+    },
+    "P4_frontend": {
+      "priority": 4,
+      "description": "フロントエンドのJSON対応",
+      "status": "completed",
+      "files": [
+        {
+          "path": "apps/ui/src/components/artifacts/ArtifactViewer.tsx",
+          "change": "ContentRenderer に MARKDOWN_FIELDS 定数追加、JSON内Markdownフィールド自動検出、表示モード切替UI追加",
+          "status": "completed"
+        }
+      ]
+    }
+  },
+  "json_output_schema": {
+    "step6.5": {
+      "type": "object",
+      "properties": {
+        "integration_package": {"type": "string", "description": "統合パッケージ（Markdown本文）"},
+        "outline_summary": {"type": "string", "description": "構成の概要"},
+        "section_count": {"type": "number", "description": "セクション数"},
+        "total_sources": {"type": "number", "description": "一次情報の総数"}
+      },
+      "required": ["integration_package"]
+    },
+    "step7a": {
+      "type": "object",
+      "properties": {
+        "draft": {"type": "string", "description": "本文初稿（Markdown本文）"},
+        "word_count": {"type": "number", "description": "文字数"},
+        "section_count": {"type": "number", "description": "セクション数"},
+        "cta_positions": {"type": "array", "items": {"type": "string"}, "description": "CTA挿入位置リスト"}
+      },
+      "required": ["draft"]
+    },
+    "step7b": {
+      "type": "object",
+      "properties": {
+        "polished": {"type": "string", "description": "ブラッシュアップ版（Markdown本文）"},
+        "word_count": {"type": "number", "description": "文字数"},
+        "changes_made": {"type": "array", "items": {"type": "string"}, "description": "修正箇所リスト"}
+      },
+      "required": ["polished"]
+    },
+    "step9": {
+      "type": "object",
+      "properties": {
+        "final_content": {"type": "string", "description": "最終版本文（Markdown本文）"},
+        "word_count": {"type": "number", "description": "文字数"},
+        "meta_description": {"type": "string", "description": "メタディスクリプション"},
+        "internal_link_suggestions": {"type": "array", "items": {"type": "string"}, "description": "内部リンク候補"}
+      },
+      "required": ["final_content"]
+    }
+  },
+  "notes": [
+    "step10のmarkdownフィールドはそのまま維持（最終出力として正当）",
+    "JSON形式でもMarkdown本文はフィールド値として保持",
+    "JSONDecodeError 発生時はフォールバック処理（raw_content or response.content直接使用）",
+    "フロントエンドはJSONとMarkdownの表示モード切替に対応"
+  ],
+  "modified_files": [
+    "apps/api/prompts/loader.py",
+    "apps/worker/activities/step6_5.py",
+    "apps/worker/activities/step7a.py",
+    "apps/worker/activities/step7b.py",
+    "apps/worker/activities/step9.py",
+    "apps/worker/graphs/pre_approval.py",
+    "apps/worker/graphs/post_approval.py",
+    "apps/ui/src/components/artifacts/ArtifactViewer.tsx"
+  ]
+}

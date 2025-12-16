@@ -4,6 +4,7 @@ Polishes and improves the draft with natural language and flow.
 Uses Gemini for natural language enhancement.
 """
 
+import json
 from typing import Any
 
 from temporalio import activity
@@ -104,8 +105,19 @@ class Step7BBrushUp(BaseActivity):
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
-        # Calculate content stats
-        polished_content = response.content
+        # Parse JSON response
+        try:
+            parsed = json.loads(response.content)
+            polished_content = parsed.get("polished", "")
+            llm_word_count = parsed.get("word_count", 0)
+            changes_made = parsed.get("changes_made", [])
+        except json.JSONDecodeError as e:
+            raise ActivityError(
+                f"Failed to parse JSON response: {e}",
+                category=ErrorCategory.RETRYABLE,
+            ) from e
+
+        # Calculate actual content stats
         word_count = len(polished_content.split())
         char_count = len(polished_content)
 
@@ -117,10 +129,12 @@ class Step7BBrushUp(BaseActivity):
             "step": self.step_id,
             "keyword": keyword,
             "polished": polished_content,
+            "changes_made": changes_made,
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
                 "word_diff_from_draft": word_diff,
+                "llm_reported_word_count": llm_word_count,
             },
             "model": response.model,
             "usage": {

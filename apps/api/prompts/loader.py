@@ -558,7 +558,15 @@ JSON形式で以下を出力:
 - パート2: 参照用データ（工程7以降で使用）
 
 ## 出力形式
-Markdown形式で統合パッケージを出力""",
+JSON形式で以下を出力:
+```json
+{
+  "integration_package": "統合パッケージ全文（Markdown形式の文字列）",
+  "outline_summary": "構成の概要",
+  "section_count": "セクション数",
+  "total_sources": "一次情報の総数"
+}
+```""",
                     variables={
                         "keyword": {"required": True, "type": "string"},
                         "enhanced_outline": {"required": True, "type": "string"},
@@ -595,7 +603,15 @@ Markdown形式で統合パッケージを出力""",
 - KGI: CTA配置確認
 
 ## 出力形式
-Markdown形式で本文初稿を出力""",
+JSON形式で以下を出力:
+```json
+{
+  "draft": "本文初稿（Markdown形式の文字列）",
+  "word_count": "文字数",
+  "section_count": "セクション数",
+  "cta_positions": ["CTA挿入位置リスト"]
+}
+```""",
                     variables={
                         "integration_package": {"required": True, "type": "string"},
                     },
@@ -621,7 +637,14 @@ Markdown形式で本文初稿を出力""",
 - 専門用語の解説追加
 
 ## 出力形式
-Markdown形式でブラッシュアップ版を出力""",
+JSON形式で以下を出力:
+```json
+{
+  "polished": "ブラッシュアップ版（Markdown形式の文字列）",
+  "word_count": "文字数",
+  "changes_made": ["修正箇所リスト"]
+}
+```""",
                     variables={
                         "draft": {"required": True, "type": "string"},
                     },
@@ -686,7 +709,15 @@ JSON形式で以下を出力:
 - 画像ALTテキスト案
 
 ## 出力形式
-Markdown形式で最終版本文を出力""",
+JSON形式で以下を出力:
+```json
+{
+  "final_content": "最終版本文（Markdown形式の文字列）",
+  "word_count": "文字数",
+  "meta_description": "メタディスクリプション",
+  "internal_link_suggestions": ["内部リンク候補"]
+}
+```""",
                     variables={
                         "polished_draft": {"required": True, "type": "string"},
                         "factcheck_result": {"required": False, "type": "object"},
