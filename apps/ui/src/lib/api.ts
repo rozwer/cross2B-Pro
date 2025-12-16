@@ -106,8 +106,8 @@ class ApiClient {
     },
 
     cancel: async (id: string): Promise<{ success: boolean }> => {
-      return this.request<{ success: boolean }>(`/api/runs/${id}/cancel`, {
-        method: 'POST',
+      return this.request<{ success: boolean }>(`/api/runs/${id}`, {
+        method: 'DELETE',
       });
     },
 
