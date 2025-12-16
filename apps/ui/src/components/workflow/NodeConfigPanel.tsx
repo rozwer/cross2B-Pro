@@ -33,24 +33,19 @@ interface ModelOption {
 
 const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
   gemini: [
-    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Exp)', description: '最新・高速', isDefault: true },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '高精度・長文' },
+    { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', description: '最新・高速', isDefault: true },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '高精度' },
     { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: '安定版' },
-    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: '軽量・高速' },
   ],
   openai: [
     { id: 'gpt-4o', name: 'GPT-4o', description: '最新・高性能', isDefault: true },
-    { id: 'gpt-4o-mini', name: 'GPT-4o mini', description: '軽量・コスト効率' },
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: '高速・128K' },
+    { id: 'gpt-4o-mini', name: 'GPT-4o mini', description: '軽量' },
     { id: 'o1', name: 'o1', description: '推論特化' },
-    { id: 'o1-mini', name: 'o1 mini', description: '推論・軽量' },
-    { id: 'o3-mini', name: 'o3 mini', description: '次世代推論' },
   ],
   anthropic: [
-    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', description: '最新・バランス', isDefault: true },
+    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', description: '最新', isDefault: true },
     { id: 'claude-opus-4', name: 'Claude Opus 4', description: '最高精度' },
-    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', description: '高速・高精度' },
-    { id: 'claude-3-haiku', name: 'Claude 3 Haiku', description: '軽量・高速' },
+    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', description: '高速' },
   ],
 };
 
