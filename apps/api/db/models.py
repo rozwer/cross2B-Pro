@@ -184,7 +184,12 @@ class Artifact(Base):
 
 
 class AuditLog(Base):
-    """Immutable audit log (UPDATE/DELETE prohibited via trigger)."""
+    """Immutable audit log with chain hash (UPDATE/DELETE prohibited via trigger).
+
+    VULN-011: 監査ログの完全性保証
+    - prev_hash: 前のログエントリーのハッシュ（チェーンハッシュ）
+    - entry_hash: このエントリーのハッシュ（改ざん検知用）
+    """
 
     __tablename__ = "audit_logs"
 
@@ -197,6 +202,13 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, nullable=False
     )
+    # VULN-011: チェーンハッシュ
+    prev_hash: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # 最初のエントリはNone
+    entry_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False
+    )  # SHA256 of entry content
 
 
 class Prompt(Base):

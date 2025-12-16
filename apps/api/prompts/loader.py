@@ -245,33 +245,104 @@ class PromptPackLoader:
         return PromptPack(pack_id=pack_id, prompts=prompts)
 
     def _load_mock_pack(self) -> PromptPack:
-        """Load mock prompt pack for testing."""
+        """Load mock prompt pack for testing.
+
+        REVIEW-005: キー名を step_id と一致させる
+        Worker/Graph が参照する step0, step1, step3a 等に統一
+        """
         return PromptPack(
             pack_id="mock_pack",
             prompts={
-                "step_0_keyword_research": PromptTemplate(
-                    step="step_0_keyword_research",
+                # Step 0: キーワード選定
+                "step0": PromptTemplate(
+                    step="step0",
                     version=1,
                     content="Analyze the keyword: {{keyword}}",
                     variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_1_structure": PromptTemplate(
-                    step="step_1_structure",
+                # Step 1: SERP分析・構成作成
+                "step1": PromptTemplate(
+                    step="step1",
                     version=1,
-                    content="Create article structure for: {{topic}}",
-                    variables={"topic": {"required": True, "type": "string"}},
+                    content="Analyze SERP results and create structure for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_2_draft": PromptTemplate(
-                    step="step_2_draft",
+                # Step 2: 競合分析
+                "step2": PromptTemplate(
+                    step="step2",
                     version=1,
-                    content="Write draft based on structure: {{structure}}",
+                    content="Analyze competitors for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
+                ),
+                # Step 3A: 本文生成（並列A）
+                "step3a": PromptTemplate(
+                    step="step3a",
+                    version=1,
+                    content="Generate article body part A for: {{structure}}",
                     variables={"structure": {"required": True, "type": "string"}},
                 ),
-                "step_3_review": PromptTemplate(
-                    step="step_3_review",
+                # Step 3B: 本文生成（並列B）
+                "step3b": PromptTemplate(
+                    step="step3b",
                     version=1,
-                    content="Review draft for quality: {{draft}}",
+                    content="Generate article body part B for: {{structure}}",
+                    variables={"structure": {"required": True, "type": "string"}},
+                ),
+                # Step 3C: 本文生成（並列C）
+                "step3c": PromptTemplate(
+                    step="step3c",
+                    version=1,
+                    content="Generate article body part C for: {{structure}}",
+                    variables={"structure": {"required": True, "type": "string"}},
+                ),
+                # Step 4: 本文マージ
+                "step4": PromptTemplate(
+                    step="step4",
+                    version=1,
+                    content="Merge article parts: {{parts}}",
+                    variables={"parts": {"required": True, "type": "string"}},
+                ),
+                # Step 5: 品質チェック
+                "step5": PromptTemplate(
+                    step="step5",
+                    version=1,
+                    content="Quality check for: {{draft}}",
                     variables={"draft": {"required": True, "type": "string"}},
+                ),
+                # Step 6: FAQ生成
+                "step6": PromptTemplate(
+                    step="step6",
+                    version=1,
+                    content="Generate FAQ for: {{article}}",
+                    variables={"article": {"required": True, "type": "string"}},
+                ),
+                # Step 7: 最終調整
+                "step7": PromptTemplate(
+                    step="step7",
+                    version=1,
+                    content="Final adjustment for: {{article}}",
+                    variables={"article": {"required": True, "type": "string"}},
+                ),
+                # Step 8: メタ情報生成
+                "step8": PromptTemplate(
+                    step="step8",
+                    version=1,
+                    content="Generate meta info for: {{article}}",
+                    variables={"article": {"required": True, "type": "string"}},
+                ),
+                # Step 9: 出力フォーマット
+                "step9": PromptTemplate(
+                    step="step9",
+                    version=1,
+                    content="Format output for: {{article}}",
+                    variables={"article": {"required": True, "type": "string"}},
+                ),
+                # Step 10: 最終チェック
+                "step10": PromptTemplate(
+                    step="step10",
+                    version=1,
+                    content="Final check for: {{article}}",
+                    variables={"article": {"required": True, "type": "string"}},
                 ),
             },
         )
