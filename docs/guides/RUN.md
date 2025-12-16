@@ -237,14 +237,47 @@ uv run ruff check apps/
 ### 4.2 API経由でのワークフロー開始
 
 ```bash
-# 新規ワークフロー作成
+# 新規ワークフロー作成（UI型に合致した形式）
 curl -X POST http://localhost:8000/api/runs \
   -H "Content-Type: application/json" \
+  -H "X-Tenant-ID: test_tenant" \
   -d '{
-    "tenant_id": "test_tenant",
-    "input_data": {"keyword": "テストキーワード"},
-    "config": {"pack_id": "default_pack"}
+    "input": {
+      "keyword": "テストキーワード",
+      "target_audience": "SEO初心者",
+      "additional_requirements": "分かりやすく解説してください"
+    },
+    "model_config": {
+      "platform": "gemini",
+      "model": "gemini-2.0-flash",
+      "options": {
+        "grounding": true,
+        "temperature": 0.7
+      }
+    },
+    "tool_config": {
+      "serp_fetch": true,
+      "page_fetch": true,
+      "url_verify": true,
+      "pdf_extract": false
+    },
+    "options": {
+      "retry_limit": 3,
+      "repair_enabled": true
+    }
   }'
+
+# ワークフローキャンセル（DELETE メソッド）
+curl -X DELETE http://localhost:8000/api/runs/{run_id} \
+  -H "X-Tenant-ID: test_tenant"
+
+# ワークフロー承認
+curl -X POST http://localhost:8000/api/runs/{run_id}/approve \
+  -H "X-Tenant-ID: test_tenant"
+
+# 成果物一覧取得
+curl http://localhost:8000/api/runs/{run_id}/files \
+  -H "X-Tenant-ID: test_tenant"
 ```
 
 ### 4.3 UI からのワークフロー操作
