@@ -5,7 +5,7 @@ import { LLMPlatform } from '@/lib/types';
 // Workflow Step Configuration
 // ============================================
 
-export type StepAIProvider = 'gemini' | 'claude' | 'manual' | 'gemini+web';
+export type StepAIProvider = 'gemini' | 'claude' | 'gpt' | 'manual' | 'gemini+web' | 'gpt+web';
 
 export interface WorkflowStepConfig {
   id: string;
@@ -31,7 +31,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     label: '準備',
     description: 'キーワード選定',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
   },
   {
     id: 'step1',
@@ -45,14 +45,14 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     label: '調査',
     description: 'CSV読み込み・検証',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
   },
   {
     id: 'step3a',
     label: '並列A',
     description: 'クエリ分析・ペルソナ',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
     isParallel: true,
   },
   {
@@ -60,7 +60,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     label: '並列B',
     description: '共起語・関連KW抽出',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
     isParallel: true,
   },
   {
@@ -68,7 +68,7 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     label: '並列C',
     description: '競合分析・差別化',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
     isParallel: true,
   },
   {
@@ -84,63 +84,63 @@ export const WORKFLOW_STEPS: WorkflowStepConfig[] = [
     label: '執筆準備',
     description: '戦略的アウトライン',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
   {
     id: 'step5',
     label: '情報収集',
     description: '一次情報収集',
     defaultProvider: 'gemini+web',
-    allowedProviders: ['gemini+web'],
+    allowedProviders: ['gemini+web', 'gpt+web'],
   },
   {
     id: 'step6',
     label: '編集',
     description: 'アウトライン強化版',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
   {
     id: 'step6.5',
     label: '統合',
     description: '統合パッケージ化',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
   {
     id: 'step7a',
     label: '初稿',
     description: '本文生成',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
   {
     id: 'step7b',
     label: '推敲',
     description: 'ブラッシュアップ',
     defaultProvider: 'gemini',
-    allowedProviders: ['gemini', 'claude'],
+    allowedProviders: ['gemini', 'claude', 'gpt'],
   },
   {
     id: 'step8',
     label: '検証',
     description: 'ファクトチェック・FAQ',
     defaultProvider: 'gemini+web',
-    allowedProviders: ['gemini+web'],
+    allowedProviders: ['gemini+web', 'gpt+web'],
   },
   {
     id: 'step9',
     label: '最終調整',
     description: '最終リライト',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
   {
     id: 'step10',
     label: '完了',
     description: '最終出力',
     defaultProvider: 'claude',
-    allowedProviders: ['claude', 'gemini'],
+    allowedProviders: ['claude', 'gemini', 'gpt'],
   },
 ];
 
@@ -267,8 +267,12 @@ export function getProviderColor(provider: StepAIProvider): string {
       return 'bg-blue-500';
     case 'claude':
       return 'bg-orange-500';
+    case 'gpt':
+      return 'bg-green-500';
     case 'gemini+web':
       return 'bg-purple-500';
+    case 'gpt+web':
+      return 'bg-emerald-500';
     case 'manual':
       return 'bg-gray-500';
     default:
@@ -282,8 +286,12 @@ export function getProviderLabel(provider: StepAIProvider): string {
       return 'Gemini';
     case 'claude':
       return 'Claude';
+    case 'gpt':
+      return 'GPT';
     case 'gemini+web':
       return 'Gemini + Web';
+    case 'gpt+web':
+      return 'GPT + Web';
     case 'manual':
       return '手動';
     default:
@@ -297,8 +305,12 @@ export function getProviderIcon(provider: StepAIProvider): string {
       return 'G';
     case 'claude':
       return 'C';
+    case 'gpt':
+      return 'O';
     case 'gemini+web':
       return 'G+';
+    case 'gpt+web':
+      return 'O+';
     case 'manual':
       return 'M';
     default:
@@ -314,6 +326,9 @@ export function providerToLLMPlatform(provider: StepAIProvider): LLMPlatform | n
       return 'gemini';
     case 'claude':
       return 'anthropic';
+    case 'gpt':
+    case 'gpt+web':
+      return 'openai';
     default:
       return null;
   }

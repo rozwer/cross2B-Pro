@@ -33,9 +33,18 @@ const CLAUDE_MODELS = [
   { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
 ];
 
+const GPT_MODELS = [
+  { id: 'gpt-4o', name: 'GPT-4o', isDefault: true },
+  { id: 'gpt-4o-mini', name: 'GPT-4o mini' },
+  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+  { id: 'o1', name: 'o1' },
+  { id: 'o1-mini', name: 'o1 mini' },
+];
+
 export interface ModelSettings {
   geminiModel: string;
   claudeModel: string;
+  gptModel: string;
   temperature: number;
   maxTokens: number;
   groundingEnabled: boolean;
@@ -114,7 +123,7 @@ export function ModelConfigPanel({
         <div className="border-b border-gray-100 p-4">
           <div className="mb-3 text-xs font-medium text-gray-500">使用モデル概要</div>
           <div className="grid grid-cols-2 gap-2">
-            {(['gemini', 'claude', 'gemini+web', 'manual'] as StepAIProvider[]).map(
+            {(['gemini', 'claude', 'gpt', 'gemini+web', 'gpt+web', 'manual'] as StepAIProvider[]).map(
               (provider) => (
                 <div
                   key={provider}
@@ -193,6 +202,27 @@ export function ModelConfigPanel({
                   className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 >
                   {CLAUDE_MODELS.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* GPT Model */}
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                  <span className="h-2 w-2 rounded-sm bg-green-500" />
+                  GPT モデル
+                </label>
+                <select
+                  value={modelSettings.gptModel}
+                  onChange={(e) =>
+                    updateModelSettings({ gptModel: e.target.value })
+                  }
+                  className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                >
+                  {GPT_MODELS.map((model) => (
                     <option key={model.id} value={model.id}>
                       {model.name}
                     </option>

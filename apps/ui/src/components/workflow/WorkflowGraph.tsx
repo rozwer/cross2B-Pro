@@ -113,8 +113,12 @@ export function WorkflowGraph({
         return '#3b82f6'; // blue
       case 'claude':
         return '#f97316'; // orange
+      case 'gpt':
+        return '#22c55e'; // green
       case 'gemini+web':
         return '#8b5cf6'; // purple
+      case 'gpt+web':
+        return '#10b981'; // emerald
       case 'manual':
         return '#6b7280'; // gray
       default:
@@ -162,7 +166,7 @@ export function WorkflowGraph({
           <div className="rounded-lg border border-gray-200 bg-white/95 p-3 shadow-md backdrop-blur-sm">
             <h3 className="mb-2 text-xs font-semibold text-gray-700">AIモデル</h3>
             <div className="flex flex-col gap-1.5">
-              {(['gemini', 'claude', 'gemini+web', 'manual'] as StepAIProvider[]).map(
+              {(['gemini', 'claude', 'gpt', 'gemini+web', 'gpt+web', 'manual'] as StepAIProvider[]).map(
                 (provider) => (
                   <div key={provider} className="flex items-center gap-2">
                     <span
