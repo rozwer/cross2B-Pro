@@ -63,9 +63,9 @@ async def run_parallel_steps(
     Raises:
         ParallelStepError: If any step fails after max retries
     """
-    MAX_RETRY_ROUNDS = 3  # Total retry rounds for the parallel group
-    PARALLEL_STEPS = ["step3a", "step3b", "step3c"]
-    ACTIVITY_NAMES = {
+    max_retry_rounds = 3  # Total retry rounds for the parallel group
+    parallel_steps = ["step3a", "step3b", "step3c"]
+    activity_names = {
         "step3a": "step3a_query_analysis",
         "step3b": "step3b_cooccurrence_extraction",
         "step3c": "step3c_competitor_analysis",
@@ -80,21 +80,21 @@ async def run_parallel_steps(
     completed: dict[str, Any] = {}
     last_errors: dict[str, str] = {}
 
-    for attempt in range(1, MAX_RETRY_ROUNDS + 1):
+    for attempt in range(1, max_retry_rounds + 1):
         # Determine which steps still need to run
-        pending = [s for s in PARALLEL_STEPS if s not in completed]
+        pending = [s for s in parallel_steps if s not in completed]
         if not pending:
             break
 
         workflow_logger.info(
-            f"Parallel steps attempt {attempt}/{MAX_RETRY_ROUNDS}: "
+            f"Parallel steps attempt {attempt}/{max_retry_rounds}: "
             f"running {pending}"
         )
 
         # Launch pending steps concurrently
         tasks = []
         for step in pending:
-            activity_name = ACTIVITY_NAMES[step]
+            activity_name = activity_names[step]
             task = workflow.execute_activity(
                 activity_name,
                 activity_args,
@@ -126,12 +126,12 @@ async def run_parallel_steps(
                 workflow_logger.info(f"{step} succeeded on attempt {attempt}")
 
     # Check if all steps completed
-    if len(completed) < len(PARALLEL_STEPS):
-        failed = [s for s in PARALLEL_STEPS if s not in completed]
+    if len(completed) < len(parallel_steps):
+        failed = [s for s in parallel_steps if s not in completed]
         error_details = {s: last_errors.get(s, "unknown error") for s in failed}
         raise ParallelStepError(
             failed_steps=failed,
-            message=f"Parallel steps failed after {MAX_RETRY_ROUNDS} attempts: {error_details}",
+            message=f"Parallel steps failed after {max_retry_rounds} attempts: {error_details}",
         )
 
     workflow_logger.info("All parallel steps completed successfully")

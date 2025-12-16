@@ -161,28 +161,41 @@ mypy apps/
 
 ```
 .
-├── .claude/
+├── apps/
+│   ├── api/                # FastAPI バックエンド
+│   ├── ui/                 # Next.js フロントエンド
+│   └── worker/             # Temporal Worker
+├── docs/
+│   ├── guides/             # RUN.md, TEST.md 等の実行ガイド
+│   ├── prompts/            # プロンプト設計ドキュメント
+│   ├── summaries/          # フェーズ完了サマリー
+│   └── screenshots/        # UI スクリーンショット
+├── scripts/                # 運用スクリプト（bootstrap, reset, worktree等）
+├── tests/
+│   ├── smoke/              # 起動確認テスト
+│   ├── unit/               # ユニットテスト
+│   ├── integration/        # 統合テスト
+│   └── e2e/                # E2Eテスト
+├── 仕様書/
+│   ├── ROADMAP.md          # 実装計画
+│   ├── workflow.md         # ワークフロー定義
+│   ├── PARALLEL_DEV_GUIDE.md
+│   ├── backend/            # BE仕様
+│   └── frontend/           # FE仕様
+├── .claude/                # Claude Code 設定
 │   ├── CLAUDE.md           # ← このファイル
 │   ├── agents/             # サブエージェント
 │   ├── commands/           # スラッシュコマンド
 │   ├── rules/              # 詳細ルール
-│   └── skills/             # LangGraph等スキル
-├── .codex/                 # Codex設定・スキル
-├── .githooks/              # Git hooks（Conventional Commits強制等）
-├── .worktrees/             # 並列開発用worktree格納ディレクトリ
-├── scripts/
-│   └── worktree.sh         # 並列開発CLIヘルパー
-├── 仕様書/
-│   ├── ROADMAP.md
-│   ├── workflow.md
-│   ├── PARALLEL_DEV_GUIDE.md  # 並列開発ガイド
-│   ├── backend/
-│   └── frontend/
-├── apps/
-│   ├── api/                # FastAPI
-│   └── worker/             # Temporal Worker
-├── langgraph-example/      # サンプル実装
-└── ref/                    # 生成物参照
+│   └── skills/             # スキル定義
+├── .codex/                 # Codex 設定・スキル
+├── .githooks/              # Git hooks
+├── .worktrees/             # 並列開発用 worktree
+├── docker/                 # Docker設定ファイル
+├── docker-compose.yml      # Docker Compose 定義
+├── pyproject.toml          # Python プロジェクト設定
+├── langgraph.json          # LangGraph CLI 設定
+└── README.md               # プロジェクト概要
 ```
 
 ---

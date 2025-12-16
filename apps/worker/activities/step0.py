@@ -11,7 +11,8 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.llm.base import LLMClient, get_llm_client
+from apps.api.llm.base import LLMInterface, get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
 from .base import ActivityError, BaseActivity
@@ -72,14 +73,18 @@ class Step0KeywordSelection(BaseActivity):
         # Get LLM client (Gemini for step0)
         llm_provider = config.get("llm_provider", "gemini")
         llm_model = config.get("llm_model")
-        llm: LLMClient = get_llm_client(llm_provider, model=llm_model)
+        llm: LLMInterface = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call
         try:
-            response = await llm.generate(
-                prompt=prompt,
+            llm_config = LLMRequestConfig(
                 max_tokens=config.get("max_tokens", 2000),
                 temperature=config.get("temperature", 0.7),
+            )
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt}],
+                system_prompt="You are a keyword analysis assistant.",
+                config=llm_config,
             )
         except Exception as e:
             raise ActivityError(
@@ -94,8 +99,8 @@ class Step0KeywordSelection(BaseActivity):
             "analysis": response.content,
             "model": response.model,
             "usage": {
-                "input_tokens": response.input_tokens,
-                "output_tokens": response.output_tokens,
+                "input_tokens": response.token_usage.input,
+                "output_tokens": response.token_usage.output,
             },
         }
 

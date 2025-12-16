@@ -13,9 +13,9 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
-from apps.api.tools.schemas import ToolRequest
 
 from .base import ActivityError, BaseActivity
 
@@ -76,14 +76,15 @@ class Step5PrimaryCollection(BaseActivity):
                 keyword=keyword,
                 outline=outline,
             )
+            llm_config = LLMRequestConfig(max_tokens=1000, temperature=0.5)
             query_response = await llm.generate(
-                prompt=query_request,
-                max_tokens=1000,
-                temperature=0.5,
+                messages=[{"role": "user", "content": query_request}],
+                system_prompt="Generate search queries for primary source collection.",
+                config=llm_config,
             )
             # Parse search queries from response
             search_queries = self._parse_queries(query_response.content)
-        except Exception as e:
+        except Exception:
             # Fall back to basic queries if parsing fails
             search_queries = [
                 f"{keyword} research statistics",
@@ -93,27 +94,23 @@ class Step5PrimaryCollection(BaseActivity):
 
         # Step 5.2: Execute searches using primary_collector tool
         registry = ToolRegistry()
-        primary_collector = registry.get_tool("primary_collector")
+        primary_collector = registry.get("primary_collector")
 
-        collected_sources = []
-        failed_queries = []
+        collected_sources: list[dict[str, Any]] = []
+        failed_queries: list[dict[str, Any]] = []
 
         if primary_collector:
             for query in search_queries[:5]:  # Limit to 5 queries
                 try:
-                    request = ToolRequest(
-                        tool_id="primary_collector",
-                        input_data={"query": query},
-                    )
-                    result = await primary_collector.execute(request)
+                    result = await primary_collector.execute(query=query)
 
                     if result.success:
-                        sources = result.output_data.get("evidence_refs", [])
+                        sources = result.data.get("evidence_refs", []) if result.data else []
                         collected_sources.extend(sources)
                     else:
                         failed_queries.append({
                             "query": query,
-                            "error": result.error,
+                            "error": result.error_message or "Unknown error",
                         })
                 except Exception as e:
                     failed_queries.append({
@@ -128,20 +125,17 @@ class Step5PrimaryCollection(BaseActivity):
             })
 
         # Step 5.3: Verify URLs
-        url_verify = registry.get_tool("url_verify")
+        url_verify = registry.get("url_verify")
         verified_sources = []
         invalid_sources = []
 
         if url_verify:
             for source in collected_sources:
                 try:
-                    verify_request = ToolRequest(
-                        tool_id="url_verify",
-                        input_data={"url": source.get("url", "")},
-                    )
-                    verify_result = await url_verify.execute(verify_request)
+                    verify_result = await url_verify.execute(url=source.get("url", ""))
 
-                    if verify_result.success and verify_result.output_data.get("status") == 200:
+                    data = verify_result.data or {}
+                    if verify_result.success and data.get("status") == 200:
                         source["verified"] = True
                         verified_sources.append(source)
                     else:

@@ -42,6 +42,10 @@ else:
 - USE_MOCK_GOOGLE_ADS: Google Ads モックモード（true/false、デフォルト true）
 """
 
+# ツールを登録（インポート時に自動登録）
+from . import fetch as fetch  # noqa: F401 - side-effect import for tool registration
+from . import search as search  # noqa: F401 - side-effect import for tool registration
+from . import verify as verify  # noqa: F401 - side-effect import for tool registration
 from .base import ErrorCategory, ToolInterface
 from .exceptions import (
     ContentExtractionError,
@@ -54,9 +58,6 @@ from .exceptions import (
 )
 from .registry import ToolManifest, ToolRegistry
 from .schemas import Evidence, ToolResult
-
-# ツールを登録（インポート時に自動登録）
-from . import fetch, search, verify
 
 __all__ = [
     # 基盤

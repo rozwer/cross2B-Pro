@@ -3,8 +3,7 @@
 import csv
 import hashlib
 import io
-import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from .base import ValidatorInterface
@@ -68,7 +67,7 @@ class CsvValidator(ValidatorInterface):
                 format="csv",
                 issues=issues,
                 repairs=[],
-                validated_at=datetime.now(timezone.utc),
+                validated_at=datetime.now(UTC),
                 original_hash=original_hash,
                 repaired_hash=None,
             )
@@ -100,7 +99,7 @@ class CsvValidator(ValidatorInterface):
             format="csv",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=original_hash,
             repaired_hash=None,
         )
@@ -207,7 +206,7 @@ class CsvValidator(ValidatorInterface):
             format="csv",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=original_hash,
             repaired_hash=None,
         )
@@ -358,7 +357,7 @@ class CsvValidator(ValidatorInterface):
             format="csv",
             issues=issues,
             repairs=[],
-            validated_at=datetime.now(timezone.utc),
+            validated_at=datetime.now(UTC),
             original_hash=self._compute_hash(content) if content else "",
             repaired_hash=None,
         )

@@ -7,7 +7,7 @@
 import hashlib
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 import httpx
@@ -146,7 +146,7 @@ class UrlVerifyTool(ToolInterface):
                 evidence_content = f"{url}|{status_code}|{final_url}"
                 evidence = Evidence(
                     url=final_url,
-                    fetched_at=datetime.now(timezone.utc),
+                    fetched_at=datetime.now(UTC),
                     excerpt=f"Status: {status_code}, Accessible: {is_accessible}",
                     content_hash=_compute_hash(evidence_content),
                 )

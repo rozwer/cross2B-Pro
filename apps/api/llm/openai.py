@@ -20,7 +20,13 @@ from openai import (
 
 from .base import LLMInterface
 from .exceptions import ErrorCategory, LLMError, LLMValidationError
-from .schemas import LLMResponse, TokenUsage
+from .schemas import (
+    LLMCallMetadata,
+    LLMMessage,
+    LLMRequestConfig,
+    LLMResponse,
+    TokenUsage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,18 +91,18 @@ class OpenAIClient(LLMInterface):
 
     async def generate(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[dict[str, str]] | list[LLMMessage],
         system_prompt: str,
-        temperature: float = 0.7,
-        max_tokens: int = 4096,
+        config: LLMRequestConfig | None = None,
+        metadata: LLMCallMetadata | None = None,
     ) -> LLMResponse:
         """テキスト生成を実行する.
 
         Args:
             messages: 会話履歴（role/content形式）
             system_prompt: システムプロンプト
-            temperature: 生成の多様性（0.0-1.0）
-            max_tokens: 最大トークン数
+            config: リクエスト設定
+            metadata: 追跡用メタデータ
 
         Returns:
             LLMResponse: 生成結果とメタデータ
@@ -104,9 +110,12 @@ class OpenAIClient(LLMInterface):
         Raises:
             LLMError: API呼び出しエラー時
         """
-        full_messages = [{"role": "system", "content": system_prompt}, *messages]
+        config = config or LLMRequestConfig()
+        normalized_messages = self._normalize_messages(messages)
+        full_messages = [{"role": "system", "content": system_prompt}, *normalized_messages]
 
-        last_error: Exception | None = None
+        self._log_request("generate", self.model, metadata)
+
         for attempt in range(1, self.max_retries + 1):
             try:
                 logger.info(
@@ -119,8 +128,8 @@ class OpenAIClient(LLMInterface):
                 response = await self.client.chat.completions.create(
                     model=self.model,
                     messages=full_messages,  # type: ignore[arg-type]
-                    temperature=temperature,
-                    max_tokens=max_tokens,
+                    temperature=config.temperature,
+                    max_tokens=config.max_tokens,
                 )
 
                 choice = response.choices[0]
@@ -146,7 +155,6 @@ class OpenAIClient(LLMInterface):
                 )
 
             except (RateLimitError, APIConnectionError) as e:
-                last_error = e
                 logger.warning(
                     "OpenAI API retryable error: model=%s, attempt=%d/%d, error=%s",
                     self.model,
@@ -183,7 +191,6 @@ class OpenAIClient(LLMInterface):
 
             except APIStatusError as e:
                 if e.status_code >= 500:
-                    last_error = e
                     logger.warning(
                         "OpenAI API server error: model=%s, attempt=%d/%d, status=%d",
                         self.model,
@@ -192,8 +199,9 @@ class OpenAIClient(LLMInterface):
                         e.status_code,
                     )
                     if attempt == self.max_retries:
+                        msg = f"OpenAI server error after {self.max_retries} tries: {e}"
                         raise LLMError(
-                            message=f"OpenAI API server error after {self.max_retries} attempts: {e}",
+                            message=msg,
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,
@@ -217,9 +225,11 @@ class OpenAIClient(LLMInterface):
 
     async def generate_json(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[dict[str, str]] | list[LLMMessage],
         system_prompt: str,
         schema: dict[str, Any],
+        config: LLMRequestConfig | None = None,
+        metadata: LLMCallMetadata | None = None,
     ) -> dict[str, Any]:
         """JSON形式での出力を保証する生成を実行する.
 
@@ -230,6 +240,8 @@ class OpenAIClient(LLMInterface):
             messages: 会話履歴
             system_prompt: システムプロンプト
             schema: 期待するJSONスキーマ（検証用）
+            config: リクエスト設定
+            metadata: 追跡用メタデータ
 
         Returns:
             dict: パース済みJSONオブジェクト
@@ -244,12 +256,12 @@ class OpenAIClient(LLMInterface):
             f"```json\n{json.dumps(schema, indent=2)}\n```"
         )
 
+        normalized_messages = self._normalize_messages(messages)
         full_messages = [
             {"role": "system", "content": enhanced_system_prompt},
-            *messages,
+            *normalized_messages,
         ]
 
-        last_error: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
                 logger.info(
@@ -294,7 +306,6 @@ class OpenAIClient(LLMInterface):
                 return dict(parsed)
 
             except (RateLimitError, APIConnectionError) as e:
-                last_error = e
                 logger.warning(
                     "OpenAI API JSON retryable error: model=%s, attempt=%d/%d, error=%s",
                     self.model,
@@ -331,7 +342,6 @@ class OpenAIClient(LLMInterface):
 
             except APIStatusError as e:
                 if e.status_code >= 500:
-                    last_error = e
                     logger.warning(
                         "OpenAI API JSON server error: model=%s, attempt=%d/%d, status=%d",
                         self.model,
@@ -340,8 +350,9 @@ class OpenAIClient(LLMInterface):
                         e.status_code,
                     )
                     if attempt == self.max_retries:
+                        msg = f"OpenAI server error after {self.max_retries} tries: {e}"
                         raise LLMError(
-                            message=f"OpenAI API server error after {self.max_retries} attempts: {e}",
+                            message=msg,
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,

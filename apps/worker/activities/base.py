@@ -281,12 +281,14 @@ class BaseActivity(ABC):
         try:
             # Check if artifact exists by trying to get metadata
             # The metadata file stores the input_digest for verification
-            meta_path = path.replace("/output.json", "/metadata.json")
+            # meta_path = path.replace("/output.json", "/metadata.json")
+            # TODO: Use meta_path for proper caching with input_digest verification
 
             # For now, simple existence check
             # In production, verify input_digest matches
             # This is a simplified version - full implementation would
             # store and verify input_digest in metadata
+            _ = path  # Mark as used, actual caching to be implemented
             return None  # Always re-run for now; enable caching later
 
         except Exception:
