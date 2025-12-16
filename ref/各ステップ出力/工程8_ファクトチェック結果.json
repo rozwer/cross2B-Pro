@@ -1,0 +1,32 @@
+{
+    "fact_check_result": {
+        "date": "2025-11-22",
+        "status": "Verified",
+        "summary": {
+            "total_checks": 15,
+            "issues_found": 0,
+            "correction_rate": "100%"
+        },
+        "data_anchors_verified": [
+            {
+                "item": "ドライバー有効求人倍率 2.59倍",
+                "source": "厚生労働省 一般職業紹介状況（令和7年8月分）",
+                "status": "Valid"
+            },
+            {
+                "item": "人手不足倒産 350件",
+                "source": "帝国データバンク（2024年度実績予測）",
+                "status": "Valid"
+            },
+            {
+                "item": "ドライバー労働時間 全産業比2割増",
+                "source": "厚生労働省/国土交通省資料",
+                "status": "Valid"
+            }
+        ],
+        "url_check": {
+            "status": "Future Date Links Detected",
+            "action": "Kept as per project settings (2025 scenario)"
+        }
+    }
+}

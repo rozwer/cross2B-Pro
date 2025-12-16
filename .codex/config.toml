@@ -1,0 +1,5 @@
+[features]
+skills = true
+
+[projects."/home/rozwer/案件"]
+trust_level = "trusted"
