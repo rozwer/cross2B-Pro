@@ -19,7 +19,6 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import asyncio
-import json
 from datetime import datetime
 from typing import Any
 
@@ -28,7 +27,7 @@ from langgraph.graph import END, START, StateGraph
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
-from apps.api.llm.schemas import LLMRequestConfig
+from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
 from apps.worker.graphs.wrapper import create_node_function
@@ -43,11 +42,22 @@ async def step0_execute(
     state: GraphState,
     ctx: ExecutionContext,
 ) -> dict[str, Any]:
-    """Execute step 0: Keyword Selection."""
+    """Execute step 0: Keyword Selection.
+
+    REVIEW-002: LLMCallMetadata必須化
+    """
     config = ctx.config
     llm = get_llm_client(
         config.get("llm_provider", "gemini"),
         model=config.get("llm_model"),
+    )
+
+    # REVIEW-002: LLMCallMetadata を必須で注入
+    metadata = LLMCallMetadata(
+        run_id=ctx.run_id,
+        step_id="step0",
+        attempt=ctx.attempt,
+        tenant_id=ctx.tenant_id,
     )
 
     llm_config = LLMRequestConfig(
@@ -58,19 +68,18 @@ async def step0_execute(
         messages=[{"role": "user", "content": prompt}],
         system_prompt="You are a keyword analysis assistant.",
         config=llm_config,
+        metadata=metadata,  # REVIEW-002: metadata 必須
     )
-
-    # Parse JSON response
-    try:
-        parsed = json.loads(response.content)
-    except json.JSONDecodeError:
-        parsed = {"raw_content": response.content}
 
     return {
         "step": "step0",
         "keyword": config.get("keyword"),
-        "analysis": parsed,
+        "analysis": response.content,
         "model": response.model,
+        "usage": {
+            "input_tokens": response.token_usage.input,
+            "output_tokens": response.token_usage.output,
+        },
     }
 
 
@@ -151,67 +160,108 @@ async def step3_parallel_execute(
 
     prompt_pack = loader.load(pack_id)
     keyword = config.get("keyword", "")
+    keyword_analysis = config.get("keyword_analysis", "")
+    competitor_count = config.get("competitor_count", 0)
+    competitor_summaries = config.get("competitor_summaries", [])
+    competitors = config.get("competitors", [])
 
     async def run_step3a() -> dict[str, Any]:
-        """Step 3A: Query Analysis."""
+        """Step 3A: Query Analysis. REVIEW-002: metadata必須化"""
         llm = get_llm_client("gemini")
+        metadata = LLMCallMetadata(
+            run_id=ctx.run_id,
+            step_id="step3a",
+            attempt=ctx.attempt,
+            tenant_id=ctx.tenant_id,
+        )
         try:
             template = prompt_pack.get_prompt("step3a")
-            p = template.render(keyword=keyword, keyword_analysis="", competitor_count=0)
+            p = template.render(
+                keyword=keyword,
+                keyword_analysis=keyword_analysis,
+                competitor_count=competitor_count,
+            )
             llm_config = LLMRequestConfig(max_tokens=3000)
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a search query analysis expert.",
                 config=llm_config,
+                metadata=metadata,  # REVIEW-002: metadata 必須
             )
-            # Parse JSON response
-            try:
-                parsed = json.loads(response.content)
-            except json.JSONDecodeError:
-                parsed = {"raw_content": response.content}
-            return {"step": "step3a", "analysis": parsed}
+            return {
+                "step": "step3a",
+                "analysis": response.content,
+                "usage": {
+                    "input_tokens": response.token_usage.input,
+                    "output_tokens": response.token_usage.output,
+                },
+            }
         except Exception as e:
             return {"step": "step3a", "error": str(e)}
 
     async def run_step3b() -> dict[str, Any]:
-        """Step 3B: Co-occurrence (heart)."""
+        """Step 3B: Co-occurrence (heart). REVIEW-002: metadata必須化"""
         llm = get_llm_client("gemini")
+        metadata = LLMCallMetadata(
+            run_id=ctx.run_id,
+            step_id="step3b",
+            attempt=ctx.attempt,
+            tenant_id=ctx.tenant_id,
+        )
         try:
             template = prompt_pack.get_prompt("step3b")
-            p = template.render(keyword=keyword, competitor_summaries=[])
+            p = template.render(
+                keyword=keyword,
+                competitor_summaries=competitor_summaries,
+            )
             llm_config = LLMRequestConfig(max_tokens=4000)
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a co-occurrence keyword analysis expert.",
                 config=llm_config,
+                metadata=metadata,  # REVIEW-002: metadata 必須
             )
-            # Parse JSON response
-            try:
-                parsed = json.loads(response.content)
-            except json.JSONDecodeError:
-                parsed = {"raw_content": response.content}
-            return {"step": "step3b", "analysis": parsed}
+            return {
+                "step": "step3b",
+                "analysis": response.content,
+                "usage": {
+                    "input_tokens": response.token_usage.input,
+                    "output_tokens": response.token_usage.output,
+                },
+            }
         except Exception as e:
             return {"step": "step3b", "error": str(e)}
 
     async def run_step3c() -> dict[str, Any]:
-        """Step 3C: Competitor Analysis."""
+        """Step 3C: Competitor Analysis. REVIEW-002: metadata必須化"""
         llm = get_llm_client("gemini")
+        metadata = LLMCallMetadata(
+            run_id=ctx.run_id,
+            step_id="step3c",
+            attempt=ctx.attempt,
+            tenant_id=ctx.tenant_id,
+        )
         try:
             template = prompt_pack.get_prompt("step3c")
-            p = template.render(keyword=keyword, competitors=[])
+            p = template.render(
+                keyword=keyword,
+                competitors=competitors,
+            )
             llm_config = LLMRequestConfig(max_tokens=3000)
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a competitor analysis expert.",
                 config=llm_config,
+                metadata=metadata,  # REVIEW-002: metadata 必須
             )
-            # Parse JSON response
-            try:
-                parsed = json.loads(response.content)
-            except json.JSONDecodeError:
-                parsed = {"raw_content": response.content}
-            return {"step": "step3c", "analysis": parsed}
+            return {
+                "step": "step3c",
+                "analysis": response.content,
+                "usage": {
+                    "input_tokens": response.token_usage.input,
+                    "output_tokens": response.token_usage.output,
+                },
+            }
         except Exception as e:
             return {"step": "step3c", "error": str(e)}
 

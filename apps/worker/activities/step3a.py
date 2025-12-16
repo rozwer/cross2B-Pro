@@ -13,7 +13,13 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
-from apps.api.llm.schemas import LLMRequestConfig
+from apps.api.llm.exceptions import (
+    LLMAuthenticationError,
+    LLMInvalidRequestError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+)
+from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
 from .base import ActivityError, BaseActivity
@@ -83,17 +89,38 @@ class Step3AQueryAnalysis(BaseActivity):
         llm_model = config.get("llm_model")
         llm = get_llm_client(llm_provider, model=llm_model)
 
-        # Execute LLM call
+        # Execute LLM call with metadata for traceability
+        llm_config = LLMRequestConfig(
+            max_tokens=config.get("max_tokens", 3000),
+            temperature=config.get("temperature", 0.7),
+        )
+        metadata = LLMCallMetadata(
+            run_id=ctx.run_id,
+            step_id=self.step_id,
+            attempt=ctx.attempt,
+            tenant_id=ctx.tenant_id,
+        )
         try:
-            llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 3000),
-                temperature=config.get("temperature", 0.7),
-            )
             response = await llm.generate(
                 messages=[{"role": "user", "content": prompt}],
                 system_prompt="You are a search query analysis expert.",
                 config=llm_config,
+                metadata=metadata,
             )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            # RETRYABLE errors - rate limit and timeout
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
+        except (LLMAuthenticationError, LLMInvalidRequestError) as e:
+            # NON_RETRYABLE errors - auth and invalid requests
+            raise ActivityError(
+                f"LLM permanent failure: {e}",
+                category=ErrorCategory.NON_RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"LLM call failed: {e}",
