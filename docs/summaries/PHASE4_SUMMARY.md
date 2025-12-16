@@ -189,4 +189,4 @@ Phase 5: Frontend UI 実装
 
 ---
 
-*Generated: 2024-12-16*
+*Updated: 2025-12-16*
