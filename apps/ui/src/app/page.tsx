@@ -1,51 +1,171 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, List, Play, Settings } from 'lucide-react';
-import { WorkflowGraph, type StepConfig, WORKFLOW_STEPS } from '@/components/workflow';
-import type { LLMPlatform } from '@/lib/types';
+import {
+  Settings2,
+  GitBranch,
+  FileOutput,
+  Plus,
+  List,
+  Play,
+  Save,
+  RotateCcw,
+} from 'lucide-react';
+import { WORKFLOW_STEPS, type StepConfig } from '@/components/workflow';
+import { TabBar, type TabItem } from '@/components/common/TabBar';
+import { ModelSettingsTab } from '@/components/tabs/ModelSettingsTab';
+import { GraphViewTab } from '@/components/tabs/GraphViewTab';
+import { OutputApprovalTab } from '@/components/tabs/OutputApprovalTab';
+import type { LLMPlatform, Run, Step } from '@/lib/types';
+import { useRun } from '@/hooks/useRun';
+
+type MainTabType = 'model' | 'graph' | 'output';
+
+const TABS: TabItem[] = [
+  { id: 'model', label: 'モデル設定', icon: <Settings2 className="h-4 w-4" /> },
+  { id: 'graph', label: 'グラフビュー', icon: <GitBranch className="h-4 w-4" /> },
+  { id: 'output', label: '出力・承認', icon: <FileOutput className="h-4 w-4" /> },
+];
 
 export default function Home() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<MainTabType>('model');
   const [stepConfigs, setStepConfigs] = useState<StepConfig[]>(WORKFLOW_STEPS);
-  const [activeTab, setActiveTab] = useState<'workflow' | 'config'>('workflow');
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [isGraphFullscreen, setIsGraphFullscreen] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const handleConfigSave = (configs: StepConfig[]) => {
-    setStepConfigs(configs);
-    // Could persist to localStorage or pass to run creation
-    localStorage.setItem('workflow-config', JSON.stringify(configs));
-  };
-
-  const handleStartNewRun = () => {
-    // Save current configs before navigating
-    localStorage.setItem('workflow-config', JSON.stringify(stepConfigs));
-    router.push('/runs/new');
-  };
-
-  // Count models by platform
-  const modelCounts = stepConfigs.reduce(
-    (acc, step) => {
-      if (step.isConfigurable && step.stepId !== 'approval') {
-        acc[step.aiModel] = (acc[step.aiModel] || 0) + 1;
+  // Load saved config on mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('workflow-config');
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        setStepConfigs(parsed);
+      } catch (e) {
+        console.error('Failed to parse saved config:', e);
       }
-      return acc;
-    },
-    {} as Record<LLMPlatform, number>
-  );
+    }
+  }, []);
+
+  // Get selected run data
+  const { run: selectedRun, loading: runLoading } = useRun(selectedRunId || '', {
+    autoFetch: !!selectedRunId,
+  });
+
+  // Handle config change
+  const handleConfigChange = useCallback((stepId: string, config: Partial<StepConfig>) => {
+    setStepConfigs((prev) =>
+      prev.map((step) => (step.stepId === stepId ? { ...step, ...config } : step))
+    );
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Batch apply model to selected steps
+  const handleBatchApply = useCallback((platform: LLMPlatform, stepIds: string[]) => {
+    const PLATFORM_MODELS: Record<LLMPlatform, { id: string }> = {
+      gemini: { id: 'gemini-3-pro' },
+      anthropic: { id: 'claude-opus-4.5' },
+      openai: { id: 'gpt-5.2' },
+    };
+
+    setStepConfigs((prev) =>
+      prev.map((step) =>
+        stepIds.includes(step.stepId)
+          ? { ...step, aiModel: platform, modelName: PLATFORM_MODELS[platform].id }
+          : step
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Save config
+  const handleSaveConfig = useCallback(() => {
+    localStorage.setItem('workflow-config', JSON.stringify(stepConfigs));
+    setHasUnsavedChanges(false);
+  }, [stepConfigs]);
+
+  // Reset to defaults
+  const handleResetConfig = useCallback(() => {
+    setStepConfigs(WORKFLOW_STEPS);
+    localStorage.removeItem('workflow-config');
+    setHasUnsavedChanges(false);
+  }, []);
+
+  // Navigate to new run
+  const handleStartNewRun = useCallback(() => {
+    handleSaveConfig();
+    router.push('/runs/new');
+  }, [handleSaveConfig, router]);
+
+  // Handle node click in graph
+  const handleGraphNodeClick = useCallback((stepId: string) => {
+    // Switch to model tab and highlight the step
+    setActiveTab('model');
+  }, []);
+
+  // Model counts for display
+  const modelCounts = useMemo(() => {
+    return stepConfigs.reduce(
+      (acc, step) => {
+        if (step.isConfigurable && step.stepId !== 'approval') {
+          acc[step.aiModel] = (acc[step.aiModel] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<LLMPlatform, number>
+    );
+  }, [stepConfigs]);
 
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">ワークフロー設定</h1>
+          <h1 className="text-2xl font-bold text-gray-900">SEO記事生成ワークフロー</h1>
           <p className="text-sm text-gray-500 mt-1">
-            SEO記事生成の工程フローを確認・カスタマイズできます
+            モデル設定、ワークフロー確認、実行状況の管理
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Model Summary Badge */}
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-xs">
+            <span className="text-blue-600">{modelCounts.gemini || 0}</span>
+            <span className="text-gray-400">/</span>
+            <span className="text-orange-600">{modelCounts.anthropic || 0}</span>
+            <span className="text-gray-400">/</span>
+            <span className="text-green-600">{modelCounts.openai || 0}</span>
+          </div>
+
+          {/* Save/Reset (only in model tab) */}
+          {activeTab === 'model' && (
+            <>
+              <button
+                onClick={handleResetConfig}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="デフォルトに戻す"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span className="hidden sm:inline">リセット</span>
+              </button>
+              <button
+                onClick={handleSaveConfig}
+                disabled={!hasUnsavedChanges}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">保存</span>
+                {hasUnsavedChanges && (
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full" />
+                )}
+              </button>
+            </>
+          )}
+
+          <div className="h-6 w-px bg-gray-200" />
+
           <Link
             href="/runs"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -58,167 +178,68 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            新規Run作成
+            新規Run
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-4 border-b border-gray-200 mb-4">
-        <button
-          onClick={() => setActiveTab('workflow')}
-          className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'workflow'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <span className="flex items-center gap-2">
-            <Play className="w-4 h-4" />
-            ワークフロー
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('config')}
-          className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'config'
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <span className="flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            設定概要
-          </span>
-        </button>
+      {/* Tab Bar */}
+      <TabBar
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as MainTabType)}
+        className="mb-4"
+      />
+
+      {/* Tab Content */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {activeTab === 'model' && (
+          <div className="h-full bg-white rounded-lg border border-gray-200 p-4 overflow-auto">
+            <ModelSettingsTab
+              stepConfigs={stepConfigs}
+              onConfigChange={handleConfigChange}
+              onBatchApply={handleBatchApply}
+            />
+          </div>
+        )}
+
+        {activeTab === 'graph' && (
+          <GraphViewTab
+            stepConfigs={stepConfigs}
+            onNodeClick={handleGraphNodeClick}
+            runStatus={selectedRun?.status}
+            runSteps={selectedRun?.steps}
+            currentStep={selectedRun?.current_step}
+            isFullscreen={isGraphFullscreen}
+            onToggleFullscreen={() => setIsGraphFullscreen(!isGraphFullscreen)}
+          />
+        )}
+
+        {activeTab === 'output' && (
+          <OutputApprovalTab onCreateRun={handleStartNewRun} />
+        )}
       </div>
 
-      {activeTab === 'workflow' ? (
-        /* Workflow Graph */
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <WorkflowGraph onConfigSave={handleConfigSave} />
-        </div>
-      ) : (
-        /* Config Summary */
-        <div className="flex-1 overflow-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Gemini */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🔵</span>
-                <h3 className="font-semibold text-blue-800">Gemini</h3>
-              </div>
-              <p className="text-2xl font-bold text-blue-900">{modelCounts.gemini || 0}</p>
-              <p className="text-sm text-blue-700">ステップで使用</p>
-              <p className="text-xs text-blue-600 mt-2">分析・検索・自然な表現</p>
-            </div>
-            {/* Claude */}
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🟠</span>
-                <h3 className="font-semibold text-orange-800">Claude</h3>
-              </div>
-              <p className="text-2xl font-bold text-orange-900">{modelCounts.anthropic || 0}</p>
-              <p className="text-sm text-orange-700">ステップで使用</p>
-              <p className="text-xs text-orange-600 mt-2">構造化・統合・品質制御</p>
-            </div>
-            {/* OpenAI */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">🟢</span>
-                <h3 className="font-semibold text-green-800">OpenAI</h3>
-              </div>
-              <p className="text-2xl font-bold text-green-900">{modelCounts.openai || 0}</p>
-              <p className="text-sm text-green-700">ステップで使用</p>
-              <p className="text-xs text-green-600 mt-2">汎用タスク</p>
-            </div>
-          </div>
-
-          {/* Step Config Table */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ステップ
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    説明
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    モデル
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Temperature
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    オプション
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {stepConfigs
-                  .filter((step) => step.stepId !== 'approval' && step.isConfigurable)
-                  .map((step) => (
-                    <tr key={step.stepId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {step.label}
-                        <span className="block text-xs text-gray-500">{step.stepId}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{step.description}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
-                            step.aiModel === 'gemini'
-                              ? 'bg-blue-100 text-blue-700'
-                              : step.aiModel === 'anthropic'
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-green-100 text-green-700'
-                          }`}
-                        >
-                          {step.aiModel === 'gemini' && '🔵'}
-                          {step.aiModel === 'anthropic' && '🟠'}
-                          {step.aiModel === 'openai' && '🟢'}
-                          {step.modelName}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{step.temperature}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex flex-wrap gap-1">
-                          {step.grounding && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                              Grounding
-                            </span>
-                          )}
-                          {step.repairEnabled && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                              自動修正
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
+      {/* Quick Tip Footer */}
       <div className="mt-4 flex items-center justify-between text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
         <div className="flex items-center gap-4">
-          <span>
-            💡 ノードをクリックするとモデル設定を変更できます
-          </span>
+          {activeTab === 'model' && (
+            <span>各ステップを展開してモデル設定を変更できます。一括適用も可能です。</span>
+          )}
+          {activeTab === 'graph' && (
+            <span>ノードをクリックするとモデル設定タブに移動します。ミニマップでナビゲートできます。</span>
+          )}
+          {activeTab === 'output' && (
+            <span>左のリストからRunを選択すると、工程別の出力と承認操作ができます。</span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs">
+        <div className="flex items-center gap-2 text-xs">
+          <span>
             全{stepConfigs.filter((s) => s.isConfigurable && s.stepId !== 'approval').length}
             ステップ
           </span>
           <span className="text-gray-300">|</span>
-          <span className="text-xs">承認ポイント: 工程3完了後</span>
+          <span>承認ポイント: 工程3完了後</span>
         </div>
       </div>
     </div>

@@ -1,14 +1,7 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import { Sparkles, Plus, LayoutDashboard } from 'lucide-react';
 import './globals.css';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
 
 export const metadata: Metadata = {
   title: 'SEO Article Generator',
@@ -21,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" className={inter.variable}>
-      <body className={inter.className}>
+    <html lang="ja">
+      <body className="font-sans antialiased">
         <div className="min-h-screen bg-gray-50">
           {/* Header */}
           <header className="glass sticky top-0 z-50 border-b border-gray-200/50">
