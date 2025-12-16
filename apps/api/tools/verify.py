@@ -102,20 +102,17 @@ class UrlVerifyTool(ToolInterface):
                     timeout=timeout,
                     follow_redirects=follow_redirects,
                 ) as client:
-                    # HEADリクエストを試行（軽量）
-                    try:
-                        response = await client.head(url, headers=headers)
-                    except httpx.HTTPStatusError:
-                        # HEADが拒否された場合はGETを試行
-                        response = await client.get(url, headers=headers)
+                    # REVIEW-009: フォールバック禁止のためGETリクエストのみ使用
+                    # HEADを拒否するサーバーもあるため、最初からGETを使用
+                    response = await client.get(url, headers=headers)
 
                 status_code = response.status_code
                 final_url = str(response.url)
                 is_redirect = final_url != url
 
-                # メタ情報を取得（GETの場合のみ）
+                # メタ情報を取得
                 meta = {}
-                if response.request.method == "GET" and status_code == 200:
+                if status_code == 200:
                     content_type = response.headers.get("content-type", "")
                     if "text/html" in content_type.lower():
                         html = response.text

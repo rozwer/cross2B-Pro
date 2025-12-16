@@ -1,20 +1,26 @@
 # Worker Dockerfile
+# REVIEW-006: pip から uv に変更（高速化・再現性向上）
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Add uv to PATH
+ENV PATH="/root/.cargo/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml ./
+# uv.lock があれば再現性を保証するためにコピー
+COPY uv.lock* ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir ".[dev]" && \
-    pip install --no-cache-dir temporalio
+# Install Python dependencies with uv
+RUN uv pip install --system --compile-bytecode ".[dev]" && \
+    uv pip install --system --compile-bytecode temporalio
 
 # Copy application code
 COPY apps ./apps
