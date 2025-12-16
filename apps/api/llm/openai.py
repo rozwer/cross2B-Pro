@@ -25,6 +25,7 @@ from .schemas import (
     LLMMessage,
     LLMRequestConfig,
     LLMResponse,
+    OpenAIConfig,
     TokenUsage,
 )
 
@@ -34,18 +35,29 @@ logger = logging.getLogger(__name__)
 class OpenAIClient(LLMInterface):
     """OpenAI API クライアント.
 
-    対応モデル: gpt-4o, gpt-4-turbo, o3 等
+    対応モデル: gpt-5.2, gpt-5.1, gpt-5 等
     """
 
     PROVIDER = "openai"
-    DEFAULT_MODEL = "gpt-4o"
+    DEFAULT_MODEL = "gpt-5.2"
     MAX_RETRIES = 3
+
+    AVAILABLE_MODELS = [
+        "gpt-5.2",  # 最新: Thinking + Instant + Pro
+        "gpt-5.2-pro",  # 最高精度
+        "gpt-5.2-chat-latest",  # Instant版
+        "gpt-5.1",  # 前バージョン
+        "gpt-5.1-chat-latest",  # Instant版
+        "gpt-5.1-codex-max",  # Codex向け
+        "gpt-5",  # 初代GPT-5
+    ]
 
     def __init__(
         self,
         api_key: str | None = None,
         model: str | None = None,
         max_retries: int | None = None,
+        openai_config: OpenAIConfig | None = None,
     ) -> None:
         """初期化.
 
@@ -53,6 +65,7 @@ class OpenAIClient(LLMInterface):
             api_key: OpenAI APIキー（省略時は環境変数から取得）
             model: 使用するモデル名
             max_retries: 最大リトライ回数
+            openai_config: OpenAI固有の設定
         """
         resolved_api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not resolved_api_key:
@@ -65,6 +78,34 @@ class OpenAIClient(LLMInterface):
         self.client = AsyncOpenAI(api_key=resolved_api_key)
         self.model = model or self.DEFAULT_MODEL
         self.max_retries = max_retries or self.MAX_RETRIES
+        self._openai_config = openai_config or OpenAIConfig()
+
+    def configure_reasoning(self, effort: str | None = None) -> None:
+        """Reasoning effortを設定（GPT-5系向け）
+
+        Args:
+            effort: none, low, medium, high, xhigh
+        """
+        self._openai_config.reasoning.effort = effort
+        logger.info(f"Reasoning effort set to: {effort}")
+
+    def enable_web_search(self, enabled: bool = True) -> None:
+        """Web Searchを有効/無効化
+
+        Args:
+            enabled: Web Searchを有効にするかどうか
+        """
+        self._openai_config.web_search.enabled = enabled
+        logger.info(f"Web search {'enabled' if enabled else 'disabled'}")
+
+    def set_verbosity(self, verbosity: str | None = None) -> None:
+        """出力の詳細度を設定
+
+        Args:
+            verbosity: concise or detailed
+        """
+        self._openai_config.verbosity = verbosity
+        logger.info(f"Verbosity set to: {verbosity}")
 
     @property
     def provider_name(self) -> str:
@@ -79,7 +120,7 @@ class OpenAIClient(LLMInterface):
     @property
     def available_models(self) -> list[str]:
         """利用可能なモデル一覧を返す"""
-        return ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo", "o3"]
+        return self.AVAILABLE_MODELS.copy()
 
     async def health_check(self) -> bool:
         """ヘルスチェック"""
@@ -129,7 +170,7 @@ class OpenAIClient(LLMInterface):
                     model=self.model,
                     messages=full_messages,  # type: ignore[arg-type]
                     temperature=config.temperature,
-                    max_tokens=config.max_tokens,
+                    max_completion_tokens=config.max_tokens,  # GPT-5系はmax_completion_tokens
                 )
 
                 choice = response.choices[0]
