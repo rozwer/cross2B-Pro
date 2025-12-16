@@ -4,9 +4,15 @@ TenantDBManager handles:
 - Connection pooling per tenant
 - Database creation for new tenants
 - Migration management
+
+VULN-004 + REVIEW-007: SQLインジェクション対策
+- tenant_id のバリデーション（安全な文字のみ許可）
+- 識別子のエスケープ
 """
 
+import logging
 import os
+import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -20,6 +26,34 @@ from sqlalchemy.ext.asyncio import (
 
 from .models import Base, Tenant
 
+logger = logging.getLogger(__name__)
+
+# VULN-004: tenant_id に許可する文字パターン（英数字とハイフン、アンダースコアのみ）
+SAFE_TENANT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
+
+
+def validate_tenant_id(tenant_id: str) -> bool:
+    """tenant_id が安全な形式かを検証（VULN-004: SQLインジェクション対策）
+
+    Args:
+        tenant_id: 検証対象のテナントID
+
+    Returns:
+        bool: 安全な形式の場合True
+    """
+    if not tenant_id:
+        return False
+    return bool(SAFE_TENANT_ID_PATTERN.match(tenant_id))
+
+
+def escape_identifier(name: str) -> str:
+    """PostgreSQL識別子をエスケープ（VULN-004: SQLインジェクション対策）
+
+    二重引用符内での識別子エスケープ
+    """
+    # 二重引用符を二重化してエスケープ
+    return name.replace('"', '""')
+
 
 class TenantDBError(Exception):
     """Error in tenant database operations."""
@@ -29,6 +63,12 @@ class TenantDBError(Exception):
 
 class TenantNotFoundError(TenantDBError):
     """Tenant does not exist."""
+
+    pass
+
+
+class TenantIdValidationError(TenantDBError):
+    """Invalid tenant ID format."""
 
     pass
 
@@ -116,9 +156,17 @@ class TenantDBManager:
             AsyncSession for the tenant's database
 
         Raises:
+            TenantIdValidationError: If tenant_id format is invalid
             TenantNotFoundError: If tenant does not exist
             TenantDBError: If tenant is inactive or connection fails
         """
+        # VULN-004: tenant_id のバリデーション
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id format in get_session: {tenant_id[:20]}...")
+            raise TenantIdValidationError(
+                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
+            )
+
         db_url = await self._get_tenant_db_url(tenant_id)
         self._get_or_create_engine(tenant_id, db_url)
 
@@ -168,8 +216,16 @@ class TenantDBManager:
             The database URL for the new tenant
 
         Raises:
+            TenantIdValidationError: If tenant_id format is invalid
             TenantDBError: If database creation fails
         """
+        # VULN-004: tenant_id のバリデーション
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id format rejected: {tenant_id[:20]}...")
+            raise TenantIdValidationError(
+                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
+            )
+
         db_host = db_host or os.getenv("DB_HOST", "localhost")
         db_user = db_user or os.getenv("DB_USER", "postgres")
         db_password = db_password or os.getenv("DB_PASSWORD", "postgres")
@@ -184,6 +240,9 @@ class TenantDBManager:
         sync_url = self.common_db_url.replace("+asyncpg", "")
         sync_engine = create_engine(sync_url, isolation_level="AUTOCOMMIT")
 
+        # VULN-004: 識別子をエスケープしてSQL実行
+        escaped_db_name = escape_identifier(db_name)
+
         with sync_engine.connect() as conn:
             # Check if database exists
             result = conn.execute(
@@ -191,7 +250,7 @@ class TenantDBManager:
                 {"name": db_name},
             )
             if not result.fetchone():
-                conn.execute(text(f'CREATE DATABASE "{db_name}"'))
+                conn.execute(text(f'CREATE DATABASE "{escaped_db_name}"'))
 
         # Run migrations on new database
         await self._run_tenant_migrations(db_url)
@@ -230,13 +289,27 @@ class TenantDBManager:
             confirm: Must be True to proceed
 
         Raises:
+            TenantIdValidationError: If tenant_id format is invalid
             TenantDBError: If confirm is False or deletion fails
         """
+        # VULN-004: tenant_id のバリデーション
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id format in delete_tenant_db: {tenant_id[:20]}...")
+            raise TenantIdValidationError(
+                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
+            )
+
         if not confirm:
             raise TenantDBError("Must confirm=True to delete tenant database")
 
         db_url = await self._get_tenant_db_url(tenant_id)
         db_name = db_url.split("/")[-1]
+
+        # VULN-004: db_name のバリデーション（追加の安全策）
+        expected_prefix = "seo_gen_tenant_"
+        if not db_name.startswith(expected_prefix):
+            logger.error(f"Unexpected database name format: {db_name}")
+            raise TenantDBError(f"Unexpected database name format")
 
         # Close any existing connections
         if tenant_id in self._engines:
@@ -250,6 +323,9 @@ class TenantDBManager:
         sync_url = self.common_db_url.replace("+asyncpg", "")
         sync_engine = create_engine(sync_url, isolation_level="AUTOCOMMIT")
 
+        # VULN-004: 識別子をエスケープ
+        escaped_db_name = escape_identifier(db_name)
+
         with sync_engine.connect() as conn:
             # Terminate existing connections
             conn.execute(
@@ -262,7 +338,7 @@ class TenantDBManager:
                 ),
                 {"name": db_name},
             )
-            conn.execute(text(f'DROP DATABASE IF EXISTS "{db_name}"'))
+            conn.execute(text(f'DROP DATABASE IF EXISTS "{escaped_db_name}"'))
 
         # Mark tenant as inactive (keep audit trail)
         async with self._common_session_factory() as session:

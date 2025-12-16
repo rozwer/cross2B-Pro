@@ -4,17 +4,42 @@ SEO Article Generator API server with endpoints for:
 - Run management (create, list, get, approve, reject, retry, cancel)
 - Artifact retrieval
 - WebSocket progress streaming
+
+VULN-005/006/008: セキュリティ強化
+- 認証ミドルウェア
+- WebSocket認証
+- CORS設定強化
 """
 
+import asyncio
+import json
 import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from jose import JWTError, jwt
 from pydantic import BaseModel
+
+from apps.api.auth import get_current_tenant, get_current_user
+from apps.api.auth.middleware import (
+    JWT_ALGORITHM,
+    JWT_SECRET_KEY,
+    create_access_token,
+    create_refresh_token,
+    verify_token,
+    AuthError,
+)
+from apps.api.auth.schemas import (
+    AuthUser,
+    LoginRequest,
+    LoginResponse,
+    RefreshRequest,
+    RefreshResponse,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -86,14 +111,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware (VULN-008: 許可オリジンを明示的に指定)
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+# 空文字列を除去
+cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
+if not cors_origins:
+    cors_origins = ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    max_age=3600,
 )
 
 
@@ -119,12 +150,87 @@ async def health_check() -> HealthResponse:
 
 
 # =============================================================================
-# Run Management Endpoints
+# Authentication Endpoints (VULN-005)
+# =============================================================================
+
+@app.post("/api/auth/login", response_model=LoginResponse)
+async def login(request: LoginRequest) -> LoginResponse:
+    """ログイン処理
+
+    TODO: 実際のユーザー認証ロジックを実装
+    現在はスタブ実装
+    """
+    # スタブ: 開発用のダミー認証
+    # TODO: データベースからユーザー検証
+    if os.getenv("ENVIRONMENT") == "development":
+        # 開発環境ではダミートークンを返す
+        user = AuthUser(
+            user_id="dev-user",
+            tenant_id="dev-tenant",
+            email=request.email,
+            roles=["user"],
+        )
+        access_token = create_access_token(user.user_id, user.tenant_id, user.roles)
+        refresh_token = create_refresh_token(user.user_id, user.tenant_id)
+
+        return LoginResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=15 * 60,  # 15分
+            user=user,
+        )
+
+    raise HTTPException(status_code=501, detail="Not implemented")
+
+
+@app.post("/api/auth/refresh", response_model=RefreshResponse)
+async def refresh_token_endpoint(request: RefreshRequest) -> RefreshResponse:
+    """トークンリフレッシュ"""
+    try:
+        token_data = verify_token(request.refresh_token, expected_type="refresh")
+
+        # 新しいアクセストークンを発行
+        new_access_token = create_access_token(
+            token_data.sub,
+            token_data.tenant_id,
+            token_data.roles,
+        )
+
+        # 新しいリフレッシュトークンを発行（オプション）
+        new_refresh_token = create_refresh_token(
+            token_data.sub,
+            token_data.tenant_id,
+        )
+
+        return RefreshResponse(
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+            expires_in=15 * 60,
+        )
+
+    except AuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+        ) from e
+
+
+@app.post("/api/auth/logout")
+async def logout(user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
+    """ログアウト処理
+
+    TODO: トークンの無効化リストへの追加（Redis等）
+    """
+    logger.info(f"User logged out: {user.user_id}")
+    return {"success": True}
+
+
+# =============================================================================
+# Run Management Endpoints (認証必須)
 # =============================================================================
 
 class RunCreateRequest(BaseModel):
     """Request to create a new run."""
-    tenant_id: str
     input_data: dict[str, object]
     config: dict[str, object] | None = None
 
@@ -140,20 +246,31 @@ class RunResponse(BaseModel):
 
 
 @app.post("/api/runs", response_model=RunResponse)
-async def create_run(request: RunCreateRequest) -> RunResponse:
-    """Create a new workflow run."""
+async def create_run(
+    request: RunCreateRequest,
+    tenant_id: str = Depends(get_current_tenant),  # 認証必須、tenant_id は JWT から取得
+) -> RunResponse:
+    """Create a new workflow run.
+
+    セキュリティ要件:
+    - tenant_id は JWT から取得（リクエストボディは信用しない）
+    """
     # TODO: Implement run creation with Temporal
     raise HTTPException(status_code=501, detail="Not implemented")
 
 
 @app.get("/api/runs")
 async def list_runs(
-    tenant_id: str | None = None,
     status: str | None = None,
     limit: int = 50,
     offset: int = 0,
+    tenant_id: str = Depends(get_current_tenant),  # 認証必須
 ) -> dict[str, object]:
-    """List runs with optional filtering."""
+    """List runs with optional filtering.
+
+    セキュリティ要件:
+    - tenant_id は JWT から取得（クエリパラメータは無視）
+    """
     # TODO: Implement with database query
     return {"runs": [], "total": 0, "limit": limit, "offset": offset}
 
@@ -221,42 +338,146 @@ async def get_step_artifact(run_id: str, step: str) -> dict[str, object]:
 
 
 # =============================================================================
-# WebSocket Progress Streaming
+# WebSocket Progress Streaming (VULN-006: 認証対応)
 # =============================================================================
+
+# 認証タイムアウト（秒）
+WS_AUTH_TIMEOUT = 10.0
+
 
 @app.websocket("/ws/runs/{run_id}")
 async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
-    """WebSocket endpoint for real-time progress updates."""
+    """WebSocket endpoint for real-time progress updates.
+
+    VULN-006: WebSocket認証
+    - 接続後に認証メッセージを待機
+    - 認証失敗時は code=1008 で切断
+    - テナント越境チェック
+    """
     await websocket.accept()
 
     try:
-        # TODO: Implement progress streaming
-        await websocket.send_json({
-            "type": "connected",
-            "run_id": run_id,
-        })
+        # 認証メッセージを待機（タイムアウト付き）
+        try:
+            data = await asyncio.wait_for(
+                websocket.receive_text(),
+                timeout=WS_AUTH_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"WebSocket auth timeout for run {run_id}")
+            await websocket.close(code=1008, reason="Auth timeout")
+            return
 
+        # 認証メッセージのパース
+        try:
+            auth_msg = json.loads(data)
+        except json.JSONDecodeError:
+            await websocket.send_json({"type": "auth_error", "reason": "Invalid message format"})
+            await websocket.close(code=1008, reason="Invalid auth message")
+            return
+
+        # 認証タイプの確認
+        if auth_msg.get("type") != "auth":
+            await websocket.send_json({"type": "auth_error", "reason": "Authentication required"})
+            await websocket.close(code=1008, reason="Auth required")
+            return
+
+        # トークン検証
+        token = auth_msg.get("token")
+        if not token:
+            await websocket.send_json({"type": "auth_error", "reason": "Missing token"})
+            await websocket.close(code=1008, reason="Missing token")
+            return
+
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            tenant_id = payload.get("tenant_id")
+            user_id = payload.get("sub")
+
+            if not tenant_id:
+                await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+
+        except JWTError as e:
+            logger.warning(f"WebSocket JWT error for run {run_id}: {e}")
+            await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+
+        # テナント越境チェック
+        # TODO: データベースから run の tenant_id を取得して比較
+        # run = await get_run_from_db(run_id)
+        # if run.tenant_id != tenant_id:
+        #     await websocket.send_json({"type": "auth_error", "reason": "Access denied"})
+        #     await websocket.close(code=1008, reason="Access denied")
+        #     return
+
+        # 認証成功
+        await websocket.send_json({"type": "auth_success"})
+        logger.info(f"WebSocket authenticated for run {run_id}, user {user_id}, tenant {tenant_id}")
+
+        # 通常の進捗ストリーミング
         while True:
             # Wait for messages (keep connection alive)
             data = await websocket.receive_text()
-            logger.debug(f"Received: {data}")
+            logger.debug(f"WebSocket received: {data}")
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for run {run_id}")
 
 
 # =============================================================================
-# Error Handlers
+# Error Handlers (VULN-009: 内部情報を隠蔽)
 # =============================================================================
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Global exception handler."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"},
+    """Global exception handler.
+
+    VULN-009: エラーメッセージ改善
+    - 本番環境では内部情報を隠蔽
+    - 開発環境ではデバッグ情報を表示
+    - リクエストIDを含めてトレーサビリティを確保
+    """
+    import uuid
+
+    # リクエストIDを生成（トレーサビリティ用）
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())[:8]
+
+    # ログには詳細を記録
+    logger.error(
+        f"Unhandled exception [request_id={request_id}]: {exc}",
+        exc_info=True,
+        extra={
+            "request_id": request_id,
+            "path": request.url.path,
+            "method": request.method,
+        },
     )
+
+    # レスポンス内容は環境に応じて変更
+    is_development = os.getenv("ENVIRONMENT", "development") == "development"
+
+    if is_development:
+        # 開発環境ではエラー詳細を表示（デバッグ用）
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": str(exc),
+                "type": type(exc).__name__,
+                "request_id": request_id,
+            },
+        )
+    else:
+        # 本番環境では内部情報を隠蔽
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal server error",
+                "request_id": request_id,
+            },
+        )
 
 
 # =============================================================================
