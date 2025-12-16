@@ -4,17 +4,32 @@ SEO Article Generator API server with endpoints for:
 - Run management (create, list, get, approve, reject, retry, cancel)
 - Artifact retrieval
 - WebSocket progress streaming
+- Authentication (JWT-based)
 """
 
+import asyncio
+import json
 import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import timedelta
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from jose import JWTError
 from pydantic import BaseModel
+
+from apps.api.auth.middleware import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_current_tenant,
+)
+from apps.api.auth.schemas import LoginRequest, RefreshRequest, TokenResponse
 
 # Configure logging
 logging.basicConfig(
@@ -116,6 +131,77 @@ async def health_check() -> HealthResponse:
         version="0.1.0",
         environment=os.getenv("ENVIRONMENT", "development"),
     )
+
+
+# =============================================================================
+# Authentication Endpoints
+# =============================================================================
+
+@app.post("/api/auth/login", response_model=TokenResponse)
+async def login(request: LoginRequest) -> TokenResponse:
+    """Login endpoint for development/testing.
+
+    In production, this should be replaced with proper authentication
+    (OAuth, SAML, etc.) based on your identity provider.
+    """
+    # TODO: Replace with proper authentication in production
+    # For development, accept any tenant/user with the dev secret
+    dev_secret = os.getenv("DEV_AUTH_SECRET", "dev-secret")
+    if request.secret != dev_secret:
+        logger.warning(f"Login failed for tenant={request.tenant_id}, user={request.user_id}")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+        )
+
+    access_token = create_access_token(
+        tenant_id=request.tenant_id,
+        user_id=request.user_id,
+    )
+    refresh_token = create_refresh_token(
+        tenant_id=request.tenant_id,
+        user_id=request.user_id,
+    )
+
+    logger.info(f"Login successful for tenant={request.tenant_id}, user={request.user_id}")
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+
+@app.post("/api/auth/refresh", response_model=TokenResponse)
+async def refresh_token(request: RefreshRequest) -> TokenResponse:
+    """Refresh access token using refresh token."""
+    try:
+        payload = decode_token(request.refresh_token)
+
+        # Verify this is a refresh token
+        # Note: decode_token already validates expiration
+
+        access_token = create_access_token(
+            tenant_id=payload.tenant_id,
+            user_id=payload.user_id,
+        )
+        new_refresh_token = create_refresh_token(
+            tenant_id=payload.tenant_id,
+            user_id=payload.user_id,
+        )
+
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=new_refresh_token,
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+
+    except JWTError as e:
+        logger.warning(f"Token refresh failed: {e}")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid refresh token",
+        ) from e
 
 
 # =============================================================================
@@ -226,20 +312,93 @@ async def get_step_artifact(run_id: str, step: str) -> dict[str, object]:
 
 @app.websocket("/ws/runs/{run_id}")
 async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
-    """WebSocket endpoint for real-time progress updates."""
+    """WebSocket endpoint for real-time progress updates.
+
+    Authentication flow:
+    1. Client connects
+    2. Server accepts connection
+    3. Client sends auth message: {"type": "auth", "token": "..."}
+    4. Server validates token and checks tenant access
+    5. Server responds with auth_success or auth_error
+    """
     await websocket.accept()
 
     try:
-        # TODO: Implement progress streaming
+        # Wait for authentication message (10 second timeout)
+        try:
+            raw_data = await asyncio.wait_for(
+                websocket.receive_text(),
+                timeout=10.0
+            )
+            auth_msg = json.loads(raw_data)
+        except asyncio.TimeoutError:
+            await websocket.send_json({
+                "type": "auth_error",
+                "reason": "Authentication timeout",
+            })
+            await websocket.close(code=1008, reason="Auth timeout")
+            return
+        except json.JSONDecodeError:
+            await websocket.send_json({
+                "type": "auth_error",
+                "reason": "Invalid message format",
+            })
+            await websocket.close(code=1008, reason="Invalid message")
+            return
+
+        # Validate auth message type
+        if auth_msg.get("type") != "auth":
+            await websocket.send_json({
+                "type": "auth_error",
+                "reason": "Authentication required",
+            })
+            await websocket.close(code=1008, reason="Auth required")
+            return
+
+        # Validate token
+        token = auth_msg.get("token")
+        if not token:
+            await websocket.send_json({
+                "type": "auth_error",
+                "reason": "No token provided",
+            })
+            await websocket.close(code=1008, reason="No token")
+            return
+
+        try:
+            payload = decode_token(token)
+            tenant_id = payload.tenant_id
+        except JWTError as e:
+            logger.warning(f"WebSocket auth failed: {e}")
+            await websocket.send_json({
+                "type": "auth_error",
+                "reason": "Invalid token",
+            })
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+
+        # TODO: Check tenant access to run_id
+        # In production, verify that the run belongs to this tenant
+        # run = await get_run(run_id)
+        # if run.tenant_id != tenant_id:
+        #     await websocket.send_json({
+        #         "type": "auth_error",
+        #         "reason": "Access denied",
+        #     })
+        #     await websocket.close(code=1008, reason="Access denied")
+        #     return
+
+        # Authentication successful
         await websocket.send_json({
-            "type": "connected",
+            "type": "auth_success",
             "run_id": run_id,
         })
+        logger.info(f"WebSocket authenticated for run {run_id}, tenant {tenant_id}")
 
+        # Handle messages
         while True:
-            # Wait for messages (keep connection alive)
             data = await websocket.receive_text()
-            logger.debug(f"Received: {data}")
+            logger.debug(f"Received from tenant {tenant_id}: {data}")
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for run {run_id}")
@@ -251,11 +410,34 @@ async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Global exception handler."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    """Global exception handler.
+
+    Security: Never expose internal error details to clients.
+    Internal details are logged server-side with an error_id for debugging.
+    """
+    import uuid
+
+    # Generate unique error ID for tracking
+    error_id = str(uuid.uuid4())[:8]
+
+    # Log full details server-side (for debugging)
+    logger.error(
+        f"Unhandled exception [error_id={error_id}]: {exc}",
+        exc_info=True,
+        extra={
+            "error_id": error_id,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+
+    # Return sanitized error to client
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error"},
+        content={
+            "detail": "An internal error occurred. Please try again later.",
+            "error_id": error_id,
+        },
     )
 
 

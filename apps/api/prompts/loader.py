@@ -245,33 +245,79 @@ class PromptPackLoader:
         return PromptPack(pack_id=pack_id, prompts=prompts)
 
     def _load_mock_pack(self) -> PromptPack:
-        """Load mock prompt pack for testing."""
+        """Load mock prompt pack for testing.
+
+        IMPORTANT: The keys must match the step_id values used in workflow:
+        - step0, step1, step2, step3a, step3b, step3c, step4, step5, etc.
+        """
         return PromptPack(
             pack_id="mock_pack",
             prompts={
-                "step_0_keyword_research": PromptTemplate(
-                    step="step_0_keyword_research",
+                # Step 0: Keyword Selection
+                "step0": PromptTemplate(
+                    step="step0",
                     version=1,
                     content="Analyze the keyword: {{keyword}}",
                     variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_1_structure": PromptTemplate(
-                    step="step_1_structure",
+                # Step 1: Competitor Fetch (tool-based, minimal prompt)
+                "step1": PromptTemplate(
+                    step="step1",
                     version=1,
-                    content="Create article structure for: {{topic}}",
-                    variables={"topic": {"required": True, "type": "string"}},
+                    content="Fetch competitor articles for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_2_draft": PromptTemplate(
-                    step="step_2_draft",
+                # Step 2: CSV Validation
+                "step2": PromptTemplate(
+                    step="step2",
                     version=1,
-                    content="Write draft based on structure: {{structure}}",
-                    variables={"structure": {"required": True, "type": "string"}},
+                    content="Validate CSV data for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
                 ),
-                "step_3_review": PromptTemplate(
-                    step="step_3_review",
+                # Step 3A: Query Analysis & Persona
+                "step3a": PromptTemplate(
+                    step="step3a",
                     version=1,
-                    content="Review draft for quality: {{draft}}",
-                    variables={"draft": {"required": True, "type": "string"}},
+                    content="Analyze query intent for: {{keyword}}\nPrevious analysis: {{keyword_analysis}}\nCompetitors: {{competitor_count}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "keyword_analysis": {"required": False, "type": "string"},
+                        "competitor_count": {"required": False, "type": "integer"},
+                    },
+                ),
+                # Step 3B: Co-occurrence (heart)
+                "step3b": PromptTemplate(
+                    step="step3b",
+                    version=1,
+                    content="Analyze co-occurrence for: {{keyword}}\nCompetitor summaries: {{competitor_summaries}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "competitor_summaries": {"required": False, "type": "array"},
+                    },
+                ),
+                # Step 3C: Competitor Analysis
+                "step3c": PromptTemplate(
+                    step="step3c",
+                    version=1,
+                    content="Analyze competitors for: {{keyword}}\nCompetitors: {{competitors}}",
+                    variables={
+                        "keyword": {"required": True, "type": "string"},
+                        "competitors": {"required": False, "type": "array"},
+                    },
+                ),
+                # Step 4: Draft Generation
+                "step4": PromptTemplate(
+                    step="step4",
+                    version=1,
+                    content="Generate article draft for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
+                ),
+                # Step 5: Final Review
+                "step5": PromptTemplate(
+                    step="step5",
+                    version=1,
+                    content="Review and finalize article for: {{keyword}}",
+                    variables={"keyword": {"required": True, "type": "string"}},
                 ),
             },
         )
