@@ -158,6 +158,114 @@ def test_tenant_isolation():
         get_data(tenant_id="tenant_b", run_id="run_1")  # 越境
 ```
 
+### APIスキーマ整合性テスト
+
+BE-UI間のAPIスキーマが一致することを確認。
+
+```python
+def test_run_response_matches_ui_type():
+    """RunResponse が UI の Run 型と一致すること"""
+    response = client.get("/api/runs/test-run", headers={"X-Tenant-ID": "test"})
+    data = response.json()
+
+    # UI型の必須フィールド
+    assert "id" in data
+    assert "tenant_id" in data
+    assert "status" in data
+    assert "current_step" in data
+    assert "input" in data  # input_data ではなく input
+    assert "model_config" in data
+    assert "steps" in data
+    assert "created_at" in data
+    assert "updated_at" in data
+
+def test_create_run_request_schema():
+    """Run作成リクエストがUI形式で受け付けられること"""
+    request_body = {
+        "input": {
+            "keyword": "テストキーワード",
+            "target_audience": "初心者"
+        },
+        "model_config": {
+            "platform": "gemini",
+            "model": "gemini-2.0-flash",
+            "options": {"grounding": True}
+        },
+        "tool_config": {
+            "serp_fetch": True,
+            "page_fetch": True,
+            "url_verify": True,
+            "pdf_extract": False
+        }
+    }
+    response = client.post(
+        "/api/runs",
+        json=request_body,
+        headers={"X-Tenant-ID": "test"}
+    )
+    assert response.status_code == 201
+```
+
+### WebSocketイベント形式テスト
+
+WebSocketイベントがUI期待形式で送信されることを確認。
+
+```python
+def test_websocket_event_format():
+    """WebSocketイベントが UI の ProgressEvent 型と一致すること"""
+    # BE内部形式: step.started → UI形式: step_started
+    from apps.api.main import convert_event_type
+
+    assert convert_event_type("step.started") == "step_started"
+    assert convert_event_type("step.completed") == "step_completed"
+    assert convert_event_type("step.failed") == "step_failed"
+    assert convert_event_type("run.completed") == "run_completed"
+
+@pytest.mark.asyncio
+async def test_websocket_broadcast():
+    """WebSocket経由でイベントが正しく配信されること"""
+    async with websockets.connect(f"ws://localhost:8000/ws/runs/{run_id}") as ws:
+        # テストイベントを発行
+        event = await asyncio.wait_for(ws.recv(), timeout=10)
+        data = json.loads(event)
+
+        # UI ProgressEvent 型の必須フィールド
+        assert "type" in data
+        assert "run_id" in data
+        assert "progress" in data
+        assert "message" in data
+        assert "timestamp" in data
+        assert "_" in data["type"]  # step_started 形式
+```
+
+### エンドポイント整合性テスト
+
+UI api.ts が期待するエンドポイントが存在することを確認。
+
+```python
+@pytest.mark.parametrize("method,path", [
+    ("GET", "/api/runs"),
+    ("POST", "/api/runs"),
+    ("GET", "/api/runs/{id}"),
+    ("DELETE", "/api/runs/{id}"),  # cancel: POST → DELETE
+    ("POST", "/api/runs/{id}/approve"),
+    ("POST", "/api/runs/{id}/reject"),
+    ("POST", "/api/runs/{id}/resume/{step}"),
+    ("POST", "/api/runs/{id}/clone"),
+    ("GET", "/api/runs/{id}/files"),
+    ("GET", "/api/runs/{id}/files/{artifact_id}/content"),
+    ("GET", "/api/runs/{id}/preview"),
+    ("GET", "/api/runs/{id}/events"),
+])
+def test_endpoint_exists(method, path):
+    """UI が期待するエンドポイントが存在すること"""
+    # FastAPI の routes から確認
+    from apps.api.main import app
+    routes = [r.path for r in app.routes if hasattr(r, 'path')]
+    normalized_path = path.replace("{id}", "{run_id}").replace("{artifact_id}", "{artifact_id}")
+    assert any(normalized_path in r for r in routes), f"{method} {path} not found"
+```
+
 ### Temporal Replay テスト
 
 Workflow の決定性違反を検出。
