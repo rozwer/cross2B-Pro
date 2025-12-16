@@ -16,6 +16,12 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import LLMInterface, get_llm_client
+from apps.api.llm.exceptions import (
+    LLMAuthenticationError,
+    LLMInvalidRequestError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+)
 from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
@@ -88,17 +94,31 @@ class Step0KeywordSelection(BaseActivity):
         )
 
         # Execute LLM call
+        llm_config = LLMRequestConfig(
+            max_tokens=config.get("max_tokens", 2000),
+            temperature=config.get("temperature", 0.7),
+        )
         try:
-            llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 2000),
-                temperature=config.get("temperature", 0.7),
-            )
             response = await llm.generate(
                 messages=[{"role": "user", "content": prompt}],
                 system_prompt="You are a keyword analysis assistant.",
                 config=llm_config,
                 metadata=metadata,  # REVIEW-001: metadata 必須
             )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            # RETRYABLE errors - rate limit and timeout
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
+        except (LLMAuthenticationError, LLMInvalidRequestError) as e:
+            # NON_RETRYABLE errors - auth and invalid requests
+            raise ActivityError(
+                f"LLM permanent failure: {e}",
+                category=ErrorCategory.NON_RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"LLM call failed: {e}",
