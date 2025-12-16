@@ -2,6 +2,10 @@
 
 Analyzes input keyword to determine optimal targeting strategy.
 Uses Gemini for analysis.
+
+REVIEW-001: LLMInterface契約に準拠
+- LLMCallMetadata 必須化
+- token_usage 参照を統一
 """
 
 from typing import Any
@@ -12,7 +16,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import LLMInterface, get_llm_client
-from apps.api.llm.schemas import LLMRequestConfig
+from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
 from .base import ActivityError, BaseActivity
@@ -75,6 +79,14 @@ class Step0KeywordSelection(BaseActivity):
         llm_model = config.get("llm_model")
         llm: LLMInterface = get_llm_client(llm_provider, model=llm_model)
 
+        # REVIEW-001: LLMCallMetadata を必須で注入（トレーサビリティ確保）
+        metadata = LLMCallMetadata(
+            run_id=ctx.run_id,
+            step_id=self.step_id,
+            attempt=ctx.attempt,
+            tenant_id=ctx.tenant_id,
+        )
+
         # Execute LLM call
         try:
             llm_config = LLMRequestConfig(
@@ -85,6 +97,7 @@ class Step0KeywordSelection(BaseActivity):
                 messages=[{"role": "user", "content": prompt}],
                 system_prompt="You are a keyword analysis assistant.",
                 config=llm_config,
+                metadata=metadata,  # REVIEW-001: metadata 必須
             )
         except Exception as e:
             raise ActivityError(
