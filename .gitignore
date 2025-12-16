@@ -1,0 +1,37 @@
+# Environment variables / secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*.pyd
+**/.Python
+**/.venv/
+**/venv/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.coverage
+**/coverage.xml
+
+# Build artifacts
+**/build/
+**/dist/
+**/*.egg-info/
+
+# Jupyter
+**/.ipynb_checkpoints/
+
+# LangGraph local runtime data
+**/.langgraph-data/
+
+# OS cruft
+.DS_Store
+
+# Local git backups
+.git-backups/
+
+# Claude Code (local overrides)
+.claude/settings.local.json
