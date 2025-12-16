@@ -206,3 +206,35 @@ class LLMInterface(ABC):
                 "attempt": metadata.attempt if metadata else 1,
             },
         )
+
+
+# エイリアス（後方互換性のため）
+LLMClient = LLMInterface
+
+
+def get_llm_client(provider: str, **kwargs) -> LLMInterface:
+    """プロバイダ名からLLMクライアントを取得
+
+    Args:
+        provider: プロバイダ名 ("gemini", "openai", "anthropic")
+        **kwargs: クライアント初期化引数
+
+    Returns:
+        LLMInterface: 対応するクライアントインスタンス
+
+    Raises:
+        ValueError: 不明なプロバイダ
+    """
+    provider = provider.lower()
+
+    if provider == "gemini":
+        from .gemini import GeminiClient
+        return GeminiClient(**kwargs)
+    elif provider == "openai":
+        from .openai import OpenAIClient
+        return OpenAIClient(**kwargs)
+    elif provider == "anthropic":
+        from .anthropic import AnthropicClient
+        return AnthropicClient(**kwargs)
+    else:
+        raise ValueError(f"Unknown LLM provider: {provider}")

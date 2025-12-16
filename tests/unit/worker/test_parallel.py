@@ -17,7 +17,7 @@ class TestParallelStepExecution:
     def test_parallel_step_error_structure(self):
         """Test ParallelStepError contains failed steps."""
         failed = ["step3a", "step3c"]
-        error = ParallelStepError(failed_steps=failed, message="Test error")
+        error = ParallelStepError(failed_steps=failed)
 
         assert error.failed_steps == failed
         assert "step3a" in str(error)
