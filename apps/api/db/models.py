@@ -119,17 +119,27 @@ class Run(Base):
         UUID(as_uuid=False),
         primary_key=True,
     )
+    tenant_id: Mapped[str] = mapped_column(
+        String(64), nullable=False, index=True
+    )  # マルチテナント分離必須
     status: Mapped[str] = mapped_column(
         String(32), nullable=False
-    )  # pending, running, paused, completed, failed
+    )  # pending, running, waiting_approval, completed, failed, cancelled
     current_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    input_data: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, nullable=True
+    )  # 元入力データ保存
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
     )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     steps: Mapped[list["Step"]] = relationship(back_populates="run", cascade="all, delete-orphan")
     artifacts: Mapped[list["Artifact"]] = relationship(
@@ -150,6 +160,9 @@ class Step(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     llm_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
     token_usage: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    error_type: Mapped[str | None] = mapped_column(
+        String(32), nullable=True
+    )  # RETRYABLE, NON_RETRYABLE, VALIDATION_FAIL
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     started_at: Mapped[datetime] = mapped_column(
@@ -173,6 +186,7 @@ class Artifact(Base):
     file_type: Mapped[str] = mapped_column(String(64), nullable=False)
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     digest: Mapped[str | None] = mapped_column(String(64), nullable=True)  # SHA256
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     extra_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata", JSON, nullable=True
     )  # 'metadata' is reserved in SQLAlchemy
