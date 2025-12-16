@@ -5,7 +5,7 @@
 import type { Node, Edge } from 'reactflow';
 
 export type NodeType = 'input' | 'llm' | 'tool' | 'parallel' | 'approval' | 'output';
-export type AIProvider = 'gemini' | 'claude' | 'manual' | 'tool';
+export type AIProvider = 'gemini' | 'openai' | 'claude' | 'manual' | 'tool';
 
 export interface WorkflowNodeData {
   label: string;
@@ -302,6 +302,13 @@ export const modelOptions: Record<AIProvider, { value: string; label: string }[]
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
   ],
+  openai: [
+    { value: 'gpt-4o', label: 'GPT-4o (推奨)' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'o1-preview', label: 'o1-preview' },
+    { value: 'o1-mini', label: 'o1-mini' },
+  ],
   claude: [
     { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (推奨)' },
     { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
@@ -325,6 +332,13 @@ export function getProviderColor(provider: AIProvider): {
         border: 'border-blue-400',
         text: 'text-blue-700',
         icon: '🔷',
+      };
+    case 'openai':
+      return {
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-400',
+        text: 'text-emerald-700',
+        icon: '🟢',
       };
     case 'claude':
       return {

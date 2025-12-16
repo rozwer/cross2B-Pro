@@ -140,6 +140,8 @@ export function WorkflowGraph({ onStartRun, className }: WorkflowGraphProps) {
             switch (data.aiProvider) {
               case 'gemini':
                 return '#3b82f6';
+              case 'openai':
+                return '#10b981';
               case 'claude':
                 return '#f97316';
               case 'manual':
@@ -180,6 +182,10 @@ export function WorkflowGraph({ onStartRun, className }: WorkflowGraphProps) {
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500" />
                 <span className="text-gray-600">Gemini</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                <span className="text-gray-600">GPT</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-orange-500" />
