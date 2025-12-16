@@ -26,7 +26,9 @@ from .exceptions import (
     LLMTimeoutError,
     LLMValidationError,
 )
+from .anthropic import AnthropicClient
 from .gemini import GeminiClient
+from .openai import OpenAIClient
 from .schemas import (
     GeminiConfig,
     GeminiGroundingConfig,
@@ -42,7 +44,9 @@ __all__ = [
     # Base
     "LLMInterface",
     # Clients
+    "AnthropicClient",
     "GeminiClient",
+    "OpenAIClient",
     # Schemas
     "LLMResponse",
     "LLMMessage",
