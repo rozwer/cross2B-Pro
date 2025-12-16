@@ -19,7 +19,7 @@ interface HtmlPreviewProps {
 }
 
 // DOMPurify 許可設定（VULN-001: XSS対策）
-const DOMPURIFY_CONFIG: DOMPurify.Config = {
+const DOMPURIFY_CONFIG = {
   // 許可するタグ
   ALLOWED_TAGS: [
     'p', 'div', 'span', 'br', 'hr',
