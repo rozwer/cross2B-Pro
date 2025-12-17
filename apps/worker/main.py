@@ -9,7 +9,14 @@ import logging
 import os
 import signal
 import sys
+from pathlib import Path
 from typing import NoReturn
+
+from dotenv import load_dotenv
+
+# Load .env from project root
+_project_root = Path(__file__).resolve().parents[2]
+load_dotenv(_project_root / ".env")
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -31,6 +38,7 @@ from .activities import (
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
+    sync_run_status,
 )
 from .workflows import ArticleWorkflow
 
@@ -65,6 +73,7 @@ ACTIVITIES = [
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
+    sync_run_status,
 ]
 
 # All workflows to register

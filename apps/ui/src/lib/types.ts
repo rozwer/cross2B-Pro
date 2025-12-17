@@ -51,9 +51,20 @@ export interface RunInput {
   additional_requirements?: string;
 }
 
+export interface StepModelConfig {
+  step_id: string;
+  platform: LLMPlatform;
+  model: string;
+  temperature: number;
+  grounding: boolean;
+  retry_limit: number;
+  repair_enabled: boolean;
+}
+
 export interface CreateRunInput {
   input: RunInput;
   model_config: ModelConfig;
+  step_configs?: StepModelConfig[];
   tool_config?: ToolConfig;
   options?: {
     retry_limit?: number;

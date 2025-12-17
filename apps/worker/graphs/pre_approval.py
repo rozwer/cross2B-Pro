@@ -19,10 +19,17 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import asyncio
+import logging
 from datetime import datetime
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
+
+# ===== DEBUG_LOG_START =====
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+# ===== DEBUG_LOG_END =====
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
@@ -46,6 +53,11 @@ async def step0_execute(
 
     REVIEW-002: LLMCallMetadata必須化
     """
+    # ===== DEBUG_LOG_START =====
+    logger.debug(f"[STEP0] Starting step0_execute with state: {state}")
+    logger.debug(f"[STEP0] Context: run_id={ctx.run_id}, tenant_id={ctx.tenant_id}")
+    # ===== DEBUG_LOG_END =====
+
     config = ctx.config
     llm = get_llm_client(
         config.get("llm_provider", "gemini"),
@@ -71,6 +83,10 @@ async def step0_execute(
         metadata=metadata,  # REVIEW-002: metadata 必須
     )
 
+    # ===== DEBUG_LOG_START =====
+    logger.debug(f"[STEP0] Completed. Model: {response.model}, Tokens: {response.token_usage}")
+    # ===== DEBUG_LOG_END =====
+
     return {
         "step": "step0",
         "keyword": config.get("keyword"),
@@ -89,6 +105,10 @@ async def step1_execute(
     ctx: ExecutionContext,
 ) -> dict[str, Any]:
     """Execute step 1: Competitor Fetch."""
+    # ===== DEBUG_LOG_START =====
+    logger.debug(f"[STEP1] Starting step1_execute")
+    # ===== DEBUG_LOG_END =====
+
     config = ctx.config
     registry = ToolRegistry()
 

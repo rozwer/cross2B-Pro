@@ -163,6 +163,8 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Tool API Keys
+      SERP_API_KEY: ${SERP_API_KEY:-}
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     depends_on:

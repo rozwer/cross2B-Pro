@@ -13,7 +13,7 @@ from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.validation.schemas import ValidationSeverity
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step2CSVValidation(BaseActivity):
@@ -37,10 +37,18 @@ class Step2CSVValidation(BaseActivity):
         Returns:
             dict with validation results
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[STEP2] execute called: tenant_id={ctx.tenant_id}, run_id={ctx.run_id}")
+
         config = ctx.config
 
-        # Get step1 output from storage (via config or state)
-        step1_data = config.get("step1_data")
+        # Load step1 data from storage (not from config to avoid gRPC size limits)
+        logger.info(f"[STEP2] Calling load_step_data for step1")
+        step1_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step1"
+        )
+        logger.info(f"[STEP2] load_step_data returned: {step1_data is not None}")
 
         if not step1_data:
             raise ActivityError(

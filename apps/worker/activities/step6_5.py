@@ -17,7 +17,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step65IntegrationPackage(BaseActivity):
@@ -56,13 +56,29 @@ class Step65IntegrationPackage(BaseActivity):
 
         # Get ALL inputs from previous steps
         keyword = config.get("keyword")
-        step0_data = config.get("step0_data", {})
-        step3a_data = config.get("step3a_data", {})
-        step3b_data = config.get("step3b_data", {})
-        step3c_data = config.get("step3c_data", {})
-        step4_data = config.get("step4_data", {})
-        step5_data = config.get("step5_data", {})
-        step6_data = config.get("step6_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step0_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step0"
+        ) or {}
+        step3a_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3a"
+        ) or {}
+        step3b_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3b"
+        ) or {}
+        step3c_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3c"
+        ) or {}
+        step4_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step4"
+        ) or {}
+        step5_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step5"
+        ) or {}
+        step6_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step6"
+        ) or {}
 
         if not keyword:
             raise ActivityError(
@@ -71,14 +87,15 @@ class Step65IntegrationPackage(BaseActivity):
             )
 
         # Prepare comprehensive input
+        # Variable names must match those in the prompt template (step6_5 in packs/default.json)
         integration_input = {
             "keyword": keyword,
             "keyword_analysis": step0_data.get("analysis", ""),
-            "query_personas": step3a_data.get("query_analysis", ""),
-            "cooccurrence_keywords": step3b_data.get("cooccurrence_analysis", ""),
-            "competitor_differentiation": step3c_data.get("competitor_analysis", ""),
+            "query_analysis": step3a_data.get("query_analysis", step3a_data.get("analysis", "")),
+            "cooccurrence_analysis": step3b_data.get("cooccurrence_analysis", step3b_data.get("analysis", "")),
+            "competitor_analysis": step3c_data.get("competitor_analysis", step3c_data.get("analysis", "")),
             "strategic_outline": step4_data.get("outline", ""),
-            "primary_sources": step5_data.get("sources", []),
+            "sources": step5_data.get("sources", []),
             "enhanced_outline": step6_data.get("enhanced_outline", ""),
         }
 
@@ -93,8 +110,9 @@ class Step65IntegrationPackage(BaseActivity):
             ) from e
 
         # Get LLM client (Claude for step6.5 - comprehensive integration)
-        llm_provider = config.get("llm_provider", "anthropic")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call
@@ -116,12 +134,36 @@ class Step65IntegrationPackage(BaseActivity):
 
         # Parse JSON response
         try:
-            parsed = json.loads(response.content)
+            # Try to extract JSON from response content
+            content = response.content.strip()
+
+            # Handle markdown code blocks
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
+                if end > start:
+                    content = content[start:end].strip()
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
+                if end > start:
+                    content = content[start:end].strip()
+
+            if not content:
+                raise ActivityError(
+                    f"Empty response from LLM",
+                    category=ErrorCategory.RETRYABLE,
+                )
+
+            parsed = json.loads(content)
             integration_package = parsed.get("integration_package", "")
             outline_summary = parsed.get("outline_summary", "")
             section_count = parsed.get("section_count", 0)
             total_sources = parsed.get("total_sources", 0)
         except json.JSONDecodeError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"[STEP6_5] JSON parse error. Response content (first 500 chars): {response.content[:500]}")
             raise ActivityError(
                 f"Failed to parse JSON response: {e}",
                 category=ErrorCategory.RETRYABLE,
