@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ChevronDown, ChevronRight, type LucideIcon } from 'lucide-react';
 import type { Step } from '@/lib/types';
 import { STEP_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,7 @@ interface WorkflowPattern1Props {
   onStepClick?: (stepName: string) => void;
 }
 
-const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const STEP_ICONS: Record<string, LucideIcon> = {
   'step-1': Package,
   'step0': Sparkles,
   'step1': Search,

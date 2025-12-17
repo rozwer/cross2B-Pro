@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, Brain, Wrench, ArrowRight, Inbox, ThumbsUp, ThumbsDown, Maximize2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, Brain, Wrench, ArrowRight, Inbox, ThumbsUp, ThumbsDown, Maximize2, type LucideIcon } from 'lucide-react';
 import type { Step } from '@/lib/types';
 import { STEP_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -19,10 +19,10 @@ interface WorkflowPattern3Props {
   currentStep: string;
   waitingApproval: boolean;
   onApprove?: () => void;
-  onReject?: () => void;
+  onReject?: (reason: string) => void;
 }
 
-const STEP_TYPES: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; type: string }> = {
+const STEP_TYPES: Record<string, { icon: LucideIcon; color: string; type: string }> = {
   'step-1': { icon: Inbox, color: '#3b82f6', type: '入力' },
   'step0': { icon: Sparkles, color: '#8b5cf6', type: 'AI' },
   'step1': { icon: Search, color: '#8b5cf6', type: 'AI' },
@@ -206,7 +206,7 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={onReject}
+                onClick={() => onReject?.('ユーザーによる却下')}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <ThumbsDown className="w-4 h-4" />

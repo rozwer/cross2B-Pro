@@ -75,22 +75,28 @@ export interface CreateRunInput {
 export interface RunSummary {
   id: string;
   status: RunStatus;
-  current_step: string;
+  current_step: string | null;
   keyword: string;
   model_config: ModelConfig;
   created_at: string;
   updated_at: string;
 }
 
-export interface Run extends RunSummary {
+export interface Run {
+  id: string;
   tenant_id: string;
+  status: RunStatus;
+  current_step: string | null;
   input: RunInput;
+  model_config: ModelConfig;
   tool_config?: ToolConfig;
   options?: {
     retry_limit: number;
     repair_enabled: boolean;
   };
   steps: Step[];
+  created_at: string;
+  updated_at: string;
   started_at?: string;
   completed_at?: string;
   error?: RunError;

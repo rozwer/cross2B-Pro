@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ChevronDown, ChevronRight, AlertTriangle, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ChevronDown, ChevronRight, AlertTriangle, RotateCcw, type LucideIcon } from 'lucide-react';
 import type { Step } from '@/lib/types';
 import { STEP_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ interface WorkflowPattern4Props {
   onStepClick?: (stepName: string) => void;
 }
 
-const STEP_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; description: string }> = {
+const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string; description: string }> = {
   'step-1': { icon: Package, color: '#3b82f6', description: 'キーワードと要件を入力' },
   'step0': { icon: Sparkles, color: '#8b5cf6', description: '初期設定と準備処理' },
   'step1': { icon: Search, color: '#8b5cf6', description: 'キーワード分析とSERP調査' },
