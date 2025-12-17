@@ -705,6 +705,74 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
     )
 
 
+async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str | None) -> list[StepResponse]:
+    """Build step responses from storage artifacts.
+
+    When DB doesn't have step records, we infer step status from storage.
+    If a step has output.json in storage, it's considered completed.
+    """
+    store = get_artifact_store()
+    if store is None:
+        return []
+
+    try:
+        artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
+    except Exception as e:
+        logger.warning(f"Failed to list artifacts for steps: {e}")
+        return []
+
+    # Extract step names from paths like: storage/tenant/run/step0/output.json
+    completed_steps: set[str] = set()
+    for path in artifact_paths:
+        parts = path.split("/")
+        if len(parts) >= 4 and parts[-1] == "output.json":
+            step_name = parts[-2]
+            completed_steps.add(step_name)
+
+    # Define all workflow steps in order
+    all_steps = [
+        "step0", "step1", "step2", "step3a", "step3b", "step3c",
+        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
+        "step8", "step9", "step10"
+    ]
+
+    step_responses: list[StepResponse] = []
+    for i, step_name in enumerate(all_steps):
+        # Normalize step name (step6_5 -> step6.5 for display consistency)
+        display_name = step_name.replace("_", ".")
+
+        # Determine status
+        if step_name in completed_steps:
+            status = StepStatus.COMPLETED
+        elif current_step and current_step == step_name:
+            status = StepStatus.RUNNING
+        elif current_step and current_step == display_name:
+            status = StepStatus.RUNNING
+        else:
+            # Check if any later step is completed (means this one was skipped or completed)
+            later_completed = any(
+                s in completed_steps for s in all_steps[i+1:]
+            )
+            if later_completed:
+                status = StepStatus.COMPLETED
+            else:
+                status = StepStatus.PENDING
+
+        step_responses.append(
+            StepResponse(
+                id=f"{run_id}-{step_name}",
+                run_id=run_id,
+                step_name=display_name,
+                status=status,
+                attempts=[],
+                started_at=None,
+                completed_at=None,
+            )
+        )
+
+    return step_responses
+
+
 # =============================================================================
 # Run Management Endpoints
 # =============================================================================
@@ -944,7 +1012,18 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
                 await session.flush()
                 await session.refresh(run)
 
-            return _run_orm_to_response(run, steps=list(run.steps))
+            # If no steps in DB, try to infer from storage
+            db_steps = list(run.steps)
+            if not db_steps:
+                storage_steps = await _get_steps_from_storage(
+                    tenant_id, run_id, run.current_step
+                )
+                # Build response with storage-based steps
+                response = _run_orm_to_response(run, steps=[])
+                response.steps = storage_steps
+                return response
+
+            return _run_orm_to_response(run, steps=db_steps)
 
     except HTTPException:
         raise
