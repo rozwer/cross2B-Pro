@@ -4,7 +4,6 @@ Polishes and improves the draft with natural language and flow.
 Uses Gemini for natural language enhancement.
 """
 
-import json
 from typing import Any
 
 from temporalio import activity
@@ -16,7 +15,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step7BBrushUp(BaseActivity):
@@ -55,7 +54,11 @@ class Step7BBrushUp(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step7a_data = config.get("step7a_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step7a_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step7a"
+        ) or {}
         draft = step7a_data.get("draft", "")
 
         if not keyword:
@@ -84,14 +87,22 @@ class Step7BBrushUp(BaseActivity):
             ) from e
 
         # Get LLM client (Gemini for step7b - natural language polish)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        import logging
+        logger = logging.getLogger(__name__)
+
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
+
+        logger.info(f"[STEP7B] Starting LLM call - provider: {llm_provider}, model: {llm_model}")
+        logger.info(f"[STEP7B] Draft length: {len(draft)} chars")
 
         # Execute LLM call
         try:
+            # Increase max_tokens for Japanese content (higher token count per character)
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 8000),
+                max_tokens=config.get("max_tokens", 16000),
                 temperature=config.get("temperature", 0.8),  # Slightly higher for creativity
             )
             response = await llm.generate(
@@ -100,22 +111,36 @@ class Step7BBrushUp(BaseActivity):
                 config=llm_config,
             )
         except Exception as e:
+            logger.error(f"[STEP7B] LLM call exception: {type(e).__name__}: {e}")
             raise ActivityError(
                 f"LLM call failed: {e}",
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
-        # Parse JSON response
-        try:
-            parsed = json.loads(response.content)
-            polished_content = parsed.get("polished", "")
-            llm_word_count = parsed.get("word_count", 0)
-            changes_made = parsed.get("changes_made", [])
-        except json.JSONDecodeError as e:
+        # Process response (plain markdown, not JSON)
+        logger.info(f"[STEP7B] LLM call completed successfully")
+        logger.info(f"[STEP7B] Raw response length: {len(response.content)}")
+        logger.info(f"[STEP7B] Raw response (first 500 chars): {response.content[:500]}")
+
+        # The response is expected to be plain markdown
+        polished_content = response.content.strip()
+
+        # Remove any code block markers if LLM still added them
+        if polished_content.startswith("```markdown"):
+            polished_content = polished_content[11:]
+        elif polished_content.startswith("```"):
+            polished_content = polished_content[3:]
+        if polished_content.endswith("```"):
+            polished_content = polished_content[:-3]
+        polished_content = polished_content.strip()
+
+        if not polished_content:
             raise ActivityError(
-                f"Failed to parse JSON response: {e}",
+                "Empty response from LLM",
                 category=ErrorCategory.RETRYABLE,
-            ) from e
+            )
+
+        logger.info(f"[STEP7B] Polished content length: {len(polished_content)} chars")
 
         # Calculate actual content stats
         word_count = len(polished_content.split())
@@ -129,12 +154,11 @@ class Step7BBrushUp(BaseActivity):
             "step": self.step_id,
             "keyword": keyword,
             "polished": polished_content,
-            "changes_made": changes_made,
+            "changes_made": [],  # Not tracked in plain markdown response
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
                 "word_diff_from_draft": word_diff,
-                "llm_reported_word_count": llm_word_count,
             },
             "model": response.model,
             "usage": {

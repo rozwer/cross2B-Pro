@@ -235,13 +235,16 @@ export class AuthManager {
 
   /**
    * 401エラー時のハンドリング（リダイレクト）
+   *
+   * NOTE: 開発段階では認証機能が未実装のため、リダイレクトを無効化
    */
   static handleUnauthorized(): void {
     this.clearToken();
     if (typeof window !== 'undefined') {
-      // 現在のURLをリダイレクト先として保存
-      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-      window.location.href = `/login?returnUrl=${returnUrl}`;
+      // TODO: 認証機能実装後に有効化
+      // const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      // window.location.href = `/login?returnUrl=${returnUrl}`;
+      console.warn('[Auth] Unauthorized - authentication not implemented yet');
     }
   }
 }

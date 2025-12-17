@@ -70,7 +70,9 @@ class Step1CompetitorFetch(BaseActivity):
                     category=ErrorCategory.RETRYABLE,
                 )
 
-            urls = serp_result.data.get("urls", []) if serp_result.data else []
+            # SerpFetchTool returns {"results": [{url, title, ...}, ...]}
+            results = serp_result.data.get("results", []) if serp_result.data else []
+            urls = [r.get("url") for r in results if r.get("url")]
 
         except ActivityError:
             raise
@@ -99,15 +101,23 @@ class Step1CompetitorFetch(BaseActivity):
         competitors = []
         failed_urls = []
 
+        # Limit content size to avoid gRPC message size limits (4MB)
+        MAX_CONTENT_CHARS = 10000  # ~10KB per article, reasonable for analysis
+
         for url in urls:
             try:
                 fetch_result = await page_fetch_tool.execute(url=url)
 
                 if fetch_result.success and fetch_result.data:
+                    # Get content and truncate if too large
+                    content = fetch_result.data.get("body_text", fetch_result.data.get("content", ""))
+                    if len(content) > MAX_CONTENT_CHARS:
+                        content = content[:MAX_CONTENT_CHARS] + "... [truncated]"
+
                     competitors.append({
                         "url": url,
                         "title": fetch_result.data.get("title", ""),
-                        "content": fetch_result.data.get("content", ""),
+                        "content": content,
                         "fetched_at": fetch_result.data.get("fetched_at"),
                     })
                 else:
@@ -117,6 +127,10 @@ class Step1CompetitorFetch(BaseActivity):
                 failed_urls.append({"url": url, "error": str(e)})
 
         # Return structured output
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[STEP1] Returning: {len(competitors)} competitors, {len(failed_urls)} failed URLs")
+
         return {
             "step": self.step_id,
             "keyword": keyword,

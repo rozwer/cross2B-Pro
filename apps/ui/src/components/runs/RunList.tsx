@@ -63,6 +63,10 @@ export function RunList() {
     );
   }
 
+  const handleDeleteRun = (runId: string) => {
+    setRuns((prevRuns) => prevRuns.filter((run) => run.id !== runId));
+  };
+
   if (error) {
     return <ErrorMessage message={error} onRetry={() => fetchRuns()} />;
   }
@@ -112,7 +116,7 @@ export function RunList() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
           {runs.map((run) => (
-            <RunCard key={run.id} run={run} />
+            <RunCard key={run.id} run={run} onDelete={handleDeleteRun} />
           ))}
         </div>
       )}
