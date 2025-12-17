@@ -190,7 +190,7 @@ export default function Home() {
             onNodeClick={handleGraphNodeClick}
             runStatus={selectedRun?.status}
             runSteps={selectedRun?.steps}
-            currentStep={selectedRun?.current_step}
+            currentStep={selectedRun?.current_step ?? undefined}
             isFullscreen={isGraphFullscreen}
             onToggleFullscreen={() => setIsGraphFullscreen(!isGraphFullscreen)}
           />

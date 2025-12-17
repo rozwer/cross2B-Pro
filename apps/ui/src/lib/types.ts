@@ -75,7 +75,7 @@ export interface CreateRunInput {
 export interface RunSummary {
   id: string;
   status: RunStatus;
-  current_step: string;
+  current_step: string | null;
   keyword: string;
   model_config: ModelConfig;
   created_at: string;

@@ -18,13 +18,13 @@ import { SUB_STEPS, getSubStepStatus } from './subStepsData';
 
 interface WorkflowPattern4Props {
   steps: Step[];
-  currentStep: string;
+  currentStep: string | null;
   waitingApproval: boolean;
   onRetry?: (stepName: string) => void;
   onStepClick?: (stepName: string) => void;
 }
 
-const STEP_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; description: string }> = {
+const STEP_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; color: string; description: string }> = {
   'step-1': { icon: Package, color: '#3b82f6', description: 'キーワードと要件を入力' },
   'step0': { icon: Sparkles, color: '#8b5cf6', description: '初期設定と準備処理' },
   'step1': { icon: Search, color: '#8b5cf6', description: 'キーワード分析とSERP調査' },
@@ -53,7 +53,7 @@ const ORDERED_STEPS = [
 
 export function WorkflowPattern4_VerticalTimeline({ steps, currentStep, waitingApproval, onRetry }: WorkflowPattern4Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set([currentStep]));
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(currentStep ? [currentStep] : []));
   const completedCount = steps.filter(s => s.status === 'completed').length;
   const progress = Math.round((completedCount / ORDERED_STEPS.length) * 100);
 

@@ -19,10 +19,10 @@ export type WorkflowViewPattern = 'n8n' | 'timeline' | 'radial';
 
 interface WorkflowProgressViewProps {
   steps: Step[];
-  currentStep: string;
+  currentStep: string | null;
   waitingApproval: boolean;
   onApprove?: () => void;
-  onReject?: () => void;
+  onReject?: (reason: string) => void;
   onRetry?: (stepName: string) => void;
   defaultPattern?: WorkflowViewPattern;
 }
