@@ -15,7 +15,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step4StrategicOutline(BaseActivity):
@@ -54,9 +54,17 @@ class Step4StrategicOutline(BaseActivity):
 
         # Get inputs from previous steps
         keyword = config.get("keyword")
-        step3a_data = config.get("step3a_data", {})
-        step3b_data = config.get("step3b_data", {})
-        step3c_data = config.get("step3c_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step3a_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3a"
+        ) or {}
+        step3b_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3b"
+        ) or {}
+        step3c_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step3c"
+        ) or {}
 
         if not keyword:
             raise ActivityError(
@@ -79,9 +87,10 @@ class Step4StrategicOutline(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client (Claude for step4 - strategic structuring)
-        llm_provider = config.get("llm_provider", "anthropic")
-        llm_model = config.get("llm_model")
+        # Get LLM client from model_config
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call

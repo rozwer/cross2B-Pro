@@ -65,19 +65,19 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-900">成果物</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">成果物</h3>
       </div>
 
-      <div className="flex divide-x divide-gray-200" style={{ minHeight: '300px' }}>
+      <div className="flex divide-x divide-gray-200 dark:divide-gray-700" style={{ minHeight: '300px' }}>
         {/* ファイルリスト */}
         <div className="w-64 flex-shrink-0 overflow-y-auto">
           {Object.entries(groupedArtifacts).map(([stepId, stepArtifacts]) => (
             <div key={stepId}>
               <button
                 onClick={() => toggleStep(stepId)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 {expandedSteps.has(stepId) ? (
                   <ChevronDown className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                   <ChevronRight className="h-4 w-4" />
                 )}
                 <span className="font-medium truncate">{stepId}</span>
-                <span className="text-xs text-gray-400 ml-auto">
+                <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
                   {stepArtifacts.length}
                 </span>
               </button>
@@ -99,8 +99,8 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                       className={cn(
                         'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors',
                         selectedArtifact?.id === artifact.id
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'text-gray-600 hover:bg-gray-50'
+                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                       )}
                     >
                       {getIcon(artifact.content_type)}
@@ -108,7 +108,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                         <p className="truncate text-xs">
                           {artifact.ref_path.split('/').pop()}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
                           {formatBytes(artifact.size_bytes)}
                         </p>
                       </div>
@@ -120,7 +120,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
           ))}
 
           {artifacts.length === 0 && (
-            <div className="p-4 text-center text-sm text-gray-500">
+            <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
               成果物がありません
             </div>
           )}
@@ -134,10 +134,10 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {selectedArtifact.ref_path}
                   </h4>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {selectedArtifact.content_type} | {formatBytes(selectedArtifact.size_bytes)}
                   </p>
                 </div>
@@ -145,7 +145,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                   <a
                     href={`data:${selectedArtifact.content_type};base64,${content.encoding === 'base64' ? content.content : btoa(content.content)}`}
                     download={selectedArtifact.ref_path.split('/').pop()}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                   >
                     <Download className="h-3.5 w-3.5" />
                     ダウンロード
@@ -159,7 +159,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
               />
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center text-sm text-gray-400">
+            <div className="h-full flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
               ファイルを選択してください
             </div>
           )}
@@ -215,15 +215,15 @@ function ContentRenderer({
     if (markdownContent && markdownFieldName) {
       return (
         <div>
-          <div className="flex items-center gap-2 mb-3 border-b border-gray-200 pb-2">
-            <span className="text-xs text-gray-500">表示モード:</span>
+          <div className="flex items-center gap-2 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400">表示モード:</span>
             <button
               onClick={() => setViewMode('json')}
               className={cn(
                 'px-2 py-1 text-xs rounded transition-colors',
                 viewMode === 'json'
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               )}
             >
               JSON
@@ -233,8 +233,8 @@ function ContentRenderer({
               className={cn(
                 'px-2 py-1 text-xs rounded transition-colors',
                 viewMode === 'markdown'
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               )}
             >
               {markdownFieldName} (Markdown)
@@ -262,7 +262,7 @@ function ContentRenderer({
 
   // デフォルト: プレーンテキスト
   return (
-    <pre className="p-4 bg-gray-50 rounded-lg text-xs overflow-auto max-h-96 whitespace-pre-wrap">
+    <pre className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs text-gray-900 dark:text-gray-100 overflow-auto max-h-96 whitespace-pre-wrap">
       {decodedContent}
     </pre>
   );

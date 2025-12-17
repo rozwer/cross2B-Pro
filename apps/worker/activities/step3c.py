@@ -16,7 +16,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step3CCompetitorAnalysis(BaseActivity):
@@ -55,7 +55,11 @@ class Step3CCompetitorAnalysis(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step1_data = config.get("step1_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step1_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step1"
+        ) or {}
         competitors = step1_data.get("competitors", [])
 
         if not keyword:

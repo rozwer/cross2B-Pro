@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Sparkles, Plus, LayoutDashboard } from 'lucide-react';
+import { ThemeProvider, ThemeToggle } from '@/components/theme';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,70 +15,73 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <div className="min-h-screen bg-gray-50">
-          {/* Header */}
-          <header className="glass sticky top-0 z-50 border-b border-gray-200/50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                {/* Logo */}
-                <Link
-                  href="/runs"
-                  className="flex items-center gap-3 group"
-                >
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-primary shadow-sm group-hover:shadow-md transition-shadow">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-lg font-semibold text-gray-900 hidden sm:block">
-                    SEO Generator
-                  </span>
-                </Link>
-
-                {/* Navigation */}
-                <nav className="flex items-center gap-2">
+        <ThemeProvider>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+            {/* Header */}
+            <header className="glass sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700/50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                  {/* Logo */}
                   <Link
                     href="/runs"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                    className="flex items-center gap-3 group"
                   >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-primary shadow-sm group-hover:shadow-md transition-shadow">
+                      <Sparkles className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-gray-100 hidden sm:block">
+                      SEO Generator
+                    </span>
                   </Link>
-                  <Link
-                    href="/runs/new"
-                    className="btn btn-primary"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">New Run</span>
-                  </Link>
-                </nav>
+
+                  {/* Navigation */}
+                  <nav className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <Link
+                      href="/runs"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      <span className="hidden sm:inline">Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/runs/new"
+                      className="btn btn-primary"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">New Run</span>
+                    </Link>
+                  </nav>
+                </div>
               </div>
-            </div>
 
-            {/* Decorative gradient line */}
-            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary-500/30 to-transparent" />
-          </header>
+              {/* Decorative gradient line */}
+              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary-500/30 to-transparent" />
+            </header>
 
-          {/* Main Content */}
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="animate-fade-in">
-              {children}
-            </div>
-          </main>
-
-          {/* Footer */}
-          <footer className="border-t border-gray-200 mt-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-                <p>SEO Article Generator v1.0</p>
-                <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
-                  System Online
-                </p>
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div className="animate-fade-in">
+                {children}
               </div>
-            </div>
-          </footer>
-        </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="border-t border-gray-200 dark:border-gray-800 mt-auto">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                  <p>SEO Article Generator v1.0</p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+                    System Online
+                  </p>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

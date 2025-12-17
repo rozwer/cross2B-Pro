@@ -6,7 +6,7 @@ This module provides:
 - Alembic migrations support
 """
 
-from .audit import AuditLogIntegrityError, AuditLogger
+from .audit import AuditLogger, AuditLogIntegrityError
 from .models import (
     Artifact,
     AuditLog,
