@@ -63,24 +63,6 @@ export default function Home() {
     setHasUnsavedChanges(true);
   }, []);
 
-  // Batch apply model to selected steps
-  const handleBatchApply = useCallback((platform: LLMPlatform, stepIds: string[]) => {
-    const PLATFORM_MODELS: Record<LLMPlatform, { id: string }> = {
-      gemini: { id: 'gemini-3-pro' },
-      anthropic: { id: 'claude-opus-4.5' },
-      openai: { id: 'gpt-5.2' },
-    };
-
-    setStepConfigs((prev) =>
-      prev.map((step) =>
-        stepIds.includes(step.stepId)
-          ? { ...step, aiModel: platform, modelName: PLATFORM_MODELS[platform].id }
-          : step
-      )
-    );
-    setHasUnsavedChanges(true);
-  }, []);
-
   // Save config
   const handleSaveConfig = useCallback(() => {
     localStorage.setItem('workflow-config', JSON.stringify(stepConfigs));
@@ -124,19 +106,19 @@ export default function Home() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">SEO記事生成ワークフロー</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">SEO記事生成ワークフロー</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             モデル設定、ワークフロー確認、実行状況の管理
           </p>
         </div>
         <div className="flex items-center gap-3">
           {/* Model Summary Badge */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-xs">
-            <span className="text-blue-600">{modelCounts.gemini || 0}</span>
-            <span className="text-gray-400">/</span>
-            <span className="text-orange-600">{modelCounts.anthropic || 0}</span>
-            <span className="text-gray-400">/</span>
-            <span className="text-green-600">{modelCounts.openai || 0}</span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs">
+            <span className="text-blue-600 dark:text-blue-400">{modelCounts.gemini || 0}</span>
+            <span className="text-gray-400 dark:text-gray-500">/</span>
+            <span className="text-orange-600 dark:text-orange-400">{modelCounts.anthropic || 0}</span>
+            <span className="text-gray-400 dark:text-gray-500">/</span>
+            <span className="text-green-600 dark:text-green-400">{modelCounts.openai || 0}</span>
           </div>
 
           {/* Save/Reset (only in model tab) */}
@@ -144,7 +126,7 @@ export default function Home() {
             <>
               <button
                 onClick={handleResetConfig}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 title="デフォルトに戻す"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -164,11 +146,11 @@ export default function Home() {
             </>
           )}
 
-          <div className="h-6 w-px bg-gray-200" />
+          <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
 
           <Link
             href="/runs"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <List className="w-4 h-4" />
             実行一覧
@@ -194,11 +176,10 @@ export default function Home() {
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {activeTab === 'model' && (
-          <div className="h-full bg-white rounded-lg border border-gray-200 p-4 overflow-auto">
+          <div className="h-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 overflow-auto">
             <ModelSettingsTab
               stepConfigs={stepConfigs}
               onConfigChange={handleConfigChange}
-              onBatchApply={handleBatchApply}
             />
           </div>
         )}
@@ -221,7 +202,7 @@ export default function Home() {
       </div>
 
       {/* Quick Tip Footer */}
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+      <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
         <div className="flex items-center gap-4">
           {activeTab === 'model' && (
             <span>各ステップを展開してモデル設定を変更できます。一括適用も可能です。</span>
@@ -238,7 +219,7 @@ export default function Home() {
             全{stepConfigs.filter((s) => s.isConfigurable && s.stepId !== 'approval').length}
             ステップ
           </span>
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
           <span>承認ポイント: 工程3完了後</span>
         </div>
       </div>

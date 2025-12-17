@@ -27,6 +27,42 @@ from apps.api.validation.schemas import ValidationReport
 T = TypeVar("T")
 
 
+async def load_step_data(
+    store: ArtifactStore,
+    tenant_id: str,
+    run_id: str,
+    step: str,
+) -> dict[str, Any] | None:
+    """Load step output data from storage.
+
+    Helper function for activities that need to load previous step data.
+
+    Args:
+        store: ArtifactStore instance
+        tenant_id: Tenant identifier
+        run_id: Run identifier
+        step: Step identifier (e.g., 'step0', 'step3a')
+
+    Returns:
+        dict with step output data, or None if not found
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"[load_step_data] Loading {step} for tenant={tenant_id}, run={run_id}")
+
+    try:
+        data = await store.get_by_path(tenant_id, run_id, step)
+        if data:
+            logger.info(f"[load_step_data] Found {step} data: {len(data)} bytes")
+            return json.loads(data.decode("utf-8"))
+        logger.warning(f"[load_step_data] No data found for {step}")
+        return None
+    except Exception as e:
+        logger.error(f"[load_step_data] Failed to load {step}: {type(e).__name__}: {e}")
+        return None
+
+
 class ActivityError(Exception):
     """Base exception for activity errors."""
 
@@ -129,6 +165,10 @@ class BaseActivity(ABC):
         Returns:
             dict with artifact_ref and metadata
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[BaseActivity.run] START: step={self.step_id}, tenant={tenant_id}, run={run_id}")
+
         start_time = time.time()
 
         # Get attempt number from Temporal
@@ -187,8 +227,10 @@ class BaseActivity(ABC):
                 metadata={},
             )
 
+            logger.info(f"[BaseActivity.run] Calling execute() for {self.step_id}")
             # Execute the step
             result = await self.execute(ctx, state)
+            logger.info(f"[BaseActivity.run] execute() completed for {self.step_id}")
 
             # Store output
             artifact_ref = await self._store_output(
@@ -211,10 +253,13 @@ class BaseActivity(ABC):
                 },
             )
 
+            # Return ONLY artifact_ref to avoid gRPC message size limits
+            # Downstream steps should load data from storage if needed
             return {
                 "artifact_ref": artifact_ref.model_dump(),
                 "duration_ms": duration_ms,
                 "skipped": False,
+                "step": self.step_id,
             }
 
         except ActivityError as e:

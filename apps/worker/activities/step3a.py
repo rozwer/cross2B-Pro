@@ -22,7 +22,7 @@ from apps.api.llm.exceptions import (
 from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step3AQueryAnalysis(BaseActivity):
@@ -61,8 +61,14 @@ class Step3AQueryAnalysis(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step0_data = config.get("step0_data", {})
-        step1_data = config.get("step1_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step0_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step0"
+        ) or {}
+        step1_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step1"
+        ) or {}
 
         if not keyword:
             raise ActivityError(

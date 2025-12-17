@@ -17,7 +17,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step7ADraftGeneration(BaseActivity):
@@ -56,7 +56,11 @@ class Step7ADraftGeneration(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step6_5_data = config.get("step6_5_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step6_5_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step6_5"
+        ) or {}
         integration_package = step6_5_data.get("integration_package", "")
 
         if not keyword:
@@ -85,8 +89,9 @@ class Step7ADraftGeneration(BaseActivity):
             ) from e
 
         # Get LLM client (Claude for step7a - long-form content)
-        llm_provider = config.get("llm_provider", "anthropic")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call with higher token limit for long-form content
@@ -107,13 +112,40 @@ class Step7ADraftGeneration(BaseActivity):
             ) from e
 
         # Parse JSON response
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[STEP7A] Raw response length: {len(response.content)}")
+        logger.info(f"[STEP7A] Raw response (first 1000 chars): {response.content[:1000]}")
+
         try:
-            parsed = json.loads(response.content)
+            # Handle markdown code blocks
+            content = response.content.strip()
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
+                if end > start:
+                    content = content[start:end].strip()
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
+                if end > start:
+                    content = content[start:end].strip()
+
+            if not content:
+                raise ActivityError(
+                    "Empty response from LLM",
+                    category=ErrorCategory.RETRYABLE,
+                )
+
+            parsed = json.loads(content)
             draft_content = parsed.get("draft", "")
             llm_word_count = parsed.get("word_count", 0)
             section_count = parsed.get("section_count", 0)
             cta_positions = parsed.get("cta_positions", [])
         except json.JSONDecodeError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"[STEP7A] JSON parse error. Response content (first 500 chars): {response.content[:500]}")
             raise ActivityError(
                 f"Failed to parse JSON response: {e}",
                 category=ErrorCategory.RETRYABLE,

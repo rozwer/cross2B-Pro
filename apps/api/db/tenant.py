@@ -309,7 +309,7 @@ class TenantDBManager:
         expected_prefix = "seo_gen_tenant_"
         if not db_name.startswith(expected_prefix):
             logger.error(f"Unexpected database name format: {db_name}")
-            raise TenantDBError(f"Unexpected database name format")
+            raise TenantDBError("Unexpected database name format")
 
         # Close any existing connections
         if tenant_id in self._engines:

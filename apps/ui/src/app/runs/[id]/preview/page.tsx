@@ -1,16 +1,17 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useState } from 'react';
 import { ArrowLeft, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Loading } from '@/components/common/Loading';
 
 export default function PreviewPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }) {
-  const { id } = use(params);
+  // Next.js 15 では params が Promise の場合がある
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  const { id } = resolvedParams;
   const [fullscreen, setFullscreen] = useState(false);
   const previewUrl = api.artifacts.getPreviewUrl(id);
 

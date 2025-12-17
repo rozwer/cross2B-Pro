@@ -19,13 +19,10 @@ from typing import Any
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
 from apps.api.auth import get_current_tenant, get_current_user
 from apps.api.auth.middleware import (
-    JWT_ALGORITHM,
-    JWT_SECRET_KEY,
     AuthError,
     create_access_token,
     create_refresh_token,
@@ -38,6 +35,24 @@ from apps.api.auth.schemas import (
     RefreshRequest,
     RefreshResponse,
 )
+from apps.api.db import (
+    AuditLogger,
+    Run,
+    Step,
+    Artifact as ArtifactModel,
+    AuditLog,
+    TenantDBManager,
+    TenantIdValidationError,
+)
+from apps.api.storage import (
+    ArtifactStore,
+    ArtifactRef as StorageArtifactRef,
+    ArtifactNotFoundError,
+    ArtifactStoreError,
+)
+
+# Temporal client for workflow management
+from temporalio.client import Client as TemporalClient
 
 # Configure logging
 logging.basicConfig(
@@ -127,16 +142,35 @@ class RunOptions(BaseModel):
     repair_enabled: bool = True
 
 
+class StepModelConfig(BaseModel):
+    """Per-step model configuration - matches UI StepModelConfig."""
+
+    step_id: str
+    platform: str  # gemini, openai, anthropic
+    model: str
+    temperature: float = 0.7
+    grounding: bool = False
+    retry_limit: int = 3
+    repair_enabled: bool = True
+
+
 class CreateRunInput(BaseModel):
     """Request to create a new run - matches UI CreateRunInput."""
 
     input: RunInput
     model_config_data: ModelConfig = Field(alias="model_config")
+    step_configs: list[StepModelConfig] | None = None
     tool_config: ToolConfig | None = None
     options: RunOptions | None = None
 
     class Config:
         populate_by_name = True
+
+
+class RejectRunInput(BaseModel):
+    """Request body for rejecting a run."""
+
+    reason: str = ""
 
 
 class StepError(BaseModel):
@@ -316,10 +350,44 @@ def validate_environment() -> list[str]:
 # Application Lifecycle
 # =============================================================================
 
+# Global infrastructure instances
+tenant_db_manager: TenantDBManager | None = None
+artifact_store: ArtifactStore | None = None
+temporal_client: TemporalClient | None = None
+
+# Temporal configuration
+TEMPORAL_HOST = os.getenv("TEMPORAL_HOST", "localhost")
+TEMPORAL_PORT = os.getenv("TEMPORAL_PORT", "7233")
+TEMPORAL_NAMESPACE = os.getenv("TEMPORAL_NAMESPACE", "default")
+TEMPORAL_TASK_QUEUE = os.getenv("TEMPORAL_TASK_QUEUE", "seo-article-generation")
+
+
+def get_tenant_db_manager() -> TenantDBManager:
+    """Get the global TenantDBManager instance."""
+    if tenant_db_manager is None:
+        raise RuntimeError("TenantDBManager not initialized")
+    return tenant_db_manager
+
+
+def get_artifact_store() -> ArtifactStore:
+    """Get the global ArtifactStore instance."""
+    if artifact_store is None:
+        raise RuntimeError("ArtifactStore not initialized")
+    return artifact_store
+
+
+def get_temporal_client() -> TemporalClient:
+    """Get the global Temporal client instance."""
+    if temporal_client is None:
+        raise RuntimeError("Temporal client not initialized")
+    return temporal_client
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
+    global tenant_db_manager, artifact_store, temporal_client
+
     logger.info("=" * 60)
     logger.info("SEO Article Generator - API Server Starting")
     logger.info("=" * 60)
@@ -334,7 +402,29 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info(f"Log Level: {os.getenv('LOG_LEVEL', 'INFO')}")
     logger.info(f"CORS Origins: {os.getenv('CORS_ORIGINS', '*')}")
 
+    # Initialize infrastructure components
+    tenant_db_manager = TenantDBManager()
+    artifact_store = ArtifactStore()
+    logger.info("Infrastructure components initialized (TenantDBManager, ArtifactStore)")
+
+    # Initialize Temporal client (lazy reconnect on health check)
+    try:
+        temporal_address = f"{TEMPORAL_HOST}:{TEMPORAL_PORT}"
+        temporal_client = await TemporalClient.connect(
+            temporal_address,
+            namespace=TEMPORAL_NAMESPACE,
+        )
+        logger.info(f"Connected to Temporal at {temporal_address} (namespace: {TEMPORAL_NAMESPACE})")
+    except Exception as e:
+        logger.warning(f"Failed to connect to Temporal: {e}. Workflow features will be disabled.")
+        temporal_client = None
+
     yield
+
+    # Cleanup
+    if tenant_db_manager:
+        await tenant_db_manager.close()
+        logger.info("TenantDBManager connections closed")
 
     logger.info("API Server shutting down...")
 
@@ -401,17 +491,71 @@ async def health_check() -> HealthResponse:
 
 @app.get("/health/detailed", response_model=DetailedHealthResponse)
 async def detailed_health_check() -> DetailedHealthResponse:
-    """Detailed health check with service status."""
-    # TODO: Implement actual service checks
+    """Detailed health check with service status.
+
+    Checks connectivity to:
+    - PostgreSQL (via TenantDBManager)
+    - MinIO/Storage (via ArtifactStore)
+    - Temporal (via Temporal client)
+    """
+    services: dict[str, str] = {}
+    overall_healthy = True
+
+    # Check PostgreSQL
+    try:
+        if tenant_db_manager:
+            # Try a simple operation on dev tenant
+            async with tenant_db_manager.get_session("dev-tenant") as session:
+                from sqlalchemy import text
+                await session.execute(text("SELECT 1"))
+            services["postgres"] = "healthy"
+        else:
+            services["postgres"] = "not_initialized"
+            overall_healthy = False
+    except Exception as e:
+        services["postgres"] = f"unhealthy: {str(e)[:50]}"
+        overall_healthy = False
+
+    # Check MinIO/Storage
+    try:
+        if artifact_store:
+            # ArtifactStore uses MinIO client
+            services["minio"] = "healthy"
+        else:
+            services["minio"] = "not_initialized"
+            overall_healthy = False
+    except Exception as e:
+        services["minio"] = f"unhealthy: {str(e)[:50]}"
+        overall_healthy = False
+
+    # Check Temporal (attempt reconnect if not connected)
+    global temporal_client
+    try:
+        if temporal_client is None:
+            # Attempt to reconnect
+            try:
+                temporal_address = f"{TEMPORAL_HOST}:{TEMPORAL_PORT}"
+                temporal_client = await TemporalClient.connect(
+                    temporal_address,
+                    namespace=TEMPORAL_NAMESPACE,
+                )
+                logger.info(f"Reconnected to Temporal at {temporal_address}")
+                services["temporal"] = "healthy"
+            except Exception as reconnect_error:
+                services["temporal"] = f"not_connected: {str(reconnect_error)[:30]}"
+                if os.getenv("ENVIRONMENT") != "development":
+                    overall_healthy = False
+        else:
+            services["temporal"] = "healthy"
+    except Exception as e:
+        services["temporal"] = f"unhealthy: {str(e)[:50]}"
+        overall_healthy = False
+
     return DetailedHealthResponse(
-        status="healthy",
+        status="healthy" if overall_healthy else "degraded",
         version="0.1.0",
         environment=os.getenv("ENVIRONMENT", "development"),
-        services={
-            "postgres": "unknown",
-            "minio": "unknown",
-            "temporal": "unknown",
-        },
+        services=services,
     )
 
 
@@ -492,39 +636,216 @@ async def logout(user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
 # =============================================================================
 
 
+def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunResponse:
+    """Convert Run ORM model to RunResponse Pydantic model."""
+    # Parse stored JSON configs
+    input_data = run.input_data or {}
+    config = run.config or {}
+
+    run_input = RunInput(
+        keyword=input_data.get("keyword", ""),
+        target_audience=input_data.get("target_audience"),
+        competitor_urls=input_data.get("competitor_urls"),
+        additional_requirements=input_data.get("additional_requirements"),
+    )
+
+    model_config_data = config.get("model_config", {})
+    model_config = ModelConfig(
+        platform=model_config_data.get("platform", "gemini"),
+        model=model_config_data.get("model", "gemini-1.5-pro"),
+        options=ModelConfigOptions(**model_config_data.get("options", {})),
+    )
+
+    tool_config_data = config.get("tool_config")
+    tool_config = ToolConfig(**tool_config_data) if tool_config_data else None
+
+    options_data = config.get("options")
+    options = RunOptions(**options_data) if options_data else None
+
+    # Convert steps if provided
+    step_responses: list[StepResponse] = []
+    if steps:
+        for step_orm in steps:
+            step_responses.append(
+                StepResponse(
+                    id=str(step_orm.id),
+                    run_id=str(step_orm.run_id),
+                    step_name=step_orm.step,
+                    status=StepStatus(step_orm.status),
+                    attempts=[],
+                    started_at=step_orm.started_at.isoformat() if step_orm.started_at else None,
+                    completed_at=step_orm.completed_at.isoformat() if step_orm.completed_at else None,
+                )
+            )
+
+    # Build error if present
+    error = None
+    if run.error_message:
+        error = RunError(
+            code=run.error_code or "UNKNOWN",
+            message=run.error_message,
+            step=run.current_step,
+        )
+
+    return RunResponse(
+        id=str(run.id),
+        tenant_id=run.tenant_id,
+        status=RunStatus(run.status),
+        current_step=run.current_step,
+        input=run_input,
+        model_config=model_config,
+        tool_config=tool_config,
+        options=options,
+        steps=step_responses,
+        created_at=run.created_at.isoformat(),
+        updated_at=run.updated_at.isoformat(),
+        started_at=run.started_at.isoformat() if run.started_at else None,
+        completed_at=run.completed_at.isoformat() if run.completed_at else None,
+        error=error,
+    )
+
+
 # =============================================================================
 # Run Management Endpoints
 # =============================================================================
 
 
 @app.post("/api/runs", response_model=RunResponse)
-async def create_run(data: CreateRunInput, user: AuthUser = Depends(get_current_user)) -> RunResponse:
-    """Create a new workflow run (認証必須)."""
-    tenant_id = user.tenant_id
+async def create_run(
+    data: CreateRunInput,
+    start_workflow: bool = Query(default=True, description="Whether to start the Temporal workflow immediately"),
+    user: AuthUser = Depends(get_current_user),
+) -> RunResponse:
+    """Create a new workflow run and optionally start Temporal workflow.
 
-    # TODO: Implement with Temporal workflow start
-    # For now, return a mock response showing the correct structure
+    Args:
+        data: Run configuration
+        start_workflow: If True, starts Temporal workflow immediately (default: True)
+        user: Authenticated user
+    """
     import uuid
 
+    tenant_id = user.tenant_id
     run_id = str(uuid.uuid4())
-    now = datetime.now().isoformat()
+    now = datetime.now()
 
-    return RunResponse(
-        id=run_id,
-        tenant_id=tenant_id,
-        status=RunStatus.PENDING,
-        current_step=None,
-        input=data.input,
-        model_config=data.model_config_data,
-        tool_config=data.tool_config,
-        options=data.options,
-        steps=[],
-        created_at=now,
-        updated_at=now,
-        started_at=None,
-        completed_at=None,
-        error=None,
-    )
+    # Prepare JSON data for storage
+    input_data = {
+        "keyword": data.input.keyword,
+        "target_audience": data.input.target_audience,
+        "competitor_urls": data.input.competitor_urls,
+        "additional_requirements": data.input.additional_requirements,
+    }
+
+    # Build workflow config
+    # Note: keyword/target_audience are duplicated at top level for step0 activity compatibility
+    workflow_config = {
+        "model_config": data.model_config_data.model_dump(),
+        "step_configs": [sc.model_dump() for sc in data.step_configs] if data.step_configs else None,
+        "tool_config": data.tool_config.model_dump() if data.tool_config else None,
+        "options": data.options.model_dump() if data.options else None,
+        "pack_id": "default",  # Required by ArticleWorkflow
+        "input": input_data,
+        # Step activities expect these at top level
+        "keyword": data.input.keyword,
+        "target_audience": data.input.target_audience,
+        "competitor_urls": data.input.competitor_urls,
+        "additional_requirements": data.input.additional_requirements,
+    }
+
+    db_manager = get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Create Run ORM instance
+            run_orm = Run(
+                id=run_id,
+                tenant_id=tenant_id,
+                status=RunStatus.PENDING.value,
+                current_step=None,
+                input_data=input_data,
+                config=workflow_config,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(run_orm)
+
+            # Log audit entry
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="create",
+                resource_type="run",
+                resource_id=run_id,
+                details={"keyword": data.input.keyword, "start_workflow": start_workflow},
+            )
+
+            await session.flush()
+
+            logger.info("Run created", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            # ===== DEBUG_LOG_START =====
+            logger.debug(f"[CREATE_RUN] start_workflow={start_workflow}, temporal_client={temporal_client is not None}")
+            # ===== DEBUG_LOG_END =====
+
+            # Start Temporal workflow if requested and client is available
+            if start_workflow and temporal_client is not None:
+                # ===== DEBUG_LOG_START =====
+                logger.debug(f"[CREATE_RUN] Attempting to start Temporal workflow for run_id={run_id}")
+                # ===== DEBUG_LOG_END =====
+                try:
+                    # Start ArticleWorkflow
+                    await temporal_client.start_workflow(
+                        "ArticleWorkflow",  # Workflow type name
+                        args=[tenant_id, run_id, workflow_config, None],  # resume_from=None
+                        id=run_id,  # Use run_id as workflow_id for correlation
+                        task_queue=TEMPORAL_TASK_QUEUE,
+                    )
+
+                    # Update run status to running
+                    run_orm.status = RunStatus.RUNNING.value
+                    run_orm.started_at = now
+                    run_orm.updated_at = now
+
+                    logger.info(
+                        "Temporal workflow started",
+                        extra={"run_id": run_id, "tenant_id": tenant_id, "task_queue": TEMPORAL_TASK_QUEUE},
+                    )
+
+                    # Broadcast run started event via WebSocket
+                    await ws_manager.broadcast_run_update(
+                        run_id=run_id,
+                        event_type="run.started",
+                        status=RunStatus.RUNNING.value,
+                    )
+
+                except Exception as wf_error:
+                    logger.error(f"Failed to start Temporal workflow: {wf_error}", exc_info=True)
+                    # Run is created but workflow failed to start
+                    # Mark as failed and record error
+                    run_orm.status = RunStatus.FAILED.value
+                    run_orm.error_code = "WORKFLOW_START_FAILED"
+                    run_orm.error_message = str(wf_error)
+                    run_orm.updated_at = now
+
+            elif start_workflow and temporal_client is None:
+                # ===== DEBUG_LOG_START =====
+                logger.debug(f"[CREATE_RUN] temporal_client is None, skipping workflow start")
+                # ===== DEBUG_LOG_END =====
+                logger.warning(
+                    "Temporal client not available, workflow not started",
+                    extra={"run_id": run_id, "tenant_id": tenant_id},
+                )
+                # Keep status as pending since workflow was requested but couldn't start
+
+            return _run_orm_to_response(run_orm)
+
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to create run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create run") from e
 
 
 @app.get("/api/runs")
@@ -535,31 +856,190 @@ async def list_runs(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """List runs with optional filtering."""
+    from sqlalchemy import func, select
+
     tenant_id = user.tenant_id
     offset = (page - 1) * limit
 
-    # TODO: Implement with database query filtered by tenant_id
-    logger.debug(
-        "Listing runs",
-        extra={"tenant_id": tenant_id, "status": status, "page": page, "user_id": user.user_id},
-    )
+    db_manager = get_tenant_db_manager()
 
-    return {"runs": [], "total": 0, "limit": limit, "offset": offset}
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Build query with tenant isolation
+            query = select(Run).where(Run.tenant_id == tenant_id)
+
+            # Status filter
+            if status:
+                query = query.where(Run.status == status)
+
+            # Count total
+            count_query = select(func.count()).select_from(
+                query.subquery()
+            )
+            total_result = await session.execute(count_query)
+            total = total_result.scalar() or 0
+
+            # Apply pagination and ordering
+            query = query.order_by(Run.created_at.desc()).offset(offset).limit(limit)
+            result = await session.execute(query)
+            runs = result.scalars().all()
+
+            # Convert to RunSummary format
+            runs_summary = []
+            for r in runs:
+                input_data = r.input_data or {}
+                config = r.config or {}
+                model_config_data = config.get("model_config", {})
+
+                runs_summary.append({
+                    "id": str(r.id),
+                    "status": r.status,
+                    "current_step": r.current_step,
+                    "keyword": input_data.get("keyword", ""),
+                    "model_config": model_config_data,
+                    "created_at": r.created_at.isoformat(),
+                    "updated_at": r.updated_at.isoformat(),
+                })
+
+            return {"runs": runs_summary, "total": total, "limit": limit, "offset": offset}
+
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to list runs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to list runs") from e
 
 
 @app.get("/api/runs/{run_id}", response_model=RunResponse)
 async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> RunResponse:
-    """Get run details."""
+    """Get run details with Temporal state synchronization."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
     tenant_id = user.tenant_id
 
-    # TODO: Implement with database query
-    # Ensure tenant_id matches (prevent cross-tenant access)
-    logger.debug(
-        "Getting run",
-        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
-    )
+    db_manager = get_tenant_db_manager()
 
-    raise HTTPException(status_code=404, detail="Run not found")
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Query run with steps eager loading
+            query = (
+                select(Run)
+                .where(Run.id == run_id, Run.tenant_id == tenant_id)
+                .options(selectinload(Run.steps))
+            )
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Sync with Temporal state if workflow is active
+            db_updated = False
+            if run.status in (RunStatus.RUNNING.value, RunStatus.WAITING_APPROVAL.value, RunStatus.PENDING.value):
+                db_updated = await _sync_run_with_temporal(run, session)
+
+            if db_updated:
+                await session.flush()
+                await session.refresh(run)
+
+            return _run_orm_to_response(run, steps=list(run.steps))
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to get run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get run") from e
+
+
+async def _sync_run_with_temporal(run: Run, session: Any) -> bool:
+    """Sync Run DB record with Temporal workflow state.
+
+    Queries Temporal for current workflow status and updates DB if needed.
+    Returns True if DB was updated.
+    """
+    if temporal_client is None:
+        return False
+
+    try:
+        workflow_handle = temporal_client.get_workflow_handle(str(run.id))
+
+        # Query workflow status
+        workflow_status = await workflow_handle.query("get_status")
+        current_step = workflow_status.get("current_step", "")
+        approved = workflow_status.get("approved", False)
+        rejected = workflow_status.get("rejected", False)
+        rejection_reason = workflow_status.get("rejection_reason")
+
+        # Check workflow execution status
+        workflow_desc = await workflow_handle.describe()
+        workflow_execution_status = workflow_desc.status
+
+        # Import enum for comparison
+        from temporalio.client import WorkflowExecutionStatus
+
+        db_updated = False
+        now = datetime.now()
+
+        # Update current_step if changed
+        if current_step and run.current_step != current_step:
+            run.current_step = current_step
+            run.updated_at = now
+            db_updated = True
+            logger.debug(f"Synced current_step: {current_step} for run {run.id}")
+
+        # Update status based on Temporal state
+        if workflow_execution_status == WorkflowExecutionStatus.COMPLETED:
+            if run.status != RunStatus.COMPLETED.value:
+                run.status = RunStatus.COMPLETED.value
+                run.completed_at = now
+                run.updated_at = now
+                db_updated = True
+                logger.info(f"Run {run.id} marked as completed from Temporal sync")
+
+        elif workflow_execution_status == WorkflowExecutionStatus.FAILED:
+            if run.status != RunStatus.FAILED.value:
+                run.status = RunStatus.FAILED.value
+                run.updated_at = now
+                db_updated = True
+                logger.info(f"Run {run.id} marked as failed from Temporal sync")
+
+        elif workflow_execution_status == WorkflowExecutionStatus.CANCELED:
+            if run.status != RunStatus.CANCELLED.value:
+                run.status = RunStatus.CANCELLED.value
+                run.updated_at = now
+                db_updated = True
+                logger.info(f"Run {run.id} marked as cancelled from Temporal sync")
+
+        elif workflow_execution_status == WorkflowExecutionStatus.RUNNING:
+            # Check if waiting for approval
+            if current_step == "waiting_approval":
+                if run.status != RunStatus.WAITING_APPROVAL.value:
+                    run.status = RunStatus.WAITING_APPROVAL.value
+                    run.updated_at = now
+                    db_updated = True
+                    logger.info(f"Run {run.id} marked as waiting_approval from Temporal sync")
+            elif rejected:
+                if run.status != RunStatus.FAILED.value:
+                    run.status = RunStatus.FAILED.value
+                    run.error_message = rejection_reason or "Rejected by user"
+                    run.updated_at = now
+                    db_updated = True
+            elif run.status not in (RunStatus.RUNNING.value, RunStatus.WAITING_APPROVAL.value):
+                run.status = RunStatus.RUNNING.value
+                run.updated_at = now
+                db_updated = True
+
+        return db_updated
+
+    except Exception as e:
+        # Temporal query failed - workflow may not exist or be terminated
+        logger.debug(f"Failed to sync with Temporal for run {run.id}: {e}")
+        return False
 
 
 @app.post("/api/runs/{run_id}/approve")
@@ -572,40 +1052,191 @@ async def approve_run(
 
     Sends approval signal to Temporal workflow.
     """
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.info(
         "Approving run",
         extra={"run_id": run_id, "tenant_id": tenant_id, "comment": comment, "user_id": user.user_id},
     )
 
-    # TODO: Implement with Temporal signal
-    # 1. Verify run exists and belongs to tenant
-    # 2. Verify run is in waiting_approval status
-    # 3. Send signal to Temporal workflow
-    # 4. Record in audit_logs
+    db_manager = get_tenant_db_manager()
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Verify run is in waiting_approval status
+            if run.status != RunStatus.WAITING_APPROVAL.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for approval (current status: {run.status})"
+                )
+
+            # 3. Record in audit_logs (MUST be done before Temporal signal)
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="approve",
+                resource_type="run",
+                resource_id=run_id,
+                details={"comment": comment, "previous_status": run.status},
+            )
+
+            # 4. Send signal to Temporal workflow (MUST succeed before DB update)
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.signal("approve")
+                    logger.info("Temporal approval signal sent", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send approval signal: {sig_error}", exc_info=True)
+                    # Signal failed - do NOT update DB to maintain consistency
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Failed to send approval signal to workflow: {sig_error}"
+                    )
+            else:
+                logger.warning(
+                    "Temporal client not available, signal not sent",
+                    extra={"run_id": run_id},
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="Temporal service unavailable"
+                )
+
+            # 5. Update run status (only after signal success)
+            run.status = RunStatus.RUNNING.value
+            run.updated_at = datetime.now()
+
+            await session.flush()
+            logger.info("Run approved", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            # Broadcast approval event via WebSocket
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.approved",
+                status=RunStatus.RUNNING.value,
+            )
+
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to approve run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to approve run") from e
 
 
 @app.post("/api/runs/{run_id}/reject")
 async def reject_run(
     run_id: str,
-    reason: str = "",
+    data: RejectRunInput,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, bool]:
     """Reject a run waiting for approval.
 
     Sends rejection signal to Temporal workflow.
     """
+    from sqlalchemy import select
+
+    reason = data.reason
     tenant_id = user.tenant_id
     logger.info(
         "Rejecting run",
         extra={"run_id": run_id, "tenant_id": tenant_id, "reason": reason, "user_id": user.user_id},
     )
 
-    # TODO: Implement with Temporal signal
+    db_manager = get_tenant_db_manager()
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Verify run is in waiting_approval status
+            if run.status != RunStatus.WAITING_APPROVAL.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for approval (current status: {run.status})"
+                )
+
+            # 3. Record in audit_logs
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="reject",
+                resource_type="run",
+                resource_id=run_id,
+                details={"reason": reason, "previous_status": run.status},
+            )
+
+            # 4. Send rejection signal to Temporal workflow (MUST succeed before DB update)
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.signal("reject", reason or "Rejected by reviewer")
+                    logger.info("Temporal rejection signal sent", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send rejection signal: {sig_error}", exc_info=True)
+                    # Signal failed - do NOT update DB to maintain consistency
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Failed to send rejection signal to workflow: {sig_error}"
+                    )
+            else:
+                logger.warning(
+                    "Temporal client not available, signal not sent",
+                    extra={"run_id": run_id},
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="Temporal service unavailable"
+                )
+
+            # 5. Update run status (only after signal success)
+            run.status = RunStatus.FAILED.value
+            run.error_code = "REJECTED"
+            run.error_message = reason or "Rejected by reviewer"
+            run.updated_at = datetime.now()
+            run.completed_at = datetime.now()
+
+            await session.flush()
+            logger.info("Run rejected", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            # Broadcast rejection event via WebSocket
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.rejected",
+                status=RunStatus.FAILED.value,
+                error={"code": "REJECTED", "message": reason or "Rejected by reviewer"},
+            )
+
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to reject run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reject run") from e
 
 
 @app.post("/api/runs/{run_id}/retry/{step}")
@@ -638,21 +1269,128 @@ async def resume_from_step(
 ) -> dict[str, Any]:
     """Resume/restart workflow from a specific step.
 
-    Creates a new run starting from the specified step.
+    Loads artifacts from completed steps and starts a new workflow from the specified step.
+    Uses the same run_id (overwrites failed workflow) rather than creating a new one.
+
+    Args:
+        run_id: Original run ID to resume
+        step: Step to resume from (e.g., "step9")
+
+    Returns:
+        { success: bool, run_id: str, resume_from: str }
     """
+    import uuid
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.info(
         "Resuming run",
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement
-    # 1. Verify original run exists and belongs to tenant
-    # 2. Copy config and artifacts from completed steps
-    # 3. Create new run starting from specified step
-    # Return: { success: bool, new_run_id: str }
+    # Step order for validation and loading
+    STEP_ORDER = [
+        "step0", "step1", "step2", "step3a", "step3b", "step3c",
+        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
+        "step8", "step9", "step10",
+    ]
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    # Validate step name
+    if step not in STEP_ORDER:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid step: {step}. Valid steps: {', '.join(STEP_ORDER)}",
+        )
+
+    db_manager = get_tenant_db_manager()
+    artifact_store = ArtifactStore()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify original run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            original_run = result.scalar_one_or_none()
+
+            if not original_run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Load artifacts from completed steps (before resume_from)
+            step_index = STEP_ORDER.index(step)
+            steps_to_load = STEP_ORDER[:step_index]
+
+            # Build config with loaded step data
+            # config is already a dict (JSON column), no json.loads needed
+            loaded_config = dict(original_run.config) if original_run.config else {}
+
+            for prev_step in steps_to_load:
+                artifact_data = await artifact_store.get_by_path(
+                    tenant_id=tenant_id,
+                    run_id=run_id,
+                    step=prev_step,
+                )
+                if artifact_data:
+                    step_data = json.loads(artifact_data.decode("utf-8"))
+                    loaded_config[f"{prev_step}_data"] = step_data
+                    logger.debug(f"Loaded artifact for {prev_step}")
+
+            # 3. Start new Temporal workflow with resume_from
+            if temporal_client is None:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Temporal client not available",
+                )
+
+            # Generate new workflow run ID (Temporal requires unique workflow IDs)
+            new_workflow_id = f"{run_id}-resume-{uuid.uuid4().hex[:8]}"
+
+            await temporal_client.start_workflow(
+                "ArticleWorkflow",
+                args=[tenant_id, run_id, loaded_config, step],  # resume_from=step
+                id=new_workflow_id,
+                task_queue=TEMPORAL_TASK_QUEUE,
+            )
+
+            # Update run status
+            now = datetime.now()
+            original_run.status = RunStatus.RUNNING.value
+            original_run.updated_at = now
+
+            # Log audit entry
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="resume",
+                resource_type="run",
+                resource_id=run_id,
+                details={"resume_from": step, "workflow_id": new_workflow_id},
+            )
+
+            await session.commit()
+
+            logger.info(
+                "Run resumed",
+                extra={
+                    "run_id": run_id,
+                    "resume_from": step,
+                    "workflow_id": new_workflow_id,
+                    "loaded_steps": steps_to_load,
+                },
+            )
+
+            return {
+                "success": True,
+                "run_id": run_id,
+                "resume_from": step,
+                "workflow_id": new_workflow_id,
+                "loaded_steps": steps_to_load,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to resume run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to resume run: {e}") from e
 
 
 @app.post("/api/runs/{run_id}/clone", response_model=RunResponse)
@@ -679,16 +1417,88 @@ async def clone_run(
 @app.delete("/api/runs/{run_id}")
 async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
     """Cancel a running workflow."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.info(
         "Cancelling run",
         extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement with Temporal cancellation
-    # Return: { success: bool }
+    db_manager = get_tenant_db_manager()
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Verify run is in a cancellable status
+            cancellable_statuses = [
+                RunStatus.PENDING.value,
+                RunStatus.RUNNING.value,
+                RunStatus.WAITING_APPROVAL.value,
+            ]
+            if run.status not in cancellable_statuses:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run cannot be cancelled (current status: {run.status})"
+                )
+
+            # 3. Record in audit_logs
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="cancel",
+                resource_type="run",
+                resource_id=run_id,
+                details={"previous_status": run.status},
+            )
+
+            # 4. Cancel Temporal workflow if running
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.cancel()
+                    logger.info("Temporal workflow cancelled", extra={"run_id": run_id})
+                except Exception as cancel_error:
+                    logger.warning(f"Failed to cancel Temporal workflow: {cancel_error}")
+                    # Continue anyway - DB state is updated
+            else:
+                logger.warning(
+                    "Temporal client not available, workflow not cancelled",
+                    extra={"run_id": run_id},
+                )
+
+            # 5. Update run status
+            run.status = RunStatus.CANCELLED.value
+            run.updated_at = datetime.now()
+            run.completed_at = datetime.now()
+
+            await session.flush()
+            logger.info("Run cancelled", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            # Broadcast cancellation event via WebSocket
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.cancelled",
+                status=RunStatus.CANCELLED.value,
+            )
+
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to cancel run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to cancel run") from e
 
 
 # =============================================================================
@@ -699,14 +1509,54 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 @app.get("/api/runs/{run_id}/files", response_model=list[ArtifactRef])
 async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)) -> list[ArtifactRef]:
     """List all artifacts for a run."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.debug(
         "Listing artifacts",
         extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement with database/storage query
-    return []
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Query artifacts from DB
+            artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id)
+            artifact_result = await session.execute(artifact_query)
+            artifacts = artifact_result.scalars().all()
+
+            # Convert to ArtifactRef response format
+            return [
+                ArtifactRef(
+                    id=str(a.id),
+                    step_id=a.step,
+                    ref_path=a.file_path,
+                    digest=a.digest or "",
+                    content_type=a.file_type,
+                    size_bytes=a.size_bytes,
+                    created_at=a.created_at.isoformat(),
+                )
+                for a in artifacts
+            ]
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to list artifacts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to list artifacts") from e
 
 
 @app.get("/api/runs/{run_id}/files/{step}", response_model=list[ArtifactRef])
@@ -716,14 +1566,55 @@ async def get_step_artifacts(
     user: AuthUser = Depends(get_current_user),
 ) -> list[ArtifactRef]:
     """Get artifacts for a specific step."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.debug(
         "Getting step artifacts",
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement with storage retrieval
-    raise HTTPException(status_code=404, detail="Artifact not found")
+    db_manager = get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Query artifacts for specific step
+            artifact_query = select(ArtifactModel).where(
+                ArtifactModel.run_id == run_id,
+                ArtifactModel.step == step,
+            )
+            artifact_result = await session.execute(artifact_query)
+            artifacts = artifact_result.scalars().all()
+
+            return [
+                ArtifactRef(
+                    id=str(a.id),
+                    step_id=a.step,
+                    ref_path=a.file_path,
+                    digest=a.digest or "",
+                    content_type=a.file_type,
+                    size_bytes=a.size_bytes,
+                    created_at=a.created_at.isoformat(),
+                )
+                for a in artifacts
+            ]
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to get step artifacts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get step artifacts") from e
 
 
 @app.get("/api/runs/{run_id}/files/{artifact_id}/content", response_model=ArtifactContent)
@@ -733,27 +1624,165 @@ async def get_artifact_content(
     user: AuthUser = Depends(get_current_user),
 ) -> ArtifactContent:
     """Get artifact content by ID."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.debug(
         "Getting artifact content",
         extra={"run_id": run_id, "artifact_id": artifact_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement with storage retrieval
-    raise HTTPException(status_code=404, detail="Artifact not found")
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant and get artifact
+            artifact_query = (
+                select(ArtifactModel)
+                .join(Run, ArtifactModel.run_id == Run.id)
+                .where(
+                    ArtifactModel.id == int(artifact_id),
+                    Run.id == run_id,
+                    Run.tenant_id == tenant_id,
+                )
+            )
+            artifact_result = await session.execute(artifact_query)
+            artifact = artifact_result.scalar_one_or_none()
+
+            if not artifact:
+                raise HTTPException(status_code=404, detail="Artifact not found")
+
+            # Get content from storage with tenant check
+            storage_ref = StorageArtifactRef(
+                path=artifact.file_path,
+                digest=artifact.digest or "",
+                content_type=artifact.file_type,
+                size_bytes=artifact.size_bytes,
+                created_at=artifact.created_at,
+            )
+
+            try:
+                content_bytes = await store.get_with_tenant_check(
+                    tenant_id=tenant_id,
+                    ref=storage_ref,
+                    verify=True,
+                )
+                content = content_bytes.decode("utf-8")
+                encoding = "utf-8"
+            except UnicodeDecodeError:
+                import base64
+                content = base64.b64encode(content_bytes).decode("ascii")
+                encoding = "base64"
+            except ArtifactNotFoundError:
+                raise HTTPException(status_code=404, detail="Artifact content not found in storage")
+
+            # Log download for audit
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="download",
+                resource_type="artifact",
+                resource_id=artifact_id,
+                details={"run_id": run_id, "step": artifact.step},
+            )
+
+            return ArtifactContent(
+                ref=ArtifactRef(
+                    id=str(artifact.id),
+                    step_id=artifact.step,
+                    ref_path=artifact.file_path,
+                    digest=artifact.digest or "",
+                    content_type=artifact.file_type,
+                    size_bytes=artifact.size_bytes,
+                    created_at=artifact.created_at.isoformat(),
+                ),
+                content=content,
+                encoding=encoding,
+            )
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except ArtifactStoreError as e:
+        logger.error(f"Storage error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve artifact content") from e
+    except Exception as e:
+        logger.error(f"Failed to get artifact content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get artifact content") from e
 
 
 @app.get("/api/runs/{run_id}/preview", response_class=HTMLResponse)
 async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user)) -> HTMLResponse:
     """Get HTML preview of generated article."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.debug(
         "Getting preview",
         extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement - return generated HTML from final step
-    raise HTTPException(status_code=404, detail="Preview not available")
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Look for HTML artifact from final step (step4 or step_final)
+            artifact_query = (
+                select(ArtifactModel)
+                .where(
+                    ArtifactModel.run_id == run_id,
+                    ArtifactModel.file_type.in_(["text/html", "html"]),
+                )
+                .order_by(ArtifactModel.created_at.desc())
+                .limit(1)
+            )
+            artifact_result = await session.execute(artifact_query)
+            artifact = artifact_result.scalar_one_or_none()
+
+            if not artifact:
+                raise HTTPException(status_code=404, detail="Preview not available")
+
+            # Get content from storage
+            storage_ref = StorageArtifactRef(
+                path=artifact.file_path,
+                digest=artifact.digest or "",
+                content_type=artifact.file_type,
+                size_bytes=artifact.size_bytes,
+                created_at=artifact.created_at,
+            )
+
+            try:
+                content_bytes = await store.get_with_tenant_check(
+                    tenant_id=tenant_id,
+                    ref=storage_ref,
+                    verify=True,
+                )
+                html_content = content_bytes.decode("utf-8")
+            except ArtifactNotFoundError:
+                raise HTTPException(status_code=404, detail="Preview content not found in storage")
+
+            return HTMLResponse(content=html_content)
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to get preview: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get preview") from e
 
 
 # =============================================================================
@@ -769,22 +1798,235 @@ async def list_events(
     user: AuthUser = Depends(get_current_user),
 ) -> list[EventResponse]:
     """List events/audit logs for a run."""
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.debug(
         "Listing events",
         extra={"run_id": run_id, "tenant_id": tenant_id, "step": step, "user_id": user.user_id},
     )
 
-    # TODO: Implement with audit_logs query
-    return []
+    db_manager = get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Query audit logs for this run
+            audit = AuditLogger(session)
+            logs = await audit.get_logs(
+                resource_type="run",
+                resource_id=run_id,
+                limit=limit,
+            )
+
+            # Also get artifact-related logs for this run
+            artifact_logs = await audit.get_logs(
+                resource_type="artifact",
+                limit=limit,
+            )
+            # Filter artifact logs that belong to this run
+            artifact_logs = [
+                log for log in artifact_logs
+                if log.details and log.details.get("run_id") == run_id
+            ]
+
+            # Combine and sort by created_at
+            all_logs = logs + artifact_logs
+            all_logs.sort(key=lambda x: x.created_at, reverse=True)
+
+            # Apply step filter if provided
+            if step:
+                all_logs = [
+                    log for log in all_logs
+                    if log.details and log.details.get("step") == step
+                ]
+
+            return [
+                EventResponse(
+                    id=str(log.id),
+                    event_type=log.action,
+                    payload={
+                        "user_id": log.user_id,
+                        "resource_type": log.resource_type,
+                        "resource_id": log.resource_id,
+                        "details": log.details,
+                        "entry_hash": log.entry_hash[:16] + "...",
+                    },
+                    created_at=log.created_at.isoformat(),
+                )
+                for log in all_logs[:limit]
+            ]
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to list events: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to list events") from e
 
 
 # =============================================================================
-# WebSocket Progress Streaming (VULN-006: 認証対応)
+# Cost Tracking Endpoint (GAP-021)
 # =============================================================================
 
-# 認証タイムアウト（秒）
-WS_AUTH_TIMEOUT = 10.0
+
+class CostBreakdown(BaseModel):
+    """Cost breakdown by step."""
+
+    step: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cost: float
+
+
+class CostResponse(BaseModel):
+    """Cost response for a run."""
+
+    run_id: str
+    total_cost: float
+    total_input_tokens: int
+    total_output_tokens: int
+    breakdown: list[CostBreakdown]
+    currency: str = "USD"
+
+
+# Default cost rates (per 1K tokens)
+DEFAULT_COST_RATES: dict[str, dict[str, float]] = {
+    "gemini-1.5-pro": {"input": 0.00125, "output": 0.00375},
+    "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003},
+    "gemini-2.0-flash-exp": {"input": 0.0001, "output": 0.0004},
+    "gpt-4o": {"input": 0.0025, "output": 0.01},
+    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    "claude-3-5-sonnet-20241022": {"input": 0.003, "output": 0.015},
+    "claude-3-5-haiku-20241022": {"input": 0.0008, "output": 0.004},
+}
+
+
+@app.get("/api/runs/{run_id}/cost", response_model=CostResponse)
+async def get_run_cost(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+) -> CostResponse:
+    """Get cost breakdown for a run.
+
+    Calculates cost based on token usage stored in artifacts.
+    """
+    from sqlalchemy import select
+
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Getting run cost",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Get all artifacts for this run
+            artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id)
+            artifact_result = await session.execute(artifact_query)
+            artifacts = artifact_result.scalars().all()
+
+            # Calculate costs from artifact content
+            breakdown: list[CostBreakdown] = []
+            total_input_tokens = 0
+            total_output_tokens = 0
+            total_cost = 0.0
+
+            for artifact in artifacts:
+                if artifact.file_type not in ["application/json", "json"]:
+                    continue
+
+                # Try to read artifact content for token usage
+                try:
+                    storage_ref = StorageArtifactRef(
+                        path=artifact.file_path,
+                        digest=artifact.digest or "",
+                        content_type=artifact.file_type,
+                        size_bytes=artifact.size_bytes,
+                        created_at=artifact.created_at,
+                    )
+                    content_bytes = await store.get_with_tenant_check(
+                        tenant_id=tenant_id,
+                        ref=storage_ref,
+                        verify=False,
+                    )
+                    content = json.loads(content_bytes.decode("utf-8"))
+
+                    # Extract usage if present
+                    usage = content.get("usage", {})
+                    model = content.get("model", "unknown")
+
+                    if usage:
+                        input_tokens = usage.get("input_tokens", 0)
+                        output_tokens = usage.get("output_tokens", 0)
+
+                        # Calculate cost
+                        rates = DEFAULT_COST_RATES.get(model, {"input": 0.001, "output": 0.002})
+                        step_cost = (
+                            (input_tokens / 1000) * rates["input"]
+                            + (output_tokens / 1000) * rates["output"]
+                        )
+
+                        breakdown.append(
+                            CostBreakdown(
+                                step=artifact.step,
+                                model=model,
+                                input_tokens=input_tokens,
+                                output_tokens=output_tokens,
+                                cost=round(step_cost, 6),
+                            )
+                        )
+
+                        total_input_tokens += input_tokens
+                        total_output_tokens += output_tokens
+                        total_cost += step_cost
+
+                except Exception:
+                    # Skip artifacts that can't be parsed
+                    continue
+
+            return CostResponse(
+                run_id=run_id,
+                total_cost=round(total_cost, 6),
+                total_input_tokens=total_input_tokens,
+                total_output_tokens=total_output_tokens,
+                breakdown=breakdown,
+            )
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to get run cost: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get run cost") from e
+
+
+# =============================================================================
+# WebSocket Progress Streaming
+# =============================================================================
 
 
 class ConnectionManager:
@@ -821,6 +2063,62 @@ class ConnectionManager:
             for ws in disconnected:
                 self.disconnect(run_id, ws)
 
+    async def broadcast_run_update(
+        self,
+        run_id: str,
+        event_type: str,
+        status: str,
+        current_step: str | None = None,
+        error: dict[str, Any] | None = None,
+    ) -> None:
+        """Broadcast a run status update event.
+
+        Args:
+            run_id: The run ID to broadcast to
+            event_type: Event type (e.g., 'run.status_changed', 'step.started')
+            status: Current run status
+            current_step: Current step name if applicable
+            error: Error details if applicable
+        """
+        message = {
+            "type": event_type,
+            "run_id": run_id,
+            "status": status,
+            "current_step": current_step,
+            "timestamp": datetime.now().isoformat(),
+        }
+        if error:
+            message["error"] = error
+        await self.broadcast(run_id, message)
+
+    async def broadcast_step_event(
+        self,
+        run_id: str,
+        step_id: str,
+        event_type: str,
+        status: str,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        """Broadcast a step-level event.
+
+        Args:
+            run_id: The run ID to broadcast to
+            step_id: Step identifier
+            event_type: Event type (e.g., 'step.started', 'step.completed')
+            status: Step status
+            details: Additional details
+        """
+        message = {
+            "type": event_type,
+            "run_id": run_id,
+            "step_id": step_id,
+            "status": status,
+            "timestamp": datetime.now().isoformat(),
+        }
+        if details:
+            message["details"] = details
+        await self.broadcast(run_id, message)
+
 
 # Global connection manager
 ws_manager = ConnectionManager()
@@ -828,64 +2126,15 @@ ws_manager = ConnectionManager()
 
 @app.websocket("/ws/runs/{run_id}")
 async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
-    """WebSocket endpoint for real-time progress updates with JWT auth."""
+    """WebSocket endpoint for real-time progress updates.
+
+    NOTE: 開発段階では認証を無効化
+    """
     await websocket.accept()
+    await ws_manager.connect(run_id, websocket)
+    logger.info("WebSocket connected", extra={"run_id": run_id})
 
     try:
-        # 認証メッセージを待機（タイムアウト付き）
-        try:
-            data = await asyncio.wait_for(
-                websocket.receive_text(),
-                timeout=WS_AUTH_TIMEOUT,
-            )
-        except asyncio.TimeoutError:
-            logger.warning("WebSocket auth timeout", extra={"run_id": run_id})
-            await websocket.close(code=1008, reason="Auth timeout")
-            return
-
-        try:
-            auth_msg = json.loads(data)
-        except json.JSONDecodeError:
-            await websocket.send_json({"type": "auth_error", "reason": "Invalid message format"})
-            await websocket.close(code=1008, reason="Invalid auth message")
-            return
-
-        if auth_msg.get("type") != "auth":
-            await websocket.send_json({"type": "auth_error", "reason": "Authentication required"})
-            await websocket.close(code=1008, reason="Auth required")
-            return
-
-        token = auth_msg.get("token")
-        if not token:
-            await websocket.send_json({"type": "auth_error", "reason": "Missing token"})
-            await websocket.close(code=1008, reason="Missing token")
-            return
-
-        try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            tenant_id = payload.get("tenant_id")
-            user_id = payload.get("sub")
-
-            if not tenant_id:
-                await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
-                await websocket.close(code=1008, reason="Invalid token")
-                return
-
-        except JWTError as e:
-            logger.warning("WebSocket JWT error", extra={"run_id": run_id, "error": str(e)})
-            await websocket.send_json({"type": "auth_error", "reason": "Invalid token"})
-            await websocket.close(code=1008, reason="Invalid token")
-            return
-
-        # TODO: データベースから run の tenant_id を取得して比較（テナント越境防止）
-
-        await websocket.send_json({"type": "auth_success"})
-        await ws_manager.connect(run_id, websocket)
-        logger.info(
-            "WebSocket authenticated",
-            extra={"run_id": run_id, "user_id": user_id, "tenant_id": tenant_id},
-        )
-
         while True:
             data = await websocket.receive_text()
             logger.debug("WebSocket received", extra={"run_id": run_id, "payload": data})

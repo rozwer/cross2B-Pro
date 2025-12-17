@@ -15,7 +15,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step6EnhancedOutline(BaseActivity):
@@ -54,8 +54,14 @@ class Step6EnhancedOutline(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step4_data = config.get("step4_data", {})
-        step5_data = config.get("step5_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step4_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step4"
+        ) or {}
+        step5_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step5"
+        ) or {}
 
         if not keyword:
             raise ActivityError(
@@ -89,8 +95,9 @@ class Step6EnhancedOutline(BaseActivity):
             ) from e
 
         # Get LLM client (Claude for step6)
-        llm_provider = config.get("llm_provider", "anthropic")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call

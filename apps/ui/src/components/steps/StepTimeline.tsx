@@ -38,10 +38,10 @@ export function StepTimeline({
   return (
     <div className="card overflow-hidden animate-fade-in">
       {/* Header with progress */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-900">ワークフロー進捗</h3>
-          <span className="text-xs font-medium text-gray-500">{progress}%</span>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">ワークフロー進捗</h3>
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{progress}%</span>
         </div>
         <div className="progress-bar">
           <div

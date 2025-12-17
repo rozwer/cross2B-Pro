@@ -17,7 +17,7 @@ from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step5PrimaryCollection(BaseActivity):
@@ -56,7 +56,11 @@ class Step5PrimaryCollection(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step4_data = config.get("step4_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step4_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step4"
+        ) or {}
         outline = step4_data.get("outline", "")
 
         if not keyword:
@@ -66,8 +70,9 @@ class Step5PrimaryCollection(BaseActivity):
             )
 
         # Step 5.1: Generate search queries using LLM
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         try:
@@ -105,7 +110,8 @@ class Step5PrimaryCollection(BaseActivity):
                     result = await primary_collector.execute(query=query)
 
                     if result.success:
-                        sources = result.data.get("evidence_refs", []) if result.data else []
+                        # primary_collector returns {"query": str, "sources": list, "total": int}
+                        sources = result.data.get("sources", []) if result.data else []
                         collected_sources.extend(sources)
                     else:
                         failed_queries.append({
@@ -150,12 +156,14 @@ class Step5PrimaryCollection(BaseActivity):
                 source["verified"] = False
             verified_sources = collected_sources
 
-        # Check if we have ANY valid sources
+        # If no sources collected, log warning but continue with empty results
+        # This allows the workflow to proceed without primary sources
         if not verified_sources and not collected_sources:
-            raise ActivityError(
-                "Failed to collect any primary sources",
-                category=ErrorCategory.NON_RETRYABLE,
-                details={"failed_queries": failed_queries},
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"No primary sources collected for '{keyword}'. "
+                f"Failed queries: {failed_queries}. Proceeding with empty results."
             )
 
         return {

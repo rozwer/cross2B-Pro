@@ -8,6 +8,13 @@ VULN-005/006: 認証ミドルウェア
 
 import logging
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# プロジェクトルートの .env を読み込む
+_project_root = Path(__file__).resolve().parents[3]
+load_dotenv(_project_root / ".env")
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -24,6 +31,11 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-productio
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
+# 開発モード設定（認証スキップ）
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+SKIP_AUTH = ENVIRONMENT == "development"
+DEV_TENANT_ID = os.getenv("DEV_TENANT_ID", "dev-tenant-001")
 
 # HTTPBearer スキーム
 security = HTTPBearer(auto_error=False)
@@ -153,22 +165,14 @@ async def get_current_tenant(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> str:
-    """JWT トークンから tenant_id を抽出
+    """tenant_id を取得
 
-    セキュリティ要件:
-    - tenant_id は JWT ペイロードから取得（URL/Body パラメータは信用しない）
-    - 検証失敗は監査ログに記録
-
-    Args:
-        request: FastAPI Request
-        credentials: Bearer トークン
-
-    Returns:
-        str: tenant_id
-
-    Raises:
-        HTTPException: 認証失敗時
+    NOTE: 開発段階では認証を無効化し、固定の tenant_id を返す
     """
+    # 開発モード: 認証スキップ
+    if SKIP_AUTH:
+        return DEV_TENANT_ID
+
     if credentials is None:
         await log_auth_failure(request, "missing_credentials")
         raise HTTPException(
@@ -198,18 +202,18 @@ async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> AuthUser:
-    """JWT トークンから認証ユーザー情報を抽出
+    """認証ユーザー情報を取得
 
-    Args:
-        request: FastAPI Request
-        credentials: Bearer トークン
-
-    Returns:
-        AuthUser: 認証済みユーザー情報
-
-    Raises:
-        HTTPException: 認証失敗時
+    NOTE: 開発段階では認証を無効化し、固定のユーザー情報を返す
     """
+    # 開発モード: 認証スキップ
+    if SKIP_AUTH:
+        return AuthUser(
+            user_id="dev-user-001",
+            tenant_id=DEV_TENANT_ID,
+            roles=["admin"],
+        )
+
     if credentials is None:
         await log_auth_failure(request, "missing_credentials")
         raise HTTPException(

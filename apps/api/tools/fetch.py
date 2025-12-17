@@ -113,7 +113,7 @@ def is_safe_url(url: str) -> tuple[bool, str]:
             for network in BLOCKED_NETWORKS:
                 if ip in network:
                     return False, f"Blocked network: {network}"
-        except AddressValueError:
+        except (AddressValueError, ValueError):
             # ホスト名の場合、DNS解決してIPをチェック
             try:
                 resolved_ips = socket.getaddrinfo(host, None)
@@ -123,7 +123,7 @@ def is_safe_url(url: str) -> tuple[bool, str]:
                         for network in BLOCKED_NETWORKS:
                             if ip in network:
                                 return False, f"Resolved to blocked network: {network}"
-                    except (AddressValueError, IndexError):
+                    except (AddressValueError, ValueError, IndexError):
                         continue
             except socket.gaierror as e:
                 return False, f"DNS resolution failed: {host} ({e})"

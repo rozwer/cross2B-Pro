@@ -16,7 +16,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step8FactCheck(BaseActivity):
@@ -55,7 +55,11 @@ class Step8FactCheck(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step7b_data = config.get("step7b_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        step7b_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step7b"
+        ) or {}
         polished_content = step7b_data.get("polished", "")
 
         if not keyword:
@@ -71,8 +75,9 @@ class Step8FactCheck(BaseActivity):
             )
 
         # Get LLM client (Gemini with grounding for fact checking)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Step 8.1: Extract claims from content

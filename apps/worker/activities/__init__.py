@@ -16,6 +16,7 @@ from .step7b import step7b_brush_up
 from .step8 import step8_fact_check
 from .step9 import step9_final_rewrite
 from .step10 import step10_final_output
+from .sync_status import sync_run_status
 
 __all__ = [
     "BaseActivity",
@@ -34,4 +35,5 @@ __all__ = [
     "step8_fact_check",
     "step9_final_rewrite",
     "step10_final_output",
+    "sync_run_status",
 ]

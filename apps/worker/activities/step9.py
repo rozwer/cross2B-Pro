@@ -4,7 +4,6 @@ Performs the final rewrite incorporating fact check results and FAQ.
 Uses Claude for high-quality final refinement.
 """
 
-import json
 from typing import Any
 
 from temporalio import activity
@@ -16,7 +15,7 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 
-from .base import ActivityError, BaseActivity
+from .base import ActivityError, BaseActivity, load_step_data
 
 
 class Step9FinalRewrite(BaseActivity):
@@ -40,6 +39,10 @@ class Step9FinalRewrite(BaseActivity):
         Returns:
             dict with final rewritten content
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[STEP9] execute called: tenant_id={ctx.tenant_id}, run_id={ctx.run_id}")
+
         config = ctx.config
         pack_id = config.get("pack_id")
 
@@ -55,8 +58,18 @@ class Step9FinalRewrite(BaseActivity):
 
         # Get inputs
         keyword = config.get("keyword")
-        step7b_data = config.get("step7b_data", {})
-        step8_data = config.get("step8_data", {})
+
+        # Load step data from storage (not from config to avoid gRPC size limits)
+        logger.info(f"[STEP9] Loading step7b and step8 data...")
+        step7b_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step7b"
+        ) or {}
+        step8_data = await load_step_data(
+            self.store, ctx.tenant_id, ctx.run_id, "step8"
+        ) or {}
+
+        logger.info(f"[STEP9] step7b_data keys: {list(step7b_data.keys()) if step7b_data else 'None'}")
+        logger.info(f"[STEP9] step8_data keys: {list(step8_data.keys()) if step8_data else 'None'}")
 
         polished_content = step7b_data.get("polished", "")
         faq_content = step8_data.get("faq", "")
@@ -90,14 +103,16 @@ class Step9FinalRewrite(BaseActivity):
             ) from e
 
         # Get LLM client (Claude for step9 - final quality refinement)
-        llm_provider = config.get("llm_provider", "anthropic")
-        llm_model = config.get("llm_model")
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Execute LLM call
         try:
+            # Increase max_tokens for Japanese content
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 8000),
+                max_tokens=config.get("max_tokens", 16000),
                 temperature=config.get("temperature", 0.6),
             )
             response = await llm.generate(
@@ -111,18 +126,29 @@ class Step9FinalRewrite(BaseActivity):
                 category=ErrorCategory.RETRYABLE,
             ) from e
 
-        # Parse JSON response
-        try:
-            parsed = json.loads(response.content)
-            final_content = parsed.get("final_content", "")
-            llm_word_count = parsed.get("word_count", 0)
-            meta_description = parsed.get("meta_description", "")
-            internal_link_suggestions = parsed.get("internal_link_suggestions", [])
-        except json.JSONDecodeError as e:
+        # Process response (plain markdown, not JSON)
+        logger.info(f"[STEP9] Raw response length: {len(response.content)}")
+        logger.info(f"[STEP9] Raw response (first 500 chars): {response.content[:500]}")
+
+        # The response is expected to be plain markdown
+        final_content = response.content.strip()
+
+        # Remove any code block markers if LLM still added them
+        if final_content.startswith("```markdown"):
+            final_content = final_content[11:]
+        elif final_content.startswith("```"):
+            final_content = final_content[3:]
+        if final_content.endswith("```"):
+            final_content = final_content[:-3]
+        final_content = final_content.strip()
+
+        if not final_content:
             raise ActivityError(
-                f"Failed to parse JSON response: {e}",
+                "Empty response from LLM",
                 category=ErrorCategory.RETRYABLE,
-            ) from e
+            )
+
+        logger.info(f"[STEP9] Final content length: {len(final_content)} chars")
 
         # Calculate actual content stats
         word_count = len(final_content.split())
@@ -132,12 +158,11 @@ class Step9FinalRewrite(BaseActivity):
             "step": self.step_id,
             "keyword": keyword,
             "final_content": final_content,
-            "meta_description": meta_description,
-            "internal_link_suggestions": internal_link_suggestions,
+            "meta_description": "",  # Not tracked in plain markdown response
+            "internal_link_suggestions": [],  # Not tracked in plain markdown response
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
-                "llm_reported_word_count": llm_word_count,
             },
             "model": response.model,
             "usage": {

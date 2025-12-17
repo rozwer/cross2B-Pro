@@ -9,6 +9,7 @@ interface RunStatusBadgeProps {
   showIcon?: boolean;
   size?: 'sm' | 'md' | 'lg';
   pulse?: boolean;
+  className?: string;
 }
 
 const statusConfig: Record<RunStatus | StepStatus, {
@@ -19,44 +20,44 @@ const statusConfig: Record<RunStatus | StepStatus, {
 }> = {
   pending: {
     label: '待機中',
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-600',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
+    textColor: 'text-gray-600 dark:text-gray-300',
     icon: Clock,
   },
   running: {
     label: '実行中',
-    bgColor: 'bg-accent-100',
-    textColor: 'text-accent-700',
+    bgColor: 'bg-accent-100 dark:bg-accent-900/40',
+    textColor: 'text-accent-700 dark:text-accent-300',
     icon: Loader2,
   },
   waiting_approval: {
     label: '承認待ち',
-    bgColor: 'bg-warning-100',
-    textColor: 'text-warning-700',
+    bgColor: 'bg-warning-100 dark:bg-warning-900/40',
+    textColor: 'text-warning-700 dark:text-warning-300',
     icon: Pause,
   },
   completed: {
     label: '完了',
-    bgColor: 'bg-success-100',
-    textColor: 'text-success-700',
+    bgColor: 'bg-success-100 dark:bg-success-900/40',
+    textColor: 'text-success-700 dark:text-success-300',
     icon: CheckCircle,
   },
   failed: {
     label: '失敗',
-    bgColor: 'bg-error-100',
-    textColor: 'text-error-700',
+    bgColor: 'bg-error-100 dark:bg-error-900/40',
+    textColor: 'text-error-700 dark:text-error-300',
     icon: XCircle,
   },
   cancelled: {
     label: 'キャンセル',
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-500',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
+    textColor: 'text-gray-500 dark:text-gray-400',
     icon: Ban,
   },
   skipped: {
     label: 'スキップ',
-    bgColor: 'bg-gray-100',
-    textColor: 'text-gray-500',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
+    textColor: 'text-gray-500 dark:text-gray-400',
     icon: SkipForward,
   },
 };
@@ -81,6 +82,7 @@ export function RunStatusBadge({
   showIcon = true,
   size = 'md',
   pulse = false,
+  className,
 }: RunStatusBadgeProps) {
   const config = statusConfig[status];
   const sizeClass = sizeConfig[size];
@@ -95,7 +97,8 @@ export function RunStatusBadge({
         config.bgColor,
         config.textColor,
         sizeClass.container,
-        shouldPulse && 'animate-pulse-soft'
+        shouldPulse && 'animate-pulse-soft',
+        className
       )}
     >
       {showIcon && (

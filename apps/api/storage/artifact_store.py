@@ -429,3 +429,60 @@ class ArtifactStore:
         self._verify_path_ownership(ref.path, tenant_id)
 
         return await self.get(ref, verify=verify)
+
+    async def get_by_path(
+        self,
+        tenant_id: str,
+        run_id: str,
+        step: str,
+        filename: str = "output.json",
+    ) -> bytes | None:
+        """パスから直接アーティファクトを取得（VULN-012）
+
+        Args:
+            tenant_id: テナントID
+            run_id: 実行ID
+            step: 工程名
+            filename: ファイル名
+
+        Returns:
+            アーティファクトのバイトデータ、存在しない場合はNone
+        """
+        path = self.build_path(tenant_id, run_id, step, filename)
+        try:
+            response = self.client.get_object(
+                bucket_name=self.bucket,
+                object_name=path,
+            )
+            content = response.read()
+            response.close()
+            response.release_conn()
+            return content
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                return None
+            raise ArtifactStoreError(f"Failed to retrieve artifact: {e}") from e
+
+    async def list_step_artifacts(
+        self,
+        tenant_id: str,
+        run_id: str,
+    ) -> dict[str, bool]:
+        """各ステップのアーティファクト存在状況を取得
+
+        Args:
+            tenant_id: テナントID
+            run_id: 実行ID
+
+        Returns:
+            dict: {step_name: exists}
+        """
+        paths = await self.list_run_artifacts(tenant_id, run_id)
+        steps: dict[str, bool] = {}
+        for path in paths:
+            # storage/{tenant_id}/{run_id}/{step}/output.json
+            parts = path.split("/")
+            if len(parts) >= 4:
+                step = parts[3]
+                steps[step] = True
+        return steps
