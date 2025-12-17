@@ -50,7 +50,7 @@ class TestUrlVerifyTool:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.url = "https://example.com/page"
-        mock_response.request.method = "HEAD"
+        mock_response.text = "<html><title>Page</title></html>"
         mock_response.headers = {
             "content-type": "text/html",
             "content-length": "12345",
@@ -58,7 +58,7 @@ class TestUrlVerifyTool:
         }
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 return_value=mock_response
             )
 
@@ -79,11 +79,11 @@ class TestUrlVerifyTool:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.url = "https://www.example.com/new-page"  # リダイレクト後
-        mock_response.request.method = "HEAD"
+        mock_response.text = "<html><title>Redirect</title></html>"
         mock_response.headers = {"content-type": "text/html"}
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 return_value=mock_response
             )
 
@@ -102,11 +102,10 @@ class TestUrlVerifyTool:
         mock_response = MagicMock()
         mock_response.status_code = 301
         mock_response.url = "https://example.com/page"
-        mock_response.request.method = "HEAD"
         mock_response.headers = {}
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 return_value=mock_response
             )
 
@@ -127,11 +126,10 @@ class TestUrlVerifyTool:
         mock_response = MagicMock()
         mock_response.status_code = 404
         mock_response.url = "https://example.com/notfound"
-        mock_response.request.method = "HEAD"
         mock_response.headers = {}
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 return_value=mock_response
             )
 
@@ -159,19 +157,10 @@ class TestUrlVerifyTool:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.url = "https://example.com/page"
-        mock_response.request.method = "GET"
         mock_response.text = html_content
         mock_response.headers = {"content-type": "text/html; charset=utf-8"}
 
-        import httpx
-
         with patch("httpx.AsyncClient") as mock_client:
-            # HEADリクエストが失敗してGETにフォールバック
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
-                side_effect=httpx.HTTPStatusError(
-                    "Method not allowed", request=MagicMock(), response=MagicMock()
-                )
-            )
             mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 return_value=mock_response
             )
@@ -192,7 +181,7 @@ class TestUrlVerifyTool:
         import httpx
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 side_effect=httpx.TimeoutException("Connection timed out")
             )
 
@@ -210,7 +199,7 @@ class TestUrlVerifyTool:
         import httpx
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.head = AsyncMock(
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
                 side_effect=httpx.ConnectError("Connection refused")
             )
 
