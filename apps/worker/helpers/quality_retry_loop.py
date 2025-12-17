@@ -8,7 +8,8 @@ QualityRetryLoop provides a structured way to execute LLM calls with:
 """
 
 import logging
-from typing import Any, Awaitable, Callable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 

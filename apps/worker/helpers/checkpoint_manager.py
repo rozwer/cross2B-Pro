@@ -108,9 +108,11 @@ class CheckpointManager:
             2. If input_digest is specified and differs from saved, return None
             3. If match or not specified, return data
         """
-        path = self.build_path(tenant_id, run_id, step_id, phase)
-
-        raw_content = await self.store.get_by_path(tenant_id, run_id, f"{step_id}/checkpoint", f"{phase}.json")
+        checkpoint_step = f"{step_id}/checkpoint"
+        checkpoint_file = f"{phase}.json"
+        raw_content = await self.store.get_by_path(
+            tenant_id, run_id, checkpoint_step, checkpoint_file
+        )
 
         if raw_content is None:
             return None
@@ -128,7 +130,10 @@ class CheckpointManager:
             if stored_digest is not None and stored_digest != input_digest:
                 return None
 
-        return checkpoint.get("data")
+        data = checkpoint.get("data")
+        if data is None:
+            return None
+        return dict(data) if isinstance(data, dict) else None
 
     async def exists(
         self,
@@ -143,7 +148,11 @@ class CheckpointManager:
         Returns:
             bool: True if exists
         """
-        raw_content = await self.store.get_by_path(tenant_id, run_id, f"{step_id}/checkpoint", f"{phase}.json")
+        checkpoint_step = f"{step_id}/checkpoint"
+        checkpoint_file = f"{phase}.json"
+        raw_content = await self.store.get_by_path(
+            tenant_id, run_id, checkpoint_step, checkpoint_file
+        )
         return raw_content is not None
 
     async def clear(
