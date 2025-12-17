@@ -9,6 +9,19 @@ from apps.api.tools import ToolRegistry
 from apps.api.tools.base import ErrorCategory
 
 
+class DummyStream:
+    """Simple async context manager to mock httpx stream"""
+
+    def __init__(self, response):
+        self.response = response
+
+    async def __aenter__(self):
+        return self.response
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
 class TestPageFetchTool:
     """page_fetch ツールのテスト"""
 
@@ -42,11 +55,17 @@ class TestPageFetchTool:
         mock_response.text = mock_html_content
         mock_response.url = "https://example.com/test"
         mock_response.headers = {"content-type": "text/html; charset=utf-8"}
+        async def aiter_bytes():
+            yield mock_html_content.encode("utf-8")
+        mock_response.aiter_bytes = aiter_bytes
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                return_value=mock_response
-            )
+        stream_cm = DummyStream(mock_response)
+
+        with patch("apps.api.tools.fetch.is_safe_url", return_value=(True, "")), patch(
+            "httpx.AsyncClient"
+        ) as mock_client:
+            client_instance = mock_client.return_value.__aenter__.return_value
+            client_instance.stream = MagicMock(return_value=stream_cm)
 
             result = await tool.execute(url="https://example.com/test")
 
@@ -74,11 +93,17 @@ class TestPageFetchTool:
         mock_response.text = html_with_links
         mock_response.url = "https://example.com/test"
         mock_response.headers = {"content-type": "text/html"}
+        async def aiter_bytes():
+            yield html_with_links.encode("utf-8")
+        mock_response.aiter_bytes = aiter_bytes
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                return_value=mock_response
-            )
+        stream_cm = DummyStream(mock_response)
+
+        with patch("apps.api.tools.fetch.is_safe_url", return_value=(True, "")), patch(
+            "httpx.AsyncClient"
+        ) as mock_client:
+            client_instance = mock_client.return_value.__aenter__.return_value
+            client_instance.stream = MagicMock(return_value=stream_cm)
 
             result = await tool.execute(
                 url="https://example.com/test", extract_links=True
@@ -96,10 +121,13 @@ class TestPageFetchTool:
         mock_response = MagicMock()
         mock_response.status_code = 404
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                return_value=mock_response
-            )
+        stream_cm = DummyStream(mock_response)
+
+        with patch("apps.api.tools.fetch.is_safe_url", return_value=(True, "")), patch(
+            "httpx.AsyncClient"
+        ) as mock_client:
+            client_instance = mock_client.return_value.__aenter__.return_value
+            client_instance.stream = MagicMock(return_value=stream_cm)
 
             result = await tool.execute(url="https://example.com/notfound")
 
@@ -115,10 +143,13 @@ class TestPageFetchTool:
         mock_response.status_code = 200
         mock_response.headers = {"content-type": "application/json"}
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                return_value=mock_response
-            )
+        stream_cm = DummyStream(mock_response)
+
+        with patch("apps.api.tools.fetch.is_safe_url", return_value=(True, "")), patch(
+            "httpx.AsyncClient"
+        ) as mock_client:
+            client_instance = mock_client.return_value.__aenter__.return_value
+            client_instance.stream = MagicMock(return_value=stream_cm)
 
             result = await tool.execute(url="https://example.com/api")
 
@@ -147,8 +178,8 @@ class TestPdfExtractTool:
         result = await tool.execute(pdf_path="/nonexistent/path/file.pdf")
 
         assert not result.success
-        assert result.error_category == ErrorCategory.NON_RETRYABLE.value
-        assert "not found" in result.error_message.lower()
+        assert result.error_category == ErrorCategory.VALIDATION_FAIL.value
+        assert "Path blocked" in result.error_message
 
 
 class TestPrimaryCollectorTool:
