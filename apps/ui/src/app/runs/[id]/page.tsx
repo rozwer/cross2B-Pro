@@ -112,7 +112,7 @@ export default function RunDetailPage({
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
-                {run.keyword}
+                {run.input.keyword}
               </h1>
               <RunStatusBadge status={run.status} />
             </div>
@@ -205,7 +205,7 @@ export default function RunDetailPage({
           {/* New Workflow Progress View with pattern switching */}
           <WorkflowProgressView
             steps={run.steps}
-            currentStep={run.current_step}
+            currentStep={run.current_step ?? ''}
             waitingApproval={run.status === 'waiting_approval'}
             onApprove={approve}
             onReject={reject}

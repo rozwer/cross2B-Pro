@@ -1380,7 +1380,7 @@ async def resume_from_step(
 
             return {
                 "success": True,
-                "run_id": run_id,
+                "new_run_id": run_id,  # Frontend expects new_run_id
                 "resume_from": step,
                 "workflow_id": new_workflow_id,
                 "loaded_steps": steps_to_load,

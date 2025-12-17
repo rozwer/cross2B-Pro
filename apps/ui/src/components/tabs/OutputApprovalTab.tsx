@@ -241,7 +241,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
   // Auto-expand current step
   useEffect(() => {
     if (run?.current_step) {
-      setExpandedSteps(prev => new Set([...Array.from(prev), run.current_step]));
+      setExpandedSteps(prev => new Set([...Array.from(prev), run.current_step as string]));
     }
   }, [run?.current_step]);
 
@@ -335,7 +335,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-gray-900 truncate">{run.keyword}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 truncate">{run.input.keyword}</h2>
             <span className={cn(
               'inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm',
               statusConfig.bg,

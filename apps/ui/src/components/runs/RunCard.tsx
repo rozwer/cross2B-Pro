@@ -45,7 +45,7 @@ export function RunCard({ run, onDelete }: RunCardProps) {
     e.stopPropagation();
     setShowDeleteConfirm(false);
   };
-  const stepLabel = STEP_LABELS[run.current_step] || run.current_step;
+  const stepLabel = run.current_step ? (STEP_LABELS[run.current_step] || run.current_step) : '待機中';
   const isActive = run.status === 'running' || run.status === 'waiting_approval';
 
   return (

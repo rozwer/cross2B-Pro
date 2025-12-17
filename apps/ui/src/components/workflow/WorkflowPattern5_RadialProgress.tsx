@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ThumbsUp, ThumbsDown, X } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ThumbsUp, ThumbsDown, X, type LucideIcon } from 'lucide-react';
 import type { Step } from '@/lib/types';
 import { STEP_LABELS } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -21,11 +21,11 @@ interface WorkflowPattern5Props {
   currentStep: string;
   waitingApproval: boolean;
   onApprove?: () => void;
-  onReject?: () => void;
+  onReject?: (reason: string) => void;
   onStepClick?: (stepName: string) => void;
 }
 
-const STEP_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
   'step-1': { icon: Package, color: '#3b82f6' },
   'step0': { icon: Sparkles, color: '#8b5cf6' },
   'step1': { icon: Search, color: '#a855f7' },
@@ -438,7 +438,7 @@ export function WorkflowPattern5_RadialProgress({ steps, currentStep, waitingApp
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={onReject}
+                onClick={() => onReject?.('ユーザーによる却下')}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
               >
                 <ThumbsDown className="w-4 h-4" />
