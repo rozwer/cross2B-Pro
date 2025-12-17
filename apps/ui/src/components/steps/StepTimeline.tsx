@@ -6,7 +6,7 @@ import { StepNode } from './StepNode';
 
 interface StepTimelineProps {
   steps: Step[];
-  currentStep: string;
+  currentStep: string | null;
   waitingApproval: boolean;
   onRetry?: (stepName: string) => void;
   onResume?: (stepName: string) => void;

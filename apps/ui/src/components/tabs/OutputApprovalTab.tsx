@@ -241,7 +241,8 @@ function RunDetailPanel({ runId }: { runId: string }) {
   // Auto-expand current step
   useEffect(() => {
     if (run?.current_step) {
-      setExpandedSteps(prev => new Set([...Array.from(prev), run.current_step]));
+      const currentStep = run.current_step;
+      setExpandedSteps(prev => new Set([...Array.from(prev), currentStep]));
     }
   }, [run?.current_step]);
 

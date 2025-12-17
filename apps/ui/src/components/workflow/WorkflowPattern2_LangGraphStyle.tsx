@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 interface WorkflowPattern2Props {
   steps: Step[];
-  currentStep: string;
+  currentStep: string | null;
   waitingApproval: boolean;
 }
 

@@ -17,12 +17,12 @@ import { SUB_STEPS, getSubStepStatus } from './subStepsData';
 
 interface WorkflowPattern1Props {
   steps: Step[];
-  currentStep: string;
+  currentStep: string | null;
   waitingApproval: boolean;
   onStepClick?: (stepName: string) => void;
 }
 
-const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const STEP_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   'step-1': Package,
   'step0': Sparkles,
   'step1': Search,
