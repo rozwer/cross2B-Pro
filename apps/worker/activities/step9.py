@@ -322,7 +322,7 @@ class Step9FinalRewrite(BaseActivity):
         # Execute LLM call
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 16000),
+                max_tokens=config.get("max_tokens", 24000),
                 temperature=config.get("temperature", 0.6),
             )
             response = await llm.generate(

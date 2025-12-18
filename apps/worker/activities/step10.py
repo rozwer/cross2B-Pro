@@ -138,8 +138,9 @@ class Step10FinalOutput(BaseActivity):
 
     MIN_CONTENT_LENGTH = 1000
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    def __init__(self) -> None:
+        """Initialize with helpers."""
+        super().__init__()
         self.input_validator = InputValidator()
         self.parser = OutputParser()
         self.metrics = ContentMetrics()
@@ -354,6 +355,20 @@ class Step10FinalOutput(BaseActivity):
             },
             warnings=warnings,
         )
+
+        # Save HTML preview file separately for preview API
+        if html_content:
+            preview_path = self.store.build_path(
+                tenant_id=ctx.tenant_id,
+                run_id=ctx.run_id,
+                step=self.step_id,
+            ).replace("/output.json", "/preview.html")
+            await self.store.put(
+                content=html_content.encode("utf-8"),
+                path=preview_path,
+                content_type="text/html",
+            )
+            activity.logger.info(f"Saved HTML preview to {preview_path}")
 
         return output.model_dump()
 
