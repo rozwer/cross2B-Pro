@@ -72,7 +72,7 @@ def create_access_token(
         roles=roles or [],
     )
 
-    return jwt.encode(payload.model_dump(), JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return str(jwt.encode(payload.model_dump(), JWT_SECRET_KEY, algorithm=JWT_ALGORITHM))
 
 
 def create_refresh_token(
@@ -96,7 +96,7 @@ def create_refresh_token(
         roles=[],
     )
 
-    return jwt.encode(payload.model_dump(), JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return str(jwt.encode(payload.model_dump(), JWT_SECRET_KEY, algorithm=JWT_ALGORITHM))
 
 
 def verify_token(token: str, expected_type: str = "access") -> TokenPayload:
