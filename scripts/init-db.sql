@@ -11,21 +11,47 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Note: Temporal auto-setup image handles its own schema
 
 -- =============================================================================
+-- Tenant Management Tables
+-- =============================================================================
+
+-- Tenants table: manages multi-tenant configuration
+CREATE TABLE IF NOT EXISTS tenants (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    database_url TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert development tenant (uses same DB for simplicity)
+INSERT INTO tenants (id, name, database_url, is_active)
+VALUES (
+    'dev-tenant-001',
+    'Development Tenant',
+    'postgresql+asyncpg://seo:seo_password@postgres:5432/seo_articles',
+    true
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================================
 -- Core Tables
 -- =============================================================================
 
 -- Runs table: tracks workflow executions
 CREATE TABLE IF NOT EXISTS runs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID NOT NULL,
+    tenant_id VARCHAR(64) NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     config JSONB NOT NULL DEFAULT '{}',
     input_data JSONB,
     current_step VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
     error_message TEXT,
+    error_code VARCHAR(100),
 
     CONSTRAINT valid_status CHECK (status IN (
         'pending', 'running', 'waiting_approval',
@@ -46,7 +72,9 @@ CREATE TABLE IF NOT EXISTS steps (
 
     CONSTRAINT valid_step_status CHECK (status IN (
         'pending', 'running', 'completed', 'failed', 'skipped'
-    ))
+    )),
+    -- UNIQUE constraint for UPSERT operations
+    CONSTRAINT uq_steps_run_step UNIQUE (run_id, step_name)
 );
 
 -- Attempts table: tracks step execution attempts
@@ -79,6 +107,19 @@ CREATE TABLE IF NOT EXISTS artifacts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Audit logs table: immutable audit trail with chain hashing
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL,
+    action VARCHAR(64) NOT NULL,
+    resource_type VARCHAR(64) NOT NULL,
+    resource_id VARCHAR(128) NOT NULL,
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    prev_hash VARCHAR(64),
+    entry_hash VARCHAR(64) NOT NULL
+);
+
 -- Events table: audit log for all actions
 CREATE TABLE IF NOT EXISTS events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -86,7 +127,7 @@ CREATE TABLE IF NOT EXISTS events (
     step_id UUID REFERENCES steps(id) ON DELETE SET NULL,
     event_type VARCHAR(100) NOT NULL,
     actor VARCHAR(255),
-    tenant_id UUID,
+    tenant_id VARCHAR(64),
     payload JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
