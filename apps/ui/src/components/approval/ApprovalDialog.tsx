@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { CheckCircle, XCircle, X, Loader2, ArrowLeft, ShieldCheck, ShieldX } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import { CheckCircle, XCircle, X, Loader2, ArrowLeft, ShieldCheck, ShieldX } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ApprovalDialogProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface ApprovalDialogProps {
   runId: string;
 }
 
-type DialogMode = 'select' | 'approve' | 'reject';
+type DialogMode = "select" | "approve" | "reject";
 
 export function ApprovalDialog({
   isOpen,
@@ -21,8 +21,8 @@ export function ApprovalDialog({
   onReject,
   runId,
 }: ApprovalDialogProps) {
-  const [mode, setMode] = useState<DialogMode>('select');
-  const [rejectReason, setRejectReason] = useState('');
+  const [mode, setMode] = useState<DialogMode>("select");
+  const [rejectReason, setRejectReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -33,14 +33,14 @@ export function ApprovalDialog({
 
     if (isOpen) {
       dialog.showModal();
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
       dialog.close();
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -50,14 +50,14 @@ export function ApprovalDialog({
 
     const handleCancel = (e: Event) => {
       e.preventDefault();
-      setMode('select');
-      setRejectReason('');
+      setMode("select");
+      setRejectReason("");
       setError(null);
       onClose();
     };
 
-    dialog.addEventListener('cancel', handleCancel);
-    return () => dialog.removeEventListener('cancel', handleCancel);
+    dialog.addEventListener("cancel", handleCancel);
+    return () => dialog.removeEventListener("cancel", handleCancel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
 
@@ -68,7 +68,7 @@ export function ApprovalDialog({
       await onApprove();
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '承認に失敗しました');
+      setError(err instanceof Error ? err.message : "承認に失敗しました");
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export function ApprovalDialog({
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      setError('却下理由を入力してください');
+      setError("却下理由を入力してください");
       return;
     }
 
@@ -86,15 +86,15 @@ export function ApprovalDialog({
       await onReject(rejectReason);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '却下に失敗しました');
+      setError(err instanceof Error ? err.message : "却下に失敗しました");
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setMode('select');
-    setRejectReason('');
+    setMode("select");
+    setRejectReason("");
     setError(null);
     onClose();
   };
@@ -116,18 +116,18 @@ export function ApprovalDialog({
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              {mode !== 'select' && (
+              {mode !== "select" && (
                 <button
-                  onClick={() => setMode('select')}
+                  onClick={() => setMode("select")}
                   className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
               )}
               <h2 className="text-lg font-semibold text-gray-900">
-                {mode === 'select' && '承認確認'}
-                {mode === 'approve' && '承認の確認'}
-                {mode === 'reject' && '却下の確認'}
+                {mode === "select" && "承認確認"}
+                {mode === "approve" && "承認の確認"}
+                {mode === "reject" && "却下の確認"}
               </h2>
             </div>
             <button
@@ -140,27 +140,27 @@ export function ApprovalDialog({
 
           {/* Content */}
           <div className="p-5">
-            {mode === 'select' && (
-              <SelectMode onApprove={() => setMode('approve')} onReject={() => setMode('reject')} />
+            {mode === "select" && (
+              <SelectMode onApprove={() => setMode("approve")} onReject={() => setMode("reject")} />
             )}
 
-            {mode === 'approve' && (
+            {mode === "approve" && (
               <ApproveMode
                 loading={loading}
                 error={error}
                 onConfirm={handleApprove}
-                onCancel={() => setMode('select')}
+                onCancel={() => setMode("select")}
               />
             )}
 
-            {mode === 'reject' && (
+            {mode === "reject" && (
               <RejectMode
                 reason={rejectReason}
                 setReason={setRejectReason}
                 loading={loading}
                 error={error}
                 onConfirm={handleReject}
-                onCancel={() => setMode('select')}
+                onCancel={() => setMode("select")}
               />
             )}
           </div>
@@ -170,18 +170,10 @@ export function ApprovalDialog({
   );
 }
 
-function SelectMode({
-  onApprove,
-  onReject,
-}: {
-  onApprove: () => void;
-  onReject: () => void;
-}) {
+function SelectMode({ onApprove, onReject }: { onApprove: () => void; onReject: () => void }) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600 text-center">
-        このRunの承認処理を選択してください
-      </p>
+      <p className="text-sm text-gray-600 text-center">このRunの承認処理を選択してください</p>
 
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -232,9 +224,7 @@ function ApproveMode({
       </div>
 
       <div className="text-center">
-        <p className="text-gray-600">
-          このRunを承認して後続の工程を開始しますか？
-        </p>
+        <p className="text-gray-600">このRunを承認して後続の工程を開始しますか？</p>
       </div>
 
       {error && (
@@ -244,11 +234,7 @@ function ApproveMode({
       )}
 
       <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="btn btn-secondary flex-1"
-        >
+        <button onClick={onCancel} disabled={loading} className="btn btn-secondary flex-1">
           戻る
         </button>
         <button
@@ -297,9 +283,7 @@ function RejectMode({
       </div>
 
       <div className="text-center">
-        <p className="text-gray-600">
-          このRunを却下します。却下理由を入力してください。
-        </p>
+        <p className="text-gray-600">このRunを却下します。却下理由を入力してください。</p>
       </div>
 
       <div>
@@ -322,18 +306,10 @@ function RejectMode({
       )}
 
       <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="btn btn-secondary flex-1"
-        >
+        <button onClick={onCancel} disabled={loading} className="btn btn-secondary flex-1">
           戻る
         </button>
-        <button
-          onClick={onConfirm}
-          disabled={loading}
-          className="btn btn-danger flex-1"
-        >
+        <button onClick={onConfirm} disabled={loading} className="btn btn-danger flex-1">
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Play,
   CheckCircle2,
@@ -25,57 +25,112 @@ import {
   Plus,
   Search,
   Filter,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatDate, formatBytes } from '@/lib/utils';
-import type { Run, RunSummary, Step, StepStatus, ArtifactRef, ArtifactContent } from '@/lib/types';
-import { useRuns } from '@/hooks/useRuns';
-import { useRun } from '@/hooks/useRun';
-import { useRunProgress } from '@/hooks/useRunProgress';
-import { useArtifacts } from '@/hooks/useArtifact';
-import { api } from '@/lib/api';
-import { Loading, LoadingPage } from '@/components/common/Loading';
-import { JsonViewer } from '@/components/artifacts/JsonViewer';
-import { MarkdownViewer } from '@/components/artifacts/MarkdownViewer';
-import { HtmlPreview } from '@/components/artifacts/HtmlPreview';
-import { STEP_LABELS } from '@/lib/types';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { formatDate, formatBytes } from "@/lib/utils";
+import type { Run, RunSummary, Step, StepStatus, ArtifactRef, ArtifactContent } from "@/lib/types";
+import { useRuns } from "@/hooks/useRuns";
+import { useRun } from "@/hooks/useRun";
+import { useRunProgress } from "@/hooks/useRunProgress";
+import { useArtifacts } from "@/hooks/useArtifact";
+import { api } from "@/lib/api";
+import { Loading, LoadingPage } from "@/components/common/Loading";
+import { JsonViewer } from "@/components/artifacts/JsonViewer";
+import { MarkdownViewer } from "@/components/artifacts/MarkdownViewer";
+import { HtmlPreview } from "@/components/artifacts/HtmlPreview";
+import { STEP_LABELS } from "@/lib/types";
 
 interface OutputApprovalTabProps {
   onCreateRun?: () => void;
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
-  pending: { bg: 'bg-gray-100', text: 'text-gray-700', icon: <Clock className="h-3.5 w-3.5" />, label: '待機中' },
-  running: { bg: 'bg-blue-100', text: 'text-blue-700', icon: <Play className="h-3.5 w-3.5 animate-pulse" />, label: '実行中' },
-  waiting_approval: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: <AlertTriangle className="h-3.5 w-3.5" />, label: '承認待ち' },
-  completed: { bg: 'bg-green-100', text: 'text-green-700', icon: <CheckCircle2 className="h-3.5 w-3.5" />, label: '完了' },
-  failed: { bg: 'bg-red-100', text: 'text-red-700', icon: <XCircle className="h-3.5 w-3.5" />, label: '失敗' },
-  cancelled: { bg: 'bg-gray-100', text: 'text-gray-500', icon: <X className="h-3.5 w-3.5" />, label: 'キャンセル' },
+const STATUS_CONFIG: Record<
+  string,
+  { bg: string; text: string; icon: React.ReactNode; label: string }
+> = {
+  pending: {
+    bg: "bg-gray-100",
+    text: "text-gray-700",
+    icon: <Clock className="h-3.5 w-3.5" />,
+    label: "待機中",
+  },
+  running: {
+    bg: "bg-blue-100",
+    text: "text-blue-700",
+    icon: <Play className="h-3.5 w-3.5 animate-pulse" />,
+    label: "実行中",
+  },
+  waiting_approval: {
+    bg: "bg-yellow-100",
+    text: "text-yellow-700",
+    icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    label: "承認待ち",
+  },
+  completed: {
+    bg: "bg-green-100",
+    text: "text-green-700",
+    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+    label: "完了",
+  },
+  failed: {
+    bg: "bg-red-100",
+    text: "text-red-700",
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    label: "失敗",
+  },
+  cancelled: {
+    bg: "bg-gray-100",
+    text: "text-gray-500",
+    icon: <X className="h-3.5 w-3.5" />,
+    label: "キャンセル",
+  },
 };
 
-const STEP_STATUS_CONFIG: Record<StepStatus, { bg: string; text: string; icon: React.ReactNode }> = {
-  pending: { bg: 'bg-gray-50', text: 'text-gray-600', icon: <Clock className="h-3.5 w-3.5 text-gray-400" /> },
-  running: { bg: 'bg-blue-50', text: 'text-blue-700', icon: <Play className="h-3.5 w-3.5 text-blue-500 animate-pulse" /> },
-  completed: { bg: 'bg-green-50', text: 'text-green-700', icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> },
-  failed: { bg: 'bg-red-50', text: 'text-red-700', icon: <XCircle className="h-3.5 w-3.5 text-red-500" /> },
-  skipped: { bg: 'bg-gray-50', text: 'text-gray-500', icon: <Clock className="h-3.5 w-3.5 text-gray-400" /> },
-};
+const STEP_STATUS_CONFIG: Record<StepStatus, { bg: string; text: string; icon: React.ReactNode }> =
+  {
+    pending: {
+      bg: "bg-gray-50",
+      text: "text-gray-600",
+      icon: <Clock className="h-3.5 w-3.5 text-gray-400" />,
+    },
+    running: {
+      bg: "bg-blue-50",
+      text: "text-blue-700",
+      icon: <Play className="h-3.5 w-3.5 text-blue-500 animate-pulse" />,
+    },
+    completed: {
+      bg: "bg-green-50",
+      text: "text-green-700",
+      icon: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
+    },
+    failed: {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      icon: <XCircle className="h-3.5 w-3.5 text-red-500" />,
+    },
+    skipped: {
+      bg: "bg-gray-50",
+      text: "text-gray-500",
+      icon: <Clock className="h-3.5 w-3.5 text-gray-400" />,
+    },
+  };
 
 export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const { runs, loading: runsLoading, fetch: fetchRuns } = useRuns();
 
   // Filter runs
   const filteredRuns = useMemo(() => {
     if (!runs) return [];
-    return runs.filter(run => {
-      const matchesSearch = searchQuery === '' ||
+    return runs.filter((run) => {
+      const matchesSearch =
+        searchQuery === "" ||
         run.keyword.toLowerCase().includes(searchQuery.toLowerCase()) ||
         run.id.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || run.status === filterStatus;
+      const matchesStatus = filterStatus === "all" || run.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
   }, [runs, searchQuery, filterStatus]);
@@ -149,7 +204,9 @@ export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
             </div>
           ) : filteredRuns.length === 0 ? (
             <div className="p-8 text-center text-gray-500 text-sm">
-              {searchQuery || filterStatus !== 'all' ? '条件に一致するRunがありません' : 'Runがありません'}
+              {searchQuery || filterStatus !== "all"
+                ? "条件に一致するRunがありません"
+                : "Runがありません"}
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -162,22 +219,28 @@ export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
                     key={run.id}
                     onClick={() => setSelectedRunId(run.id)}
                     className={cn(
-                      'w-full text-left px-3 py-3 transition-colors',
-                      isSelected ? 'bg-primary-50 border-l-2 border-primary-500' : 'hover:bg-gray-50'
+                      "w-full text-left px-3 py-3 transition-colors",
+                      isSelected
+                        ? "bg-primary-50 border-l-2 border-primary-500"
+                        : "hover:bg-gray-50",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className={cn(
-                        'font-medium truncate',
-                        isSelected ? 'text-primary-700' : 'text-gray-900'
-                      )}>
+                      <p
+                        className={cn(
+                          "font-medium truncate",
+                          isSelected ? "text-primary-700" : "text-gray-900",
+                        )}
+                      >
                         {run.keyword}
                       </p>
-                      <span className={cn(
-                        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs flex-shrink-0',
-                        status.bg,
-                        status.text
-                      )}>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs flex-shrink-0",
+                          status.bg,
+                          status.text,
+                        )}
+                      >
                         {status.icon}
                         {status.label}
                       </span>
@@ -221,16 +284,16 @@ export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
 function RunDetailPanel({ runId }: { runId: string }) {
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
-  const [showApprovalConfirm, setShowApprovalConfirm] = useState<'approve' | 'reject' | null>(null);
-  const [approvalComment, setApprovalComment] = useState('');
+  const [showApprovalConfirm, setShowApprovalConfirm] = useState<"approve" | "reject" | null>(null);
+  const [approvalComment, setApprovalComment] = useState("");
 
   const { run, loading, error, fetch, approve, reject, retry } = useRun(runId);
   const { events, wsStatus } = useRunProgress(runId, {
     onEvent: (event) => {
       if (
-        event.type === 'step_completed' ||
-        event.type === 'step_failed' ||
-        event.type === 'run_completed'
+        event.type === "step_completed" ||
+        event.type === "step_failed" ||
+        event.type === "run_completed"
       ) {
         fetch();
       }
@@ -241,7 +304,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
   // Auto-expand current step
   useEffect(() => {
     if (run?.current_step) {
-      setExpandedSteps(prev => new Set([...Array.from(prev), run.current_step as string]));
+      setExpandedSteps((prev) => new Set([...Array.from(prev), run.current_step as string]));
     }
   }, [run?.current_step]);
 
@@ -267,19 +330,19 @@ function RunDetailPanel({ runId }: { runId: string }) {
     try {
       await approve();
       setShowApprovalConfirm(null);
-      setApprovalComment('');
+      setApprovalComment("");
     } catch (err) {
-      console.error('Approval failed:', err);
+      console.error("Approval failed:", err);
     }
   };
 
   const handleReject = async () => {
     try {
-      await reject(approvalComment || 'Rejected by user');
+      await reject(approvalComment || "Rejected by user");
       setShowApprovalConfirm(null);
-      setApprovalComment('');
+      setApprovalComment("");
     } catch (err) {
-      console.error('Rejection failed:', err);
+      console.error("Rejection failed:", err);
     }
   };
 
@@ -287,7 +350,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
     try {
       await retry(stepName);
     } catch (err) {
-      console.error('Retry failed:', err);
+      console.error("Retry failed:", err);
     }
   };
 
@@ -304,7 +367,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
       <div className="h-full flex items-center justify-center bg-white rounded-lg border border-gray-200">
         <div className="text-center">
           <XCircle className="h-12 w-12 text-red-300 mx-auto mb-3" />
-          <p className="text-gray-700 mb-2">{error || 'Run not found'}</p>
+          <p className="text-gray-700 mb-2">{error || "Run not found"}</p>
           <button
             onClick={fetch}
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm"
@@ -318,16 +381,19 @@ function RunDetailPanel({ runId }: { runId: string }) {
   }
 
   const statusConfig = STATUS_CONFIG[run.status] || STATUS_CONFIG.pending;
-  const progress = run.steps.filter(s => s.status === 'completed').length;
+  const progress = run.steps.filter((s) => s.status === "completed").length;
   const total = run.steps.length;
 
   // Group artifacts by step
-  const artifactsByStep = artifacts.reduce((acc, artifact) => {
-    const stepId = artifact.step_id;
-    if (!acc[stepId]) acc[stepId] = [];
-    acc[stepId].push(artifact);
-    return acc;
-  }, {} as Record<string, ArtifactRef[]>);
+  const artifactsByStep = artifacts.reduce(
+    (acc, artifact) => {
+      const stepId = artifact.step_id;
+      if (!acc[stepId]) acc[stepId] = [];
+      acc[stepId].push(artifact);
+      return acc;
+    },
+    {} as Record<string, ArtifactRef[]>,
+  );
 
   return (
     <div className="h-full flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -336,27 +402,32 @@ function RunDetailPanel({ runId }: { runId: string }) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-900 truncate">{run.input.keyword}</h2>
-            <span className={cn(
-              'inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm',
-              statusConfig.bg,
-              statusConfig.text
-            )}>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm",
+                statusConfig.bg,
+                statusConfig.text,
+              )}
+            >
               {statusConfig.icon}
               {statusConfig.label}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={cn(
-              'inline-flex items-center gap-1 text-xs',
-              wsStatus === 'connected' ? 'text-green-600' : 'text-gray-400'
-            )}>
-              {wsStatus === 'connected' ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-xs",
+                wsStatus === "connected" ? "text-green-600" : "text-gray-400",
+              )}
+            >
+              {wsStatus === "connected" ? (
+                <Wifi className="h-3.5 w-3.5" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5" />
+              )}
               {wsStatus}
             </span>
-            <button
-              onClick={fetch}
-              className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-            >
+            <button onClick={fetch} className="p-1.5 hover:bg-gray-200 rounded transition-colors">
               <RefreshCw className="h-4 w-4 text-gray-500" />
             </button>
           </div>
@@ -367,17 +438,19 @@ function RunDetailPanel({ runId }: { runId: string }) {
           <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={cn(
-                'h-full transition-all duration-500',
-                run.status === 'failed' ? 'bg-red-500' : 'bg-primary-500'
+                "h-full transition-all duration-500",
+                run.status === "failed" ? "bg-red-500" : "bg-primary-500",
               )}
               style={{ width: `${(progress / total) * 100}%` }}
             />
           </div>
-          <span className="text-sm text-gray-600">{progress}/{total} 完了</span>
+          <span className="text-sm text-gray-600">
+            {progress}/{total} 完了
+          </span>
         </div>
 
         {/* Approval Actions */}
-        {run.status === 'waiting_approval' && (
+        {run.status === "waiting_approval" && (
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -386,14 +459,14 @@ function RunDetailPanel({ runId }: { runId: string }) {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowApprovalConfirm('reject')}
+                  onClick={() => setShowApprovalConfirm("reject")}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
                 >
                   <X className="h-4 w-4" />
                   却下
                 </button>
                 <button
-                  onClick={() => setShowApprovalConfirm('approve')}
+                  onClick={() => setShowApprovalConfirm("approve")}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
                 >
                   <Check className="h-4 w-4" />
@@ -406,7 +479,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
             {showApprovalConfirm && (
               <div className="mt-3 pt-3 border-t border-yellow-200">
                 <p className="text-sm text-yellow-800 mb-2">
-                  {showApprovalConfirm === 'approve' ? '承認' : '却下'}してよろしいですか？
+                  {showApprovalConfirm === "approve" ? "承認" : "却下"}してよろしいですか？
                 </p>
                 <textarea
                   value={approvalComment}
@@ -423,12 +496,12 @@ function RunDetailPanel({ runId }: { runId: string }) {
                     キャンセル
                   </button>
                   <button
-                    onClick={showApprovalConfirm === 'approve' ? handleApprove : handleReject}
+                    onClick={showApprovalConfirm === "approve" ? handleApprove : handleReject}
                     className={cn(
-                      'px-3 py-1.5 rounded text-sm transition-colors',
-                      showApprovalConfirm === 'approve'
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-red-600 text-white hover:bg-red-700'
+                      "px-3 py-1.5 rounded text-sm transition-colors",
+                      showApprovalConfirm === "approve"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-red-600 text-white hover:bg-red-700",
                     )}
                   >
                     確定
@@ -451,13 +524,13 @@ function RunDetailPanel({ runId }: { runId: string }) {
             const stepLabel = STEP_LABELS[step.step_name] || step.step_name;
 
             return (
-              <div key={step.id} className={cn(isCurrent && 'bg-blue-50/50')}>
+              <div key={step.id} className={cn(isCurrent && "bg-blue-50/50")}>
                 {/* Step Header */}
                 <button
                   onClick={() => toggleStep(step.step_name)}
                   className={cn(
-                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50',
-                    isExpanded && 'bg-gray-50'
+                    "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50",
+                    isExpanded && "bg-gray-50",
                   )}
                 >
                   {isExpanded ? (
@@ -466,19 +539,23 @@ function RunDetailPanel({ runId }: { runId: string }) {
                     <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                   )}
 
-                  <div className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
-                    stepStatusConfig.bg
-                  )}>
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                      stepStatusConfig.bg,
+                    )}
+                  >
                     {stepStatusConfig.icon}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={cn('font-medium', stepStatusConfig.text)}>{stepLabel}</span>
+                      <span className={cn("font-medium", stepStatusConfig.text)}>{stepLabel}</span>
                       <span className="text-xs text-gray-400">{step.step_name}</span>
                       {isCurrent && (
-                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">現在</span>
+                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                          現在
+                        </span>
                       )}
                     </div>
                     {step.started_at && (
@@ -497,7 +574,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
                   )}
 
                   {/* Retry Button */}
-                  {step.status === 'failed' && (
+                  {step.status === "failed" && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -517,31 +594,35 @@ function RunDetailPanel({ runId }: { runId: string }) {
                     {/* Attempts */}
                     {step.attempts.length > 0 && (
                       <div className="mt-3">
-                        <h5 className="text-xs font-medium text-gray-500 uppercase mb-2">試行履歴</h5>
+                        <h5 className="text-xs font-medium text-gray-500 uppercase mb-2">
+                          試行履歴
+                        </h5>
                         <div className="space-y-2">
                           {step.attempts.map((attempt, index) => (
                             <div
                               key={attempt.id}
                               className={cn(
-                                'p-2 rounded border',
-                                attempt.status === 'succeeded' && 'bg-green-50 border-green-200',
-                                attempt.status === 'failed' && 'bg-red-50 border-red-200',
-                                attempt.status === 'running' && 'bg-blue-50 border-blue-200'
+                                "p-2 rounded border",
+                                attempt.status === "succeeded" && "bg-green-50 border-green-200",
+                                attempt.status === "failed" && "bg-red-50 border-red-200",
+                                attempt.status === "running" && "bg-blue-50 border-blue-200",
                               )}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium">
                                   試行 #{attempt.attempt_num}
                                 </span>
-                                <span className={cn(
-                                  'text-xs',
-                                  attempt.status === 'succeeded' && 'text-green-700',
-                                  attempt.status === 'failed' && 'text-red-700',
-                                  attempt.status === 'running' && 'text-blue-700'
-                                )}>
-                                  {attempt.status === 'succeeded' && '成功'}
-                                  {attempt.status === 'failed' && '失敗'}
-                                  {attempt.status === 'running' && '実行中'}
+                                <span
+                                  className={cn(
+                                    "text-xs",
+                                    attempt.status === "succeeded" && "text-green-700",
+                                    attempt.status === "failed" && "text-red-700",
+                                    attempt.status === "running" && "text-blue-700",
+                                  )}
+                                >
+                                  {attempt.status === "succeeded" && "成功"}
+                                  {attempt.status === "failed" && "失敗"}
+                                  {attempt.status === "running" && "実行中"}
                                 </span>
                               </div>
                               {attempt.error && (
@@ -566,22 +647,30 @@ function RunDetailPanel({ runId }: { runId: string }) {
                     {/* Validation Report */}
                     {step.validation_report && (
                       <div className="mt-3">
-                        <h5 className="text-xs font-medium text-gray-500 uppercase mb-2">検証結果</h5>
-                        <div className={cn(
-                          'p-2 rounded border',
-                          step.validation_report.valid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                        )}>
+                        <h5 className="text-xs font-medium text-gray-500 uppercase mb-2">
+                          検証結果
+                        </h5>
+                        <div
+                          className={cn(
+                            "p-2 rounded border",
+                            step.validation_report.valid
+                              ? "bg-green-50 border-green-200"
+                              : "bg-red-50 border-red-200",
+                          )}
+                        >
                           <div className="flex items-center gap-2">
                             {step.validation_report.valid ? (
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             ) : (
                               <XCircle className="h-4 w-4 text-red-600" />
                             )}
-                            <span className={cn(
-                              'text-sm font-medium',
-                              step.validation_report.valid ? 'text-green-700' : 'text-red-700'
-                            )}>
-                              {step.validation_report.valid ? 'パス' : '失敗'}
+                            <span
+                              className={cn(
+                                "text-sm font-medium",
+                                step.validation_report.valid ? "text-green-700" : "text-red-700",
+                              )}
+                            >
+                              {step.validation_report.valid ? "パス" : "失敗"}
                             </span>
                           </div>
                           {step.validation_report.errors.length > 0 && (
@@ -607,11 +696,13 @@ function RunDetailPanel({ runId }: { runId: string }) {
                     )}
 
                     {/* Empty State */}
-                    {step.attempts.length === 0 && !step.validation_report && stepArtifacts.length === 0 && (
-                      <div className="mt-3 text-center py-4 text-gray-400 text-sm">
-                        このステップはまだ開始されていません
-                      </div>
-                    )}
+                    {step.attempts.length === 0 &&
+                      !step.validation_report &&
+                      stepArtifacts.length === 0 && (
+                        <div className="mt-3 text-center py-4 text-gray-400 text-sm">
+                          このステップはまだ開始されていません
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -636,7 +727,7 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
       const data = await api.artifacts.download(runId, artifact.id);
       setContent(data);
     } catch (err) {
-      console.error('Failed to load artifact:', err);
+      console.error("Failed to load artifact:", err);
       setContent(null);
     } finally {
       setLoading(false);
@@ -644,10 +735,10 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
   };
 
   const getIcon = (contentType: string) => {
-    if (contentType.includes('json')) return <Code className="h-4 w-4" />;
-    if (contentType.includes('html')) return <FileText className="h-4 w-4" />;
-    if (contentType.includes('markdown')) return <FileText className="h-4 w-4" />;
-    if (contentType.includes('image')) return <ImageIcon className="h-4 w-4" />;
+    if (contentType.includes("json")) return <Code className="h-4 w-4" />;
+    if (contentType.includes("html")) return <FileText className="h-4 w-4" />;
+    if (contentType.includes("markdown")) return <FileText className="h-4 w-4" />;
+    if (contentType.includes("image")) return <ImageIcon className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
 
@@ -660,16 +751,16 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
             key={artifact.id}
             onClick={() => loadContent(artifact)}
             className={cn(
-              'flex items-center gap-2 p-2 rounded border text-left text-sm transition-colors',
+              "flex items-center gap-2 p-2 rounded border text-left text-sm transition-colors",
               selectedArtifact?.id === artifact.id
-                ? 'bg-primary-50 border-primary-300'
-                : 'bg-white border-gray-200 hover:border-gray-300'
+                ? "bg-primary-50 border-primary-300"
+                : "bg-white border-gray-200 hover:border-gray-300",
             )}
           >
             {getIcon(artifact.content_type)}
             <div className="flex-1 min-w-0">
               <p className="truncate text-xs font-medium text-gray-700">
-                {artifact.ref_path.split('/').pop()}
+                {artifact.ref_path.split("/").pop()}
               </p>
               <p className="text-xs text-gray-400">{formatBytes(artifact.size_bytes)}</p>
             </div>
@@ -683,8 +774,8 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
           <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
             <span className="text-xs text-gray-600 truncate">{selectedArtifact.ref_path}</span>
             <a
-              href={`data:${selectedArtifact.content_type};base64,${content?.encoding === 'base64' ? content?.content : btoa(content?.content || '')}`}
-              download={selectedArtifact.ref_path.split('/').pop()}
+              href={`data:${selectedArtifact.content_type};base64,${content?.encoding === "base64" ? content?.content : btoa(content?.content || "")}`}
+              download={selectedArtifact.ref_path.split("/").pop()}
               className="text-xs text-primary-600 hover:underline flex items-center gap-1"
             >
               <Download className="h-3 w-3" />
@@ -693,7 +784,9 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
           </div>
           <div className="max-h-64 overflow-auto">
             {loading ? (
-              <div className="p-4"><Loading text="読み込み中..." /></div>
+              <div className="p-4">
+                <Loading text="読み込み中..." />
+              </div>
             ) : content ? (
               <ContentRenderer
                 content={content.content}
@@ -701,7 +794,9 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
                 encoding={content.encoding}
               />
             ) : (
-              <div className="p-4 text-center text-gray-400 text-sm">コンテンツを読み込めませんでした</div>
+              <div className="p-4 text-center text-gray-400 text-sm">
+                コンテンツを読み込めませんでした
+              </div>
             )}
           </div>
         </div>
@@ -718,26 +813,38 @@ function ContentRenderer({
 }: {
   content: string;
   contentType: string;
-  encoding: 'utf-8' | 'base64';
+  encoding: "utf-8" | "base64";
 }) {
-  const decodedContent = encoding === 'base64' ? atob(content) : content;
+  const decodedContent = encoding === "base64" ? atob(content) : content;
 
-  if (contentType.includes('json')) {
-    return <div className="p-2"><JsonViewer content={decodedContent} /></div>;
+  if (contentType.includes("json")) {
+    return (
+      <div className="p-2">
+        <JsonViewer content={decodedContent} />
+      </div>
+    );
   }
 
-  if (contentType.includes('html')) {
-    return <div className="p-2"><HtmlPreview content={decodedContent} /></div>;
+  if (contentType.includes("html")) {
+    return (
+      <div className="p-2">
+        <HtmlPreview content={decodedContent} />
+      </div>
+    );
   }
 
-  if (contentType.includes('markdown')) {
-    return <div className="p-2"><MarkdownViewer content={decodedContent} /></div>;
+  if (contentType.includes("markdown")) {
+    return (
+      <div className="p-2">
+        <MarkdownViewer content={decodedContent} />
+      </div>
+    );
   }
 
   return (
     <pre className="p-3 bg-gray-50 text-xs overflow-auto whitespace-pre-wrap text-gray-700">
       {decodedContent.slice(0, 2000)}
-      {decodedContent.length > 2000 && '...'}
+      {decodedContent.length > 2000 && "..."}
     </pre>
   );
 }

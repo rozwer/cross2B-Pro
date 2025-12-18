@@ -4,9 +4,9 @@
  * NOTE: 開発段階では認証を無効化
  */
 
-import type { ProgressEvent } from './types';
+import type { ProgressEvent } from "./types";
 
-export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type WebSocketStatus = "connecting" | "connected" | "disconnected" | "error";
 
 export interface WebSocketOptions {
   onMessage?: (event: ProgressEvent) => void;
@@ -16,15 +16,18 @@ export interface WebSocketOptions {
   reconnectDelay?: number;
 }
 
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+
+// 開発環境用の固定テナントID（本番では認証から取得）
+const DEV_TENANT_ID = "dev-tenant-001";
 
 export class RunProgressWebSocket {
   private ws: WebSocket | null = null;
   private runId: string;
-  private options: Required<Omit<WebSocketOptions, 'onAuthError'>>;
+  private options: Required<Omit<WebSocketOptions, "onAuthError">>;
   private reconnectCount = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private status: WebSocketStatus = 'disconnected';
+  private status: WebSocketStatus = "disconnected";
 
   constructor(runId: string, options: WebSocketOptions = {}) {
     this.runId = runId;
@@ -38,21 +41,23 @@ export class RunProgressWebSocket {
   }
 
   /**
-   * WebSocket接続を開始（認証なし - 開発モード）
+   * WebSocket接続を開始（開発モード用tenant_id付き）
    */
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
       return;
     }
 
-    this.setStatus('connecting');
-    const url = `${WS_BASE}/ws/runs/${this.runId}`;
+    this.setStatus("connecting");
+    // 開発モード: tenant_id をクエリパラメータで送信
+    // 本番では AuthManager.getTenantId() を使用
+    const url = `${WS_BASE}/ws/runs/${this.runId}?tenant_id=${DEV_TENANT_ID}`;
 
     try {
       this.ws = new WebSocket(url);
       this.setupEventHandlers();
     } catch {
-      this.setStatus('error');
+      this.setStatus("error");
       this.scheduleReconnect();
     }
   }
@@ -65,7 +70,7 @@ export class RunProgressWebSocket {
 
     this.ws.onopen = () => {
       this.reconnectCount = 0;
-      this.setStatus('connected');
+      this.setStatus("connected");
     };
 
     this.ws.onmessage = (event) => {
@@ -73,17 +78,17 @@ export class RunProgressWebSocket {
         const data = JSON.parse(event.data);
         this.options.onMessage(data as ProgressEvent);
       } catch (error) {
-        console.error('WebSocket: Failed to parse message:', error);
+        console.error("WebSocket: Failed to parse message:", error);
       }
     };
 
     this.ws.onerror = (event) => {
-      this.setStatus('error');
+      this.setStatus("error");
       this.options.onError(event);
     };
 
     this.ws.onclose = () => {
-      this.setStatus('disconnected');
+      this.setStatus("disconnected");
       this.scheduleReconnect();
     };
   }
@@ -97,7 +102,7 @@ export class RunProgressWebSocket {
 
   private scheduleReconnect(): void {
     if (this.reconnectCount >= this.options.reconnectAttempts) {
-      console.warn('Max reconnect attempts reached');
+      console.warn("Max reconnect attempts reached");
       return;
     }
 
@@ -123,7 +128,7 @@ export class RunProgressWebSocket {
       this.ws = null;
     }
 
-    this.setStatus('disconnected');
+    this.setStatus("disconnected");
   }
 
   getStatus(): WebSocketStatus {
@@ -133,7 +138,7 @@ export class RunProgressWebSocket {
 
 export function createRunProgressWebSocket(
   runId: string,
-  options?: WebSocketOptions
+  options?: WebSocketOptions,
 ): RunProgressWebSocket {
   return new RunProgressWebSocket(runId, options);
 }

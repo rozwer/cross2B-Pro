@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Run } from '@/lib/types';
-import { api } from '@/lib/api';
+import { useState, useEffect, useCallback } from "react";
+import type { Run } from "@/lib/types";
+import { api } from "@/lib/api";
 
 interface UseRunOptions {
   autoFetch?: boolean;
@@ -33,7 +33,7 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
       const data = await api.runs.get(runId);
       setRun(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch run');
+      setError(err instanceof Error ? err.message : "Failed to fetch run");
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
       await api.runs.reject(runId, reason);
       await fetch();
     },
-    [runId, fetch]
+    [runId, fetch],
   );
 
   const retry = useCallback(
@@ -64,7 +64,7 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
       await fetch();
       return result;
     },
-    [runId, fetch]
+    [runId, fetch],
   );
 
   const resume = useCallback(
@@ -72,7 +72,7 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
       const result = await api.runs.resume(runId, step);
       return result;
     },
-    [runId]
+    [runId],
   );
 
   return {

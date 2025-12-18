@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   Cpu,
   Thermometer,
@@ -18,11 +18,11 @@ import {
   Brain,
   Link,
   Gauge,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ProviderLogo } from '@/components/icons/ProviderLogos';
-import type { StepConfig } from '@/components/workflow/NodeConfigPanel';
-import type { LLMPlatform } from '@/lib/types';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ProviderLogo } from "@/components/icons/ProviderLogos";
+import type { StepConfig } from "@/components/workflow/NodeConfigPanel";
+import type { LLMPlatform } from "@/lib/types";
 
 interface ModelSettingsTabProps {
   stepConfigs: StepConfig[];
@@ -39,53 +39,61 @@ interface ModelOption {
 // バックエンド実装に基づいたモデル一覧（apps/api/llm/）
 const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
   gemini: [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '高速・コスト効率（デフォルト）', isDefault: true },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview', description: '最新・最高性能' },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '高精度' },
+    {
+      id: "gemini-2.5-flash",
+      name: "Gemini 2.5 Flash",
+      description: "高速・コスト効率（デフォルト）",
+      isDefault: true,
+    },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "標準" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "高精度" },
+    { id: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", description: "最新プレビュー" },
   ],
   openai: [
-    { id: 'gpt-5.2', name: 'GPT-5.2', description: '最新（デフォルト）', isDefault: true },
-    { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro', description: '最高精度' },
-    { id: 'gpt-5.2-chat-latest', name: 'GPT-5.2 Chat Latest', description: 'Instant版' },
-    { id: 'gpt-5.1', name: 'GPT-5.1', description: '前バージョン' },
-    { id: 'gpt-5.1-chat-latest', name: 'GPT-5.1 Chat Latest', description: 'Instant版' },
-    { id: 'gpt-5.1-codex-max', name: 'GPT-5.1 Codex Max', description: 'Codex向け' },
-    { id: 'gpt-5', name: 'GPT-5', description: '初代GPT-5' },
+    { id: "gpt-4o", name: "GPT-4o", description: "最新（デフォルト）", isDefault: true },
+    { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "軽量・高速" },
+    { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "高精度" },
   ],
   anthropic: [
-    { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet 4.5', description: '最新（デフォルト）', isDefault: true },
-    { id: 'claude-opus-4-5-20251124', name: 'Claude Opus 4.5', description: '最新・最高精度' },
-    { id: 'claude-opus-4-1-20250805', name: 'Claude Opus 4.1', description: 'Opus 4.1' },
-    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', description: 'Sonnet 4' },
-    { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', description: 'Opus 4' },
+    {
+      id: "claude-sonnet-4-20250514",
+      name: "Claude Sonnet 4",
+      description: "バランス型（デフォルト）",
+      isDefault: true,
+    },
+    { id: "claude-opus-4-20250514", name: "Claude Opus 4", description: "最高精度" },
+    { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "高速" },
   ],
 };
 
-const PLATFORM_INFO: Record<LLMPlatform, { name: string; color: string; bgColor: string; borderColor: string; description: string }> = {
+const PLATFORM_INFO: Record<
+  LLMPlatform,
+  { name: string; color: string; bgColor: string; borderColor: string; description: string }
+> = {
   gemini: {
-    name: 'Gemini',
-    color: 'text-blue-700 dark:text-blue-300',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-800',
-    description: 'Grounding・URL Context・Code Execution対応',
+    name: "Gemini",
+    color: "text-blue-700 dark:text-blue-300",
+    bgColor: "bg-blue-50 dark:bg-blue-900/30",
+    borderColor: "border-blue-200 dark:border-blue-800",
+    description: "Grounding・URL Context・Code Execution対応",
   },
   anthropic: {
-    name: 'Claude',
-    color: 'text-orange-700 dark:text-orange-300',
-    bgColor: 'bg-orange-50 dark:bg-orange-900/30',
-    borderColor: 'border-orange-200 dark:border-orange-800',
-    description: 'Extended Thinking対応',
+    name: "Claude",
+    color: "text-orange-700 dark:text-orange-300",
+    bgColor: "bg-orange-50 dark:bg-orange-900/30",
+    borderColor: "border-orange-200 dark:border-orange-800",
+    description: "Extended Thinking対応",
   },
   openai: {
-    name: 'OpenAI',
-    color: 'text-green-700 dark:text-green-300',
-    bgColor: 'bg-green-50 dark:bg-green-900/30',
-    borderColor: 'border-green-200 dark:border-green-800',
-    description: 'Reasoning・Web Search対応',
+    name: "OpenAI",
+    color: "text-green-700 dark:text-green-300",
+    bgColor: "bg-green-50 dark:bg-green-900/30",
+    borderColor: "border-green-200 dark:border-green-800",
+    description: "Reasoning・Web Search対応",
   },
 };
 
-type FilterPlatform = 'all' | LLMPlatform;
+type FilterPlatform = "all" | LLMPlatform;
 
 // プラットフォーム固有オプションの型定義
 interface GeminiOptions {
@@ -98,15 +106,15 @@ interface GeminiOptions {
 }
 
 interface OpenAIOptions {
-  reasoningEffort: 'none' | 'low' | 'medium' | 'high' | 'xhigh';
+  reasoningEffort: "none" | "low" | "medium" | "high" | "xhigh";
   webSearch: boolean;
-  verbosity: 'concise' | 'detailed';
+  verbosity: "concise" | "detailed";
 }
 
 interface AnthropicOptions {
   extendedThinking: boolean;
   thinkingBudget: number;
-  effort: 'low' | 'medium' | 'high';
+  effort: "low" | "medium" | "high";
 }
 
 // デフォルト値
@@ -120,20 +128,20 @@ const DEFAULT_GEMINI_OPTIONS: GeminiOptions = {
 };
 
 const DEFAULT_OPENAI_OPTIONS: OpenAIOptions = {
-  reasoningEffort: 'medium',
+  reasoningEffort: "medium",
   webSearch: false,
-  verbosity: 'detailed',
+  verbosity: "detailed",
 };
 
 const DEFAULT_ANTHROPIC_OPTIONS: AnthropicOptions = {
   extendedThinking: false,
   thinkingBudget: 1024,
-  effort: 'medium',
+  effort: "medium",
 };
 
 export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsTabProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterPlatform, setFilterPlatform] = useState<FilterPlatform>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterPlatform, setFilterPlatform] = useState<FilterPlatform>("all");
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
 
   // プラットフォーム固有オプションの状態（stepIdごとに管理）
@@ -143,18 +151,19 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
 
   // Filter configurable steps only
   const configurableSteps = useMemo(() => {
-    return stepConfigs.filter(step => step.isConfigurable && step.stepId !== 'approval');
+    return stepConfigs.filter((step) => step.isConfigurable && step.stepId !== "approval");
   }, [stepConfigs]);
 
   // Apply search and platform filter
   const filteredSteps = useMemo(() => {
-    return configurableSteps.filter(step => {
-      const matchesSearch = searchQuery === '' ||
+    return configurableSteps.filter((step) => {
+      const matchesSearch =
+        searchQuery === "" ||
         step.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
         step.stepId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         step.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesPlatform = filterPlatform === 'all' || step.aiModel === filterPlatform;
+      const matchesPlatform = filterPlatform === "all" || step.aiModel === filterPlatform;
 
       return matchesSearch && matchesPlatform;
     });
@@ -167,7 +176,7 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
         acc[step.aiModel] = (acc[step.aiModel] || 0) + 1;
         return acc;
       },
-      {} as Record<LLMPlatform, number>
+      {} as Record<LLMPlatform, number>,
     );
   }, [configurableSteps]);
 
@@ -193,21 +202,21 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
 
   // オプション更新ヘルパー
   const updateGeminiOpts = (stepId: string, update: Partial<GeminiOptions>) => {
-    setGeminiOptions(prev => ({
+    setGeminiOptions((prev) => ({
       ...prev,
       [stepId]: { ...getGeminiOpts(stepId), ...update },
     }));
   };
 
   const updateOpenaiOpts = (stepId: string, update: Partial<OpenAIOptions>) => {
-    setOpenaiOptions(prev => ({
+    setOpenaiOptions((prev) => ({
       ...prev,
       [stepId]: { ...getOpenaiOpts(stepId), ...update },
     }));
   };
 
   const updateAnthropicOpts = (stepId: string, update: Partial<AnthropicOptions>) => {
-    setAnthropicOptions(prev => ({
+    setAnthropicOptions((prev) => ({
       ...prev,
       [stepId]: { ...getAnthropicOpts(stepId), ...update },
     }));
@@ -246,7 +255,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
               max="1"
               step="0.1"
               value={opts.groundingThreshold}
-              onChange={(e) => updateGeminiOpts(stepId, { groundingThreshold: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                updateGeminiOpts(stepId, { groundingThreshold: parseFloat(e.target.value) })
+              }
               className="w-full"
             />
           </div>
@@ -314,7 +325,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
               max="24576"
               step="1024"
               value={opts.thinkingBudget}
-              onChange={(e) => updateGeminiOpts(stepId, { thinkingBudget: parseInt(e.target.value) })}
+              onChange={(e) =>
+                updateGeminiOpts(stepId, { thinkingBudget: parseInt(e.target.value) })
+              }
               className="w-full"
             />
             <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -340,7 +353,11 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
           </label>
           <select
             value={opts.reasoningEffort}
-            onChange={(e) => updateOpenaiOpts(stepId, { reasoningEffort: e.target.value as OpenAIOptions['reasoningEffort'] })}
+            onChange={(e) =>
+              updateOpenaiOpts(stepId, {
+                reasoningEffort: e.target.value as OpenAIOptions["reasoningEffort"],
+              })
+            }
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             <option value="none">None (低レイテンシ)</option>
@@ -376,18 +393,18 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
             Verbosity
           </label>
           <div className="flex gap-2">
-            {(['concise', 'detailed'] as const).map((level) => (
+            {(["concise", "detailed"] as const).map((level) => (
               <button
                 key={level}
                 onClick={() => updateOpenaiOpts(stepId, { verbosity: level })}
                 className={cn(
-                  'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all',
+                  "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
                   opts.verbosity === level
-                    ? 'bg-green-100 text-green-700 ring-1 ring-green-300'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? "bg-green-100 text-green-700 ring-1 ring-green-300"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100",
                 )}
               >
-                {level === 'concise' ? '簡潔' : '詳細'}
+                {level === "concise" ? "簡潔" : "詳細"}
               </button>
             ))}
           </div>
@@ -429,7 +446,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
               max="32768"
               step="1024"
               value={opts.thinkingBudget}
-              onChange={(e) => updateAnthropicOpts(stepId, { thinkingBudget: parseInt(e.target.value) })}
+              onChange={(e) =>
+                updateAnthropicOpts(stepId, { thinkingBudget: parseInt(e.target.value) })
+              }
               className="w-full"
             />
           </div>
@@ -442,18 +461,18 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
             Effort Level (Claude Opus 4.5向け)
           </label>
           <div className="flex gap-2">
-            {(['low', 'medium', 'high'] as const).map((level) => (
+            {(["low", "medium", "high"] as const).map((level) => (
               <button
                 key={level}
                 onClick={() => updateAnthropicOpts(stepId, { effort: level })}
                 className={cn(
-                  'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all',
+                  "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
                   opts.effort === level
-                    ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-300'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100",
                 )}
               >
-                {level === 'low' ? '低' : level === 'medium' ? '中' : '高'}
+                {level === "low" ? "低" : level === "medium" ? "中" : "高"}
               </button>
             ))}
           </div>
@@ -466,24 +485,26 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
     <div className="h-full flex flex-col">
       {/* Header Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {(['gemini', 'anthropic', 'openai'] as LLMPlatform[]).map(platform => {
+        {(["gemini", "anthropic", "openai"] as LLMPlatform[]).map((platform) => {
           const info = PLATFORM_INFO[platform];
           return (
             <button
               key={platform}
-              onClick={() => setFilterPlatform(filterPlatform === platform ? 'all' : platform)}
+              onClick={() => setFilterPlatform(filterPlatform === platform ? "all" : platform)}
               className={cn(
-                'p-4 rounded-xl border-2 transition-all text-left',
+                "p-4 rounded-xl border-2 transition-all text-left",
                 filterPlatform === platform
-                  ? `${info.bgColor} ${info.borderColor} ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-${platform === 'gemini' ? 'blue' : platform === 'anthropic' ? 'orange' : 'green'}-200`
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? `${info.bgColor} ${info.borderColor} ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-${platform === "gemini" ? "blue" : platform === "anthropic" ? "orange" : "green"}-200`
+                  : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
               )}
             >
               <div className="flex items-center gap-2 mb-2">
                 <ProviderLogo platform={platform} size={28} />
-                <h3 className={cn('font-semibold', info.color)}>{info.name}</h3>
+                <h3 className={cn("font-semibold", info.color)}>{info.name}</h3>
               </div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{modelCounts[platform] || 0}</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {modelCounts[platform] || 0}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">ステップで使用</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{info.description}</p>
             </button>
@@ -512,7 +533,7 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
         <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 sticky top-0">
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {filteredSteps.length}件のステップ
-            {filterPlatform !== 'all' && ` (${PLATFORM_INFO[filterPlatform].name}でフィルタ中)`}
+            {filterPlatform !== "all" && ` (${PLATFORM_INFO[filterPlatform].name}でフィルタ中)`}
           </span>
         </div>
 
@@ -532,7 +553,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-gray-900 dark:text-gray-100">{step.label}</h4>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{step.stepId}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {step.stepId}
+                      </span>
                       {isRecommended && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded">
                           <CheckCircle2 className="h-3 w-3" />
@@ -540,22 +563,28 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{step.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {step.description}
+                    </p>
                   </div>
 
                   {/* Current Model Badge */}
-                  <div className={cn(
-                    'flex items-center gap-2 px-3 py-1.5 rounded-lg',
-                    platformInfo.bgColor,
-                    platformInfo.borderColor,
-                    'border'
-                  )}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+                      platformInfo.bgColor,
+                      platformInfo.borderColor,
+                      "border",
+                    )}
+                  >
                     <ProviderLogo platform={step.aiModel} size={20} />
                     <div className="text-right">
-                      <p className={cn('text-sm font-medium', platformInfo.color)}>
+                      <p className={cn("text-sm font-medium", platformInfo.color)}>
                         {step.modelName}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">T: {step.temperature}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        T: {step.temperature}
+                      </p>
                     </div>
                   </div>
 
@@ -586,31 +615,35 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                             プラットフォーム
                           </label>
                           <div className="flex gap-2">
-                            {(['gemini', 'anthropic', 'openai'] as LLMPlatform[]).map((platform) => {
-                              const info = PLATFORM_INFO[platform];
-                              const isActive = step.aiModel === platform;
-                              return (
-                                <button
-                                  key={platform}
-                                  onClick={() => {
-                                    const defaultModel = PLATFORM_MODELS[platform].find(m => m.isDefault) || PLATFORM_MODELS[platform][0];
-                                    onConfigChange(step.stepId, {
-                                      aiModel: platform,
-                                      modelName: defaultModel.id,
-                                    });
-                                  }}
-                                  className={cn(
-                                    'flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2',
-                                    isActive
-                                      ? `${info.bgColor} ${info.color} ring-2 ${info.borderColor}`
-                                      : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
-                                  )}
-                                >
-                                  <ProviderLogo platform={platform} size={18} />
-                                  <span className="hidden sm:inline">{info.name}</span>
-                                </button>
-                              );
-                            })}
+                            {(["gemini", "anthropic", "openai"] as LLMPlatform[]).map(
+                              (platform) => {
+                                const info = PLATFORM_INFO[platform];
+                                const isActive = step.aiModel === platform;
+                                return (
+                                  <button
+                                    key={platform}
+                                    onClick={() => {
+                                      const defaultModel =
+                                        PLATFORM_MODELS[platform].find((m) => m.isDefault) ||
+                                        PLATFORM_MODELS[platform][0];
+                                      onConfigChange(step.stepId, {
+                                        aiModel: platform,
+                                        modelName: defaultModel.id,
+                                      });
+                                    }}
+                                    className={cn(
+                                      "flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2",
+                                      isActive
+                                        ? `${info.bgColor} ${info.color} ring-2 ${info.borderColor}`
+                                        : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600",
+                                    )}
+                                  >
+                                    <ProviderLogo platform={platform} size={18} />
+                                    <span className="hidden sm:inline">{info.name}</span>
+                                  </button>
+                                );
+                              },
+                            )}
                           </div>
                         </div>
 
@@ -622,7 +655,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                           </label>
                           <select
                             value={step.modelName}
-                            onChange={(e) => onConfigChange(step.stepId, { modelName: e.target.value })}
+                            onChange={(e) =>
+                              onConfigChange(step.stepId, { modelName: e.target.value })
+                            }
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           >
                             {PLATFORM_MODELS[step.aiModel].map((model) => (
@@ -645,7 +680,11 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                             max="2"
                             step="0.1"
                             value={step.temperature}
-                            onChange={(e) => onConfigChange(step.stepId, { temperature: parseFloat(e.target.value) })}
+                            onChange={(e) =>
+                              onConfigChange(step.stepId, {
+                                temperature: parseFloat(e.target.value),
+                              })
+                            }
                             className="w-full"
                           />
                           <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
@@ -664,7 +703,9 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                               <input
                                 type="checkbox"
                                 checked={step.repairEnabled}
-                                onChange={(e) => onConfigChange(step.stepId, { repairEnabled: e.target.checked })}
+                                onChange={(e) =>
+                                  onConfigChange(step.stepId, { repairEnabled: e.target.checked })
+                                }
                                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 bg-white dark:bg-gray-700"
                               />
                               <span className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1">
@@ -674,13 +715,19 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                             </label>
                             <div className="flex items-center gap-2">
                               <RotateCcw className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
-                              <span className="text-sm text-gray-600 dark:text-gray-300">リトライ上限:</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-300">
+                                リトライ上限:
+                              </span>
                               <input
                                 type="number"
                                 min="1"
                                 max="10"
                                 value={step.retryLimit}
-                                onChange={(e) => onConfigChange(step.stepId, { retryLimit: parseInt(e.target.value, 10) })}
+                                onChange={(e) =>
+                                  onConfigChange(step.stepId, {
+                                    retryLimit: parseInt(e.target.value, 10),
+                                  })
+                                }
                                 className="w-16 px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                               />
                               <span className="text-sm text-gray-500 dark:text-gray-400">回</span>
@@ -696,15 +743,20 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                           {PLATFORM_INFO[step.aiModel].name}固有オプション
                         </h5>
 
-                        <div className={cn(
-                          'p-4 rounded-lg border',
-                          step.aiModel === 'gemini' && 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-                          step.aiModel === 'openai' && 'bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-                          step.aiModel === 'anthropic' && 'bg-orange-50/50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                        )}>
-                          {step.aiModel === 'gemini' && renderGeminiOptions(step.stepId)}
-                          {step.aiModel === 'openai' && renderOpenAIOptions(step.stepId)}
-                          {step.aiModel === 'anthropic' && renderAnthropicOptions(step.stepId)}
+                        <div
+                          className={cn(
+                            "p-4 rounded-lg border",
+                            step.aiModel === "gemini" &&
+                              "bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+                            step.aiModel === "openai" &&
+                              "bg-green-50/50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+                            step.aiModel === "anthropic" &&
+                              "bg-orange-50/50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800",
+                          )}
+                        >
+                          {step.aiModel === "gemini" && renderGeminiOptions(step.stepId)}
+                          {step.aiModel === "openai" && renderOpenAIOptions(step.stepId)}
+                          {step.aiModel === "anthropic" && renderAnthropicOptions(step.stepId)}
                         </div>
                       </div>
                     </div>
@@ -714,11 +766,15 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
                       <div className="mt-4 flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                         <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         <p className="text-xs text-yellow-700 dark:text-yellow-300">
-                          このステップには <strong>{PLATFORM_INFO[step.recommendedModel].name}</strong> が推奨されています
+                          このステップには{" "}
+                          <strong>{PLATFORM_INFO[step.recommendedModel].name}</strong>{" "}
+                          が推奨されています
                         </p>
                         <button
                           onClick={() => {
-                            const defaultModel = PLATFORM_MODELS[step.recommendedModel].find(m => m.isDefault) || PLATFORM_MODELS[step.recommendedModel][0];
+                            const defaultModel =
+                              PLATFORM_MODELS[step.recommendedModel].find((m) => m.isDefault) ||
+                              PLATFORM_MODELS[step.recommendedModel][0];
                             onConfigChange(step.stepId, {
                               aiModel: step.recommendedModel,
                               modelName: defaultModel.id,
@@ -741,7 +797,7 @@ export function ModelSettingsTab({ stepConfigs, onConfigChange }: ModelSettingsT
           <div className="p-12 text-center">
             <Filter className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
-              {searchQuery ? '検索結果がありません' : 'フィルタに一致するステップがありません'}
+              {searchQuery ? "検索結果がありません" : "フィルタに一致するステップがありません"}
             </p>
           </div>
         )}

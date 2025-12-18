@@ -1,9 +1,22 @@
-'use client';
+"use client";
 
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, ChevronRight } from 'lucide-react';
-import type { Step } from '@/lib/types';
-import { STEP_LABELS } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Clock,
+  Pause,
+  Sparkles,
+  Search,
+  FileText,
+  Pencil,
+  Eye,
+  Package,
+  ChevronRight,
+} from "lucide-react";
+import type { Step } from "@/lib/types";
+import { STEP_LABELS } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /**
  * Pattern 2: LangGraph Studio Style
@@ -20,65 +33,103 @@ interface WorkflowPattern2Props {
 }
 
 const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  'step-1': Package,
-  'step0': Sparkles,
-  'step1': Search,
-  'step3': FileText,
-  'step2': Search,
-  'step3a': Sparkles,
-  'step3b': Sparkles,
-  'step3c': Sparkles,
-  'step4': FileText,
-  'step5': Pencil,
-  'step6': Eye,
-  'step6.5': Package,
-  'step7a': FileText,
-  'step7b': FileText,
-  'step8': Eye,
-  'step9': Sparkles,
-  'step10': CheckCircle,
+  "step-1": Package,
+  step0: Sparkles,
+  step1: Search,
+  step3: FileText,
+  step2: Search,
+  step3a: Sparkles,
+  step3b: Sparkles,
+  step3c: Sparkles,
+  step4: FileText,
+  step5: Pencil,
+  step6: Eye,
+  "step6.5": Package,
+  step7a: FileText,
+  step7b: FileText,
+  step8: Eye,
+  step9: Sparkles,
+  step10: CheckCircle,
 };
 
 // Simplified layout: rows with items
 const FLOW_LAYOUT = [
-  { row: 0, items: ['step-1'] },
-  { row: 1, items: ['step0'] },
-  { row: 2, items: ['step1'] },
-  { row: 3, items: ['step2', 'step3'] },
-  { row: 4, items: ['step3a', 'step3b', 'step3c'] },
-  { row: 5, items: ['step4'] },
-  { row: 6, items: ['step5'] },
-  { row: 7, items: ['step6'] },
-  { row: 8, items: ['step6.5'] },
-  { row: 9, items: ['step7a', 'step7b'] },
-  { row: 10, items: ['step8'] },
-  { row: 11, items: ['step9'] },
-  { row: 12, items: ['step10'] },
+  { row: 0, items: ["step-1"] },
+  { row: 1, items: ["step0"] },
+  { row: 2, items: ["step1"] },
+  { row: 3, items: ["step2", "step3"] },
+  { row: 4, items: ["step3a", "step3b", "step3c"] },
+  { row: 5, items: ["step4"] },
+  { row: 6, items: ["step5"] },
+  { row: 7, items: ["step6"] },
+  { row: 8, items: ["step6.5"] },
+  { row: 9, items: ["step7a", "step7b"] },
+  { row: 10, items: ["step8"] },
+  { row: 11, items: ["step9"] },
+  { row: 12, items: ["step10"] },
 ];
 
-export function WorkflowPattern2_LangGraphStyle({ steps, currentStep, waitingApproval }: WorkflowPattern2Props) {
+export function WorkflowPattern2_LangGraphStyle({
+  steps,
+  currentStep,
+  waitingApproval,
+}: WorkflowPattern2Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
-  const completedCount = steps.filter(s => s.status === 'completed').length;
+  const completedCount = steps.filter((s) => s.status === "completed").length;
   const totalSteps = Object.keys(STEP_LABELS).length;
   const progress = Math.round((completedCount / totalSteps) * 100);
 
   const getStatusStyles = (status?: string, isWaiting?: boolean) => {
-    if (isWaiting) return { border: 'border-amber-400', bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-500' };
+    if (isWaiting)
+      return {
+        border: "border-amber-400",
+        bg: "bg-amber-50",
+        text: "text-amber-700",
+        icon: "text-amber-500",
+      };
     switch (status) {
-      case 'completed': return { border: 'border-emerald-400', bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-500' };
-      case 'running': return { border: 'border-blue-400', bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-500' };
-      case 'failed': return { border: 'border-red-400', bg: 'bg-red-50', text: 'text-red-700', icon: 'text-red-500' };
-      default: return { border: 'border-gray-200', bg: 'bg-gray-50', text: 'text-gray-500', icon: 'text-gray-400' };
+      case "completed":
+        return {
+          border: "border-emerald-400",
+          bg: "bg-emerald-50",
+          text: "text-emerald-700",
+          icon: "text-emerald-500",
+        };
+      case "running":
+        return {
+          border: "border-blue-400",
+          bg: "bg-blue-50",
+          text: "text-blue-700",
+          icon: "text-blue-500",
+        };
+      case "failed":
+        return {
+          border: "border-red-400",
+          bg: "bg-red-50",
+          text: "text-red-700",
+          icon: "text-red-500",
+        };
+      default:
+        return {
+          border: "border-gray-200",
+          bg: "bg-gray-50",
+          text: "text-gray-500",
+          icon: "text-gray-400",
+        };
     }
   };
 
   const getStatusIcon = (status?: string, isWaiting?: boolean) => {
     if (isWaiting) return <Pause className="w-3.5 h-3.5" />;
     switch (status) {
-      case 'completed': return <CheckCircle className="w-3.5 h-3.5" />;
-      case 'running': return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
-      case 'failed': return <XCircle className="w-3.5 h-3.5" />;
-      default: return <Clock className="w-3.5 h-3.5" />;
+      case "completed":
+        return <CheckCircle className="w-3.5 h-3.5" />;
+      case "running":
+        return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
+      case "failed":
+        return <XCircle className="w-3.5 h-3.5" />;
+      default:
+        return <Clock className="w-3.5 h-3.5" />;
     }
   };
 
@@ -106,11 +157,13 @@ export function WorkflowPattern2_LangGraphStyle({ steps, currentStep, waitingApp
       </div>
 
       {/* Graph Canvas */}
-      <div className="relative p-8 overflow-x-auto"
-           style={{
-             backgroundImage: 'radial-gradient(circle, #e5e7eb 1px, transparent 1px)',
-             backgroundSize: '24px 24px'
-           }}>
+      <div
+        className="relative p-8 overflow-x-auto"
+        style={{
+          backgroundImage: "radial-gradient(circle, #e5e7eb 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      >
         <div className="flex flex-col gap-3 min-w-max">
           {FLOW_LAYOUT.map((row, rowIndex) => (
             <div key={rowIndex} className="flex items-center justify-center gap-4">
@@ -125,18 +178,22 @@ export function WorkflowPattern2_LangGraphStyle({ steps, currentStep, waitingApp
                 return (
                   <div key={stepName} className="flex items-center gap-4">
                     {/* Node */}
-                    <div className={cn(
-                      "relative flex items-center gap-3 px-4 py-3",
-                      "bg-white rounded-xl border-2 shadow-sm",
-                      "transition-all duration-200 hover:shadow-md",
-                      styles.border,
-                      isCurrent && "ring-2 ring-blue-200"
-                    )}>
+                    <div
+                      className={cn(
+                        "relative flex items-center gap-3 px-4 py-3",
+                        "bg-white rounded-xl border-2 shadow-sm",
+                        "transition-all duration-200 hover:shadow-md",
+                        styles.border,
+                        isCurrent && "ring-2 ring-blue-200",
+                      )}
+                    >
                       {/* Icon */}
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center",
-                        styles.bg
-                      )}>
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center",
+                          styles.bg,
+                        )}
+                      >
                         <Icon className={cn("w-4 h-4", styles.icon)} />
                       </div>
 
@@ -146,15 +203,13 @@ export function WorkflowPattern2_LangGraphStyle({ steps, currentStep, waitingApp
                           <span className={cn("text-sm font-medium", styles.text)}>
                             {STEP_LABELS[stepName]}
                           </span>
-                          <span className={styles.icon}>
-                            {getStatusIcon(status, isWaiting)}
-                          </span>
+                          <span className={styles.icon}>{getStatusIcon(status, isWaiting)}</span>
                         </div>
                         <span className="text-xs font-mono text-gray-400">{stepName}</span>
                       </div>
 
                       {/* Running indicator */}
-                      {status === 'running' && (
+                      {status === "running" && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
                       )}
                     </div>

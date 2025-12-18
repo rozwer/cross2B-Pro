@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Play, AlertTriangle } from 'lucide-react';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useState } from "react";
+import { Play, AlertTriangle } from "lucide-react";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface ResumeConfirmDialogProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export function ResumeConfirmDialog({
       await onConfirm();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resume');
+      setError(err instanceof Error ? err.message : "Failed to resume");
     } finally {
       setLoading(false);
     }

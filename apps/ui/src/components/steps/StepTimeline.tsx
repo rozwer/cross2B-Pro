@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import type { Step } from '@/lib/types';
-import { STEP_LABELS } from '@/lib/types';
-import { StepNode } from './StepNode';
+import type { Step } from "@/lib/types";
+import { STEP_LABELS } from "@/lib/types";
+import { StepNode } from "./StepNode";
 
 interface StepTimelineProps {
   steps: Step[];
@@ -32,7 +32,7 @@ export function StepTimeline({
   });
 
   // Calculate progress percentage
-  const completedCount = orderedSteps.filter((s) => s.step?.status === 'completed').length;
+  const completedCount = orderedSteps.filter((s) => s.step?.status === "completed").length;
   const progress = Math.round((completedCount / orderedSteps.length) * 100);
 
   return (
@@ -40,14 +40,13 @@ export function StepTimeline({
       {/* Header with progress */}
       <div className="p-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">ワークフロー進捗</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            ワークフロー進捗
+          </h3>
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{progress}%</span>
         </div>
         <div className="progress-bar">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
         </div>
       </div>
 

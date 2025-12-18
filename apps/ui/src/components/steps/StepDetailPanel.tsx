@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Clock, AlertTriangle, CheckCircle, FileText, Activity } from 'lucide-react';
-import type { Step, StepAttempt, ValidationReport } from '@/lib/types';
-import { formatDate } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { Clock, AlertTriangle, CheckCircle, FileText, Activity } from "lucide-react";
+import type { Step, StepAttempt, ValidationReport } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface StepDetailPanelProps {
   step: Step;
@@ -23,7 +23,7 @@ export function StepDetailPanel({ step }: StepDetailPanelProps) {
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
           <Clock className="h-4 w-4" />
           <span>
-            {step.started_at ? formatDate(step.started_at) : '未開始'}
+            {step.started_at ? formatDate(step.started_at) : "未開始"}
             {step.completed_at && ` → ${formatDate(step.completed_at)}`}
           </span>
         </div>
@@ -63,10 +63,13 @@ function AttemptCard({ attempt, index }: { attempt: StepAttempt; index: number }
   return (
     <div
       className={cn(
-        'p-2 rounded border text-xs',
-        attempt.status === 'succeeded' && 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800',
-        attempt.status === 'failed' && 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800',
-        attempt.status === 'running' && 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800'
+        "p-2 rounded border text-xs",
+        attempt.status === "succeeded" &&
+          "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800",
+        attempt.status === "failed" &&
+          "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800",
+        attempt.status === "running" &&
+          "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
       )}
     >
       <div className="flex items-center justify-between">
@@ -75,10 +78,13 @@ function AttemptCard({ attempt, index }: { attempt: StepAttempt; index: number }
         </span>
         <span
           className={cn(
-            'px-1.5 py-0.5 rounded text-xs',
-            attempt.status === 'succeeded' && 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
-            attempt.status === 'failed' && 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
-            attempt.status === 'running' && 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+            "px-1.5 py-0.5 rounded text-xs",
+            attempt.status === "succeeded" &&
+              "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
+            attempt.status === "failed" &&
+              "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300",
+            attempt.status === "running" &&
+              "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300",
           )}
         >
           {attempt.status}
@@ -95,7 +101,7 @@ function AttemptCard({ attempt, index }: { attempt: StepAttempt; index: number }
       )}
       {attempt.repairs && attempt.repairs.length > 0 && (
         <div className="mt-1 text-amber-600 dark:text-amber-400">
-          修正適用: {attempt.repairs.map((r) => r.repair_type).join(', ')}
+          修正適用: {attempt.repairs.map((r) => r.repair_type).join(", ")}
         </div>
       )}
     </div>
@@ -106,8 +112,10 @@ function ValidationReportSummary({ report }: { report: ValidationReport }) {
   return (
     <div
       className={cn(
-        'p-2 rounded border text-xs',
-        report.valid ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800'
+        "p-2 rounded border text-xs",
+        report.valid
+          ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800"
+          : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800",
       )}
     >
       <div className="flex items-center gap-2">
@@ -117,7 +125,7 @@ function ValidationReportSummary({ report }: { report: ValidationReport }) {
           <AlertTriangle className="h-4 w-4 text-red-500" />
         )}
         <span className="font-medium text-gray-900 dark:text-gray-100">
-          {report.valid ? '検証OK' : '検証NG'}
+          {report.valid ? "検証OK" : "検証NG"}
         </span>
         <span className="text-gray-500 dark:text-gray-400">({report.format})</span>
       </div>

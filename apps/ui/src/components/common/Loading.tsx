@@ -1,57 +1,52 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface LoadingProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   className?: string;
   text?: string;
-  variant?: 'spinner' | 'dots' | 'pulse';
+  variant?: "spinner" | "dots" | "pulse";
 }
 
-export function Loading({ size = 'md', className, text, variant = 'spinner' }: LoadingProps) {
+export function Loading({ size = "md", className, text, variant = "spinner" }: LoadingProps) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   const textSizeClasses = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
   };
 
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
-      {variant === 'spinner' && (
+    <div className={cn("flex flex-col items-center justify-center gap-3", className)}>
+      {variant === "spinner" && (
         <div className="relative">
+          <div className={cn("rounded-full border-2 border-gray-200", sizeClasses[size])} />
           <div
             className={cn(
-              'rounded-full border-2 border-gray-200',
-              sizeClasses[size]
-            )}
-          />
-          <div
-            className={cn(
-              'absolute inset-0 rounded-full border-2 border-transparent border-t-primary-500 animate-spin',
-              sizeClasses[size]
+              "absolute inset-0 rounded-full border-2 border-transparent border-t-primary-500 animate-spin",
+              sizeClasses[size],
             )}
           />
         </div>
       )}
 
-      {variant === 'dots' && (
+      {variant === "dots" && (
         <div className="flex items-center gap-1.5">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
               className={cn(
-                'rounded-full bg-primary-500',
-                size === 'sm' ? 'h-1.5 w-1.5' : size === 'md' ? 'h-2 w-2' : 'h-3 w-3'
+                "rounded-full bg-primary-500",
+                size === "sm" ? "h-1.5 w-1.5" : size === "md" ? "h-2 w-2" : "h-3 w-3",
               )}
               style={{
-                animation: 'bounce 1.4s infinite ease-in-out both',
+                animation: "bounce 1.4s infinite ease-in-out both",
                 animationDelay: `${i * 0.16}s`,
               }}
             />
@@ -59,25 +54,20 @@ export function Loading({ size = 'md', className, text, variant = 'spinner' }: L
         </div>
       )}
 
-      {variant === 'pulse' && (
+      {variant === "pulse" && (
         <div className="relative">
+          <div className={cn("rounded-full bg-primary-100", sizeClasses[size])} />
           <div
             className={cn(
-              'rounded-full bg-primary-100',
-              sizeClasses[size]
-            )}
-          />
-          <div
-            className={cn(
-              'absolute inset-0 rounded-full bg-primary-500 animate-ping opacity-75',
-              sizeClasses[size]
+              "absolute inset-0 rounded-full bg-primary-500 animate-ping opacity-75",
+              sizeClasses[size],
             )}
           />
         </div>
       )}
 
       {text && (
-        <p className={cn('text-gray-500 font-medium animate-pulse', textSizeClasses[size])}>
+        <p className={cn("text-gray-500 font-medium animate-pulse", textSizeClasses[size])}>
           {text}
         </p>
       )}
@@ -85,7 +75,7 @@ export function Loading({ size = 'md', className, text, variant = 'spinner' }: L
   );
 }
 
-export function LoadingPage({ text = '読み込み中...' }: { text?: string }) {
+export function LoadingPage({ text = "読み込み中..." }: { text?: string }) {
   return (
     <div className="min-h-[400px] flex items-center justify-center animate-fade-in">
       <div className="flex flex-col items-center gap-6">
@@ -118,14 +108,7 @@ export function LoadingOverlay({ text }: { text?: string }) {
 
 // Skeleton components for loading states
 export function Skeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        'shimmer rounded-lg',
-        className
-      )}
-    />
-  );
+  return <div className={cn("shimmer rounded-lg", className)} />;
 }
 
 export function CardSkeleton() {

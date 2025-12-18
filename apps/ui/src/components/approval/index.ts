@@ -1,2 +1,2 @@
-export { ApprovalDialog } from './ApprovalDialog';
-export { ResumeConfirmDialog } from './ResumeConfirmDialog';
+export { ApprovalDialog } from "./ApprovalDialog";
+export { ResumeConfirmDialog } from "./ResumeConfirmDialog";

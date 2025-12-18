@@ -1,9 +1,29 @@
-'use client';
+"use client";
 
-import { CheckCircle, XCircle, Loader2, Clock, Pause, Sparkles, Search, FileText, Pencil, Eye, Package, Brain, Wrench, ArrowRight, Inbox, ThumbsUp, ThumbsDown, Maximize2, type LucideIcon } from 'lucide-react';
-import type { Step } from '@/lib/types';
-import { STEP_LABELS } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Clock,
+  Pause,
+  Sparkles,
+  Search,
+  FileText,
+  Pencil,
+  Eye,
+  Package,
+  Brain,
+  Wrench,
+  ArrowRight,
+  Inbox,
+  ThumbsUp,
+  ThumbsDown,
+  Maximize2,
+  type LucideIcon,
+} from "lucide-react";
+import type { Step } from "@/lib/types";
+import { STEP_LABELS } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /**
  * Pattern 3: Dify Style
@@ -23,50 +43,66 @@ interface WorkflowPattern3Props {
 }
 
 const STEP_TYPES: Record<string, { icon: LucideIcon; color: string; type: string }> = {
-  'step-1': { icon: Inbox, color: '#3b82f6', type: '入力' },
-  'step0': { icon: Sparkles, color: '#8b5cf6', type: 'AI' },
-  'step1': { icon: Search, color: '#8b5cf6', type: 'AI' },
-  'step3': { icon: FileText, color: '#10b981', type: '処理' },
-  'step2': { icon: Wrench, color: '#f59e0b', type: 'ツール' },
-  'step3a': { icon: Brain, color: '#ec4899', type: 'AI' },
-  'step3b': { icon: Brain, color: '#ec4899', type: 'AI' },
-  'step3c': { icon: Brain, color: '#ec4899', type: 'AI' },
-  'step4': { icon: FileText, color: '#06b6d4', type: '処理' },
-  'step5': { icon: Pencil, color: '#8b5cf6', type: 'AI' },
-  'step6': { icon: Eye, color: '#f59e0b', type: 'レビュー' },
-  'step6.5': { icon: Package, color: '#6366f1', type: '処理' },
-  'step7a': { icon: FileText, color: '#10b981', type: '出力' },
-  'step7b': { icon: FileText, color: '#10b981', type: '出力' },
-  'step8': { icon: Eye, color: '#f59e0b', type: '検証' },
-  'step9': { icon: Sparkles, color: '#8b5cf6', type: 'AI' },
-  'step10': { icon: ArrowRight, color: '#10b981', type: '完了' },
+  "step-1": { icon: Inbox, color: "#3b82f6", type: "入力" },
+  step0: { icon: Sparkles, color: "#8b5cf6", type: "AI" },
+  step1: { icon: Search, color: "#8b5cf6", type: "AI" },
+  step3: { icon: FileText, color: "#10b981", type: "処理" },
+  step2: { icon: Wrench, color: "#f59e0b", type: "ツール" },
+  step3a: { icon: Brain, color: "#ec4899", type: "AI" },
+  step3b: { icon: Brain, color: "#ec4899", type: "AI" },
+  step3c: { icon: Brain, color: "#ec4899", type: "AI" },
+  step4: { icon: FileText, color: "#06b6d4", type: "処理" },
+  step5: { icon: Pencil, color: "#8b5cf6", type: "AI" },
+  step6: { icon: Eye, color: "#f59e0b", type: "レビュー" },
+  "step6.5": { icon: Package, color: "#6366f1", type: "処理" },
+  step7a: { icon: FileText, color: "#10b981", type: "出力" },
+  step7b: { icon: FileText, color: "#10b981", type: "出力" },
+  step8: { icon: Eye, color: "#f59e0b", type: "検証" },
+  step9: { icon: Sparkles, color: "#8b5cf6", type: "AI" },
+  step10: { icon: ArrowRight, color: "#10b981", type: "完了" },
 };
 
 const FLOW_ROWS = [
-  ['step-1'],
-  ['step0', 'step1'],
-  ['step2', 'step3'],
-  ['step3a', 'step3b', 'step3c'],
-  ['step4', 'step5'],
-  ['step6', 'step6.5'],
-  ['step7a', 'step7b'],
-  ['step8', 'step9'],
-  ['step10'],
+  ["step-1"],
+  ["step0", "step1"],
+  ["step2", "step3"],
+  ["step3a", "step3b", "step3c"],
+  ["step4", "step5"],
+  ["step6", "step6.5"],
+  ["step7a", "step7b"],
+  ["step8", "step9"],
+  ["step10"],
 ];
 
-export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval, onApprove, onReject }: WorkflowPattern3Props) {
+export function WorkflowPattern3_DifyStyle({
+  steps,
+  currentStep,
+  waitingApproval,
+  onApprove,
+  onReject,
+}: WorkflowPattern3Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
-  const completedCount = steps.filter(s => s.status === 'completed').length;
+  const completedCount = steps.filter((s) => s.status === "completed").length;
   const totalSteps = Object.keys(STEP_LABELS).length;
   const progress = Math.round((completedCount / totalSteps) * 100);
 
   const getStatusPill = (status?: string, isWaiting?: boolean) => {
-    if (isWaiting) return { label: '承認待ち', bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' };
+    if (isWaiting)
+      return { label: "承認待ち", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" };
     switch (status) {
-      case 'completed': return { label: '完了', bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' };
-      case 'running': return { label: '実行中', bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' };
-      case 'failed': return { label: '失敗', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' };
-      default: return { label: '待機', bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' };
+      case "completed":
+        return {
+          label: "完了",
+          bg: "bg-emerald-100",
+          text: "text-emerald-700",
+          dot: "bg-emerald-500",
+        };
+      case "running":
+        return { label: "実行中", bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" };
+      case "failed":
+        return { label: "失敗", bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" };
+      default:
+        return { label: "待機", bg: "bg-gray-100", text: "text-gray-500", dot: "bg-gray-400" };
     }
   };
 
@@ -87,7 +123,9 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-2xl font-bold text-violet-600">{progress}%</p>
-              <p className="text-xs text-gray-500">{completedCount} / {totalSteps} ステップ</p>
+              <p className="text-xs text-gray-500">
+                {completedCount} / {totalSteps} ステップ
+              </p>
             </div>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Maximize2 className="w-4 h-4 text-gray-500" />
@@ -106,7 +144,11 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
                 const status = step?.status;
                 const isCurrent = stepName === currentStep;
                 const isWaiting = waitingApproval && isCurrent;
-                const config = STEP_TYPES[stepName] || { icon: Sparkles, color: '#8b5cf6', type: 'AI' };
+                const config = STEP_TYPES[stepName] || {
+                  icon: Sparkles,
+                  color: "#8b5cf6",
+                  type: "AI",
+                };
                 const statusPill = getStatusPill(status, isWaiting);
                 const Icon = config.icon;
 
@@ -117,9 +159,9 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
                       "relative bg-white rounded-xl shadow-sm border transition-all duration-200",
                       "hover:shadow-md hover:-translate-y-0.5",
                       isCurrent && "ring-2 ring-violet-400 ring-offset-2",
-                      isWaiting && "ring-2 ring-amber-400 ring-offset-2"
+                      isWaiting && "ring-2 ring-amber-400 ring-offset-2",
                     )}
-                    style={{ borderLeftWidth: '4px', borderLeftColor: config.color }}
+                    style={{ borderLeftWidth: "4px", borderLeftColor: config.color }}
                   >
                     <div className="p-4 min-w-[160px]">
                       {/* Header */}
@@ -141,21 +183,26 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
                       </h4>
 
                       {/* Status pill */}
-                      <div className={cn(
-                        "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
-                        statusPill.bg, statusPill.text
-                      )}>
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          statusPill.dot,
-                          status === 'running' && "animate-pulse"
-                        )} />
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
+                          statusPill.bg,
+                          statusPill.text,
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            statusPill.dot,
+                            status === "running" && "animate-pulse",
+                          )}
+                        />
                         {statusPill.label}
                       </div>
                     </div>
 
                     {/* Running animation */}
-                    {status === 'running' && (
+                    {status === "running" && (
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100 rounded-b-xl overflow-hidden">
                         <div className="h-full bg-blue-500 animate-progress" />
                       </div>
@@ -179,10 +226,10 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
                       key={stepName}
                       className={cn(
                         "flex-1 max-w-[8px] rounded-sm",
-                        step?.status === 'completed' && "bg-emerald-400",
-                        step?.status === 'running' && "bg-blue-400",
-                        step?.status === 'failed' && "bg-red-400",
-                        !step?.status && "bg-gray-200"
+                        step?.status === "completed" && "bg-emerald-400",
+                        step?.status === "running" && "bg-blue-400",
+                        step?.status === "failed" && "bg-red-400",
+                        !step?.status && "bg-gray-200",
                       )}
                     />
                   );
@@ -201,12 +248,14 @@ export function WorkflowPattern3_DifyStyle({ steps, currentStep, waitingApproval
               <Pause className="w-5 h-5 text-amber-600" />
               <div>
                 <p className="text-sm font-medium text-amber-900">承認が必要です</p>
-                <p className="text-xs text-amber-700">レビュー結果を確認して承認または却下してください</p>
+                <p className="text-xs text-amber-700">
+                  レビュー結果を確認して承認または却下してください
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => onReject?.('ユーザーによる却下')}
+                onClick={() => onReject?.("ユーザーによる却下")}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <ThumbsDown className="w-4 h-4" />

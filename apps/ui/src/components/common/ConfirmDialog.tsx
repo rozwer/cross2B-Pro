@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { X, AlertTriangle, CheckCircle, Info, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useRef } from "react";
+import { X, AlertTriangle, CheckCircle, Info, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface ConfirmDialogProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'default' | 'danger' | 'success' | 'info';
+  variant?: "default" | "danger" | "success" | "info";
   loading?: boolean;
   children?: React.ReactNode;
 }
@@ -20,27 +20,27 @@ interface ConfirmDialogProps {
 const variantConfig = {
   default: {
     icon: null,
-    iconBg: 'bg-primary-100',
-    iconColor: 'text-primary-600',
-    confirmBtn: 'btn btn-primary',
+    iconBg: "bg-primary-100",
+    iconColor: "text-primary-600",
+    confirmBtn: "btn btn-primary",
   },
   danger: {
     icon: AlertTriangle,
-    iconBg: 'bg-error-100',
-    iconColor: 'text-error-600',
-    confirmBtn: 'btn btn-danger',
+    iconBg: "bg-error-100",
+    iconColor: "text-error-600",
+    confirmBtn: "btn btn-danger",
   },
   success: {
     icon: CheckCircle,
-    iconBg: 'bg-success-100',
-    iconColor: 'text-success-600',
-    confirmBtn: 'btn btn-primary',
+    iconBg: "bg-success-100",
+    iconColor: "text-success-600",
+    confirmBtn: "btn btn-primary",
   },
   info: {
     icon: Info,
-    iconBg: 'bg-accent-100',
-    iconColor: 'text-accent-600',
-    confirmBtn: 'btn btn-primary',
+    iconBg: "bg-accent-100",
+    iconColor: "text-accent-600",
+    confirmBtn: "btn btn-primary",
   },
 };
 
@@ -50,9 +50,9 @@ export function ConfirmDialog({
   onConfirm,
   title,
   description,
-  confirmText = '確認',
-  cancelText = 'キャンセル',
-  variant = 'default',
+  confirmText = "確認",
+  cancelText = "キャンセル",
+  variant = "default",
   loading = false,
   children,
 }: ConfirmDialogProps) {
@@ -67,14 +67,14 @@ export function ConfirmDialog({
     if (isOpen) {
       dialog.showModal();
       // Prevent body scroll
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
       dialog.close();
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -87,8 +87,8 @@ export function ConfirmDialog({
       onClose();
     };
 
-    dialog.addEventListener('cancel', handleCancel);
-    return () => dialog.removeEventListener('cancel', handleCancel);
+    dialog.addEventListener("cancel", handleCancel);
+    return () => dialog.removeEventListener("cancel", handleCancel);
   }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
@@ -109,8 +109,8 @@ export function ConfirmDialog({
           <div className="flex items-start gap-4 p-5 pb-0">
             {/* Icon */}
             {IconComponent && (
-              <div className={cn('flex-shrink-0 p-2.5 rounded-xl', config.iconBg)}>
-                <IconComponent className={cn('h-5 w-5', config.iconColor)} />
+              <div className={cn("flex-shrink-0 p-2.5 rounded-xl", config.iconBg)}>
+                <IconComponent className={cn("h-5 w-5", config.iconColor)} />
               </div>
             )}
 
@@ -131,26 +131,18 @@ export function ConfirmDialog({
           </div>
 
           {/* Content */}
-          {children && (
-            <div className="px-5 pt-4">
-              {children}
-            </div>
-          )}
+          {children && <div className="px-5 pt-4">{children}</div>}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 p-5 pt-6">
-            <button
-              onClick={onClose}
-              disabled={loading}
-              className="btn btn-secondary"
-            >
+            <button onClick={onClose} disabled={loading} className="btn btn-secondary">
               {cancelText}
             </button>
             {confirmText && (
               <button
                 onClick={onConfirm}
                 disabled={loading}
-                className={cn(config.confirmBtn, 'min-w-[100px]')}
+                className={cn(config.confirmBtn, "min-w-[100px]")}
               >
                 {loading ? (
                   <>

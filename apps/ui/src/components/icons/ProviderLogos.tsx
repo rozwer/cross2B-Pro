@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface LogoProps {
   className?: string;
@@ -83,10 +83,7 @@ export function AnthropicLogo({ className, size = 24 }: LogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={cn(className)}
     >
-      <path
-        d="M17.3037 3.84375H14.2969L19.5469 20.1562H22.5537L17.3037 3.84375Z"
-        fill="#D97757"
-      />
+      <path d="M17.3037 3.84375H14.2969L19.5469 20.1562H22.5537L17.3037 3.84375Z" fill="#D97757" />
       <path
         d="M6.69629 3.84375L1.44629 20.1562H4.53223L5.60254 16.875H11.6045L12.6748 20.1562H15.7607L10.5107 3.84375H6.69629ZM6.46973 14.1562L8.60352 7.59375L10.7373 14.1562H6.46973Z"
         fill="#D97757"
@@ -103,16 +100,16 @@ export function ProviderLogo({
   className,
   size = 24,
 }: {
-  platform: 'gemini' | 'openai' | 'anthropic';
+  platform: "gemini" | "openai" | "anthropic";
   className?: string;
   size?: number;
 }) {
   switch (platform) {
-    case 'gemini':
+    case "gemini":
       return <GeminiLogo className={className} size={size} />;
-    case 'openai':
+    case "openai":
       return <OpenAILogo className={className} size={size} />;
-    case 'anthropic':
+    case "anthropic":
       return <AnthropicLogo className={className} size={size} />;
     default:
       return null;

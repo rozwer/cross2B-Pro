@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface JsonViewerProps {
   content: string;
@@ -17,7 +17,7 @@ export function JsonViewer({ content }: JsonViewerProps) {
   try {
     parsed = JSON.parse(content);
   } catch (e) {
-    parseError = e instanceof Error ? e.message : 'Invalid JSON';
+    parseError = e instanceof Error ? e.message : "Invalid JSON";
   }
 
   const handleCopy = async () => {
@@ -76,7 +76,7 @@ interface JsonNodeProps {
 function JsonNode({ value, name, isLast, depth = 0 }: JsonNodeProps) {
   const [expanded, setExpanded] = useState(depth < 2);
 
-  const isObject = value !== null && typeof value === 'object';
+  const isObject = value !== null && typeof value === "object";
   const isArray = Array.isArray(value);
   const entries = isObject
     ? isArray
@@ -88,13 +88,13 @@ function JsonNode({ value, name, isLast, depth = 0 }: JsonNodeProps) {
     if (value === null) {
       return <span className="text-gray-500">null</span>;
     }
-    if (typeof value === 'boolean') {
+    if (typeof value === "boolean") {
       return <span className="text-purple-600">{value.toString()}</span>;
     }
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       return <span className="text-blue-600">{value}</span>;
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return <span className="text-green-600">&quot;{value}&quot;</span>;
     }
     return null;
@@ -115,8 +115,8 @@ function JsonNode({ value, name, isLast, depth = 0 }: JsonNodeProps) {
     );
   }
 
-  const bracketOpen = isArray ? '[' : '{';
-  const bracketClose = isArray ? ']' : '}';
+  const bracketOpen = isArray ? "[" : "{";
+  const bracketClose = isArray ? "]" : "}";
 
   if (entries.length === 0) {
     return (
@@ -159,7 +159,7 @@ function JsonNode({ value, name, isLast, depth = 0 }: JsonNodeProps) {
         <span className="text-gray-500">{bracketOpen}</span>
         {!expanded && (
           <span className="text-gray-400 ml-1">
-            {entries.length} {isArray ? 'items' : 'keys'}...
+            {entries.length} {isArray ? "items" : "keys"}...
           </span>
         )}
         {!expanded && (
