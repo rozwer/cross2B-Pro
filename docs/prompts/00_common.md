@@ -2,7 +2,7 @@
 
 ---
 
-```markdown
+````markdown
 ## 作業開始手順
 
 ### 1. Worktree作成（初回のみ）
@@ -19,7 +19,7 @@ git worktree add -b "feat/$TOPIC" ".worktrees/$TOPIC" develop
 
 # 作業ディレクトリへ移動
 cd ".worktrees/$TOPIC"
-```
+````
 
 ### 2. 作業ディレクトリ確認
 
@@ -88,4 +88,7 @@ tests/
 - `仕様書/workflow.md` - ワークフロー定義
 - `仕様書/backend/*.md` - バックエンド仕様
 - `仕様書/frontend/ui.md` - フロントエンド仕様
+
+```
+
 ```

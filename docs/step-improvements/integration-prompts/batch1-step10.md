@@ -11,6 +11,7 @@
 ### フォールバック禁止違反（Line 125-127）
 
 **現状コード**:
+
 ```python
 except Exception:
     # Checklist is nice-to-have, continue if fails
@@ -18,6 +19,7 @@ except Exception:
 ```
 
 **修正後**:
+
 ```python
 except Exception as e:
     activity.logger.error(f"Checklist generation failed: {e}")
@@ -32,7 +34,7 @@ except Exception as e:
 
 ### 1. OutputParser
 
-```python
+````python
 from apps.worker.helpers import OutputParser
 
 class Step10FinalOutput(BaseActivity):
@@ -52,7 +54,7 @@ class Step10FinalOutput(BaseActivity):
             # extract_json_block は json 用だが、html も同様に動作
 
         return html_content, response.token_usage.output
-```
+````
 
 ### 2. InputValidator
 

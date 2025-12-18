@@ -9,18 +9,18 @@ SEO記事自動生成システムの Phase 5（フロントエンドUI）が完�
 
 ### PR履歴
 
-| PR | タイトル | 状態 |
-|----|---------|------|
+| PR  | タイトル                       | 状態   |
+| --- | ------------------------------ | ------ |
 | #13 | feat(ui): フロントエンドUI実装 | Merged |
 
 ### 画面構成
 
-| 画面 | パス | 機能 |
-|------|------|------|
-| Runs一覧 | `/runs` | ステータスフィルター、更新、Run一覧表示 |
-| Run作成 | `/runs/new` | 工程-1入力、モデル/ツール/実行オプション設定 |
-| Run詳細 | `/runs/[id]` | StepTimeline、成果物、イベント、設定表示 |
-| プレビュー | `/runs/[id]/preview` | 生成HTML確認 |
+| 画面       | パス                 | 機能                                         |
+| ---------- | -------------------- | -------------------------------------------- |
+| Runs一覧   | `/runs`              | ステータスフィルター、更新、Run一覧表示      |
+| Run作成    | `/runs/new`          | 工程-1入力、モデル/ツール/実行オプション設定 |
+| Run詳細    | `/runs/[id]`         | StepTimeline、成果物、イベント、設定表示     |
+| プレビュー | `/runs/[id]/preview` | 生成HTML確認                                 |
 
 ### 実装ファイル
 
@@ -88,20 +88,20 @@ apps/ui/
 
 ### LangGraphワークフローテスト内訳
 
-| カテゴリ | テスト数 | 内容 |
-|---------|---------|------|
-| E2E | 9 | ワークフロー全体統合テスト |
-| Integration | 8 | グラフ構造・フロー検証 |
-| Smoke | 17 | Docker・構文・型チェック |
-| Unit - LLM | 77 | Gemini/OpenAI/Anthropic/NanoBanana |
-| Unit - Core | 20 | State/Context/Errors |
-| Unit - DB | 8 | Models検証 |
-| Unit - Storage | 11 | ArtifactStore |
-| Unit - Validation | 35 | JSON検証・修復 |
-| Unit - Prompts | 18 | PromptPack/Loader |
-| Unit - Worker | 23 | Workflow/Activity/Parallel |
-| Unit - Observability | 14 | Events/Logger |
-| その他 | 83 | Tools等 |
+| カテゴリ             | テスト数 | 内容                               |
+| -------------------- | -------- | ---------------------------------- |
+| E2E                  | 9        | ワークフロー全体統合テスト         |
+| Integration          | 8        | グラフ構造・フロー検証             |
+| Smoke                | 17       | Docker・構文・型チェック           |
+| Unit - LLM           | 77       | Gemini/OpenAI/Anthropic/NanoBanana |
+| Unit - Core          | 20       | State/Context/Errors               |
+| Unit - DB            | 8        | Models検証                         |
+| Unit - Storage       | 11       | ArtifactStore                      |
+| Unit - Validation    | 35       | JSON検証・修復                     |
+| Unit - Prompts       | 18       | PromptPack/Loader                  |
+| Unit - Worker        | 23       | Workflow/Activity/Parallel         |
+| Unit - Observability | 14       | Events/Logger                      |
+| その他               | 83       | Tools等                            |
 
 ## 技術スタック
 
@@ -159,18 +159,21 @@ const { progress, isConnected } = useRunProgress(runId);
 ## 機能一覧
 
 ### Run管理
+
 - ✅ Run一覧表示（ステータスフィルター付き）
 - ✅ Run作成（キーワード、モデル、オプション設定）
 - ✅ Run詳細表示
 - ✅ リアルタイム進捗更新（WebSocket）
 
 ### 承認フロー
+
 - ✅ 承認ダイアログ
 - ✅ 却下ダイアログ（理由入力）
 - ✅ リトライダイアログ（失敗工程の再実行）
 - ✅ 部分再実行（特定工程から再開）
 
 ### 成果物表示
+
 - ✅ JSON ビューア（シンタックスハイライト）
 - ✅ HTML プレビュー
 - ✅ Markdown レンダリング
@@ -178,14 +181,14 @@ const { progress, isConnected } = useRunProgress(runId);
 
 ## 全Phase完了サマリー
 
-| Phase | 内容 | テスト数 |
-|-------|------|---------|
-| Phase 1 | LLM API (Gemini/OpenAI/Anthropic + NanoBanana) | 77 |
-| Phase 2 | Tools + Validation | 104 |
-| Phase 3 | Core + Storage + DB + Observability + Prompts | 74 |
-| Phase 4 | LangGraph + Temporal Workflow | 31 |
-| Phase 5 | Frontend UI + E2E/Smoke | 37 |
-| **合計** | | **323** |
+| Phase    | 内容                                           | テスト数 |
+| -------- | ---------------------------------------------- | -------- |
+| Phase 1  | LLM API (Gemini/OpenAI/Anthropic + NanoBanana) | 77       |
+| Phase 2  | Tools + Validation                             | 104      |
+| Phase 3  | Core + Storage + DB + Observability + Prompts  | 74       |
+| Phase 4  | LangGraph + Temporal Workflow                  | 31       |
+| Phase 5  | Frontend UI + E2E/Smoke                        | 37       |
+| **合計** |                                                | **323**  |
 
 ## 次のステップ
 
@@ -206,5 +209,5 @@ const { progress, isConnected } = useRunProgress(runId);
 
 ---
 
-*Updated: 2025-12-16*
-*All Phases Completed - 323 Tests Passing*
+_Updated: 2025-12-16_
+_All Phases Completed - 323 Tests Passing_

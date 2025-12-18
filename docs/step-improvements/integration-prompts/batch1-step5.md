@@ -11,6 +11,7 @@
 ### フォールバック禁止違反（Line 92-98）
 
 **現状コード**:
+
 ```python
 except Exception:
     # Fall back to basic queries if parsing fails  ← 禁止違反
@@ -22,6 +23,7 @@ except Exception:
 ```
 
 **修正後**:
+
 ```python
 from apps.worker.helpers import OutputParser, ParseResult
 from apps.worker.helpers.schemas import QualityResult

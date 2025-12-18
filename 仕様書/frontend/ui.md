@@ -9,12 +9,12 @@
 
 ### 1. Runs一覧
 
-| 項目 | 内容 |
-|------|------|
-| 状態 | pending / running / waiting_approval / completed / failed |
-| 最終更新 | timestamp |
-| 要約 | 入力キーワード、現在工程 |
-| 設定サマリ | 選択モデル、オプション |
+| 項目       | 内容                                                      |
+| ---------- | --------------------------------------------------------- |
+| 状態       | pending / running / waiting_approval / completed / failed |
+| 最終更新   | timestamp                                                 |
+| 要約       | 入力キーワード、現在工程                                  |
+| 設定サマリ | 選択モデル、オプション                                    |
 
 ### 2. Run作成
 

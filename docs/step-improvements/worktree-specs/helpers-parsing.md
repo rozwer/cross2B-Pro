@@ -127,7 +127,7 @@ class StepOutputBase(BaseModel):
 
 ### 2.1 クラス定義
 
-```python
+````python
 class OutputParser:
     """LLM出力のパーサー"""
 
@@ -191,7 +191,7 @@ class OutputParser:
         - { で始まり } で終わる
         - [ で始まり ] で終わる
         """
-```
+````
 
 ### 2.2 使用例
 
@@ -220,7 +220,7 @@ else:
 
 ### test_output_parser.py
 
-```python
+````python
 import pytest
 from apps.worker.helpers import OutputParser, ParseResult
 
@@ -346,7 +346,7 @@ class TestLooksLikeJson:
         parser = OutputParser()
         assert parser.looks_like_json("plain text") is False
         assert parser.looks_like_json("# Markdown") is False
-```
+````
 
 ### test_schemas.py
 
@@ -501,9 +501,11 @@ if "trailing_comma_removed" in fixes_applied:
 ## 依存関係
 
 ### このworktreeが依存するもの
+
 - なし（最初に実装）
 
 ### このworktreeに依存するもの
+
 - `helpers-validation` (QualityResult, InputValidationResult を使用)
 - `helpers-metrics` (TextMetrics, MarkdownMetrics, CheckpointMetadata を使用)
 - 全ステップ (ParseResult, OutputParser を使用)

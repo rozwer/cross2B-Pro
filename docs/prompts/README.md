@@ -32,17 +32,17 @@ Phase 5 (Phase 4完了後):
 
 ## ファイル一覧
 
-| ファイル | 説明 | Phase |
-|---------|------|-------|
-| [00_common.md](./00_common.md) | 全セッション共通の前提・ルール | - |
-| [01_gemini.md](./01_gemini.md) | Gemini クライアント | 1 |
-| [02_openai.md](./02_openai.md) | OpenAI クライアント | 1 |
-| [03_anthropic.md](./03_anthropic.md) | Anthropic クライアント | 1 |
-| [04_tools.md](./04_tools.md) | Tools (SERP/Fetch/Verify) | 2 |
-| [05_validation.md](./05_validation.md) | Validation (JSON/CSV) | 2 |
-| [06_contract.md](./06_contract.md) | Contract + Store基盤 | 3 |
-| [07_langgraph.md](./07_langgraph.md) | LangGraph + Temporal | 4 |
-| [08_frontend.md](./08_frontend.md) | Frontend UI | 5 |
+| ファイル                               | 説明                           | Phase |
+| -------------------------------------- | ------------------------------ | ----- |
+| [00_common.md](./00_common.md)         | 全セッション共通の前提・ルール | -     |
+| [01_gemini.md](./01_gemini.md)         | Gemini クライアント            | 1     |
+| [02_openai.md](./02_openai.md)         | OpenAI クライアント            | 1     |
+| [03_anthropic.md](./03_anthropic.md)   | Anthropic クライアント         | 1     |
+| [04_tools.md](./04_tools.md)           | Tools (SERP/Fetch/Verify)      | 2     |
+| [05_validation.md](./05_validation.md) | Validation (JSON/CSV)          | 2     |
+| [06_contract.md](./06_contract.md)     | Contract + Store基盤           | 3     |
+| [07_langgraph.md](./07_langgraph.md)   | LangGraph + Temporal           | 4     |
+| [08_frontend.md](./08_frontend.md)     | Frontend UI                    | 5     |
 
 ## 注意事項
 

@@ -1,6 +1,7 @@
 # 並列開発ガイド
 
 > **参考**: awakia氏「Gitで並列開発が楽になるブランチモデル」を本プロジェクト用にカスタマイズ
+>
 > - git worktree による物理的分離
 > - サブエージェント（Claude/Codex）による同時実装
 > - フォールバック禁止原則との整合性
@@ -25,13 +26,13 @@ main (master)
 
 ### ブランチ命名規則
 
-| プレフィックス | 用途 | 例 |
-|--------------|------|-----|
-| `feat/` | 新機能開発 | `feat/llm-gemini`, `feat/step4-contract` |
-| `fix/` | バグ修正 | `fix/json-validator-edge-case` |
-| `refactor/` | リファクタリング | `refactor/artifact-store` |
-| `docs/` | ドキュメント | `docs/api-specification` |
-| `hotfix/` | 緊急修正（mainから分岐） | `hotfix/security-patch` |
+| プレフィックス | 用途                     | 例                                       |
+| -------------- | ------------------------ | ---------------------------------------- |
+| `feat/`        | 新機能開発               | `feat/llm-gemini`, `feat/step4-contract` |
+| `fix/`         | バグ修正                 | `fix/json-validator-edge-case`           |
+| `refactor/`    | リファクタリング         | `refactor/artifact-store`                |
+| `docs/`        | ドキュメント             | `docs/api-specification`                 |
+| `hotfix/`      | 緊急修正（mainから分岐） | `hotfix/security-patch`                  |
 
 ### ブランチのライフサイクル
 
@@ -49,11 +50,11 @@ main (master)
 
 ### なぜ Worktree を使うか
 
-| 課題 | 解決策 |
-|------|--------|
-| 複数AIエージェントが同時編集で衝突 | worktree で物理的にディレクトリ分離 |
-| ブランチ切替のオーバーヘッド | worktree なら切替不要（並列で開ける） |
-| 依存関係の分離 | 各 worktree で独立した venv/node_modules |
+| 課題                               | 解決策                                   |
+| ---------------------------------- | ---------------------------------------- |
+| 複数AIエージェントが同時編集で衝突 | worktree で物理的にディレクトリ分離      |
+| ブランチ切替のオーバーヘッド       | worktree なら切替不要（並列で開ける）    |
+| 依存関係の分離                     | 各 worktree で独立した venv/node_modules |
 
 ### ディレクトリ構造
 
@@ -130,10 +131,10 @@ for topic in llm-gemini llm-openai llm-anthropic; do
 done
 ```
 
-| Worktree | 担当 | 成果物 |
-|----------|------|--------|
-| `.worktrees/llm-gemini/` | Gemini クライアント | `apps/api/llm/gemini.py` |
-| `.worktrees/llm-openai/` | OpenAI クライアント | `apps/api/llm/openai.py` |
+| Worktree                    | 担当                   | 成果物                      |
+| --------------------------- | ---------------------- | --------------------------- |
+| `.worktrees/llm-gemini/`    | Gemini クライアント    | `apps/api/llm/gemini.py`    |
+| `.worktrees/llm-openai/`    | OpenAI クライアント    | `apps/api/llm/openai.py`    |
 | `.worktrees/llm-anthropic/` | Anthropic クライアント | `apps/api/llm/anthropic.py` |
 
 **衝突回避**: 各クライアントは独立したファイル。共通インターフェース（`base.py`）は先に develop で確定。
@@ -146,12 +147,12 @@ for topic in tools-search tools-fetch tools-verify tools-registry; do
 done
 ```
 
-| Worktree | 担当 | 成果物 |
-|----------|------|--------|
-| `.worktrees/tools-search/` | SERP, Search Volume | `apps/api/tools/search.py` |
-| `.worktrees/tools-fetch/` | Page Fetch, PDF Extract | `apps/api/tools/fetch.py` |
-| `.worktrees/tools-verify/` | URL Verify, Evidence | `apps/api/tools/verify.py` |
-| `.worktrees/tools-registry/` | Tool Manifest | `apps/api/tools/registry.py` |
+| Worktree                     | 担当                    | 成果物                       |
+| ---------------------------- | ----------------------- | ---------------------------- |
+| `.worktrees/tools-search/`   | SERP, Search Volume     | `apps/api/tools/search.py`   |
+| `.worktrees/tools-fetch/`    | Page Fetch, PDF Extract | `apps/api/tools/fetch.py`    |
+| `.worktrees/tools-verify/`   | URL Verify, Evidence    | `apps/api/tools/verify.py`   |
+| `.worktrees/tools-registry/` | Tool Manifest           | `apps/api/tools/registry.py` |
 
 ### Step 4: 契約基盤（3並列）
 
@@ -225,11 +226,11 @@ git push --force-with-lease
 
 ### Codex（レビュー・調査）
 
-| 役割 | 呼び出しタイミング |
-|------|-------------------|
-| コードレビュー | PR作成前 |
-| 設計レビュー | 新規機能設計時 |
-| セキュリティレビュー | 認証・入力処理時 |
+| 役割                 | 呼び出しタイミング |
+| -------------------- | ------------------ |
+| コードレビュー       | PR作成前           |
+| 設計レビュー         | 新規機能設計時     |
+| セキュリティレビュー | 認証・入力処理時   |
 
 ---
 
@@ -265,6 +266,7 @@ fatal: 'feat/xxx' is already checked out at '...'
 ```
 
 **解決**:
+
 ```bash
 git worktree list  # どこで使われているか確認
 git worktree remove ".worktrees/xxx"  # 削除

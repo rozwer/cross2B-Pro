@@ -8,9 +8,9 @@ SEO記事自動生成システムの Phase 3（契約基盤 + 成果物ストア
 
 ### PR履歴
 
-| PR | タイトル | 状態 |
-|----|---------|------|
-| #8 | feat(core): 契約基盤 + Store + 観測 + DB + Prompt Pack | Merged |
+| PR  | タイトル                                               | 状態   |
+| --- | ------------------------------------------------------ | ------ |
+| #8  | feat(core): 契約基盤 + Store + 観測 + DB + Prompt Pack | Merged |
 
 ### 実装ファイル
 
@@ -46,12 +46,14 @@ apps/api/db/
 ```
 
 **共通管理DB:**
+
 - `tenants`: テナント情報
 - `llm_providers`: LLMプロバイダ設定
 - `llm_models`: モデル情報
 - `step_llm_defaults`: 工程別デフォルト設定
 
 **顧客別DB:**
+
 - `runs`: 実行履歴
 - `steps`: 工程ステップ
 - `artifacts`: 成果物メタデータ
@@ -175,4 +177,4 @@ Phase 4: LangGraph + Temporal 実装
 
 ---
 
-*Updated: 2025-12-16*
+_Updated: 2025-12-16_

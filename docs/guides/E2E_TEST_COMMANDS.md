@@ -18,6 +18,7 @@ curl -s -X POST http://localhost:8000/api/runs \
 ```
 
 **レスポンス例:**
+
 ```json
 {
   "id": "618923ad-c915-4415-9f25-6857ac69dd7d",
@@ -157,24 +158,24 @@ lsof -i :5432  # PostgreSQL
 
 ## 6. ワークフロー全ステップ一覧
 
-| ステップ | 説明 | 依存 |
-|---------|------|------|
-| step0 | キーワード選定 | - |
-| step1 | 競合記事取得 | step0 |
-| step2 | CSV検証 | step1 |
-| step3a | クエリ分析 | step0, step1 |
-| step3b | 共起語分析 | step1 |
-| step3c | 競合分析 | step1 |
-| **承認待ち** | Human-in-the-loop | step3完了 |
-| step4 | 戦略的アウトライン | step3a/b/c |
-| step5 | 一次情報収集 | step4 |
-| step6 | 強化アウトライン | step5 |
-| step6_5 | 統合パッケージ | step6 |
-| step7a | ドラフト生成 | step6_5 |
-| step7b | ブラッシュアップ | step7a |
-| step8 | ファクトチェック | step7b |
-| step9 | 最終リライト | step8 |
-| step10 | 最終出力（HTML） | step9 |
+| ステップ     | 説明               | 依存         |
+| ------------ | ------------------ | ------------ |
+| step0        | キーワード選定     | -            |
+| step1        | 競合記事取得       | step0        |
+| step2        | CSV検証            | step1        |
+| step3a       | クエリ分析         | step0, step1 |
+| step3b       | 共起語分析         | step1        |
+| step3c       | 競合分析           | step1        |
+| **承認待ち** | Human-in-the-loop  | step3完了    |
+| step4        | 戦略的アウトライン | step3a/b/c   |
+| step5        | 一次情報収集       | step4        |
+| step6        | 強化アウトライン   | step5        |
+| step6_5      | 統合パッケージ     | step6        |
+| step7a       | ドラフト生成       | step6_5      |
+| step7b       | ブラッシュアップ   | step7a       |
+| step8        | ファクトチェック   | step7b       |
+| step9        | 最終リライト       | step8        |
+| step10       | 最終出力（HTML）   | step9        |
 
 ## 7. トラブルシューティング
 

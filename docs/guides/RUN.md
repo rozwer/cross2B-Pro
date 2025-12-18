@@ -6,13 +6,13 @@
 
 以下がインストールされていること:
 
-| 項目 | 最小バージョン | 確認コマンド |
-|------|---------------|-------------|
-| Docker | 24.0+ | `docker --version` |
-| Docker Compose | 2.20+ | `docker compose version` |
-| Python | 3.11+ | `python3 --version` |
-| Node.js | 20+ | `node --version` |
-| uv | 0.4+ | `uv --version` |
+| 項目           | 最小バージョン | 確認コマンド             |
+| -------------- | -------------- | ------------------------ |
+| Docker         | 24.0+          | `docker --version`       |
+| Docker Compose | 2.20+          | `docker compose version` |
+| Python         | 3.11+          | `python3 --version`      |
+| Node.js        | 20+            | `node --version`         |
+| uv             | 0.4+           | `uv --version`           |
 
 ```bash
 # 環境一括チェック
@@ -77,16 +77,16 @@ uv run langgraph dev
 
 **起動後のアクセス先:**
 
-| サービス | URL | 説明 |
-|----------|-----|------|
+| サービス         | URL                   | 説明                 |
+| ---------------- | --------------------- | -------------------- |
 | LangGraph Studio | http://localhost:8123 | グラフ可視化・実行UI |
 
 #### 2.3 利用可能なグラフ
 
-| グラフ名 | 説明 | 工程 |
-|----------|------|------|
-| `pre_approval` | 承認前フロー | step0 → step1 → step2 → step3(並列) |
-| `post_approval` | 承認後フロー | step4 → step5 → ... → step10 |
+| グラフ名        | 説明         | 工程                                |
+| --------------- | ------------ | ----------------------------------- |
+| `pre_approval`  | 承認前フロー | step0 → step1 → step2 → step3(並列) |
+| `post_approval` | 承認後フロー | step4 → step5 → ... → step10        |
 
 #### 2.4 LangGraph Studio の使い方
 
@@ -154,13 +154,13 @@ npm run dev
 
 **起動後のアクセス先:**
 
-| サービス | URL | 説明 |
-|----------|-----|------|
-| UI | http://localhost:3000 | フロントエンド |
-| API | http://localhost:8000 | バックエンドAPI |
-| API Docs | http://localhost:8000/docs | Swagger UI |
-| Temporal UI | http://localhost:8080 | ワークフロー管理 |
-| MinIO Console | http://localhost:9001 | ストレージ管理 |
+| サービス      | URL                        | 説明             |
+| ------------- | -------------------------- | ---------------- |
+| UI            | http://localhost:3000      | フロントエンド   |
+| API           | http://localhost:8000      | バックエンドAPI  |
+| API Docs      | http://localhost:8000/docs | Swagger UI       |
+| Temporal UI   | http://localhost:8080      | ワークフロー管理 |
+| MinIO Console | http://localhost:9001      | ストレージ管理   |
 
 ---
 
@@ -428,13 +428,13 @@ uv run ruff check apps/ --fix                  # 自動修正
 
 ### スラッシュコマンド（Claude Code）
 
-| コマンド | 説明 |
-|----------|------|
-| `/dev:up` | ローカル環境起動 |
-| `/dev:down` | ローカル環境停止 |
-| `/dev:smoke` | smoke テスト実行 |
-| `/workflow:new-run` | 新規ワークフロー開始 |
-| `/workflow:approve-run` | ワークフロー承認 |
+| コマンド                | 説明                 |
+| ----------------------- | -------------------- |
+| `/dev:up`               | ローカル環境起動     |
+| `/dev:down`             | ローカル環境停止     |
+| `/dev:smoke`            | smoke テスト実行     |
+| `/workflow:new-run`     | 新規ワークフロー開始 |
+| `/workflow:approve-run` | ワークフロー承認     |
 
 ---
 

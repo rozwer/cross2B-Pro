@@ -4,25 +4,25 @@
 
 ### Run 操作
 
-| メソッド | パス | 用途 |
-|----------|------|------|
-| POST | `/api/runs` | ワークフロー開始 |
-| GET | `/api/runs/{id}` | 状態取得 |
-| POST | `/api/runs/{id}/approve` | 承認 |
-| POST | `/api/runs/{id}/reject` | 却下 |
-| POST | `/api/runs/{id}/retry/{step}` | 工程再実行 |
-| POST | `/api/runs/{id}/resume/{step}` | 特定工程から再開（部分再実行） |
-| DELETE | `/api/runs/{id}` | キャンセル |
-| GET | `/api/runs/{id}/files` | 生成物一覧 |
-| GET | `/api/runs/{id}/files/{step}` | 工程別出力取得 |
-| GET | `/api/runs/{id}/preview` | HTMLプレビュー |
+| メソッド | パス                           | 用途                           |
+| -------- | ------------------------------ | ------------------------------ |
+| POST     | `/api/runs`                    | ワークフロー開始               |
+| GET      | `/api/runs/{id}`               | 状態取得                       |
+| POST     | `/api/runs/{id}/approve`       | 承認                           |
+| POST     | `/api/runs/{id}/reject`        | 却下                           |
+| POST     | `/api/runs/{id}/retry/{step}`  | 工程再実行                     |
+| POST     | `/api/runs/{id}/resume/{step}` | 特定工程から再開（部分再実行） |
+| DELETE   | `/api/runs/{id}`               | キャンセル                     |
+| GET      | `/api/runs/{id}/files`         | 生成物一覧                     |
+| GET      | `/api/runs/{id}/files/{step}`  | 工程別出力取得                 |
+| GET      | `/api/runs/{id}/preview`       | HTMLプレビュー                 |
 
 ### ヘルスチェック
 
-| メソッド | パス | 用途 |
-|----------|------|------|
-| GET | `/health` | 基本的な生存確認 |
-| GET | `/health/detailed` | 依存サービスの状態詳細 |
+| メソッド | パス               | 用途                   |
+| -------- | ------------------ | ---------------------- |
+| GET      | `/health`          | 基本的な生存確認       |
+| GET      | `/health/detailed` | 依存サービスの状態詳細 |
 
 #### `/health` レスポンス
 
@@ -59,15 +59,15 @@
 
 ### コスト集計
 
-| メソッド | パス | 用途 |
-|----------|------|------|
-| GET | `/api/runs/{id}/cost` | run 単位のコスト |
-| GET | `/api/costs/summary` | テナント単位のコスト集計 |
+| メソッド | パス                  | 用途                     |
+| -------- | --------------------- | ------------------------ |
+| GET      | `/api/runs/{id}/cost` | run 単位のコスト         |
+| GET      | `/api/costs/summary`  | テナント単位のコスト集計 |
 
 ### WebSocket
 
-| パス | 用途 |
-|------|------|
+| パス            | 用途           |
+| --------------- | -------------- |
 | `/ws/runs/{id}` | 進捗ストリーム |
 
 ## 認証・認可
@@ -77,11 +77,11 @@
 
 ### ロール
 
-| ロール | 説明 |
-|--------|------|
-| admin | 全操作可能 |
+| ロール   | 説明                     |
+| -------- | ------------------------ |
+| admin    | 全操作可能               |
 | operator | 実行・承認・リトライ可能 |
-| viewer | 閲覧・DLのみ |
+| viewer   | 閲覧・DLのみ             |
 
 ---
 
@@ -89,19 +89,19 @@
 
 ### テナント単位の制限
 
-| 項目 | デフォルト値 | 説明 |
-|------|-------------|------|
-| API リクエスト | 100 req/min | 全エンドポイント合計 |
-| 同時実行 run 数 | 3 | running 状態の run |
-| 1日の run 作成数 | 50 | 暴走防止 |
+| 項目             | デフォルト値 | 説明                 |
+| ---------------- | ------------ | -------------------- |
+| API リクエスト   | 100 req/min  | 全エンドポイント合計 |
+| 同時実行 run 数  | 3            | running 状態の run   |
+| 1日の run 作成数 | 50           | 暴走防止             |
 
 ### LLM API スロットリング
 
-| 項目 | デフォルト値 | 説明 |
-|------|-------------|------|
-| Gemini | 60 req/min | プロバイダ側の制限に準拠 |
-| Claude | 40 req/min | プロバイダ側の制限に準拠 |
-| OpenAI | 60 req/min | プロバイダ側の制限に準拠 |
+| 項目   | デフォルト値 | 説明                     |
+| ------ | ------------ | ------------------------ |
+| Gemini | 60 req/min   | プロバイダ側の制限に準拠 |
+| Claude | 40 req/min   | プロバイダ側の制限に準拠 |
+| OpenAI | 60 req/min   | プロバイダ側の制限に準拠 |
 
 ### レスポンス
 
@@ -118,9 +118,11 @@
 ## 監査ログ
 
 必須アクション：
+
 - start / approve / reject / retry / cancel / download / delete
 
 必須フィールド：
+
 - `actor`, `tenant_id`, `run_id`, `step`, `timestamp`
 
 ---
@@ -131,20 +133,20 @@
 
 ### 必須ツール
 
-| tool_id | 機能 |
-|---------|------|
-| `serp_fetch` | SERP取得（上位N件URL） |
-| `page_fetch` | ページ取得 + 本文抽出 |
-| `primary_collector` | 一次情報収集器 |
-| `url_verify` | URL実在確認 |
-| `pdf_extract` | PDFテキスト抽出 |
+| tool_id             | 機能                   |
+| ------------------- | ---------------------- |
+| `serp_fetch`        | SERP取得（上位N件URL） |
+| `page_fetch`        | ページ取得 + 本文抽出  |
+| `primary_collector` | 一次情報収集器         |
+| `url_verify`        | URL実在確認            |
+| `pdf_extract`       | PDFテキスト抽出        |
 
 ### 拡張ツール
 
-| tool_id | 機能 |
-|---------|------|
-| `search_volume` | 検索ボリューム取得 |
-| `related_keywords` | 関連語取得 |
+| tool_id            | 機能               |
+| ------------------ | ------------------ |
+| `search_volume`    | 検索ボリューム取得 |
+| `related_keywords` | 関連語取得         |
 
 ### 共通設計
 

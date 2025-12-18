@@ -6,31 +6,33 @@
 
 15のステップ改善ドキュメントを分析した結果、以下の**7つの共通ヘルパー**を特定しました。
 
-| ヘルパー | 説明 | 対象ステップ |
-|---------|------|-------------|
-| `OutputParser` | JSON/Markdown パース・整形 | 全ステップ |
-| `InputValidator` | 入力データ品質チェック | Step3-10 |
-| `QualityValidator` | 出力品質検証 | 全ステップ |
-| `ContentMetrics` | コンテンツメトリクス計算 | Step2,3b,7a-10 |
-| `CheckpointManager` | チェックポイント管理 | 全ステップ |
-| `QualityRetryLoop` | 品質ループ制御 | Step0,3a-c,4,7a,10 |
-| Shared Schemas | 共通Pydanticモデル | 全ステップ |
+| ヘルパー            | 説明                       | 対象ステップ       |
+| ------------------- | -------------------------- | ------------------ |
+| `OutputParser`      | JSON/Markdown パース・整形 | 全ステップ         |
+| `InputValidator`    | 入力データ品質チェック     | Step3-10           |
+| `QualityValidator`  | 出力品質検証               | 全ステップ         |
+| `ContentMetrics`    | コンテンツメトリクス計算   | Step2,3b,7a-10     |
+| `CheckpointManager` | チェックポイント管理       | 全ステップ         |
+| `QualityRetryLoop`  | 品質ループ制御             | Step0,3a-c,4,7a,10 |
+| Shared Schemas      | 共通Pydanticモデル         | 全ステップ         |
 
 ---
 
 ## 1. OutputParser
 
 ### 目的
+
 LLM出力のJSON/Markdownパースを堅牢化する。
 
 ### 背景
+
 - 全ステップでJSONコードブロック除去が必要
 - 長文生成（Step6.5, 7a, 8）でJSON形式が崩れやすい
 - 決定的な修正（末尾カンマ除去等）は許容
 
 ### インターフェース
 
-```python
+````python
 # apps/worker/helpers/output_parser.py
 
 from typing import Any
@@ -159,7 +161,7 @@ class OutputParser:
             (stripped.startswith("{") and stripped.endswith("}")) or
             (stripped.startswith("[") and stripped.endswith("]"))
         )
-```
+````
 
 ### 使用例
 
@@ -188,9 +190,11 @@ else:
 ## 2. InputValidator
 
 ### 目的
+
 前ステップのデータ品質を検証し、早期にエラーを検出する。
 
 ### 背景
+
 - Step4以降で前ステップデータの欠落が問題
 - 必須 vs 推奨の区別が必要
 - 最低件数/最低文字数のチェックが共通
@@ -306,9 +310,11 @@ if result.missing_recommended:
 ## 3. QualityValidator
 
 ### 目的
+
 LLM出力の品質を統一的に検証する。
 
 ### 背景
+
 - 各ステップで「必須要素の存在チェック」が必要
 - 出力の完全性（切れていないか）チェックが必要
 - 構造的な品質（セクション数、見出し階層等）チェックが必要
@@ -508,16 +514,18 @@ if not result.is_acceptable:
 ## 4. ContentMetrics
 
 ### 目的
+
 コンテンツのメトリクスを統一的に計算する。
 
 ### 背景
+
 - 日本語対応の単語数カウントが必要
 - セクション数、見出し階層のカウントが共通
 - キーワード密度計算が複数ステップで必要
 
 ### インターフェース
 
-```python
+````python
 # apps/worker/helpers/content_metrics.py
 
 from pydantic import BaseModel
@@ -631,7 +639,7 @@ class ContentMetrics:
             "h2_diff": mod_md.h2_count - orig_md.h2_count,
             "h3_diff": mod_md.h3_count - orig_md.h3_count,
         }
-```
+````
 
 ### 使用例
 
@@ -664,9 +672,11 @@ if comparison["word_ratio"] < 0.7:
 ## 5. CheckpointManager
 
 ### 目的
+
 Activity内のチェックポイントを統一的に管理する。
 
 ### 背景
+
 - 複数ステップでチェックポイント保存/ロードが必要
 - storage APIの呼び出しパターンが共通
 - 失敗時の部分結果保存が重要
@@ -809,9 +819,11 @@ else:
 ## 6. QualityRetryLoop
 
 ### 目的
+
 品質チェック付きリトライを統一的に実行する。
 
 ### 背景
+
 - 複数ステップで「LLM呼び出し → 品質チェック → 必要ならリトライ」のパターン
 - リトライ時のプロンプト補強が共通
 
@@ -969,6 +981,7 @@ else:
 ## 7. Shared Schemas
 
 ### 目的
+
 全ステップで共通して使える型定義を提供する。
 
 ```python
@@ -1062,15 +1075,15 @@ class StepOutputBase(BaseModel):
 
 ## 実装優先度
 
-| 優先度 | ヘルパー | 理由 | 工数見積 |
-|--------|---------|------|----------|
-| **最高** | `OutputParser` | 全ステップのJSONパースに必須 | 2h |
-| **最高** | `InputValidator` | 入力品質保証の基盤 | 2h |
-| **最高** | Shared Schemas | 型定義の統一 | 1h |
-| **高** | `QualityValidator` | 出力品質検証の統一 | 3h |
-| **高** | `ContentMetrics` | メトリクス計算の統一 | 2h |
-| **中** | `CheckpointManager` | 再実行効率化 | 2h |
-| **中** | `QualityRetryLoop` | 品質ループの統一 | 2h |
+| 優先度   | ヘルパー            | 理由                         | 工数見積 |
+| -------- | ------------------- | ---------------------------- | -------- |
+| **最高** | `OutputParser`      | 全ステップのJSONパースに必須 | 2h       |
+| **最高** | `InputValidator`    | 入力品質保証の基盤           | 2h       |
+| **最高** | Shared Schemas      | 型定義の統一                 | 1h       |
+| **高**   | `QualityValidator`  | 出力品質検証の統一           | 3h       |
+| **高**   | `ContentMetrics`    | メトリクス計算の統一         | 2h       |
+| **中**   | `CheckpointManager` | 再実行効率化                 | 2h       |
+| **中**   | `QualityRetryLoop`  | 品質ループの統一             | 2h       |
 
 **合計工数見積: 14h**
 

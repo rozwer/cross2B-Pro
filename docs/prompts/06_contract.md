@@ -219,6 +219,7 @@ class ArtifactStore:
 ### models.py
 
 仕様書/backend/database.md に従って実装:
+
 - 共通管理DB: tenants, llm_providers, llm_models, step_llm_defaults
 - 顧客別DB: runs, steps, artifacts, audit_logs, prompts
 
