@@ -84,7 +84,7 @@ class GeminiClient(LLMInterface):
         api_key: str | None = None,
         model: str | None = None,
         gemini_config: GeminiConfig | None = None,
-        timeout: float = 120.0,
+        timeout: float = 420.0,
     ) -> None:
         """初期化
 

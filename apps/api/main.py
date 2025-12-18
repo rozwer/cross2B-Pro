@@ -14,7 +14,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +41,7 @@ from apps.api.db import (
     Step,
     Artifact as ArtifactModel,
     AuditLog,
+    Prompt as PromptModel,
     TenantDBManager,
     TenantIdValidationError,
 )
@@ -50,6 +51,7 @@ from apps.api.storage import (
     ArtifactNotFoundError,
     ArtifactStoreError,
 )
+from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
 
 # Temporal client for workflow management
 from temporalio.client import Client as TemporalClient
@@ -190,13 +192,21 @@ class RepairLog(BaseModel):
     description: str
 
 
+class StepAttemptStatus(str, Enum):
+    """Step attempt status values."""
+
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class StepAttempt(BaseModel):
     """Step attempt record."""
 
     id: str
     step_id: str
     attempt_num: int
-    status: str  # running, succeeded, failed
+    status: StepAttemptStatus
     started_at: str
     completed_at: str | None = None
     error: StepError | None = None
@@ -265,6 +275,16 @@ class StepResponse(BaseModel):
     validation_report: ValidationReport | None = None
 
 
+class StepUpdateRequest(BaseModel):
+    """Request to update step status (internal API)."""
+
+    run_id: str
+    step_name: str
+    status: Literal["running", "completed", "failed"]
+    error_message: str | None = None
+    retry_count: int = 0
+
+
 class RunError(BaseModel):
     """Run error information."""
 
@@ -318,6 +338,59 @@ class EventResponse(BaseModel):
     event_type: str
     payload: dict[str, Any]
     created_at: str
+
+
+# =============================================================================
+# Prompt Pydantic Models
+# =============================================================================
+
+
+class PromptVariableInfo(BaseModel):
+    """Prompt variable information."""
+
+    required: bool = True
+    type: str = "string"
+    description: str = ""
+    default: str | None = None
+
+
+class PromptResponse(BaseModel):
+    """Prompt response model."""
+
+    id: int
+    step: str
+    version: int
+    content: str
+    variables: dict[str, PromptVariableInfo] | None = None
+    is_active: bool
+    created_at: str | None = None
+
+
+class PromptListResponse(BaseModel):
+    """Prompt list response model."""
+
+    prompts: list[PromptResponse]
+    total: int
+
+
+class CreatePromptInput(BaseModel):
+    """Request to create a new prompt."""
+
+    step: str = Field(..., description="Step identifier (e.g., step0, step1, step3a)")
+    content: str = Field(..., description="Prompt content text")
+    variables: dict[str, PromptVariableInfo] | None = Field(
+        None, description="Variable definitions for template rendering"
+    )
+
+
+class UpdatePromptInput(BaseModel):
+    """Request to update an existing prompt."""
+
+    content: str | None = Field(None, description="Updated prompt content")
+    variables: dict[str, PromptVariableInfo] | None = Field(
+        None, description="Updated variable definitions"
+    )
+    is_active: bool | None = Field(None, description="Active status")
 
 
 # =============================================================================
@@ -451,8 +524,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    allow_methods=["*"],
+    allow_headers=["*"],
     max_age=3600,
 )
 
@@ -670,7 +743,7 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
                 StepResponse(
                     id=str(step_orm.id),
                     run_id=str(step_orm.run_id),
-                    step_name=step_orm.step,
+                    step_name=step_orm.step_name,  # DB column is step_name
                     status=StepStatus(step_orm.status),
                     attempts=[],
                     started_at=step_orm.started_at.isoformat() if step_orm.started_at else None,
@@ -710,6 +783,7 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
 
     When DB doesn't have step records, we infer step status from storage.
     If a step has output.json in storage, it's considered completed.
+    Also builds artifact refs for each step.
     """
     store = get_artifact_store()
     if store is None:
@@ -721,20 +795,57 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
         logger.warning(f"Failed to list artifacts for steps: {e}")
         return []
 
-    # Extract step names from paths like: storage/tenant/run/step0/output.json
+    # Extract step names and artifacts from paths like: storage/tenant/run/step0/output.json
     completed_steps: set[str] = set()
+    step_artifacts: dict[str, list[str]] = {}  # step_name -> list of artifact paths
+
     for path in artifact_paths:
         parts = path.split("/")
-        if len(parts) >= 4 and parts[-1] == "output.json":
+        if len(parts) >= 4:
             step_name = parts[-2]
-            completed_steps.add(step_name)
+            # Track artifacts per step
+            if step_name not in step_artifacts:
+                step_artifacts[step_name] = []
+            step_artifacts[step_name].append(path)
+            # Mark step as completed if it has output.json
+            if parts[-1] == "output.json":
+                completed_steps.add(step_name)
 
     # Define all workflow steps in order
+    # Note: step6_5 in storage corresponds to step6.5 in UI
+    # step-1 is the input step (always completed when workflow starts)
+    # step3 is a parent step whose status is derived from step3a/b/c
     all_steps = [
-        "step0", "step1", "step2", "step3a", "step3b", "step3c",
+        "step-1", "step0", "step1", "step2", "step3", "step3a", "step3b", "step3c",
         "step4", "step5", "step6", "step6_5", "step7a", "step7b",
         "step8", "step9", "step10"
     ]
+
+    # Steps that are always completed once workflow starts (no artifact needed)
+    always_completed_steps = {"step-1", "step0"}
+
+    # Define parent steps with their children (parent status derived from children)
+    parent_child_groups = {
+        "step3": ["step3a", "step3b", "step3c"],
+    }
+
+    # Define parallel step groups (these steps run in parallel, not sequentially)
+    parallel_groups = {
+        "step3a": {"step3a", "step3b", "step3c"},
+        "step3b": {"step3a", "step3b", "step3c"},
+        "step3c": {"step3a", "step3b", "step3c"},
+        "step7a": {"step7a", "step7b"},
+        "step7b": {"step7a", "step7b"},
+    }
+
+    # Define steps after each parallel group (used for inference)
+    steps_after_parallel = {
+        "step3a": "step4",
+        "step3b": "step4",
+        "step3c": "step4",
+        "step7a": "step8",
+        "step7b": "step8",
+    }
 
     step_responses: list[StepResponse] = []
     for i, step_name in enumerate(all_steps):
@@ -748,15 +859,72 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
             status = StepStatus.RUNNING
         elif current_step and current_step == display_name:
             status = StepStatus.RUNNING
-        else:
-            # Check if any later step is completed (means this one was skipped or completed)
-            later_completed = any(
-                s in completed_steps for s in all_steps[i+1:]
-            )
-            if later_completed:
+        # Special handling for input steps: always completed once workflow starts
+        elif step_name in always_completed_steps:
+            status = StepStatus.COMPLETED
+        # Special handling for parent steps (step3): derive from children
+        elif step_name in parent_child_groups:
+            children = parent_child_groups[step_name]
+            # Parent is completed when ALL children are completed
+            all_children_completed = all(child in completed_steps for child in children)
+            if all_children_completed:
                 status = StepStatus.COMPLETED
+            # Parent is running if any child is running
+            elif current_step in children:
+                status = StepStatus.RUNNING
             else:
                 status = StepStatus.PENDING
+        else:
+            # Special handling for parallel steps (step3a/b/c, step7a/b)
+            if step_name in parallel_groups:
+                # If the step after this parallel group is completed or running,
+                # this parallel step must be completed
+                next_step = steps_after_parallel[step_name]
+                next_step_idx = all_steps.index(next_step) if next_step in all_steps else -1
+                if next_step_idx >= 0:
+                    # Check if next step or any step after is completed/running
+                    later_completed = any(
+                        s in completed_steps for s in all_steps[next_step_idx:]
+                    )
+                    later_running = current_step in all_steps[next_step_idx:] if current_step else False
+                    if later_completed or later_running:
+                        status = StepStatus.COMPLETED
+                    else:
+                        status = StepStatus.PENDING
+                else:
+                    status = StepStatus.PENDING
+            else:
+                # Check if any later step is completed (means this one was skipped or completed)
+                later_completed = any(
+                    s in completed_steps for s in all_steps[i+1:]
+                )
+                if later_completed:
+                    status = StepStatus.COMPLETED
+                else:
+                    status = StepStatus.PENDING
+
+        # Build artifact refs for this step
+        artifacts: list[ArtifactRef] = []
+        paths = step_artifacts.get(step_name, [])
+        for idx, artifact_path in enumerate(paths):
+            # Extract filename for content type inference
+            filename = artifact_path.split("/")[-1] if "/" in artifact_path else artifact_path
+            content_type = "application/json" if filename.endswith(".json") else \
+                          "text/html" if filename.endswith(".html") else \
+                          "text/markdown" if filename.endswith(".md") else \
+                          "application/octet-stream"
+
+            artifacts.append(
+                ArtifactRef(
+                    id=f"{run_id}-{step_name}-{idx}",
+                    step_id=f"{run_id}-{step_name}",
+                    ref_path=artifact_path,
+                    digest="",  # Unknown from path only
+                    content_type=content_type,
+                    size_bytes=0,  # Unknown from path only
+                    created_at=datetime.now().isoformat(),
+                )
+            )
 
         step_responses.append(
             StepResponse(
@@ -767,6 +935,7 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
                 attempts=[],
                 started_at=None,
                 completed_at=None,
+                artifacts=artifacts if artifacts else None,
             )
         )
 
@@ -1327,17 +1496,140 @@ async def retry_step(
     """Retry a failed step.
 
     Same conditions only - no fallback to different model/tool.
+    Sends retry signal to Temporal workflow.
     """
+    import uuid
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.info(
         "Retrying step",
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement with Temporal signal
-    # Return: { success: bool, new_attempt_id: str }
+    # Valid step names
+    VALID_STEPS = [
+        "step0", "step1", "step2", "step3a", "step3b", "step3c",
+        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
+        "step8", "step9", "step10",
+    ]
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    # Normalize step name (step6.5 -> step6_5)
+    normalized_step = step.replace(".", "_")
+    if normalized_step not in VALID_STEPS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid step: {step}. Valid steps: {', '.join(VALID_STEPS)}",
+        )
+
+    db_manager = get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Verify run is in a retryable status (failed)
+            if run.status != RunStatus.FAILED.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run must be in failed status to retry (current status: {run.status})"
+                )
+
+            # 3. Get step record (if exists) for retry count tracking
+            step_query = select(Step).where(
+                Step.run_id == run_id,
+                Step.step_name == normalized_step.replace("_", "."),
+            )
+            step_result = await session.execute(step_query)
+            step_record = step_result.scalar_one_or_none()
+
+            # Note: We allow retrying from any step when run is failed
+            # This enables "retry from this step" and "retry from previous step" functionality
+
+            # 4. Record in audit_logs
+            new_attempt_id = str(uuid.uuid4())
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="retry",
+                resource_type="step",
+                resource_id=f"{run_id}/{step}",
+                details={
+                    "new_attempt_id": new_attempt_id,
+                    "previous_status": run.status,
+                },
+            )
+
+            # 5. Start new Temporal workflow with resume_from
+            # Note: Failed workflows cannot receive signals, so we start a new workflow
+            if temporal_client is None:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Temporal client not available"
+                )
+
+            try:
+                # Load original config
+                loaded_config = dict(run.config) if run.config else {}
+
+                # Generate new workflow ID (Temporal requires unique workflow IDs)
+                new_workflow_id = f"{run_id}-retry-{new_attempt_id[:8]}"
+
+                await temporal_client.start_workflow(
+                    "ArticleWorkflow",
+                    args=[tenant_id, run_id, loaded_config, normalized_step],  # resume_from=normalized_step
+                    id=new_workflow_id,
+                    task_queue=TEMPORAL_TASK_QUEUE,
+                )
+                logger.info(
+                    "Temporal retry workflow started",
+                    extra={"run_id": run_id, "step": step, "new_workflow_id": new_workflow_id},
+                )
+            except Exception as wf_error:
+                logger.error(f"Failed to start retry workflow: {wf_error}", exc_info=True)
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Failed to start retry workflow: {wf_error}"
+                )
+
+            # 6. Update run status
+            run.status = RunStatus.RUNNING.value
+            run.updated_at = datetime.now()
+
+            # Update step status if record exists
+            if step_record:
+                step_record.status = StepStatus.RUNNING.value
+                step_record.retry_count = (step_record.retry_count or 0) + 1
+
+            await session.flush()
+            logger.info("Step retry initiated", extra={"run_id": run_id, "step": step})
+
+            # Broadcast retry event via WebSocket
+            await ws_manager.broadcast_step_event(
+                run_id=run_id,
+                step=step,
+                event_type="step_retrying",
+                status=StepStatus.RUNNING.value,
+                message=f"Retrying step {step}",
+                attempt=step_record.retry_count if step_record else 1,
+            )
+
+            return {"success": True, "new_attempt_id": new_attempt_id}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to retry step: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retry step") from e
 
 
 @app.post("/api/runs/{run_id}/resume/{step}")
@@ -1472,25 +1764,168 @@ async def resume_from_step(
         raise HTTPException(status_code=500, detail=f"Failed to resume run: {e}") from e
 
 
+class CloneRunInput(BaseModel):
+    """Request body for cloning a run with optional overrides."""
+
+    keyword: str | None = None
+    target_audience: str | None = None
+    competitor_urls: list[str] | None = None
+    additional_requirements: str | None = None
+    model_config_override: ModelConfig | None = Field(None, alias="model_config")
+    start_workflow: bool = True
+
+    class Config:
+        populate_by_name = True
+
+
 @app.post("/api/runs/{run_id}/clone", response_model=RunResponse)
 async def clone_run(
     run_id: str,
-    overrides: dict[str, Any] | None = None,
+    data: CloneRunInput | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> RunResponse:
-    """Clone an existing run with optional config overrides."""
+    """Clone an existing run with optional config overrides.
+
+    Creates a new run based on an existing run's configuration.
+    Optionally overrides specific input fields.
+    """
+    import uuid
+    from sqlalchemy import select
+
     tenant_id = user.tenant_id
     logger.info(
         "Cloning run",
         extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # TODO: Implement
-    # 1. Verify original run exists and belongs to tenant
-    # 2. Copy run config, optionally applying overrides
-    # 3. Create new run with copied config
+    db_manager = get_tenant_db_manager()
 
-    raise HTTPException(status_code=501, detail="Not implemented")
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify original run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            original_run = result.scalar_one_or_none()
+
+            if not original_run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Copy run config from original
+            original_input = original_run.input_data or {}
+            original_config = original_run.config or {}
+
+            # Build new input with optional overrides
+            new_input = {
+                "keyword": data.keyword if data and data.keyword else original_input.get("keyword", ""),
+                "target_audience": data.target_audience if data and data.target_audience else original_input.get("target_audience"),
+                "competitor_urls": data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls"),
+                "additional_requirements": data.additional_requirements if data and data.additional_requirements else original_input.get("additional_requirements"),
+            }
+
+            # Copy model config with optional override
+            if data and data.model_config_override:
+                new_model_config = data.model_config_override.model_dump()
+            else:
+                new_model_config = original_config.get("model_config", {
+                    "platform": "gemini",
+                    "model": "gemini-1.5-pro",
+                    "options": {},
+                })
+
+            # Build new workflow config
+            new_workflow_config = {
+                "model_config": new_model_config,
+                "step_configs": original_config.get("step_configs"),
+                "tool_config": original_config.get("tool_config"),
+                "options": original_config.get("options"),
+                "pack_id": original_config.get("pack_id", "default"),
+                "input": new_input,
+                # Step activities expect these at top level
+                "keyword": new_input["keyword"],
+                "target_audience": new_input.get("target_audience"),
+                "competitor_urls": new_input.get("competitor_urls"),
+                "additional_requirements": new_input.get("additional_requirements"),
+            }
+
+            # 3. Create new run
+            new_run_id = str(uuid.uuid4())
+            now = datetime.now()
+
+            new_run = Run(
+                id=new_run_id,
+                tenant_id=tenant_id,
+                status=RunStatus.PENDING.value,
+                current_step=None,
+                input_data=new_input,
+                config=new_workflow_config,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(new_run)
+
+            # 4. Log audit entry
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="clone",
+                resource_type="run",
+                resource_id=new_run_id,
+                details={
+                    "source_run_id": run_id,
+                    "keyword": new_input["keyword"],
+                    "start_workflow": data.start_workflow if data else True,
+                },
+            )
+
+            await session.flush()
+            logger.info(
+                "Run cloned",
+                extra={"new_run_id": new_run_id, "source_run_id": run_id, "tenant_id": tenant_id},
+            )
+
+            # 5. Optionally start Temporal workflow
+            start_workflow = data.start_workflow if data else True
+            if start_workflow and temporal_client is not None:
+                try:
+                    await temporal_client.start_workflow(
+                        "ArticleWorkflow",
+                        args=[tenant_id, new_run_id, new_workflow_config, None],
+                        id=new_run_id,
+                        task_queue=TEMPORAL_TASK_QUEUE,
+                    )
+
+                    new_run.status = RunStatus.RUNNING.value
+                    new_run.started_at = now
+                    new_run.updated_at = now
+
+                    logger.info(
+                        "Cloned workflow started",
+                        extra={"run_id": new_run_id, "task_queue": TEMPORAL_TASK_QUEUE},
+                    )
+
+                    await ws_manager.broadcast_run_update(
+                        run_id=new_run_id,
+                        event_type="run.started",
+                        status=RunStatus.RUNNING.value,
+                    )
+
+                except Exception as wf_error:
+                    logger.error(f"Failed to start cloned workflow: {wf_error}", exc_info=True)
+                    new_run.status = RunStatus.FAILED.value
+                    new_run.error_code = "WORKFLOW_START_FAILED"
+                    new_run.error_message = str(wf_error)
+                    new_run.updated_at = now
+
+            return _run_orm_to_response(new_run)
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to clone run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to clone run") from e
 
 
 @app.delete("/api/runs/{run_id}")
@@ -1580,6 +2015,290 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
         raise HTTPException(status_code=500, detail="Failed to cancel run") from e
 
 
+@app.delete("/api/runs/{run_id}/delete")
+async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
+    """Delete a completed, failed, or cancelled run."""
+    from sqlalchemy import select, delete as sql_delete
+
+    tenant_id = user.tenant_id
+    logger.info(
+        "Deleting run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # 1. Verify run exists and belongs to tenant
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 2. Verify run is in a deletable status (not running)
+            deletable_statuses = [
+                RunStatus.COMPLETED.value,
+                RunStatus.FAILED.value,
+                RunStatus.CANCELLED.value,
+            ]
+            if run.status not in deletable_statuses:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run cannot be deleted while in progress (current status: {run.status}). Cancel it first."
+                )
+
+            # 3. Record in audit_logs before deletion
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="delete",
+                resource_type="run",
+                resource_id=run_id,
+                details={"status": run.status, "keyword": run.input_data.get("keyword") if run.input_data else None},
+            )
+
+            # 4. Delete artifacts from storage
+            try:
+                artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
+                for path in artifact_paths:
+                    await store.delete(path)
+                logger.info(f"Deleted {len(artifact_paths)} artifacts from storage", extra={"run_id": run_id})
+            except Exception as storage_error:
+                logger.warning(f"Failed to delete some artifacts from storage: {storage_error}")
+                # Continue with DB deletion anyway
+
+            # 5. Delete related records from DB
+            # Delete artifacts
+            await session.execute(
+                sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id)
+            )
+
+            # Delete steps
+            await session.execute(
+                sql_delete(Step).where(Step.run_id == run_id)
+            )
+
+            # Delete the run itself
+            await session.delete(run)
+
+            await session.flush()
+            logger.info("Run deleted", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to delete run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to delete run") from e
+
+
+class BulkDeleteRequest(BaseModel):
+    """Request body for bulk delete."""
+    run_ids: list[str]
+
+
+class BulkDeleteResponse(BaseModel):
+    """Response for bulk delete."""
+    deleted: list[str]
+    failed: list[dict[str, str]]  # [{"id": "...", "error": "..."}]
+
+
+@app.post("/api/runs/bulk-delete", response_model=BulkDeleteResponse)
+async def bulk_delete_runs(
+    request: BulkDeleteRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> BulkDeleteResponse:
+    """Delete multiple runs. Running/pending/waiting runs are cancelled first."""
+    from sqlalchemy import select, delete as sql_delete
+
+    tenant_id = user.tenant_id
+    logger.info(
+        "Bulk deleting runs",
+        extra={"run_ids": request.run_ids, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+
+    deleted: list[str] = []
+    failed: list[dict[str, str]] = []
+
+    # Statuses that need to be cancelled before deletion
+    cancellable_statuses = [
+        RunStatus.PENDING.value,
+        RunStatus.RUNNING.value,
+        RunStatus.WAITING_APPROVAL.value,
+    ]
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            for run_id in request.run_ids:
+                try:
+                    # 1. Verify run exists and belongs to tenant
+                    query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+                    result = await session.execute(query)
+                    run = result.scalar_one_or_none()
+
+                    if not run:
+                        failed.append({"id": run_id, "error": "Run not found"})
+                        continue
+
+                    # 2. If running/pending/waiting, cancel first
+                    if run.status in cancellable_statuses:
+                        # Cancel Temporal workflow if running
+                        if temporal_client is not None:
+                            try:
+                                workflow_handle = temporal_client.get_workflow_handle(run_id)
+                                await workflow_handle.cancel()
+                                logger.info("Temporal workflow cancelled for bulk delete", extra={"run_id": run_id})
+                            except Exception as cancel_error:
+                                logger.warning(f"Failed to cancel Temporal workflow {run_id}: {cancel_error}")
+
+                        # Update status to cancelled
+                        run.status = RunStatus.CANCELLED.value
+                        run.updated_at = datetime.utcnow()
+                        await session.flush()
+
+                        # Log cancellation
+                        audit = AuditLogger(session)
+                        await audit.log(
+                            user_id=user.user_id,
+                            action="cancel",
+                            resource_type="run",
+                            resource_id=run_id,
+                            details={"previous_status": run.status, "bulk": True, "reason": "bulk_delete"},
+                        )
+
+                    # 3. Record deletion in audit_logs
+                    audit = AuditLogger(session)
+                    await audit.log(
+                        user_id=user.user_id,
+                        action="delete",
+                        resource_type="run",
+                        resource_id=run_id,
+                        details={"status": run.status, "bulk": True},
+                    )
+
+                    # 4. Delete artifacts from storage
+                    try:
+                        artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
+                        for path in artifact_paths:
+                            await store.delete(path)
+                    except Exception as storage_error:
+                        logger.warning(f"Failed to delete artifacts for {run_id}: {storage_error}")
+
+                    # 5. Delete related records from DB
+                    await session.execute(
+                        sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id)
+                    )
+                    await session.execute(
+                        sql_delete(Step).where(Step.run_id == run_id)
+                    )
+                    await session.delete(run)
+
+                    deleted.append(run_id)
+
+                except Exception as e:
+                    logger.error(f"Failed to delete run {run_id}: {e}")
+                    failed.append({"id": run_id, "error": str(e)})
+
+            # Commit all changes at once
+            await session.flush()
+
+        logger.info(f"Bulk delete completed: {len(deleted)} deleted, {len(failed)} failed")
+        return BulkDeleteResponse(deleted=deleted, failed=failed)
+
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to bulk delete runs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to bulk delete runs") from e
+
+
+# =============================================================================
+# Internal API Endpoints (for Worker communication)
+# =============================================================================
+
+
+@app.post("/api/internal/steps/update")
+async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
+    """Update step status in DB (internal API for Worker).
+
+    This endpoint is called by Temporal Worker to record step progress.
+    No authentication required - assumes Docker network isolation.
+    """
+    from sqlalchemy import text
+
+    logger.info(
+        "Updating step status",
+        extra={
+            "run_id": request.run_id,
+            "step_name": request.step_name,
+            "status": request.status,
+        },
+    )
+
+    db_manager = get_tenant_db_manager()
+
+    try:
+        # Get tenant_id from run
+        # Note: We use dev-tenant-001 for now since internal API doesn't have auth context
+        # TODO: Pass tenant_id from Worker or look up from run
+        tenant_id = "dev-tenant-001"
+
+        async with db_manager.get_session(tenant_id) as session:
+            # UPSERT step record
+            await session.execute(
+                text("""
+                    INSERT INTO steps (id, run_id, step_name, status, started_at, retry_count)
+                    VALUES (
+                        gen_random_uuid(),
+                        :run_id,
+                        :step_name,
+                        :status,
+                        CASE WHEN :status = 'running' THEN NOW() ELSE NULL END,
+                        :retry_count
+                    )
+                    ON CONFLICT (run_id, step_name)
+                    DO UPDATE SET
+                        status = :status,
+                        started_at = CASE
+                            WHEN :status = 'running' THEN NOW()
+                            ELSE steps.started_at
+                        END,
+                        completed_at = CASE
+                            WHEN :status IN ('completed', 'failed') THEN NOW()
+                            ELSE NULL
+                        END,
+                        error_message = :error_message,
+                        retry_count = :retry_count
+                """),
+                {
+                    "run_id": request.run_id,
+                    "step_name": request.step_name,
+                    "status": request.status,
+                    "error_message": request.error_message,
+                    "retry_count": request.retry_count,
+                },
+            )
+            await session.commit()
+
+        return {"ok": True}
+
+    except Exception as e:
+        logger.error(f"Failed to update step status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update step status") from e
+
+
 # =============================================================================
 # Artifact Endpoints
 # =============================================================================
@@ -1618,11 +2337,11 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
             return [
                 ArtifactRef(
                     id=str(a.id),
-                    step_id=a.step,
-                    ref_path=a.file_path,
+                    step_id=str(a.step_id) if a.step_id else "",
+                    ref_path=a.ref_path,
                     digest=a.digest or "",
-                    content_type=a.file_type,
-                    size_bytes=a.size_bytes,
+                    content_type=a.content_type or a.artifact_type,
+                    size_bytes=a.size_bytes or 0,
                     created_at=a.created_at.isoformat(),
                 )
                 for a in artifacts
@@ -1665,22 +2384,38 @@ async def get_step_artifacts(
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            # Query artifacts for specific step
-            artifact_query = select(ArtifactModel).where(
-                ArtifactModel.run_id == run_id,
-                ArtifactModel.step == step,
+            # Query artifacts for specific step (via step_id -> steps.step_name)
+            # First, find step by name
+            step_query = select(Step).where(
+                Step.run_id == run_id,
+                Step.step_name == step,
             )
+            step_result = await session.execute(step_query)
+            step_record = step_result.scalar_one_or_none()
+
+            if step_record:
+                # Query artifacts by step_id
+                artifact_query = select(ArtifactModel).where(
+                    ArtifactModel.run_id == run_id,
+                    ArtifactModel.step_id == step_record.id,
+                )
+            else:
+                # Fallback: query all artifacts and filter by artifact_type containing step name
+                artifact_query = select(ArtifactModel).where(
+                    ArtifactModel.run_id == run_id,
+                )
+
             artifact_result = await session.execute(artifact_query)
             artifacts = artifact_result.scalars().all()
 
             return [
                 ArtifactRef(
                     id=str(a.id),
-                    step_id=a.step,
-                    ref_path=a.file_path,
+                    step_id=str(a.step_id) if a.step_id else "",
+                    ref_path=a.ref_path,
                     digest=a.digest or "",
-                    content_type=a.file_type,
-                    size_bytes=a.size_bytes,
+                    content_type=a.content_type or a.artifact_type,
+                    size_bytes=a.size_bytes or 0,
                     created_at=a.created_at.isoformat(),
                 )
                 for a in artifacts
@@ -1717,11 +2452,12 @@ async def get_artifact_content(
     try:
         async with db_manager.get_session(tenant_id) as session:
             # Verify run belongs to tenant and get artifact
+            # Note: artifact_id is UUID string now
             artifact_query = (
                 select(ArtifactModel)
                 .join(Run, ArtifactModel.run_id == Run.id)
                 .where(
-                    ArtifactModel.id == int(artifact_id),
+                    ArtifactModel.id == artifact_id,
                     Run.id == run_id,
                     Run.tenant_id == tenant_id,
                 )
@@ -1734,10 +2470,10 @@ async def get_artifact_content(
 
             # Get content from storage with tenant check
             storage_ref = StorageArtifactRef(
-                path=artifact.file_path,
+                path=artifact.ref_path,
                 digest=artifact.digest or "",
-                content_type=artifact.file_type,
-                size_bytes=artifact.size_bytes,
+                content_type=artifact.content_type or artifact.artifact_type,
+                size_bytes=artifact.size_bytes or 0,
                 created_at=artifact.created_at,
             )
 
@@ -1763,17 +2499,17 @@ async def get_artifact_content(
                 action="download",
                 resource_type="artifact",
                 resource_id=artifact_id,
-                details={"run_id": run_id, "step": artifact.step},
+                details={"run_id": run_id, "step_id": artifact.step_id},
             )
 
             return ArtifactContent(
                 ref=ArtifactRef(
                     id=str(artifact.id),
-                    step_id=artifact.step,
-                    ref_path=artifact.file_path,
+                    step_id=str(artifact.step_id) if artifact.step_id else "",
+                    ref_path=artifact.ref_path,
                     digest=artifact.digest or "",
-                    content_type=artifact.file_type,
-                    size_bytes=artifact.size_bytes,
+                    content_type=artifact.content_type or artifact.artifact_type,
+                    size_bytes=artifact.size_bytes or 0,
                     created_at=artifact.created_at.isoformat(),
                 ),
                 content=content,
@@ -1954,6 +2690,326 @@ async def list_events(
 
 
 # =============================================================================
+# Configuration Endpoints - Models and Workflow Settings
+# =============================================================================
+
+
+class ProviderConfig(BaseModel):
+    """Provider configuration with available models."""
+
+    provider: str
+    default_model: str
+    available_models: list[str]
+    supports_grounding: bool = False
+
+
+class StepDefaultConfig(BaseModel):
+    """Default configuration for a workflow step."""
+
+    step_id: str
+    label: str
+    description: str
+    ai_model: str  # gemini, openai, anthropic
+    model_name: str
+    temperature: float
+    grounding: bool
+    retry_limit: int
+    repair_enabled: bool
+    is_configurable: bool
+    recommended_model: str
+
+
+class ModelsConfigResponse(BaseModel):
+    """Response for GET /api/config/models."""
+
+    providers: list[ProviderConfig]
+    step_defaults: list[StepDefaultConfig]
+
+
+# Step default configurations (source of truth for FE)
+WORKFLOW_STEP_DEFAULTS: list[StepDefaultConfig] = [
+    StepDefaultConfig(
+        step_id="step-1",
+        label="入力",
+        description="キーワードとターゲット情報の入力",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=False,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step0",
+        label="キーワード選定",
+        description="キーワードの分析と最適化",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step1",
+        label="競合記事取得",
+        description="SERP分析と競合コンテンツの収集",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.5,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step2",
+        label="CSV検証",
+        description="取得データの形式検証",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.3,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step3a",
+        label="クエリ分析",
+        description="検索クエリとペルソナの分析",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step3b",
+        label="共起語抽出",
+        description="関連キーワードと共起語の抽出",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step3c",
+        label="競合分析",
+        description="競合記事の差別化ポイント分析",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="approval",
+        label="承認待ち",
+        description="人間による確認・承認ポイント",
+        ai_model="gemini",
+        model_name="",
+        temperature=0,
+        grounding=False,
+        retry_limit=1,
+        repair_enabled=False,
+        is_configurable=False,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step4",
+        label="アウトライン",
+        description="戦略的な記事構成の作成",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.7,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step5",
+        label="一次情報収集",
+        description="Web検索による一次情報の収集",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.5,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step6",
+        label="アウトライン強化",
+        description="一次情報を組み込んだ構成改善",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.7,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step6.5",
+        label="統合パッケージ",
+        description="全情報の統合とパッケージ化",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.5,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step7a",
+        label="本文生成",
+        description="初稿の本文生成",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.8,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step7b",
+        label="ブラッシュアップ",
+        description="文章の磨き上げと最適化",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.6,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step8",
+        label="ファクトチェック",
+        description="事実確認とFAQ生成",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.3,
+        grounding=True,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
+    ),
+    StepDefaultConfig(
+        step_id="step9",
+        label="最終リライト",
+        description="品質管理と最終調整",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.5,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step10",
+        label="最終出力",
+        description="HTML/Markdown形式での出力",
+        ai_model="anthropic",
+        model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+        temperature=0.3,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="anthropic",
+    ),
+]
+
+
+@app.get("/api/config/models", response_model=ModelsConfigResponse)
+async def get_models_config() -> ModelsConfigResponse:
+    """Get available models and default workflow step configurations.
+
+    This endpoint provides:
+    - Available LLM providers with their default models
+    - Default configuration for each workflow step
+
+    The frontend should use this as the source of truth for model names
+    and step configurations.
+    """
+    gemini_default = os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash")
+    openai_default = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4o")
+    anthropic_default = os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514")
+
+    providers = [
+        ProviderConfig(
+            provider="gemini",
+            default_model=gemini_default,
+            available_models=[
+                gemini_default,
+                "gemini-2.0-flash",
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
+            ],
+            supports_grounding=True,
+        ),
+        ProviderConfig(
+            provider="openai",
+            default_model=openai_default,
+            available_models=[
+                openai_default,
+                "gpt-4o",
+                "gpt-4o-mini",
+                "gpt-4-turbo",
+            ],
+            supports_grounding=False,
+        ),
+        ProviderConfig(
+            provider="anthropic",
+            default_model=anthropic_default,
+            available_models=[
+                anthropic_default,
+                "claude-sonnet-4-20250514",
+                "claude-3-5-sonnet-20241022",
+                "claude-3-5-haiku-20241022",
+            ],
+            supports_grounding=False,
+        ),
+    ]
+
+    return ModelsConfigResponse(
+        providers=providers,
+        step_defaults=WORKFLOW_STEP_DEFAULTS,
+    )
+
+
+# =============================================================================
 # Cost Tracking Endpoint (GAP-021)
 # =============================================================================
 
@@ -2033,16 +3089,17 @@ async def get_run_cost(
             total_cost = 0.0
 
             for artifact in artifacts:
-                if artifact.file_type not in ["application/json", "json"]:
+                content_type = artifact.content_type or artifact.artifact_type
+                if content_type not in ["application/json", "json"]:
                     continue
 
                 # Try to read artifact content for token usage
                 try:
                     storage_ref = StorageArtifactRef(
-                        path=artifact.file_path,
+                        path=artifact.ref_path,
                         digest=artifact.digest or "",
-                        content_type=artifact.file_type,
-                        size_bytes=artifact.size_bytes,
+                        content_type=content_type,
+                        size_bytes=artifact.size_bytes or 0,
                         created_at=artifact.created_at,
                     )
                     content_bytes = await store.get_with_tenant_check(
@@ -2067,9 +3124,18 @@ async def get_run_cost(
                             + (output_tokens / 1000) * rates["output"]
                         )
 
+                        # Get step name from step_id if available
+                        step_name = artifact.artifact_type
+                        if artifact.step_id:
+                            step_query = select(Step).where(Step.id == artifact.step_id)
+                            step_result = await session.execute(step_query)
+                            step_record = step_result.scalar_one_or_none()
+                            if step_record:
+                                step_name = step_record.step_name
+
                         breakdown.append(
                             CostBreakdown(
-                                step=artifact.step,
+                                step=step_name,
                                 model=model,
                                 input_tokens=input_tokens,
                                 output_tokens=output_tokens,
@@ -2101,6 +3167,166 @@ async def get_run_cost(
     except Exception as e:
         logger.error(f"Failed to get run cost: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to get run cost") from e
+
+
+# =============================================================================
+# Prompt Management Endpoints (JSON File Based)
+# =============================================================================
+
+
+class PromptJsonResponse(BaseModel):
+    """Prompt response from JSON file."""
+
+    step: str
+    version: int
+    content: str
+    variables: dict[str, Any] | None = None
+
+
+class PromptListJsonResponse(BaseModel):
+    """List of prompts from JSON file."""
+
+    pack_id: str
+    prompts: list[PromptJsonResponse]
+    total: int
+
+
+class UpdatePromptJsonInput(BaseModel):
+    """Request to update a prompt in JSON file."""
+
+    content: str = Field(..., description="Updated prompt content")
+    variables: dict[str, Any] | None = Field(None, description="Updated variable definitions")
+
+
+@app.get("/api/prompts", response_model=PromptListJsonResponse)
+async def list_prompts(
+    pack_id: str = Query(default="default", description="Prompt pack ID"),
+    step: str | None = Query(default=None, description="Filter by step name"),
+) -> PromptListJsonResponse:
+    """List all prompts from JSON file."""
+    logger.debug("Listing prompts from JSON", extra={"pack_id": pack_id, "step": step})
+
+    try:
+        loader = PromptPackLoader()
+        pack = loader.load(pack_id)
+
+        prompts = []
+        for step_id, template in pack.prompts.items():
+            if step and step_id != step:
+                continue
+            prompts.append(
+                PromptJsonResponse(
+                    step=template.step,
+                    version=template.version,
+                    content=template.content,
+                    variables=template.variables if template.variables else None,
+                )
+            )
+
+        # Sort by step name
+        prompts.sort(key=lambda p: p.step)
+
+        return PromptListJsonResponse(
+            pack_id=pack_id,
+            prompts=prompts,
+            total=len(prompts),
+        )
+
+    except PromptPackNotFoundError as e:
+        logger.error(f"Prompt pack not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Prompt pack '{pack_id}' not found") from e
+    except Exception as e:
+        logger.error(f"Failed to list prompts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to list prompts") from e
+
+
+@app.get("/api/prompts/step/{step}", response_model=PromptJsonResponse)
+async def get_prompt_by_step(
+    step: str,
+    pack_id: str = Query(default="default", description="Prompt pack ID"),
+) -> PromptJsonResponse:
+    """Get a specific prompt by step name from JSON file."""
+    logger.debug("Getting prompt by step from JSON", extra={"pack_id": pack_id, "step": step})
+
+    try:
+        loader = PromptPackLoader()
+        pack = loader.load(pack_id)
+        template = pack.get_prompt(step)
+
+        return PromptJsonResponse(
+            step=template.step,
+            version=template.version,
+            content=template.content,
+            variables=template.variables if template.variables else None,
+        )
+
+    except PromptPackNotFoundError as e:
+        logger.error(f"Prompt pack not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Prompt pack '{pack_id}' not found") from e
+    except Exception as e:
+        logger.error(f"Failed to get prompt: {e}", exc_info=True)
+        raise HTTPException(status_code=404, detail=f"Prompt not found for step: {step}") from e
+
+
+@app.put("/api/prompts/step/{step}", response_model=PromptJsonResponse)
+async def update_prompt_by_step(
+    step: str,
+    data: UpdatePromptJsonInput,
+    pack_id: str = Query(default="default", description="Prompt pack ID"),
+) -> PromptJsonResponse:
+    """Update a prompt by step name in JSON file."""
+    import json
+    from pathlib import Path
+
+    logger.info("Updating prompt in JSON file", extra={"pack_id": pack_id, "step": step})
+
+    try:
+        # Load current JSON file
+        packs_dir = Path(__file__).parent / "prompts" / "packs"
+        json_path = packs_dir / f"{pack_id}.json"
+
+        if not json_path.exists():
+            raise HTTPException(status_code=404, detail=f"Prompt pack '{pack_id}' not found")
+
+        with open(json_path, encoding="utf-8") as f:
+            pack_data = json.load(f)
+
+        # Check if step exists
+        if step not in pack_data.get("prompts", {}):
+            raise HTTPException(status_code=404, detail=f"Prompt not found for step: {step}")
+
+        # Update the prompt
+        current_version = pack_data["prompts"][step].get("version", 1)
+        pack_data["prompts"][step]["content"] = data.content
+        pack_data["prompts"][step]["version"] = current_version + 1
+        if data.variables is not None:
+            pack_data["prompts"][step]["variables"] = data.variables
+
+        # Write back to JSON file
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(pack_data, f, ensure_ascii=False, indent=2)
+
+        # Clear loader cache
+        loader = PromptPackLoader()
+        loader.invalidate(pack_id)
+
+        logger.info(
+            "Prompt updated in JSON file",
+            extra={"pack_id": pack_id, "step": step, "new_version": current_version + 1},
+        )
+
+        return PromptJsonResponse(
+            step=step,
+            version=current_version + 1,
+            content=data.content,
+            variables=data.variables,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update prompt: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update prompt") from e
 
 
 # =============================================================================
@@ -2173,30 +3399,41 @@ class ConnectionManager:
     async def broadcast_step_event(
         self,
         run_id: str,
-        step_id: str,
+        step: str,
         event_type: str,
         status: str,
+        progress: int = 0,
+        message: str = "",
+        attempt: int | None = None,
         details: dict[str, Any] | None = None,
     ) -> None:
         """Broadcast a step-level event.
 
         Args:
             run_id: The run ID to broadcast to
-            step_id: Step identifier
-            event_type: Event type (e.g., 'step.started', 'step.completed')
+            step: Step name (e.g., 'step0', 'step3a')
+            event_type: Event type (e.g., 'step_started', 'step_completed')
             status: Step status
+            progress: Progress percentage (0-100)
+            message: Human-readable status message
+            attempt: Attempt number if applicable
             details: Additional details
         """
-        message = {
+        # Match frontend ProgressEvent type
+        event_message: dict[str, Any] = {
             "type": event_type,
             "run_id": run_id,
-            "step_id": step_id,
+            "step": step,  # Frontend expects 'step', not 'step_id'
             "status": status,
+            "progress": progress,
+            "message": message,
             "timestamp": datetime.now().isoformat(),
         }
+        if attempt is not None:
+            event_message["attempt"] = attempt
         if details:
-            message["details"] = details
-        await self.broadcast(run_id, message)
+            event_message["details"] = details
+        await self.broadcast(run_id, event_message)
 
 
 # Global connection manager

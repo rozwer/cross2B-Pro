@@ -112,6 +112,21 @@
         }
       }
     },
+    "step5_queries": {
+      "step": "step5_queries",
+      "version": 1,
+      "content": "あなたはSEO記事執筆のための情報収集エージェントです。\n\n## タスク\nキーワード「{{keyword}}」に関する記事を書くために、一次情報（統計データ、公式情報、専門家の見解など）を収集するための検索クエリを生成してください。\n\n## アウトライン\n{{outline}}\n\n## 出力形式\n以下のJSON形式のみを出力してください。説明文は不要です。\n\n{\"queries\": [\"SEO対策 統計データ 2024\", \"SEO 初心者 成功事例\", \"Google 検索アルゴリズム 公式\", \"SEO対策 効果 調査\", \"検索エンジン最適化 ガイドライン\"]}\n\n## 要件\n- 5〜8個の具体的な検索クエリを配列で出力\n- 信頼性の高い情報源を見つけるためのクエリにする\n- 日本語のクエリを優先",
+      "variables": {
+        "keyword": {
+          "required": true,
+          "type": "string"
+        },
+        "outline": {
+          "required": true,
+          "type": "string"
+        }
+      }
+    },
     "step6": {
       "step": "step6",
       "version": 1,
@@ -311,8 +326,8 @@
     },
     "step10_html": {
       "step": "step10_html",
-      "version": 1,
-      "content": "以下の記事コンテンツを完全なHTMLドキュメントに変換してください。\nキーワード: {{keyword}}\n\n記事コンテンツ:\n{{content}}\n\nSEO最適化されたHTMLを出力してください。必ず<html>, <head>, <body>タグを含む完全なHTML文書にしてください。",
+      "version": 2,
+      "content": "以下の記事コンテンツを完全なHTMLドキュメントに変換してください。\nキーワード: {{keyword}}\n\n記事コンテンツ:\n{{content}}\n\n## 重要な要件\n1. 必ず完全なHTML文書を出力してください\n2. 以下の構造を必ず含めてください：\n   - <!DOCTYPE html>\n   - <html lang=\"ja\">で開始し、</html>で終了\n   - <head>セクション（<title>, <meta charset>, <meta description>を含む）\n   - <body>セクション\n3. すべてのタグは必ず閉じてください\n4. SEO最適化されたメタタグを含めてください\n\nHTMLコードのみを出力し、説明文は不要です。",
       "variables": {
         "keyword": {
           "required": true,
