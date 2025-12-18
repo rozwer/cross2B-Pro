@@ -58,9 +58,9 @@ main (master) ← 本番相当
 
 ### ルール
 
-- **develop/main への直接 push 禁止**（Git hooks で強制）
+- **main への直接 push 禁止**（Git hooks で強制、develop は許可）
 - **Conventional Commits 形式必須**（`feat:`, `fix:`, `docs:`...）
-- **PR必須**、マージ前に smoke テスト通過
+- **PR必須**（main へのマージ時）、マージ前に smoke テスト通過
 - **同一ファイルへの同時編集を避ける**
 
 ---
@@ -123,6 +123,37 @@ mypy apps/
 - カバレッジ目標: 80%以上（クリティカルパスは100%）
 - モックは最小限（外部API/DB接続のみ）
 - フォールバックテスト禁止（正常系のみテスト）
+
+---
+
+## 開発スタイル
+
+### パッケージ管理
+
+- **Python: `uv` を使用**（pip/poetry ではなく uv）
+  ```bash
+  uv sync              # 依存インストール
+  uv add <package>     # パッケージ追加
+  uv run pytest        # コマンド実行
+  ```
+- **Node.js: `npm` を使用**
+
+### コミット方針
+
+- **細かく頻繁にコミット**する（大きな変更を一括コミットしない）
+- カテゴリ別に分割：UI / API / Worker / docs / chore など
+- 1コミット = 1つの論理的な変更単位
+- コミットメッセージは Conventional Commits 形式
+
+```bash
+# 良い例
+git commit -m "feat(ui): add dark mode toggle"
+git commit -m "fix(api): handle null response from LLM"
+git commit -m "docs: update workflow specification"
+
+# 悪い例（大きすぎる）
+git commit -m "feat: implement entire feature with tests and docs"
+```
 
 ---
 
