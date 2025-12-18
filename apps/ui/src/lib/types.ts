@@ -84,6 +84,7 @@ export interface Run {
   current_step: string | null;
   input: RunInput;
   model_config: ModelConfig;
+  step_configs?: StepModelConfig[];
   tool_config?: ToolConfig;
   options?: {
     retry_limit: number;
@@ -151,6 +152,7 @@ export interface RepairLog {
 export interface ArtifactRef {
   id: string;
   step_id: string;
+  step_name: string;  // Human-readable step name (e.g., "step1", "step5")
   ref_path: string;
   digest: string;
   content_type: string;
@@ -276,21 +278,32 @@ export const STEP_LABELS: Record<string, string> = {
   "step-1": "入力",
   step0: "準備",
   step1: "分析",
-  step3: "構成",
   step2: "調査",
-  step3a: "並列処理A",
-  step3b: "並列処理B",
-  step3c: "並列処理C",
+  step3: "構成",
+  step3a: "3-A",
+  step3b: "3-B",
+  step3c: "3-C",
   step4: "執筆準備",
   step5: "本文生成",
   step6: "編集",
-  "step6.5": "統合パッケージ",
+  "step6.5": "構成済み記事",
   step7a: "HTML生成",
   step7b: "メタ情報",
   step8: "検証",
   step9: "最終調整",
   step10: "完了",
 };
+
+// Helper to normalize step names (step6_5 -> step6.5)
+export function normalizeStepName(stepName: string): string {
+  return stepName.replace("_", ".");
+}
+
+// Get label for step name (handles both step6_5 and step6.5)
+export function getStepLabel(stepName: string): string {
+  const normalized = normalizeStepName(stepName);
+  return STEP_LABELS[normalized] || STEP_LABELS[stepName] || stepName;
+}
 
 // ============================================
 // Prompt Types (JSON file-based)

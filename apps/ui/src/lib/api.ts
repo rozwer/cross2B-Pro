@@ -241,11 +241,32 @@ class ApiClient {
     },
 
     download: async (runId: string, artifactId: string): Promise<ArtifactContent> => {
-      return this.request<ArtifactContent>(`/api/runs/${runId}/files/${artifactId}/content`);
+      // URL encode artifactId as it may contain colons (e.g., "run_id:step:filename")
+      return this.request<ArtifactContent>(`/api/runs/${runId}/files/${encodeURIComponent(artifactId)}/content`);
     },
 
     getPreviewUrl: (runId: string): string => {
       return `${this.baseUrl}/api/runs/${runId}/preview`;
+    },
+
+    /**
+     * HTMLプレビューを取得（認証ヘッダー付き）
+     */
+    getPreview: async (runId: string): Promise<string> => {
+      const url = `${this.baseUrl}/api/runs/${runId}/preview`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "X-Tenant-ID": DEV_TENANT_ID,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || `HTTP ${response.status}`);
+      }
+
+      return response.text();
     },
   };
 
