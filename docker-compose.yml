@@ -102,8 +102,9 @@ services:
       dockerfile: docker/Dockerfile.api
     container_name: seo-api
     environment:
-      # Database
+      # Database (common DB for tenant management)
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-seo}:${POSTGRES_PASSWORD:-seo_password}@postgres:5432/${POSTGRES_DB:-seo_articles}
+      COMMON_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-seo}:${POSTGRES_PASSWORD:-seo_password}@postgres:5432/${POSTGRES_DB:-seo_articles}
       # Storage
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
@@ -122,6 +123,9 @@ services:
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Authentication (dev mode skips auth)
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEV_TENANT_ID: ${DEV_TENANT_ID:-dev-tenant-001}
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,8 +150,9 @@ services:
       dockerfile: docker/Dockerfile.worker
     container_name: seo-worker
     environment:
-      # Database
+      # Database (common DB for tenant management)
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-seo}:${POSTGRES_PASSWORD:-seo_password}@postgres:5432/${POSTGRES_DB:-seo_articles}
+      COMMON_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-seo}:${POSTGRES_PASSWORD:-seo_password}@postgres:5432/${POSTGRES_DB:-seo_articles}
       # Storage
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
@@ -167,6 +172,9 @@ services:
       SERP_API_KEY: ${SERP_API_KEY:-}
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Authentication (dev mode)
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEV_TENANT_ID: ${DEV_TENANT_ID:-dev-tenant-001}
     depends_on:
       postgres:
         condition: service_healthy
