@@ -123,6 +123,7 @@ class TestDiagnosticsService:
             "total_errors": 1,
             "by_category": {"retryable": 1},
             "by_step": {"step3": 1},
+            "by_source": {"llm": 1},
             "by_type": {"LLMTimeoutError": 1},
             "timeline": [],
         })
@@ -137,10 +138,12 @@ class TestDiagnosticsService:
                 "total_errors": 1,
                 "by_category": {"retryable": 1},
                 "by_step": {"step3": 1},
+                "by_source": {"llm": 1},
                 "by_type": {"LLMTimeoutError": 1},
                 "timeline": [
                     {
                         "step": "step3",
+                        "source": "llm",
                         "type": "LLMTimeoutError",
                         "message": "Timeout",
                         "attempt": 3,
@@ -151,6 +154,7 @@ class TestDiagnosticsService:
             "error_logs": [
                 {
                     "step_id": "step3",
+                    "source": "llm",
                     "category": "retryable",
                     "type": "LLMTimeoutError",
                     "message": "Timeout after 30s",
@@ -265,11 +269,13 @@ class TestDiagnosticsService:
                 "total_errors": 2,
                 "by_category": {"retryable": 2},
                 "by_step": {"step3": 2},
+                "by_source": {"llm": 2},
                 "by_type": {"LLMTimeoutError": 2},
                 "timeline": [
                     {
                         "timestamp": "2024-01-01T12:00:00",
                         "step": "step3",
+                        "source": "llm",
                         "type": "LLMTimeoutError",
                         "attempt": 1,
                         "message": "First timeout",
