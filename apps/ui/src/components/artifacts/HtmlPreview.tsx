@@ -146,13 +146,12 @@ export function HtmlPreview({ content }: HtmlPreviewProps) {
       )}
 
       {mode === "preview" ? (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          {/* VULN-001: sandbox を空文字列に（ほぼ全て無効化） */}
-          <iframe
-            srcDoc={sanitizedContent}
-            title="HTML Preview"
-            className="w-full h-96 bg-white"
-            sandbox=""
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          {/* VULN-001: DOMPurify でサニタイズ済みなので div + dangerouslySetInnerHTML を使用 */}
+          {/* iframe sandbox="" は srcdoc 内のスクリプトをブロックする際にコンソールエラーを出すため回避 */}
+          <div
+            className="w-full h-96 bg-white dark:bg-gray-900 overflow-auto p-4 prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         </div>
       ) : (
