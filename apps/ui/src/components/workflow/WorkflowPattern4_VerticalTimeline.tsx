@@ -16,6 +16,7 @@ import {
   ChevronRight,
   AlertTriangle,
   RotateCcw,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -36,8 +37,10 @@ import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
 interface WorkflowPattern4Props {
   steps: Step[];
   currentStep: string;
+  runStatus?: string;
   waitingApproval: boolean;
   onRetry?: (stepName: string) => void;
+  onResumeFrom?: (stepName: string) => void;
   onStepClick?: (stepName: string) => void;
 }
 
@@ -93,8 +96,10 @@ const ALL_STEP_NAMES = Object.keys(STEP_LABELS);
 export function WorkflowPattern4_VerticalTimeline({
   steps,
   currentStep,
+  runStatus,
   waitingApproval,
   onRetry,
+  onResumeFrom,
 }: WorkflowPattern4Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set([currentStep]));
@@ -110,12 +115,21 @@ export function WorkflowPattern4_VerticalTimeline({
   };
 
   // Helper: Get effective status for a step (handles parent-child relationships)
+  // If the run has failed, treat "running" steps as "failed"
   const getEffectiveStatus = (stepName: string): string | undefined => {
     // Always completed steps (input/preparation)
     const alwaysCompletedSteps = ["step-1", "step0"];
     if (alwaysCompletedSteps.includes(stepName)) {
       return "completed";
     }
+
+    // Helper to adjust status based on run status
+    const adjustForRunFailure = (status: string | undefined): string | undefined => {
+      if (runStatus === "failed" && status === "running") {
+        return "failed";
+      }
+      return status;
+    };
 
     // Check if this is a parent step with parallel children
     const children = PARALLEL_PARENT_CHILDREN[stepName];
@@ -127,12 +141,12 @@ export function WorkflowPattern4_VerticalTimeline({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running
+      // Parent is running if any child is running (but check run failure)
       const anyChildRunning = children.some(
         (childName) => stepMap.get(childName)?.status === "running"
       );
       if (anyChildRunning) {
-        return "running";
+        return adjustForRunFailure("running");
       }
       // Parent is failed if any child failed (and none running)
       const anyChildFailed = children.some(
@@ -145,8 +159,8 @@ export function WorkflowPattern4_VerticalTimeline({
       return "pending";
     }
 
-    // Regular step: use actual status
-    return stepMap.get(stepName)?.status;
+    // Regular step: use actual status, adjusted for run failure
+    return adjustForRunFailure(stepMap.get(stepName)?.status);
   };
 
   // Calculate progress using effective status for all steps
@@ -416,6 +430,15 @@ export function WorkflowPattern4_VerticalTimeline({
                                         完了: {new Date(step.completed_at).toLocaleTimeString()}
                                       </p>
                                     )}
+                                    {onResumeFrom && (
+                                      <button
+                                        onClick={() => onResumeFrom(stepName)}
+                                        className="inline-flex items-center gap-1 px-2 py-1 mt-2 text-xs text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-500/20 rounded transition-colors"
+                                      >
+                                        <Play className="w-3 h-3" />
+                                        ここから再開
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                                 {status === "failed" && (
@@ -423,15 +446,26 @@ export function WorkflowPattern4_VerticalTimeline({
                                     <p className="text-xs text-red-600 dark:text-red-400 mb-2">
                                       エラーが発生しました
                                     </p>
-                                    {onRetry && (
-                                      <button
-                                        onClick={() => onRetry(stepName)}
-                                        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 rounded transition-colors"
-                                      >
-                                        <RotateCcw className="w-3 h-3" />
-                                        リトライ
-                                      </button>
-                                    )}
+                                    <div className="flex flex-wrap gap-2">
+                                      {onRetry && (
+                                        <button
+                                          onClick={() => onRetry(stepName)}
+                                          className="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 rounded transition-colors"
+                                        >
+                                          <RotateCcw className="w-3 h-3" />
+                                          リトライ
+                                        </button>
+                                      )}
+                                      {onResumeFrom && (
+                                        <button
+                                          onClick={() => onResumeFrom(stepName)}
+                                          className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500/20 rounded transition-colors"
+                                        >
+                                          <Play className="w-3 h-3" />
+                                          ここから再開
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                                 {isWaiting && (

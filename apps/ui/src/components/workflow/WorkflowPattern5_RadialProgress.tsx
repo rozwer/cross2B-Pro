@@ -16,6 +16,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   X,
+  RotateCcw,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -35,10 +37,13 @@ import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
 interface WorkflowPattern5Props {
   steps: Step[];
   currentStep: string;
+  runStatus?: string;
   waitingApproval: boolean;
   onApprove?: () => void;
   onReject?: (reason: string) => void;
   onStepClick?: (stepName: string) => void;
+  onRetry?: (stepName: string) => void;
+  onResumeFrom?: (stepName: string) => void;
 }
 
 const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
@@ -67,13 +72,15 @@ const RADIAL_STEPS = [
   "step0",
   "step1",
   "step2",
-  "step3",
   "step3a",
+  "step3b",
+  "step3c",
   "step4",
   "step5",
   "step6",
   "step6.5",
   "step7a",
+  "step7b",
   "step8",
   "step9",
   "step10",
@@ -85,15 +92,21 @@ const PARALLEL_PARENT_CHILDREN: Record<string, string[]> = {
   step7: ["step7a", "step7b"],
 };
 
+// Key steps to show labels for (evenly distributed around the circle)
+const KEY_LABEL_STEPS = ["step-1", "step4", "step7a", "step10"];
+
 // All step names for progress calculation (from STEP_LABELS)
 const ALL_STEP_NAMES = Object.keys(STEP_LABELS);
 
 export function WorkflowPattern5_RadialProgress({
   steps,
   currentStep,
+  runStatus,
   waitingApproval,
   onApprove,
   onReject,
+  onRetry,
+  onResumeFrom,
 }: WorkflowPattern5Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
 
@@ -101,12 +114,21 @@ export function WorkflowPattern5_RadialProgress({
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
 
   // Helper: Get effective status for a step (handles parent-child relationships)
+  // If the run has failed, treat "running" steps as "failed"
   const getEffectiveStatus = (stepName: string): string | undefined => {
     // Always completed steps (input/preparation)
     const alwaysCompletedSteps = ["step-1", "step0"];
     if (alwaysCompletedSteps.includes(stepName)) {
       return "completed";
     }
+
+    // Helper to adjust status based on run status
+    const adjustForRunFailure = (status: string | undefined): string | undefined => {
+      if (runStatus === "failed" && status === "running") {
+        return "failed";
+      }
+      return status;
+    };
 
     // Check if this is a parent step with parallel children
     const children = PARALLEL_PARENT_CHILDREN[stepName];
@@ -118,12 +140,12 @@ export function WorkflowPattern5_RadialProgress({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running
+      // Parent is running if any child is running (but check run failure)
       const anyChildRunning = children.some(
         (childName) => stepMap.get(childName)?.status === "running"
       );
       if (anyChildRunning) {
-        return "running";
+        return adjustForRunFailure("running");
       }
       // Parent is failed if any child failed (and none running)
       const anyChildFailed = children.some(
@@ -136,8 +158,8 @@ export function WorkflowPattern5_RadialProgress({
       return "pending";
     }
 
-    // Regular step: use actual status
-    return stepMap.get(stepName)?.status;
+    // Regular step: use actual status, adjusted for run failure
+    return adjustForRunFailure(stepMap.get(stepName)?.status);
   };
 
   // Calculate progress using effective status for all steps
@@ -185,7 +207,6 @@ export function WorkflowPattern5_RadialProgress({
     setSelectedStep(selectedStep === stepName ? null : stepName);
   };
 
-  const selectedStepData = selectedStep ? stepMap.get(selectedStep) : null;
   const selectedSubSteps = selectedStep ? SUB_STEPS[selectedStep] || [] : [];
   // Use effective status for selected step (handles always-completed and parent-child)
   const selectedEffectiveStatus = selectedStep ? getEffectiveStatus(selectedStep) : undefined;
@@ -208,19 +229,23 @@ export function WorkflowPattern5_RadialProgress({
             <span
               className={cn(
                 "w-2 h-2 rounded-full",
-                steps.some((s) => s.status === "running")
-                  ? "bg-cyan-500 animate-pulse"
-                  : steps.every((s) => s.status === "completed")
-                    ? "bg-emerald-500"
-                    : "bg-amber-500",
+                steps.some((s) => s.status === "failed")
+                  ? "bg-red-500"
+                  : steps.some((s) => s.status === "running")
+                    ? "bg-cyan-500 animate-pulse"
+                    : steps.every((s) => s.status === "completed")
+                      ? "bg-emerald-500"
+                      : "bg-amber-500",
               )}
             />
             <span className="text-sm text-gray-900 dark:text-white font-medium">
-              {steps.some((s) => s.status === "running")
-                ? "実行中"
-                : steps.every((s) => s.status === "completed")
-                  ? "完了"
-                  : "処理中"}
+              {steps.some((s) => s.status === "failed")
+                ? "失敗"
+                : steps.some((s) => s.status === "running")
+                  ? "実行中"
+                  : steps.every((s) => s.status === "completed")
+                    ? "完了"
+                    : "処理中"}
             </span>
           </div>
         </div>
@@ -488,9 +513,9 @@ export function WorkflowPattern5_RadialProgress({
               )}
             </div>
 
-            {/* Status info - use effective status for display */}
+            {/* Status info and action buttons */}
             {selectedStep && (
-              <div className="px-3 pb-3">
+              <div className="px-3 pb-3 space-y-2">
                 <div
                   className={cn(
                     "p-2 rounded-lg text-xs",
@@ -505,16 +530,54 @@ export function WorkflowPattern5_RadialProgress({
                   {selectedEffectiveStatus === "failed" && "エラー発生"}
                   {!selectedEffectiveStatus && "待機中"}
                 </div>
+
+                {/* Action buttons - show retry for failed, resume for completed/failed */}
+                {(selectedEffectiveStatus === "failed" || selectedEffectiveStatus === "completed") &&
+                 (onRetry || onResumeFrom) && (
+                  <div className="space-y-1.5 pt-2 border-t border-gray-200 dark:border-white/10">
+                    {/* Retry button - only for failed */}
+                    {selectedEffectiveStatus === "failed" && onRetry && (
+                      <button
+                        onClick={() => {
+                          onRetry(selectedStep);
+                          setSelectedStep(null);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        このステップを再実行
+                      </button>
+                    )}
+                    {/* Resume button - for completed or failed */}
+                    {onResumeFrom && (
+                      <button
+                        onClick={() => {
+                          onResumeFrom(selectedStep);
+                          setSelectedStep(null);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 px-3 py-2 text-white text-xs font-medium rounded-lg transition-colors",
+                          selectedEffectiveStatus === "failed"
+                            ? "bg-gray-500 hover:bg-gray-600"
+                            : "bg-violet-500 hover:bg-violet-600"
+                        )}
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                        ここから再開
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Floating labels for key steps */}
+        {/* Floating labels for key steps - show only major milestones */}
         {!selectedStep && (
           <div className="absolute inset-0 pointer-events-none">
             {stepPositions
-              .filter((_, i) => i % 3 === 0)
+              .filter((pos) => KEY_LABEL_STEPS.includes(pos.step))
               .map((pos) => {
                 // Use effective status for label styling
                 const effectiveStatus = getEffectiveStatus(pos.step);

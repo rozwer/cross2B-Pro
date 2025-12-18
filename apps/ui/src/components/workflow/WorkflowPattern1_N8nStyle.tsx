@@ -16,7 +16,7 @@ import {
   ChevronDown,
   ChevronRight,
   RotateCcw,
-  SkipBack,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -35,6 +35,7 @@ import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
 interface WorkflowPattern1Props {
   steps: Step[];
   currentStep: string;
+  runStatus?: string;
   waitingApproval: boolean;
   onStepClick?: (stepName: string) => void;
   onRetry?: (stepName: string) => void;
@@ -124,6 +125,7 @@ const ALL_STEP_NAMES = Object.keys(STEP_LABELS);
 export function WorkflowPattern1_N8nStyle({
   steps,
   currentStep,
+  runStatus,
   waitingApproval,
   onRetry,
   onResumeFrom,
@@ -134,12 +136,21 @@ export function WorkflowPattern1_N8nStyle({
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
   // Helper: Get effective status for a step (handles parent-child relationships)
+  // If the run has failed, treat "running" steps as "failed"
   const getEffectiveStatus = (stepName: string): string | undefined => {
     // Always completed steps (input/preparation)
     const alwaysCompletedSteps = ["step-1", "step0"];
     if (alwaysCompletedSteps.includes(stepName)) {
       return "completed";
     }
+
+    // Helper to adjust status based on run status
+    const adjustForRunFailure = (status: string | undefined): string | undefined => {
+      if (runStatus === "failed" && status === "running") {
+        return "failed";
+      }
+      return status;
+    };
 
     // Check if this is a parent step with parallel children
     const children = PARALLEL_PARENT_CHILDREN[stepName];
@@ -151,12 +162,12 @@ export function WorkflowPattern1_N8nStyle({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running
+      // Parent is running if any child is running (but check run failure)
       const anyChildRunning = children.some(
         (childName) => stepMap.get(childName)?.status === "running"
       );
       if (anyChildRunning) {
-        return "running";
+        return adjustForRunFailure("running");
       }
       // Parent is failed if any child failed (and none running)
       const anyChildFailed = children.some(
@@ -169,8 +180,8 @@ export function WorkflowPattern1_N8nStyle({
       return "pending";
     }
 
-    // Regular step: use actual status
-    return stepMap.get(stepName)?.status;
+    // Regular step: use actual status, adjusted for run failure
+    return adjustForRunFailure(stepMap.get(stepName)?.status);
   };
 
   // Calculate progress using effective status for all steps
@@ -388,13 +399,16 @@ export function WorkflowPattern1_N8nStyle({
                             })}
                           </div>
 
-                          {/* Retry/Resume buttons for failed steps */}
-                          {status === "failed" && (onRetry || onResumeFrom) && (
+                          {/* Action buttons for completed or failed steps */}
+                          {(status === "completed" || status === "failed") && (onRetry || onResumeFrom) && (
                             <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
-                              <div className="text-xs font-medium text-red-500 dark:text-red-400 mb-2">
-                                このステップで失敗しました
-                              </div>
-                              {onRetry && (
+                              {status === "failed" && (
+                                <div className="text-xs font-medium text-red-500 dark:text-red-400 mb-2">
+                                  このステップで失敗しました
+                                </div>
+                              )}
+                              {/* Retry button - only for failed */}
+                              {status === "failed" && onRetry && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -406,21 +420,22 @@ export function WorkflowPattern1_N8nStyle({
                                   このステップを再実行
                                 </button>
                               )}
+                              {/* Resume button - for completed or failed */}
                               {onResumeFrom && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Find previous step
-                                    const stepIndex = STEP_GROUPS.flat().indexOf(stepName);
-                                    if (stepIndex > 0) {
-                                      const prevStep = STEP_GROUPS.flat()[stepIndex - 1];
-                                      onResumeFrom(prevStep);
-                                    }
+                                    onResumeFrom(stepName);
                                   }}
-                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors"
+                                  className={cn(
+                                    "w-full flex items-center justify-center gap-2 px-3 py-2 text-white text-xs font-medium rounded-lg transition-colors",
+                                    status === "failed"
+                                      ? "bg-gray-500 hover:bg-gray-600"
+                                      : "bg-violet-500 hover:bg-violet-600"
+                                  )}
                                 >
-                                  <SkipBack className="w-3.5 h-3.5" />
-                                  1つ前から再実行
+                                  <Play className="w-3.5 h-3.5" />
+                                  ここから再開
                                 </button>
                               )}
                             </div>
