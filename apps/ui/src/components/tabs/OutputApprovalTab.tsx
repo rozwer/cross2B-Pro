@@ -35,6 +35,7 @@ import { useRunProgress } from "@/hooks/useRunProgress";
 import { useArtifacts } from "@/hooks/useArtifact";
 import { api } from "@/lib/api";
 import { Loading, LoadingPage } from "@/components/common/Loading";
+import { ApprovalDialog } from "@/components/common/ApprovalDialog";
 import { JsonViewer } from "@/components/artifacts/JsonViewer";
 import { MarkdownViewer } from "@/components/artifacts/MarkdownViewer";
 import { HtmlPreview } from "@/components/artifacts/HtmlPreview";
@@ -284,8 +285,8 @@ export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
 function RunDetailPanel({ runId }: { runId: string }) {
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
-  const [showApprovalConfirm, setShowApprovalConfirm] = useState<"approve" | "reject" | null>(null);
-  const [approvalComment, setApprovalComment] = useState("");
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalLoading, setApprovalLoading] = useState(false);
 
   const { run, loading, error, fetch, approve, reject, retry } = useRun(runId);
   const { events, wsStatus } = useRunProgress(runId, {
@@ -327,22 +328,26 @@ function RunDetailPanel({ runId }: { runId: string }) {
   };
 
   const handleApprove = async () => {
+    setApprovalLoading(true);
     try {
       await approve();
-      setShowApprovalConfirm(null);
-      setApprovalComment("");
+      setShowApprovalDialog(false);
     } catch (err) {
       console.error("Approval failed:", err);
+    } finally {
+      setApprovalLoading(false);
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason: string) => {
+    setApprovalLoading(true);
     try {
-      await reject(approvalComment || "Rejected by user");
-      setShowApprovalConfirm(null);
-      setApprovalComment("");
+      await reject(reason);
+      setShowApprovalDialog(false);
     } catch (err) {
       console.error("Rejection failed:", err);
+    } finally {
+      setApprovalLoading(false);
     }
   };
 
@@ -384,12 +389,12 @@ function RunDetailPanel({ runId }: { runId: string }) {
   const progress = run.steps.filter((s) => s.status === "completed").length;
   const total = run.steps.length;
 
-  // Group artifacts by step
+  // Group artifacts by step_name (fallback to step_id for backwards compatibility)
   const artifactsByStep = artifacts.reduce(
     (acc, artifact) => {
-      const stepId = artifact.step_id;
-      if (!acc[stepId]) acc[stepId] = [];
-      acc[stepId].push(artifact);
+      const stepKey = artifact.step_name || artifact.step_id;
+      if (!acc[stepKey]) acc[stepKey] = [];
+      acc[stepKey].push(artifact);
       return acc;
     },
     {} as Record<string, ArtifactRef[]>,
@@ -457,60 +462,27 @@ function RunDetailPanel({ runId }: { runId: string }) {
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
                 <span className="font-medium text-yellow-800">承認が必要です</span>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowApprovalConfirm("reject")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
-                >
-                  <X className="h-4 w-4" />
-                  却下
-                </button>
-                <button
-                  onClick={() => setShowApprovalConfirm("approve")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
-                >
-                  <Check className="h-4 w-4" />
-                  承認
-                </button>
-              </div>
+              <button
+                onClick={() => setShowApprovalDialog(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
+              >
+                <Eye className="h-4 w-4" />
+                成果物を確認して承認
+              </button>
             </div>
-
-            {/* Approval Confirm */}
-            {showApprovalConfirm && (
-              <div className="mt-3 pt-3 border-t border-yellow-200">
-                <p className="text-sm text-yellow-800 mb-2">
-                  {showApprovalConfirm === "approve" ? "承認" : "却下"}してよろしいですか？
-                </p>
-                <textarea
-                  value={approvalComment}
-                  onChange={(e) => setApprovalComment(e.target.value)}
-                  placeholder="コメント（任意）"
-                  className="w-full px-3 py-2 border border-yellow-300 rounded text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-yellow-500"
-                  rows={2}
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setShowApprovalConfirm(null)}
-                    className="px-3 py-1.5 text-gray-600 text-sm hover:bg-yellow-100 rounded transition-colors"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    onClick={showApprovalConfirm === "approve" ? handleApprove : handleReject}
-                    className={cn(
-                      "px-3 py-1.5 rounded text-sm transition-colors",
-                      showApprovalConfirm === "approve"
-                        ? "bg-green-600 text-white hover:bg-green-700"
-                        : "bg-red-600 text-white hover:bg-red-700",
-                    )}
-                  >
-                    確定
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
+
+        {/* Approval Dialog */}
+        <ApprovalDialog
+          isOpen={showApprovalDialog}
+          onClose={() => setShowApprovalDialog(false)}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          runId={runId}
+          artifacts={artifacts}
+          loading={approvalLoading}
+        />
       </div>
 
       {/* Steps List */}

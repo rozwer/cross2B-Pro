@@ -20,10 +20,12 @@ export type WorkflowViewPattern = "n8n" | "timeline" | "radial";
 interface WorkflowProgressViewProps {
   steps: Step[];
   currentStep: string;
+  runStatus?: string;
   waitingApproval: boolean;
   onApprove?: () => void;
   onReject?: (reason: string) => void;
   onRetry?: (stepName: string) => void;
+  onResumeFrom?: (stepName: string) => void;
   defaultPattern?: WorkflowViewPattern;
 }
 
@@ -41,10 +43,12 @@ const STORAGE_KEY = "workflow-view-pattern";
 export function WorkflowProgressView({
   steps,
   currentStep,
+  runStatus,
   waitingApproval,
   onApprove,
   onReject,
   onRetry,
+  onResumeFrom,
   defaultPattern = "n8n",
 }: WorkflowProgressViewProps) {
   // Load saved pattern from localStorage
@@ -99,25 +103,32 @@ export function WorkflowProgressView({
           <WorkflowPattern1_N8nStyle
             steps={steps}
             currentStep={currentStep}
+            runStatus={runStatus}
             waitingApproval={waitingApproval}
             onRetry={onRetry}
+            onResumeFrom={onResumeFrom}
           />
         )}
         {pattern === "timeline" && (
           <WorkflowPattern4_VerticalTimeline
             steps={steps}
             currentStep={currentStep}
+            runStatus={runStatus}
             waitingApproval={waitingApproval}
             onRetry={onRetry}
+            onResumeFrom={onResumeFrom}
           />
         )}
         {pattern === "radial" && (
           <WorkflowPattern5_RadialProgress
             steps={steps}
             currentStep={currentStep}
+            runStatus={runStatus}
             waitingApproval={waitingApproval}
             onApprove={onApprove}
             onReject={onReject}
+            onRetry={onRetry}
+            onResumeFrom={onResumeFrom}
           />
         )}
       </div>
