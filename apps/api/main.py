@@ -246,6 +246,7 @@ class ArtifactRef(BaseModel):
 
     id: str
     step_id: str
+    step_name: str = ""  # Human-readable step name for display
     ref_path: str
     digest: str
     content_type: str
@@ -318,6 +319,7 @@ class RunResponse(BaseModel):
     current_step: str | None
     input: RunInput
     model_config_data: ModelConfig = Field(alias="model_config")
+    step_configs: list[StepModelConfig] | None = None
     tool_config: ToolConfig | None = None
     options: RunOptions | None = None
     steps: list[StepResponse] = Field(default_factory=list)
@@ -735,6 +737,12 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
     options_data = config.get("options")
     options = RunOptions(**options_data) if options_data else None
 
+    # Parse step_configs
+    step_configs_data = config.get("step_configs")
+    step_configs: list[StepModelConfig] | None = None
+    if step_configs_data:
+        step_configs = [StepModelConfig(**sc) for sc in step_configs_data]
+
     # Convert steps if provided
     step_responses: list[StepResponse] = []
     if steps:
@@ -767,6 +775,7 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
         current_step=run.current_step,
         input=run_input,
         model_config=model_config,
+        step_configs=step_configs,
         tool_config=tool_config,
         options=options,
         steps=step_responses,
@@ -778,12 +787,18 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
     )
 
 
-async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str | None) -> list[StepResponse]:
+async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str | None, run_status: str | None = None) -> list[StepResponse]:
     """Build step responses from storage artifacts.
 
     When DB doesn't have step records, we infer step status from storage.
     If a step has output.json in storage, it's considered completed.
     Also builds artifact refs for each step.
+
+    Args:
+        tenant_id: Tenant ID
+        run_id: Run ID
+        current_step: Current step name from Temporal
+        run_status: Overall run status (e.g., "failed", "running", "completed")
     """
     store = get_artifact_store()
     if store is None:
@@ -856,9 +871,17 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
         if step_name in completed_steps:
             status = StepStatus.COMPLETED
         elif current_step and current_step == step_name:
-            status = StepStatus.RUNNING
+            # If run is failed, the current step is the failed step
+            if run_status == RunStatus.FAILED.value:
+                status = StepStatus.FAILED
+            else:
+                status = StepStatus.RUNNING
         elif current_step and current_step == display_name:
-            status = StepStatus.RUNNING
+            # If run is failed, the current step is the failed step
+            if run_status == RunStatus.FAILED.value:
+                status = StepStatus.FAILED
+            else:
+                status = StepStatus.RUNNING
         # Special handling for input steps: always completed once workflow starts
         elif step_name in always_completed_steps:
             status = StepStatus.COMPLETED
@@ -869,9 +892,12 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
             all_children_completed = all(child in completed_steps for child in children)
             if all_children_completed:
                 status = StepStatus.COMPLETED
-            # Parent is running if any child is running
+            # Parent is running/failed if any child is current step
             elif current_step in children:
-                status = StepStatus.RUNNING
+                if run_status == RunStatus.FAILED.value:
+                    status = StepStatus.FAILED
+                else:
+                    status = StepStatus.RUNNING
             else:
                 status = StepStatus.PENDING
         else:
@@ -1185,7 +1211,7 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
             db_steps = list(run.steps)
             if not db_steps:
                 storage_steps = await _get_steps_from_storage(
-                    tenant_id, run_id, run.current_step
+                    tenant_id, run_id, run.current_step, run.status
                 )
                 # Build response with storage-based steps
                 response = _run_orm_to_response(run, steps=[])
@@ -2063,10 +2089,8 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
             # 4. Delete artifacts from storage
             try:
-                artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
-                for path in artifact_paths:
-                    await store.delete(path)
-                logger.info(f"Deleted {len(artifact_paths)} artifacts from storage", extra={"run_id": run_id})
+                deleted_count = await store.delete_run_artifacts(tenant_id, run_id)
+                logger.info(f"Deleted {deleted_count} artifacts from storage", extra={"run_id": run_id})
             except Exception as storage_error:
                 logger.warning(f"Failed to delete some artifacts from storage: {storage_error}")
                 # Continue with DB deletion anyway
@@ -2189,9 +2213,7 @@ async def bulk_delete_runs(
 
                     # 4. Delete artifacts from storage
                     try:
-                        artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
-                        for path in artifact_paths:
-                            await store.delete(path)
+                        await store.delete_run_artifacts(tenant_id, run_id)
                     except Exception as storage_error:
                         logger.warning(f"Failed to delete artifacts for {run_id}: {storage_error}")
 
@@ -2306,8 +2328,12 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
 
 @app.get("/api/runs/{run_id}/files", response_model=list[ArtifactRef])
 async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)) -> list[ArtifactRef]:
-    """List all artifacts for a run."""
+    """List all artifacts for a run.
+
+    Falls back to MinIO listing if DB artifacts table is empty.
+    """
     from sqlalchemy import select
+    from datetime import datetime
 
     tenant_id = user.tenant_id
     logger.debug(
@@ -2328,24 +2354,84 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
+            # Build step_id -> step_name mapping
+            steps_query = select(Step).where(Step.run_id == run_id)
+            steps_result = await session.execute(steps_query)
+            steps = steps_result.scalars().all()
+            step_id_to_name = {str(s.id): s.step_name for s in steps}
+
             # Query artifacts from DB
             artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id)
             artifact_result = await session.execute(artifact_query)
             artifacts = artifact_result.scalars().all()
 
-            # Convert to ArtifactRef response format
-            return [
-                ArtifactRef(
-                    id=str(a.id),
-                    step_id=str(a.step_id) if a.step_id else "",
-                    ref_path=a.ref_path,
-                    digest=a.digest or "",
-                    content_type=a.content_type or a.artifact_type,
-                    size_bytes=a.size_bytes or 0,
-                    created_at=a.created_at.isoformat(),
-                )
-                for a in artifacts
-            ]
+            # If DB has artifacts, return them
+            if artifacts:
+                return [
+                    ArtifactRef(
+                        id=str(a.id),
+                        step_id=str(a.step_id) if a.step_id else "",
+                        step_name=step_id_to_name.get(str(a.step_id), "") if a.step_id else "",
+                        ref_path=a.ref_path,
+                        digest=a.digest or "",
+                        content_type=a.content_type or a.artifact_type,
+                        size_bytes=a.size_bytes or 0,
+                        created_at=a.created_at.isoformat(),
+                    )
+                    for a in artifacts
+                ]
+
+            # Fallback: List artifacts directly from MinIO storage
+            logger.info(f"No artifacts in DB for run {run_id}, listing from MinIO")
+            try:
+                paths = await store.list_run_artifacts(tenant_id, run_id)
+                artifact_refs = []
+
+                for path in paths:
+                    # Parse path: storage/{tenant_id}/{run_id}/{step}/{filename}
+                    parts = path.split("/")
+                    if len(parts) >= 5:
+                        step_name = parts[3]
+                        filename = parts[4]
+
+                        # Skip non-output files (checkpoints, metadata)
+                        if filename.startswith("checkpoint_") or filename == "metadata.json":
+                            continue
+                        # Only include output files (output.json, .html, .md)
+                        if not (filename.endswith(".json") or filename.endswith(".html") or filename.endswith(".md")):
+                            continue
+
+                        # Get file stat from MinIO for size
+                        try:
+                            stat = store.client.stat_object(store.bucket, path)
+                            size_bytes = stat.size if stat.size is not None else 0
+                            created_at = stat.last_modified.isoformat() if stat.last_modified else datetime.now().isoformat()
+                        except Exception:
+                            size_bytes = 0
+                            created_at = datetime.now().isoformat()
+
+                        # Determine content type
+                        content_type = "application/json"
+                        if filename.endswith(".html"):
+                            content_type = "text/html"
+                        elif filename.endswith(".md"):
+                            content_type = "text/markdown"
+
+                        artifact_refs.append(ArtifactRef(
+                            id=f"{run_id}:{step_name}:{filename}",  # Synthetic ID
+                            step_id="",
+                            step_name=step_name,
+                            ref_path=path,
+                            digest="",  # Not available without reading file
+                            content_type=content_type,
+                            size_bytes=size_bytes,
+                            created_at=created_at,
+                        ))
+
+                return artifact_refs
+            except Exception as e:
+                logger.warning(f"Failed to list from MinIO: {e}")
+                return []
 
     except HTTPException:
         raise
@@ -2384,6 +2470,12 @@ async def get_step_artifacts(
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
+            # Build step_id -> step_name mapping
+            steps_query = select(Step).where(Step.run_id == run_id)
+            steps_result = await session.execute(steps_query)
+            steps = steps_result.scalars().all()
+            step_id_to_name = {str(s.id): s.step_name for s in steps}
+
             # Query artifacts for specific step (via step_id -> steps.step_name)
             # First, find step by name
             step_query = select(Step).where(
@@ -2412,6 +2504,7 @@ async def get_step_artifacts(
                 ArtifactRef(
                     id=str(a.id),
                     step_id=str(a.step_id) if a.step_id else "",
+                    step_name=step_id_to_name.get(str(a.step_id), "") if a.step_id else "",
                     ref_path=a.ref_path,
                     digest=a.digest or "",
                     content_type=a.content_type or a.artifact_type,
@@ -2437,8 +2530,13 @@ async def get_artifact_content(
     artifact_id: str,
     user: AuthUser = Depends(get_current_user),
 ) -> ArtifactContent:
-    """Get artifact content by ID."""
+    """Get artifact content by ID.
+
+    Supports both DB artifact IDs (UUID) and synthetic MinIO IDs ({run_id}:{step}:{filename}).
+    """
     from sqlalchemy import select
+    from datetime import datetime
+    import base64
 
     tenant_id = user.tenant_id
     logger.debug(
@@ -2451,8 +2549,70 @@ async def get_artifact_content(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            # Verify run belongs to tenant and get artifact
-            # Note: artifact_id is UUID string now
+            # Verify run belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Check if artifact_id is a synthetic MinIO ID (format: {run_id}:{step}:{filename})
+            if ":" in artifact_id:
+                # Parse synthetic ID
+                parts = artifact_id.split(":", 2)
+                if len(parts) == 3:
+                    _, step_name, filename = parts
+                    ref_path = f"storage/{tenant_id}/{run_id}/{step_name}/{filename}"
+
+                    # Get content directly from MinIO
+                    try:
+                        content_bytes = await store.get_by_path(tenant_id, run_id, step_name, filename)
+                        if content_bytes is None:
+                            raise HTTPException(status_code=404, detail="Artifact not found in storage")
+                    except ArtifactStoreError:
+                        raise HTTPException(status_code=404, detail="Artifact not found in storage")
+
+                    # Decode content
+                    try:
+                        content = content_bytes.decode("utf-8")
+                        encoding = "utf-8"
+                    except UnicodeDecodeError:
+                        content = base64.b64encode(content_bytes).decode("ascii")
+                        encoding = "base64"
+
+                    # Determine content type
+                    content_type = "application/json"
+                    if filename.endswith(".html"):
+                        content_type = "text/html"
+                    elif filename.endswith(".md"):
+                        content_type = "text/markdown"
+
+                    # Get file stat for size
+                    try:
+                        stat = store.client.stat_object(store.bucket, ref_path)
+                        size_bytes = stat.size if stat.size is not None else len(content_bytes)
+                        created_at = stat.last_modified.isoformat() if stat.last_modified else datetime.now().isoformat()
+                    except Exception:
+                        size_bytes = len(content_bytes)
+                        created_at = datetime.now().isoformat()
+
+                    return ArtifactContent(
+                        ref=ArtifactRef(
+                            id=artifact_id,
+                            step_id="",
+                            step_name=step_name,
+                            ref_path=ref_path,
+                            digest="",
+                            content_type=content_type,
+                            size_bytes=size_bytes,
+                            created_at=created_at,
+                        ),
+                        content=content,
+                        encoding=encoding,
+                    )
+
+            # Standard DB artifact lookup
             artifact_query = (
                 select(ArtifactModel)
                 .join(Run, ArtifactModel.run_id == Run.id)
@@ -2483,14 +2643,15 @@ async def get_artifact_content(
                     ref=storage_ref,
                     verify=True,
                 )
+            except ArtifactNotFoundError:
+                raise HTTPException(status_code=404, detail="Artifact content not found in storage")
+
+            try:
                 content = content_bytes.decode("utf-8")
                 encoding = "utf-8"
             except UnicodeDecodeError:
-                import base64
                 content = base64.b64encode(content_bytes).decode("ascii")
                 encoding = "base64"
-            except ArtifactNotFoundError:
-                raise HTTPException(status_code=404, detail="Artifact content not found in storage")
 
             # Log download for audit
             audit = AuditLogger(session)
@@ -2502,10 +2663,20 @@ async def get_artifact_content(
                 details={"run_id": run_id, "step_id": artifact.step_id},
             )
 
+            # Get step_name if step_id is available
+            step_name = ""
+            if artifact.step_id:
+                step_query = select(Step).where(Step.id == artifact.step_id)
+                step_result = await session.execute(step_query)
+                step_record = step_result.scalar_one_or_none()
+                if step_record:
+                    step_name = step_record.step_name
+
             return ArtifactContent(
                 ref=ArtifactRef(
                     id=str(artifact.id),
                     step_id=str(artifact.step_id) if artifact.step_id else "",
+                    step_name=step_name,
                     ref_path=artifact.ref_path,
                     digest=artifact.digest or "",
                     content_type=artifact.content_type or artifact.artifact_type,
@@ -2553,40 +2724,77 @@ async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            # Look for HTML artifact from final step (step4 or step_final)
-            artifact_query = (
-                select(ArtifactModel)
-                .where(
-                    ArtifactModel.run_id == run_id,
-                    ArtifactModel.file_type.in_(["text/html", "html"]),
-                )
-                .order_by(ArtifactModel.created_at.desc())
-                .limit(1)
-            )
-            artifact_result = await session.execute(artifact_query)
-            artifact = artifact_result.scalar_one_or_none()
-
-            if not artifact:
-                raise HTTPException(status_code=404, detail="Preview not available")
-
-            # Get content from storage
-            storage_ref = StorageArtifactRef(
-                path=artifact.file_path,
-                digest=artifact.digest or "",
-                content_type=artifact.file_type,
-                size_bytes=artifact.size_bytes,
-                created_at=artifact.created_at,
-            )
-
+            # First, try to get HTML from storage directly (step10/preview.html)
+            # This is the preferred method for new runs
+            html_content = None
             try:
-                content_bytes = await store.get_with_tenant_check(
+                content_bytes = await store.get_by_path(
                     tenant_id=tenant_id,
-                    ref=storage_ref,
-                    verify=True,
+                    run_id=run_id,
+                    step="step10",
+                    filename="preview.html",
                 )
-                html_content = content_bytes.decode("utf-8")
-            except ArtifactNotFoundError:
-                raise HTTPException(status_code=404, detail="Preview content not found in storage")
+                if content_bytes:
+                    html_content = content_bytes.decode("utf-8")
+                    logger.debug("Found HTML preview at step10/preview.html")
+            except Exception:
+                # Fallback: look for HTML artifact in DB (legacy support)
+                logger.debug("No preview.html at step10, checking DB artifacts")
+
+            if not html_content:
+                # Look for HTML artifact from final step in DB
+                artifact_query = (
+                    select(ArtifactModel)
+                    .where(
+                        ArtifactModel.run_id == run_id,
+                        ArtifactModel.content_type.in_(["text/html", "html"]),
+                    )
+                    .order_by(ArtifactModel.created_at.desc())
+                    .limit(1)
+                )
+                artifact_result = await session.execute(artifact_query)
+                artifact = artifact_result.scalar_one_or_none()
+
+                if not artifact:
+                    # Final fallback: try to extract html_content from step10/output.json
+                    try:
+                        output_bytes = await store.get_by_path(
+                            tenant_id=tenant_id,
+                            run_id=run_id,
+                            step="step10",
+                            filename="output.json",
+                        )
+                        if output_bytes:
+                            import json
+                            output_data = json.loads(output_bytes.decode("utf-8"))
+                            html_content = output_data.get("html_content")
+                            if html_content:
+                                logger.debug("Extracted html_content from step10/output.json")
+                    except Exception as e:
+                        logger.debug(f"Could not extract from output.json: {e}")
+
+                if not html_content and artifact:
+                    # Get content from DB artifact reference
+                    storage_ref = StorageArtifactRef(
+                        path=artifact.ref_path,
+                        digest=artifact.digest or "",
+                        content_type=artifact.content_type or "text/html",
+                        size_bytes=artifact.size_bytes or 0,
+                        created_at=artifact.created_at,
+                    )
+
+                    try:
+                        content_bytes = await store.get_with_tenant_check(
+                            tenant_id=tenant_id,
+                            ref=storage_ref,
+                            verify=True,
+                        )
+                        html_content = content_bytes.decode("utf-8")
+                    except ArtifactNotFoundError:
+                        pass
+
+            if not html_content:
+                raise HTTPException(status_code=404, detail="Preview not available")
 
             return HTMLResponse(content=html_content)
 
@@ -3385,7 +3593,7 @@ class ConnectionManager:
             current_step: Current step name if applicable
             error: Error details if applicable
         """
-        message = {
+        message: dict[str, Any] = {
             "type": event_type,
             "run_id": run_id,
             "status": status,
