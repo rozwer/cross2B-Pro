@@ -1,7 +1,7 @@
 #!/bin/bash
-# pre-push hook: develop/mainへの直接pushを禁止
+# pre-push hook: main/masterへの直接pushを禁止（developは許可）
 
-protected_branches=("main" "master" "develop")
+protected_branches=("main" "master")
 current_branch=$(git symbolic-ref --short HEAD)
 
 for branch in "${protected_branches[@]}"; do
