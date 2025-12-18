@@ -9,12 +9,17 @@ All workflow activities inherit from BaseActivity to ensure:
 
 import hashlib
 import json
+import os
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, TypeVar
 
+import httpx
 from temporalio import activity
+
+# API base URL for internal communication (Worker -> API)
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://api:8000")
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory, StepError
@@ -213,6 +218,14 @@ class BaseActivity(ABC):
             {"attempt": attempt, "input_digest": input_digest},
         )
 
+        # Update step status in DB via API
+        await self._update_step_status(
+            run_id=run_id,
+            step_name=self.step_id,
+            status="running",
+            retry_count=attempt,
+        )
+
         try:
             # Build minimal state for execution
             state = GraphState(
@@ -253,6 +266,13 @@ class BaseActivity(ABC):
                 },
             )
 
+            # Update step status in DB via API
+            await self._update_step_status(
+                run_id=run_id,
+                step_name=self.step_id,
+                status="completed",
+            )
+
             # Return ONLY artifact_ref to avoid gRPC message size limits
             # Downstream steps should load data from storage if needed
             return {
@@ -273,6 +293,13 @@ class BaseActivity(ABC):
                     "details": e.details,
                 },
             )
+            # Update step status in DB via API
+            await self._update_step_status(
+                run_id=run_id,
+                step_name=self.step_id,
+                status="failed",
+                error_message=str(e),
+            )
             raise
 
         except Exception as e:
@@ -285,6 +312,13 @@ class BaseActivity(ABC):
                     "category": ErrorCategory.RETRYABLE.value,
                     "unexpected": True,
                 },
+            )
+            # Update step status in DB via API
+            await self._update_step_status(
+                run_id=run_id,
+                step_name=self.step_id,
+                status="failed",
+                error_message=str(e),
             )
             raise ActivityError(
                 message=f"Unexpected error in {self.step_id}: {e}",
@@ -404,6 +438,44 @@ class BaseActivity(ABC):
             payload=payload,
         )
         await self.emitter.emit(event)
+
+    async def _update_step_status(
+        self,
+        run_id: str,
+        step_name: str,
+        status: str,
+        error_message: str | None = None,
+        retry_count: int = 0,
+    ) -> None:
+        """Update step status via internal API.
+
+        Sends HTTP request to API to record step progress in DB.
+        Failures are logged but not raised to avoid blocking workflow.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{API_BASE_URL}/api/internal/steps/update",
+                    json={
+                        "run_id": run_id,
+                        "step_name": step_name,
+                        "status": status,
+                        "error_message": error_message,
+                        "retry_count": retry_count,
+                    },
+                )
+                if response.status_code != 200:
+                    logger.warning(
+                        f"Failed to update step status: {response.status_code} {response.text}"
+                    )
+                else:
+                    logger.info(f"Step status updated: {step_name} -> {status}")
+        except Exception as e:
+            # Log but don't raise - step status update is not critical
+            logger.warning(f"Failed to update step status via API: {e}")
 
     def create_step_error(
         self,
