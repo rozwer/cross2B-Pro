@@ -11,6 +11,7 @@ from .exceptions import (
 )
 from .json_validator import JsonValidator
 from .repairer import Repairer
+from .step9_validator import Step9OutputValidator
 from .schemas import (
     RepairAction,
     ValidationIssue,
@@ -28,6 +29,7 @@ __all__ = [
     "ValidatorInterface",
     "JsonValidator",
     "CsvValidator",
+    "Step9OutputValidator",
     # Repairer
     "Repairer",
     # Exceptions

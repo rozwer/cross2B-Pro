@@ -5,6 +5,7 @@ Includes HTML validation and publication checklist.
 Uses Claude for final formatting.
 """
 
+import logging
 from typing import Any
 
 from temporalio import activity
@@ -15,8 +16,12 @@ from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
+from apps.api.validation import Step9OutputValidator
+from apps.api.validation.schemas import ValidationReport
 
 from .base import ActivityError, BaseActivity
+
+logger = logging.getLogger(__name__)
 
 
 class Step10FinalOutput(BaseActivity):
@@ -56,7 +61,6 @@ class Step10FinalOutput(BaseActivity):
         # Get inputs
         keyword = config.get("keyword")
         step9_data = config.get("step9_data", {})
-        final_content = step9_data.get("final_content", "")
 
         if not keyword:
             raise ActivityError(
@@ -64,11 +68,51 @@ class Step10FinalOutput(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
-        if not final_content:
-            raise ActivityError(
-                "final content is required - run step9 first",
-                category=ErrorCategory.NON_RETRYABLE,
+        # Validate and repair step9 output before proceeding
+        validation_report = self._validate_step9_output(step9_data)
+
+        # Log any repairs that were applied
+        if validation_report.repairs:
+            logger.info(
+                "Step9 output repairs applied",
+                extra={
+                    "run_id": ctx.run_id,
+                    "repair_count": len(validation_report.repairs),
+                    "repairs": [
+                        {"code": r.code, "description": r.description}
+                        for r in validation_report.repairs
+                    ],
+                },
             )
+
+        if not validation_report.valid:
+            error_messages = [
+                f"[{issue.code}] {issue.message}"
+                for issue in validation_report.issues
+                if issue.severity.value == "error"
+            ]
+            raise ActivityError(
+                f"Step9 output validation failed: {'; '.join(error_messages)}",
+                category=ErrorCategory.VALIDATION_FAIL,
+                details={
+                    "validation_issues": [
+                        {
+                            "code": issue.code,
+                            "message": issue.message,
+                            "severity": issue.severity.value,
+                            "location": issue.location,
+                        }
+                        for issue in validation_report.issues
+                    ],
+                    "repairs_applied": [
+                        {"code": r.code, "description": r.description}
+                        for r in validation_report.repairs
+                    ],
+                },
+            )
+
+        # Use the (potentially repaired) content from step9_data
+        final_content = step9_data.get("final_content", "")
 
         # Get LLM client (Claude for step10 - final formatting)
         llm_provider = config.get("llm_provider", "anthropic")
@@ -131,7 +175,8 @@ class Step10FinalOutput(BaseActivity):
         if checklist_response:
             checklist_tokens = checklist_response.token_usage.output
 
-        return {
+        # Build result with validation info
+        result = {
             "step": self.step_id,
             "keyword": keyword,
             "article": {
@@ -150,6 +195,41 @@ class Step10FinalOutput(BaseActivity):
                 "checklist_tokens": checklist_tokens,
             },
         }
+
+        # Include validation metadata if repairs were applied
+        if validation_report.repairs:
+            result["validation"] = {
+                "repairs_applied": [
+                    {
+                        "code": r.code,
+                        "description": r.description,
+                        "applied_at": r.applied_at.isoformat(),
+                    }
+                    for r in validation_report.repairs
+                ],
+                "original_hash": validation_report.original_hash,
+                "repaired_hash": validation_report.repaired_hash,
+            }
+
+        return result
+
+    def _validate_step9_output(
+        self, step9_data: dict[str, Any]
+    ) -> ValidationReport:
+        """Validate and repair step9 output before processing.
+
+        Applies deterministic repairs (BOM removal, line ending normalization,
+        trailing whitespace trimming, heading level normalization) and validates
+        the content structure.
+
+        Args:
+            step9_data: The output dictionary from step9 (modified in-place if repairs applied)
+
+        Returns:
+            ValidationReport with validation results and any repairs applied
+        """
+        validator = Step9OutputValidator()
+        return validator.validate(step9_data, auto_repair=True)
 
     def _validate_html(self, html_content: str) -> bool:
         """Basic HTML validation.
