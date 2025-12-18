@@ -5,7 +5,26 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from apps.api.core.errors import ErrorCategory
-from apps.api.observability.error_collector import ErrorCollector, ErrorLogEntry
+from apps.api.observability.error_collector import (
+    ErrorCollector,
+    ErrorLogEntry,
+    GlobalErrorCollector,
+    LogSource,
+    get_global_collector,
+)
+
+
+class TestLogSource:
+    """Tests for LogSource enum."""
+
+    def test_all_sources_defined(self):
+        """Test all log sources are defined."""
+        assert LogSource.LLM.value == "llm"
+        assert LogSource.TOOL.value == "tool"
+        assert LogSource.VALIDATION.value == "validation"
+        assert LogSource.STORAGE.value == "storage"
+        assert LogSource.ACTIVITY.value == "activity"
+        assert LogSource.API.value == "api"
 
 
 class TestErrorLogEntry:
@@ -23,9 +42,22 @@ class TestErrorLogEntry:
 
         assert entry.run_id == "run-123"
         assert entry.step_id == "step1"
+        assert entry.source == LogSource.ACTIVITY  # Default value
         assert entry.error_category == ErrorCategory.RETRYABLE
         assert entry.error_type == "LLMTimeoutError"
         assert entry.attempt == 1
+
+    def test_error_log_entry_with_source(self):
+        """Test error log entry with explicit source."""
+        entry = ErrorLogEntry(
+            run_id="run-123",
+            source=LogSource.LLM,
+            error_category=ErrorCategory.RETRYABLE,
+            error_type="LLMTimeoutError",
+            error_message="Request timed out",
+        )
+
+        assert entry.source == LogSource.LLM
 
     def test_error_log_entry_with_context(self):
         """Test error log entry with additional context."""
@@ -132,6 +164,7 @@ class TestErrorCollector:
         mock_error1 = MagicMock()
         mock_error1.error_category = "retryable"
         mock_error1.step_id = "step1"
+        mock_error1.source = "llm"
         mock_error1.error_type = "LLMTimeoutError"
         mock_error1.error_message = "Timeout"
         mock_error1.attempt = 1
@@ -140,6 +173,7 @@ class TestErrorCollector:
         mock_error2 = MagicMock()
         mock_error2.error_category = "non_retryable"
         mock_error2.step_id = "step2"
+        mock_error2.source = "tool"
         mock_error2.error_type = "LLMAuthError"
         mock_error2.error_message = "Auth failed"
         mock_error2.attempt = 1
@@ -156,6 +190,8 @@ class TestErrorCollector:
         assert summary["by_category"]["non_retryable"] == 1
         assert summary["by_step"]["step1"] == 1
         assert summary["by_step"]["step2"] == 1
+        assert summary["by_source"]["llm"] == 1
+        assert summary["by_source"]["tool"] == 1
         assert len(summary["timeline"]) == 2
 
     @pytest.mark.asyncio
@@ -164,6 +200,7 @@ class TestErrorCollector:
         # Setup mock error
         mock_error = MagicMock()
         mock_error.step_id = "step1"
+        mock_error.source = "llm"
         mock_error.error_category = "retryable"
         mock_error.error_type = "LLMTimeoutError"
         mock_error.error_message = "Timeout"
@@ -215,3 +252,153 @@ class TestErrorCollector:
         assert context["run_status"] == "failed"
         assert context["error_summary"]["total_errors"] == 1
         assert len(context["error_logs"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_log_llm_error(self, collector, mock_session):
+        """Test logging an LLM-specific error."""
+        exc = TimeoutError("LLM request timed out")
+        await collector.log_llm_error(
+            run_id="run-123",
+            exception=exc,
+            error_category=ErrorCategory.RETRYABLE,
+            provider="anthropic",
+            model="claude-sonnet-4",
+            step_id="step1",
+            attempt=2,
+            extra_context={"timeout_ms": 30000},
+        )
+
+        mock_session.add.assert_called_once()
+        added_log = mock_session.add.call_args[0][0]
+        assert added_log.source == "llm"
+        assert added_log.context["provider"] == "anthropic"
+        assert added_log.context["model"] == "claude-sonnet-4"
+        assert added_log.context["timeout_ms"] == 30000
+
+    @pytest.mark.asyncio
+    async def test_log_tool_error(self, collector, mock_session):
+        """Test logging a tool-specific error."""
+        exc = RuntimeError("Failed to fetch URL")
+        await collector.log_tool_error(
+            run_id="run-123",
+            exception=exc,
+            error_category=ErrorCategory.RETRYABLE,
+            tool_id="fetch",
+            step_id="step3",
+            extra_context={"url": "https://example.com"},
+        )
+
+        mock_session.add.assert_called_once()
+        added_log = mock_session.add.call_args[0][0]
+        assert added_log.source == "tool"
+        assert added_log.context["tool_id"] == "fetch"
+        assert added_log.context["url"] == "https://example.com"
+
+    @pytest.mark.asyncio
+    async def test_log_validation_error(self, collector, mock_session):
+        """Test logging a validation error."""
+        await collector.log_validation_error(
+            run_id="run-123",
+            error_message="JSON schema validation failed",
+            validation_type="json_schema",
+            step_id="step5",
+            issues=[{"path": "$.title", "error": "missing required field"}],
+        )
+
+        mock_session.add.assert_called_once()
+        added_log = mock_session.add.call_args[0][0]
+        assert added_log.source == "validation"
+        assert added_log.error_category == "validation_fail"
+        assert added_log.context["validation_type"] == "json_schema"
+        assert len(added_log.context["issues"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_log_storage_error(self, collector, mock_session):
+        """Test logging a storage error."""
+        exc = IOError("MinIO connection failed")
+        await collector.log_storage_error(
+            run_id="run-123",
+            exception=exc,
+            error_category=ErrorCategory.RETRYABLE,
+            operation="put",
+            path="tenant-1/run-123/step1/output.json",
+            step_id="step1",
+        )
+
+        mock_session.add.assert_called_once()
+        added_log = mock_session.add.call_args[0][0]
+        assert added_log.source == "storage"
+        assert added_log.context["operation"] == "put"
+        assert added_log.context["path"] == "tenant-1/run-123/step1/output.json"
+
+    @pytest.mark.asyncio
+    async def test_get_errors_with_source_filter(self, collector, mock_session):
+        """Test filtering errors by source."""
+        mock_error = MagicMock()
+        mock_error.source = "llm"
+        mock_error.error_type = "LLMTimeoutError"
+
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [mock_error]
+        mock_session.execute.return_value = mock_result
+
+        errors = await collector.get_errors_for_run("run-123", source=LogSource.LLM)
+
+        assert len(errors) == 1
+        mock_session.execute.assert_called_once()
+
+
+class TestGlobalErrorCollector:
+    """Tests for GlobalErrorCollector."""
+
+    @pytest.fixture
+    def global_collector(self):
+        """Create a new GlobalErrorCollector."""
+        return GlobalErrorCollector()
+
+    @pytest.mark.asyncio
+    async def test_log_error_queues_entry(self, global_collector):
+        """Test that log_error queues an entry."""
+        await global_collector.log_error(
+            run_id="run-123",
+            error_category=ErrorCategory.RETRYABLE,
+            error_type="TestError",
+            error_message="Test message",
+            source=LogSource.LLM,
+        )
+
+        assert global_collector.pending_count() == 1
+
+    @pytest.mark.asyncio
+    async def test_log_multiple_errors(self, global_collector):
+        """Test queuing multiple errors."""
+        for i in range(3):
+            await global_collector.log_error(
+                run_id="run-123",
+                error_category=ErrorCategory.RETRYABLE,
+                error_type="TestError",
+                error_message=f"Test message {i}",
+            )
+
+        assert global_collector.pending_count() == 3
+
+    @pytest.mark.asyncio
+    async def test_log_exception_queues_with_stack_trace(self, global_collector):
+        """Test that log_exception includes stack trace."""
+        try:
+            raise ValueError("Test exception")
+        except ValueError as e:
+            await global_collector.log_exception(
+                run_id="run-123",
+                exception=e,
+                error_category=ErrorCategory.NON_RETRYABLE,
+                source=LogSource.TOOL,
+            )
+
+        assert global_collector.pending_count() == 1
+
+    def test_get_global_collector_singleton(self):
+        """Test that get_global_collector returns the same instance."""
+        collector1 = get_global_collector()
+        collector2 = get_global_collector()
+        assert collector1 is collector2

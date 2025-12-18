@@ -157,6 +157,7 @@ class TestErrorLog:
         error_log = ErrorLog(
             run_id="550e8400-e29b-41d4-a716-446655440000",
             step_id="step3",
+            source="llm",
             error_category="retryable",
             error_type="LLMTimeoutError",
             error_message="Request timed out after 30 seconds",
@@ -165,6 +166,7 @@ class TestErrorLog:
             attempt=2,
         )
         assert error_log.step_id == "step3"
+        assert error_log.source == "llm"
         assert error_log.error_category == "retryable"
         assert error_log.error_type == "LLMTimeoutError"
         assert error_log.attempt == 2
@@ -179,9 +181,23 @@ class TestErrorLog:
             error_message="Invalid API key",
         )
         assert error_log.step_id is None
+        assert error_log.source == "activity"  # Default value
         assert error_log.stack_trace is None
         assert error_log.context is None
         assert error_log.attempt == 1
+
+    def test_error_log_all_sources(self) -> None:
+        """Test ErrorLog with different source values."""
+        sources = ["llm", "tool", "validation", "storage", "activity", "api"]
+        for source in sources:
+            error_log = ErrorLog(
+                run_id="550e8400-e29b-41d4-a716-446655440000",
+                source=source,
+                error_category="retryable",
+                error_type="TestError",
+                error_message="Test error message",
+            )
+            assert error_log.source == source
 
 
 class TestDiagnosticReport:

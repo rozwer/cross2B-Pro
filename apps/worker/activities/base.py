@@ -400,6 +400,7 @@ class BaseActivity(ABC):
         ctx: ExecutionContext,
         error: Exception,
         category: ErrorCategory,
+        source: str = "activity",
         context: dict[str, Any] | None = None,
     ) -> None:
         """Collect error for LLM-based diagnostics.
@@ -411,6 +412,7 @@ class BaseActivity(ABC):
             ctx: Execution context
             error: The exception that occurred
             category: Error classification
+            source: Error source (activity, llm, tool, validation, storage, api)
             context: Additional context (LLM model, tool, params, etc.)
         """
         try:
@@ -439,16 +441,17 @@ class BaseActivity(ABC):
                     text(
                         """
                         INSERT INTO error_logs
-                        (run_id, step_id, error_category, error_type,
+                        (run_id, step_id, source, error_category, error_type,
                          error_message, stack_trace, context, attempt)
                         VALUES
-                        (:run_id, :step_id, :error_category, :error_type,
+                        (:run_id, :step_id, :source, :error_category, :error_type,
                          :error_message, :stack_trace, :context, :attempt)
                         """
                     ),
                     {
                         "run_id": ctx.run_id,
                         "step_id": ctx.step_id,
+                        "source": source,
                         "error_category": category.value,
                         "error_type": type(error).__name__,
                         "error_message": str(error),

@@ -255,6 +255,7 @@ class ErrorLog(Base):
     """Detailed error log for diagnostics.
 
     Collects all errors within a run/session for LLM-based failure analysis.
+    Supports multiple sources: llm, tool, validation, storage, activity, api.
     """
 
     __tablename__ = "error_logs"
@@ -264,6 +265,9 @@ class ErrorLog(Base):
         UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True
     )
     step_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    source: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="activity", index=True
+    )  # llm, tool, validation, storage, activity, api
     error_category: Mapped[str] = mapped_column(
         String(32), nullable=False
     )  # retryable, non_retryable, validation_fail

@@ -789,6 +789,7 @@ class ErrorLogResponse(BaseModel):
 
     id: int
     step_id: str | None
+    source: str  # llm, tool, validation, storage, activity, api
     error_category: str
     error_type: str
     error_message: str
@@ -844,6 +845,7 @@ async def list_error_logs(
                 ErrorLogResponse(
                     id=e.id,
                     step_id=e.step_id,
+                    source=e.source,
                     error_category=e.error_category,
                     error_type=e.error_type,
                     error_message=e.error_message,
