@@ -8,6 +8,6 @@ description: Temporal リプレイ（決定性違反/履歴起因バグの切り
 
 ## 手順（導入後に確定）
 
-1) Workflow history を取得（Temporal CLI/API）  
-2) Python SDK の replayer でローカル replay  
-3) 例外の最初の差分（非決定な分岐/時刻/乱数/外部I/O）を特定して修正
+1. Workflow history を取得（Temporal CLI/API）
+2. Python SDK の replayer でローカル replay
+3. 例外の最初の差分（非決定な分岐/時刻/乱数/外部I/O）を特定して修正

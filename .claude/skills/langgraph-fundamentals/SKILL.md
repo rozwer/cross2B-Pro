@@ -29,12 +29,13 @@ graph = StateGraph(State)
 
 Define with `TypedDict` or Pydantic `BaseModel`. Two update modes:
 
-| Mode | Syntax | Behavior |
-|------|--------|----------|
-| Override | `field: Type` | Replace value |
-| Reduce | `field: Annotated[Type, reducer]` | Apply reducer function |
+| Mode     | Syntax                            | Behavior               |
+| -------- | --------------------------------- | ---------------------- |
+| Override | `field: Type`                     | Replace value          |
+| Reduce   | `field: Annotated[Type, reducer]` | Apply reducer function |
 
 Common reducers:
+
 - `operator.add` - Append to list
 - `add_messages` - Append messages with deduplication
 
@@ -59,6 +60,7 @@ graph.add_node(my_node)  # name = "my_node"
 ```
 
 Async nodes:
+
 ```python
 async def async_node(state: State) -> dict:
     result = await some_async_call()
@@ -70,6 +72,7 @@ async def async_node(state: State) -> dict:
 Connect nodes to define execution flow.
 
 **Normal edges** - Fixed transitions:
+
 ```python
 graph.add_edge(START, "node_a")
 graph.add_edge("node_a", "node_b")
@@ -77,6 +80,7 @@ graph.add_edge("node_b", END)
 ```
 
 **Conditional edges** - Dynamic routing:
+
 ```python
 def route(state: State) -> str:
     if state["count"] > 5:
@@ -91,6 +95,7 @@ graph.add_conditional_edges(
 ```
 
 **Fan-out/Fan-in** - Parallel execution:
+
 ```python
 # Fan-out: single node to multiple
 graph.add_edge("start", "task_a")

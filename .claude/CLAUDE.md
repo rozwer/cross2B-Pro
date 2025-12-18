@@ -4,13 +4,13 @@
 
 ## Source of Truth
 
-| 用途 | ファイル |
-|------|----------|
-| **実装計画** | `仕様書/ROADMAP.md` |
-| **ワークフロー** | `仕様書/workflow.md` |
-| **並列開発** | `仕様書/PARALLEL_DEV_GUIDE.md` |
-| **Backend** | `仕様書/backend/` |
-| **Frontend** | `仕様書/frontend/` |
+| 用途             | ファイル                       |
+| ---------------- | ------------------------------ |
+| **実装計画**     | `仕様書/ROADMAP.md`            |
+| **ワークフロー** | `仕様書/workflow.md`           |
+| **並列開発**     | `仕様書/PARALLEL_DEV_GUIDE.md` |
+| **Backend**      | `仕様書/backend/`              |
+| **Frontend**     | `仕様書/frontend/`             |
 
 ---
 
@@ -42,19 +42,19 @@ main (master) ← 本番相当
 
 ### スラッシュコマンド
 
-| 操作 | コマンド |
-|------|----------|
-| 作成 | `/dev:worktree-new <branch>` |
-| 一覧 | `/dev:worktree-list` |
+| 操作 | コマンド                        |
+| ---- | ------------------------------- |
+| 作成 | `/dev:worktree-new <branch>`    |
+| 一覧 | `/dev:worktree-list`            |
 | 削除 | `/dev:worktree-remove <branch>` |
 
 ### 推奨分割（ROADMAP準拠）
 
-| Step | Worktrees |
-|------|-----------|
-| Step1 | `llm-gemini`, `llm-openai`, `llm-anthropic` |
+| Step  | Worktrees                                                       |
+| ----- | --------------------------------------------------------------- |
+| Step1 | `llm-gemini`, `llm-openai`, `llm-anthropic`                     |
 | Step3 | `tools-search`, `tools-fetch`, `tools-verify`, `tools-registry` |
-| Step4 | `contract-state`, `contract-context`, `contract-adapter` |
+| Step4 | `contract-state`, `contract-context`, `contract-adapter`        |
 
 ### ルール
 
@@ -77,15 +77,16 @@ codex
 
 ### 使用場面
 
-| 場面 | コマンド例 |
-|------|-----------|
-| コードレビュー | `/review:codex-review` |
-| 設計レビュー | `@architect` で設計案を出す |
-| セキュリティ | `@security-reviewer` で越境チェック |
+| 場面           | コマンド例                          |
+| -------------- | ----------------------------------- |
+| コードレビュー | `/review:codex-review`              |
+| 設計レビュー   | `@architect` で設計案を出す         |
+| セキュリティ   | `@security-reviewer` で越境チェック |
 
 ### Codex Skills
 
 `.codex/skills/` に専用スキルあり：
+
 - `codex-reviewer` - コードレビュー
 - `langgraph-*` - LangGraph実装パターン
 
@@ -95,12 +96,12 @@ codex
 
 ### テスト戦略
 
-| レベル | 対象 | 実行タイミング |
-|--------|------|---------------|
-| smoke | 依存/構文/起動 | commit前 |
-| unit | 関数単位 | push前 |
-| integration | API/DB/Temporal | PR前 |
-| e2e | 全工程通し | merge前 |
+| レベル      | 対象            | 実行タイミング |
+| ----------- | --------------- | -------------- |
+| smoke       | 依存/構文/起動  | commit前       |
+| unit        | 関数単位        | push前         |
+| integration | API/DB/Temporal | PR前           |
+| e2e         | 全工程通し      | merge前        |
 
 ### コマンド
 
@@ -146,14 +147,14 @@ mypy apps/
 
 ## サブエージェント
 
-| エージェント | 用途 |
-|-------------|------|
-| `@architect` | 設計判断・分割方針 |
-| `@backend-implementer` | BE実装 |
-| `@frontend-implementer` | FE実装 |
-| `@prompt-engineer` | プロンプト設計 |
-| `@security-reviewer` | セキュリティレビュー |
-| `@temporal-debugger` | Temporalデバッグ |
+| エージェント            | 用途                 |
+| ----------------------- | -------------------- |
+| `@architect`            | 設計判断・分割方針   |
+| `@backend-implementer`  | BE実装               |
+| `@frontend-implementer` | FE実装               |
+| `@prompt-engineer`      | プロンプト設計       |
+| `@security-reviewer`    | セキュリティレビュー |
+| `@temporal-debugger`    | Temporalデバッグ     |
 
 ---
 
@@ -204,13 +205,13 @@ mypy apps/
 
 ### よく使うコマンド
 
-| 操作 | コマンド |
-|------|----------|
-| 起動 | `/dev:up` |
-| 停止 | `/dev:down` |
-| smoke | `/dev:smoke` |
-| run開始 | `/workflow:new-run` |
-| 承認 | `/workflow:approve-run` |
+| 操作    | コマンド                |
+| ------- | ----------------------- |
+| 起動    | `/dev:up`               |
+| 停止    | `/dev:down`             |
+| smoke   | `/dev:smoke`            |
+| run開始 | `/workflow:new-run`     |
+| 承認    | `/workflow:approve-run` |
 
 ### 仕様参照
 

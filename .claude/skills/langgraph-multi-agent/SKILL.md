@@ -9,11 +9,11 @@ Patterns for building multi-agent systems with LangGraph.
 
 ## Architecture Overview
 
-| Pattern | Control Flow | Best For |
-|---------|--------------|----------|
-| **Supervisor** | Central orchestrator delegates to workers | Structured workflows, clear hierarchy |
-| **Swarm** | Agents hand off directly to each other | Dynamic routing, lower latency |
-| **Agent-as-Tool** | Main agent calls subagents as tools | Simple delegation, isolated subagents |
+| Pattern           | Control Flow                              | Best For                              |
+| ----------------- | ----------------------------------------- | ------------------------------------- |
+| **Supervisor**    | Central orchestrator delegates to workers | Structured workflows, clear hierarchy |
+| **Swarm**         | Agents hand off directly to each other    | Dynamic routing, lower latency        |
+| **Agent-as-Tool** | Main agent calls subagents as tools       | Simple delegation, isolated subagents |
 
 ## Supervisor Pattern
 
@@ -236,7 +236,7 @@ def specialist_node(state: State) -> dict:
 class MultiAgentState(TypedDict):
     # Shared across all agents
     messages: Annotated[list, add_messages]
-    
+
     # Agent-specific (private)
     researcher_scratchpad: str
     coder_scratchpad: str
@@ -291,19 +291,21 @@ result = app.invoke(inputs, config)
 
 ## Choosing Architecture
 
-| Factor | Supervisor | Swarm |
-|--------|------------|-------|
-| Latency | Higher (routing overhead) | Lower (direct handoff) |
-| Control | Centralized | Distributed |
-| Complexity | Simpler to reason about | More flexible |
-| Token usage | More (supervisor sees all) | Less (direct routing) |
+| Factor      | Supervisor                 | Swarm                  |
+| ----------- | -------------------------- | ---------------------- |
+| Latency     | Higher (routing overhead)  | Lower (direct handoff) |
+| Control     | Centralized                | Distributed            |
+| Complexity  | Simpler to reason about    | More flexible          |
+| Token usage | More (supervisor sees all) | Less (direct routing)  |
 
 **Use Supervisor when:**
+
 - Clear hierarchy needed
 - Consistent routing logic required
 - Working with third-party agents
 
 **Use Swarm when:**
+
 - Latency is critical
 - Agents are peers
 - Dynamic, organic routing

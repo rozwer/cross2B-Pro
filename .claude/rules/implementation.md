@@ -10,17 +10,17 @@ description: 実装ルール統合版（API/Temporal/LangGraph/Storage/Security/
 
 ### エンドポイント
 
-| メソッド | パス | 用途 |
-|----------|------|------|
-| POST | `/api/runs` | ワークフロー開始 |
-| GET | `/api/runs/{id}` | 状態取得 |
-| POST | `/api/runs/{id}/approve` | 承認 |
-| POST | `/api/runs/{id}/reject` | 却下 |
-| POST | `/api/runs/{id}/retry/{step}` | 工程再実行 |
-| DELETE | `/api/runs/{id}` | キャンセル |
-| GET | `/api/runs/{id}/files` | 生成物一覧 |
-| GET | `/api/runs/{id}/files/{step}` | 工程別出力取得 |
-| WS | `/ws/runs/{id}` | 進捗ストリーム |
+| メソッド | パス                          | 用途             |
+| -------- | ----------------------------- | ---------------- |
+| POST     | `/api/runs`                   | ワークフロー開始 |
+| GET      | `/api/runs/{id}`              | 状態取得         |
+| POST     | `/api/runs/{id}/approve`      | 承認             |
+| POST     | `/api/runs/{id}/reject`       | 却下             |
+| POST     | `/api/runs/{id}/retry/{step}` | 工程再実行       |
+| DELETE   | `/api/runs/{id}`              | キャンセル       |
+| GET      | `/api/runs/{id}/files`        | 生成物一覧       |
+| GET      | `/api/runs/{id}/files/{step}` | 工程別出力取得   |
+| WS       | `/ws/runs/{id}`               | 進捗ストリーム   |
 
 ### 実装ルール
 
@@ -58,12 +58,12 @@ if existing_output := storage.get(f"{tenant}/{run}/{step}/output.json"):
 
 ### 契約フィールド
 
-| フィールド | 説明 |
-|------------|------|
-| `output_path` | storage上のパス（工程別・run別・tenant別） |
-| `output_digest` | 出力内容の sha256 |
-| `summary` | UI/ログ用の短い要約 |
-| `metrics` | token usage / 文字数 / 主要メタ情報 |
+| フィールド      | 説明                                       |
+| --------------- | ------------------------------------------ |
+| `output_path`   | storage上のパス（工程別・run別・tenant別） |
+| `output_digest` | 出力内容の sha256                          |
+| `summary`       | UI/ログ用の短い要約                        |
+| `metrics`       | token usage / 文字数 / 主要メタ情報        |
 
 ### パス規約
 
@@ -89,6 +89,7 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 ### 監査ログ
 
 必須フィールド：
+
 - `actor`: 実行者ID
 - `tenant_id`: テナントID
 - `run_id`: ワークフロー実行ID
@@ -152,13 +153,13 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 
 ### 必要条件
 
-| 項目 | 最小バージョン | 確認コマンド |
-|------|---------------|-------------|
-| Docker | 24.0+ | `docker --version` |
-| Docker Compose | 2.20+ | `docker compose version` |
-| Python | 3.11+ | `python3 --version` |
-| Node.js | 20+ | `node --version` |
-| uv | 0.4+ | `uv --version` |
+| 項目           | 最小バージョン | 確認コマンド             |
+| -------------- | -------------- | ------------------------ |
+| Docker         | 24.0+          | `docker --version`       |
+| Docker Compose | 2.20+          | `docker compose version` |
+| Python         | 3.11+          | `python3 --version`      |
+| Node.js        | 20+            | `node --version`         |
+| uv             | 0.4+           | `uv --version`           |
 
 ### 環境確認スクリプト
 
@@ -177,15 +178,15 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 
 ### Docker Compose サービス
 
-| サービス | ポート | 説明 |
-|----------|--------|------|
-| postgres | 5432 | PostgreSQL データベース |
-| minio | 9000, 9001 | オブジェクトストレージ |
-| temporal | 7233 | ワークフローエンジン |
-| temporal-ui | 8080 | Temporal 管理UI |
-| api | 8000 | FastAPI バックエンド |
-| worker | - | Temporal Worker |
-| ui | 3000 | Next.js フロントエンド |
+| サービス    | ポート     | 説明                    |
+| ----------- | ---------- | ----------------------- |
+| postgres    | 5432       | PostgreSQL データベース |
+| minio       | 9000, 9001 | オブジェクトストレージ  |
+| temporal    | 7233       | ワークフローエンジン    |
+| temporal-ui | 8080       | Temporal 管理UI         |
+| api         | 8000       | FastAPI バックエンド    |
+| worker      | -          | Temporal Worker         |
+| ui          | 3000       | Next.js フロントエンド  |
 
 ### 起動コマンド
 
@@ -231,13 +232,13 @@ USE_MOCK_LLM=true  # モックモード
 
 ### テストレベル
 
-| レベル | 対象 | 実行タイミング | コマンド |
-|--------|------|---------------|----------|
-| env-check | 環境要件 | 作業開始前 | `./scripts/check-env.sh` |
-| smoke | 依存/構文/起動 | commit前 | `uv run pytest tests/smoke/ -v` |
-| unit | 関数単位 | push前 | `uv run pytest tests/unit/ -v` |
-| integration | API/DB/Temporal | PR前 | `uv run pytest tests/integration/ -v` |
-| e2e | 全工程通し | merge前 | `uv run pytest tests/e2e/ -v` |
+| レベル      | 対象            | 実行タイミング | コマンド                              |
+| ----------- | --------------- | -------------- | ------------------------------------- |
+| env-check   | 環境要件        | 作業開始前     | `./scripts/check-env.sh`              |
+| smoke       | 依存/構文/起動  | commit前       | `uv run pytest tests/smoke/ -v`       |
+| unit        | 関数単位        | push前         | `uv run pytest tests/unit/ -v`        |
+| integration | API/DB/Temporal | PR前           | `uv run pytest tests/integration/ -v` |
+| e2e         | 全工程通し      | merge前        | `uv run pytest tests/e2e/ -v`         |
 
 ### smoke テスト内容
 
@@ -359,13 +360,13 @@ jobs:
 
 ### よくある問題
 
-| 症状 | 原因 | 解決策 |
-|------|------|--------|
-| `ModuleNotFoundError` | 依存関係未インストール | `uv sync` |
-| Docker接続エラー | Docker未起動 | Docker Desktop を起動 |
-| ポート競合 | 既存プロセス | `.env` でポート変更 or `lsof -i :PORT` で確認 |
-| 型エラー | mypy 設定 | `--ignore-missing-imports` を使用 |
-| インポートエラー | パス設定 | `PYTHONPATH=.` を設定 |
+| 症状                  | 原因                   | 解決策                                        |
+| --------------------- | ---------------------- | --------------------------------------------- |
+| `ModuleNotFoundError` | 依存関係未インストール | `uv sync`                                     |
+| Docker接続エラー      | Docker未起動           | Docker Desktop を起動                         |
+| ポート競合            | 既存プロセス           | `.env` でポート変更 or `lsof -i :PORT` で確認 |
+| 型エラー              | mypy 設定              | `--ignore-missing-imports` を使用             |
+| インポートエラー      | パス設定               | `PYTHONPATH=.` を設定                         |
 
 ### デバッグコマンド
 

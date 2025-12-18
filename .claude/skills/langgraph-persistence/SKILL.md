@@ -11,11 +11,11 @@ Persistence enables memory, human-in-the-loop, time-travel, and fault-tolerance.
 
 Save graph state at every super-step. Available implementations:
 
-| Checkpointer | Package | Use Case |
-|--------------|---------|----------|
-| `InMemorySaver` | langgraph-checkpoint | Development/testing |
-| `SqliteSaver` | langgraph-checkpoint-sqlite | Local workflows |
-| `PostgresSaver` | langgraph-checkpoint-postgres | Production |
+| Checkpointer    | Package                       | Use Case            |
+| --------------- | ----------------------------- | ------------------- |
+| `InMemorySaver` | langgraph-checkpoint          | Development/testing |
+| `SqliteSaver`   | langgraph-checkpoint-sqlite   | Local workflows     |
+| `PostgresSaver` | langgraph-checkpoint-postgres | Production          |
 
 ### Basic Setup
 

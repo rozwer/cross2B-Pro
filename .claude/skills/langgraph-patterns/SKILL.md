@@ -11,12 +11,12 @@ Advanced patterns for production LangGraph applications.
 
 ### Stream Modes
 
-| Mode | Output | Use Case |
-|------|--------|----------|
-| `"values"` | Full state after each step | Debugging |
-| `"updates"` | Partial updates per node | Progress tracking |
-| `"messages"` | LLM tokens as generated | Chat UX |
-| `"custom"` | User-defined data | Custom progress |
+| Mode         | Output                     | Use Case          |
+| ------------ | -------------------------- | ----------------- |
+| `"values"`   | Full state after each step | Debugging         |
+| `"updates"`  | Partial updates per node   | Progress tracking |
+| `"messages"` | LLM tokens as generated    | Chat UX           |
+| `"custom"`   | User-defined data          | Custom progress   |
 
 ### Basic Streaming
 
@@ -122,7 +122,7 @@ async def parallel_node(state: State) -> dict:
         fetch_data_c(state["query"]),
     ]
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     # Handle failures
     successful = [r for r in results if not isinstance(r, Exception)]
     return {"data": successful}
