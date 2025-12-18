@@ -50,8 +50,9 @@ MIN_SECTION_COUNT = 3
 class Step7ADraftGeneration(BaseActivity):
     """Activity for article draft generation."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    def __init__(self) -> None:
+        """Initialize with helpers."""
+        super().__init__()
         self.input_validator = InputValidator()
         self.parser = OutputParser()
         self.metrics = ContentMetrics()
@@ -319,7 +320,7 @@ class Step7ADraftGeneration(BaseActivity):
 
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 8000),
+                max_tokens=config.get("max_tokens", 16000),
                 temperature=config.get("temperature", 0.7),
             )
             response = await llm.generate(
@@ -365,7 +366,7 @@ class Step7ADraftGeneration(BaseActivity):
 
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=4000,
+                max_tokens=8000,
                 temperature=0.7,
             )
             response = await llm.generate(

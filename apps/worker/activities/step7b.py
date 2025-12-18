@@ -213,7 +213,7 @@ class Step7BBrushUp(BaseActivity):
         # Execute LLM call
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 16000),
+                max_tokens=config.get("max_tokens", 24000),
                 temperature=config.get("temperature", 0.8),
             )
             response = await llm.generate(
