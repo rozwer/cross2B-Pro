@@ -147,7 +147,9 @@ class Step5PrimaryCollection(BaseActivity):
                 )
 
                 # === OutputParser統合 (フォールバック禁止) ===
+                activity.logger.info(f"LLM response content: {query_response.content[:1000]}")
                 parse_result = self.parser.parse_json(query_response.content)
+                activity.logger.info(f"Parse result: success={parse_result.success}, format={parse_result.format_detected}")
 
                 search_queries = []
                 if parse_result.success and parse_result.data:

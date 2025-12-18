@@ -58,8 +58,13 @@ class CheckpointManager:
                 },
                 "data": { ... }
             }
+
+        Storage path:
+            storage/{tenant_id}/{run_id}/{step_id}/checkpoint_{phase}.json
         """
-        path = self.build_path(tenant_id, run_id, step_id, phase)
+        # Build filename as checkpoint_{phase}.json to avoid slash in step parameter
+        checkpoint_filename = f"checkpoint_{phase}.json"
+        path = f"storage/{tenant_id}/{run_id}/{step_id}/{checkpoint_filename}"
 
         checkpoint = {
             "_metadata": {
@@ -107,11 +112,14 @@ class CheckpointManager:
             1. Check if checkpoint exists
             2. If input_digest is specified and differs from saved, return None
             3. If match or not specified, return data
+
+        Storage path:
+            storage/{tenant_id}/{run_id}/{step_id}/checkpoint_{phase}.json
         """
-        checkpoint_step = f"{step_id}/checkpoint"
-        checkpoint_file = f"{phase}.json"
+        # Use checkpoint_{phase}.json filename to avoid slash in step parameter
+        checkpoint_filename = f"checkpoint_{phase}.json"
         raw_content = await self.store.get_by_path(
-            tenant_id, run_id, checkpoint_step, checkpoint_file
+            tenant_id, run_id, step_id, checkpoint_filename
         )
 
         if raw_content is None:
@@ -148,10 +156,10 @@ class CheckpointManager:
         Returns:
             bool: True if exists
         """
-        checkpoint_step = f"{step_id}/checkpoint"
-        checkpoint_file = f"{phase}.json"
+        # Use checkpoint_{phase}.json filename to avoid slash in step parameter
+        checkpoint_filename = f"checkpoint_{phase}.json"
         raw_content = await self.store.get_by_path(
-            tenant_id, run_id, checkpoint_step, checkpoint_file
+            tenant_id, run_id, step_id, checkpoint_filename
         )
         return raw_content is not None
 
@@ -167,15 +175,19 @@ class CheckpointManager:
 
         Args:
             phase: If specified, clear only that phase; otherwise clear all phases
+
+        Storage path format:
+            storage/{tenant_id}/{run_id}/{step_id}/checkpoint_{phase}.json
         """
         # List all checkpoint artifacts for this step
         paths = await self.store.list_run_artifacts(tenant_id, run_id)
 
-        checkpoint_prefix = f"storage/{tenant_id}/{run_id}/{step_id}/checkpoint/"
+        # Match checkpoint files: storage/{tenant}/{run}/{step}/checkpoint_{phase}.json
+        checkpoint_prefix = f"storage/{tenant_id}/{run_id}/{step_id}/checkpoint_"
 
         for path in paths:
             if path.startswith(checkpoint_prefix):
-                if phase is None or path.endswith(f"/{phase}.json"):
+                if phase is None or path.endswith(f"checkpoint_{phase}.json"):
                     from apps.api.storage.schemas import ArtifactRef
 
                     ref = ArtifactRef(
@@ -198,9 +210,9 @@ class CheckpointManager:
         Build checkpoint path.
 
         Returns:
-            str: "{tenant_id}/{run_id}/{step_id}/checkpoint/{phase}.json"
+            str: "storage/{tenant_id}/{run_id}/{step_id}/checkpoint_{phase}.json"
         """
-        return f"{tenant_id}/{run_id}/{step_id}/checkpoint/{phase}.json"
+        return f"storage/{tenant_id}/{run_id}/{step_id}/checkpoint_{phase}.json"
 
     @staticmethod
     def compute_digest(data: Any) -> str:
