@@ -4,12 +4,14 @@ All workflow activities inherit from BaseActivity to ensure:
 - Idempotency: If artifact exists with same input hash, skip re-execution
 - Observability: All state changes emit events
 - Error handling: Consistent error classification and logging
+- Error collection: All errors logged for LLM-based diagnostics
 - Storage: All outputs stored via ArtifactStore (path/digest only returned)
 """
 
 import hashlib
 import json
 import time
+import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, TypeVar
@@ -228,6 +230,14 @@ class BaseActivity(ABC):
                     "details": e.details,
                 },
             )
+
+            # Collect error for diagnostics
+            await self._collect_error(
+                ctx=ctx,
+                error=e,
+                category=e.category,
+                context=e.details,
+            )
             raise
 
         except Exception as e:
@@ -241,6 +251,15 @@ class BaseActivity(ABC):
                     "unexpected": True,
                 },
             )
+
+            # Collect error for diagnostics
+            await self._collect_error(
+                ctx=ctx,
+                error=e,
+                category=ErrorCategory.RETRYABLE,
+                context={"unexpected": True},
+            )
+
             raise ActivityError(
                 message=f"Unexpected error in {self.step_id}: {e}",
                 category=ErrorCategory.RETRYABLE,
@@ -375,3 +394,77 @@ class BaseActivity(ABC):
             occurred_at=datetime.now(),
             attempt=activity.info().attempt,
         )
+
+    async def _collect_error(
+        self,
+        ctx: ExecutionContext,
+        error: Exception,
+        category: ErrorCategory,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Collect error for LLM-based diagnostics.
+
+        Stores error details in the error_logs table for later analysis
+        by the diagnostics service.
+
+        Args:
+            ctx: Execution context
+            error: The exception that occurred
+            category: Error classification
+            context: Additional context (LLM model, tool, params, etc.)
+        """
+        try:
+            from sqlalchemy import text
+
+            from apps.api.db.tenant import get_tenant_engine
+
+            # Get tenant database engine
+            engine = await get_tenant_engine(ctx.tenant_id)
+
+            # Build error context
+            error_context = context or {}
+            error_context.update({
+                "step_id": ctx.step_id,
+                "timeout_seconds": ctx.timeout_seconds,
+                "config_keys": list(ctx.config.keys()) if ctx.config else [],
+            })
+
+            # Get stack trace
+            stack_trace = "".join(
+                traceback.format_exception(type(error), error, error.__traceback__)
+            )
+
+            async with engine.connect() as conn:
+                await conn.execute(
+                    text(
+                        """
+                        INSERT INTO error_logs
+                        (run_id, step_id, error_category, error_type,
+                         error_message, stack_trace, context, attempt)
+                        VALUES
+                        (:run_id, :step_id, :error_category, :error_type,
+                         :error_message, :stack_trace, :context, :attempt)
+                        """
+                    ),
+                    {
+                        "run_id": ctx.run_id,
+                        "step_id": ctx.step_id,
+                        "error_category": category.value,
+                        "error_type": type(error).__name__,
+                        "error_message": str(error),
+                        "stack_trace": stack_trace,
+                        "context": error_context,
+                        "attempt": ctx.attempt,
+                    },
+                )
+                await conn.commit()
+
+            activity.logger.debug(
+                f"Error logged for diagnostics: {type(error).__name__} in {ctx.step_id}"
+            )
+
+        except Exception as log_error:
+            # Don't fail the activity if error logging fails
+            activity.logger.warning(
+                f"Failed to log error for diagnostics: {log_error}"
+            )

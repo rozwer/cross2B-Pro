@@ -5,6 +5,8 @@ from datetime import datetime
 from apps.api.db.models import (
     Artifact,
     AuditLog,
+    DiagnosticReport,
+    ErrorLog,
     LLMModel,
     LLMProvider,
     Prompt,
@@ -145,3 +147,90 @@ class TestPrompt:
         assert prompt.step == "step_1"
         assert prompt.version == 1
         assert "{{keyword}}" in prompt.content
+
+
+class TestErrorLog:
+    """Tests for ErrorLog model."""
+
+    def test_error_log_creation(self) -> None:
+        """Test ErrorLog model creation."""
+        error_log = ErrorLog(
+            run_id="550e8400-e29b-41d4-a716-446655440000",
+            step_id="step3",
+            error_category="retryable",
+            error_type="LLMTimeoutError",
+            error_message="Request timed out after 30 seconds",
+            stack_trace="Traceback (most recent call last):\n...",
+            context={"timeout_ms": 30000, "model": "gemini-pro"},
+            attempt=2,
+        )
+        assert error_log.step_id == "step3"
+        assert error_log.error_category == "retryable"
+        assert error_log.error_type == "LLMTimeoutError"
+        assert error_log.attempt == 2
+        assert error_log.context["timeout_ms"] == 30000
+
+    def test_error_log_without_optional_fields(self) -> None:
+        """Test ErrorLog with only required fields."""
+        error_log = ErrorLog(
+            run_id="550e8400-e29b-41d4-a716-446655440000",
+            error_category="non_retryable",
+            error_type="LLMAuthenticationError",
+            error_message="Invalid API key",
+        )
+        assert error_log.step_id is None
+        assert error_log.stack_trace is None
+        assert error_log.context is None
+        assert error_log.attempt == 1
+
+
+class TestDiagnosticReport:
+    """Tests for DiagnosticReport model."""
+
+    def test_diagnostic_report_creation(self) -> None:
+        """Test DiagnosticReport model creation."""
+        report = DiagnosticReport(
+            run_id="550e8400-e29b-41d4-a716-446655440000",
+            root_cause_analysis="Network timeout during LLM API call",
+            recommended_actions=[
+                {
+                    "priority": 1,
+                    "action": "Retry the workflow",
+                    "rationale": "Network issues are transient",
+                    "step_to_resume": "step3",
+                },
+                {
+                    "priority": 2,
+                    "action": "Check API endpoint health",
+                    "rationale": "Verify service availability",
+                },
+            ],
+            resume_step="step3",
+            confidence_score=0.85,
+            llm_provider="anthropic",
+            llm_model="claude-sonnet-4",
+            prompt_tokens=1500,
+            completion_tokens=800,
+            latency_ms=2500,
+        )
+        assert report.root_cause_analysis == "Network timeout during LLM API call"
+        assert len(report.recommended_actions) == 2
+        assert report.recommended_actions[0]["priority"] == 1
+        assert report.resume_step == "step3"
+        assert report.confidence_score == 0.85
+        assert report.llm_provider == "anthropic"
+        assert report.latency_ms == 2500
+
+    def test_diagnostic_report_without_optional_fields(self) -> None:
+        """Test DiagnosticReport with only required fields."""
+        report = DiagnosticReport(
+            run_id="550e8400-e29b-41d4-a716-446655440000",
+            root_cause_analysis="Unknown error",
+            recommended_actions=[],
+            llm_provider="gemini",
+            llm_model="gemini-pro",
+        )
+        assert report.resume_step is None
+        assert report.confidence_score is None
+        assert report.prompt_tokens is None
+        assert report.completion_tokens is None
