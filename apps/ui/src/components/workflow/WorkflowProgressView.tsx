@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { LayoutGrid, Clock, Target } from 'lucide-react';
-import type { Step } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { WorkflowPattern1_N8nStyle } from './WorkflowPattern1_N8nStyle';
-import { WorkflowPattern4_VerticalTimeline } from './WorkflowPattern4_VerticalTimeline';
-import { WorkflowPattern5_RadialProgress } from './WorkflowPattern5_RadialProgress';
+import { useState } from "react";
+import { LayoutGrid, Clock, Target } from "lucide-react";
+import type { Step } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { WorkflowPattern1_N8nStyle } from "./WorkflowPattern1_N8nStyle";
+import { WorkflowPattern4_VerticalTimeline } from "./WorkflowPattern4_VerticalTimeline";
+import { WorkflowPattern5_RadialProgress } from "./WorkflowPattern5_RadialProgress";
 
 /**
  * WorkflowProgressView
@@ -15,7 +15,7 @@ import { WorkflowPattern5_RadialProgress } from './WorkflowPattern5_RadialProgre
  * - Saves user preference to localStorage
  */
 
-export type WorkflowViewPattern = 'n8n' | 'timeline' | 'radial';
+export type WorkflowViewPattern = "n8n" | "timeline" | "radial";
 
 interface WorkflowProgressViewProps {
   steps: Step[];
@@ -27,13 +27,16 @@ interface WorkflowProgressViewProps {
   defaultPattern?: WorkflowViewPattern;
 }
 
-const PATTERN_CONFIG: Record<WorkflowViewPattern, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
-  n8n: { label: 'フロー', icon: LayoutGrid },
-  timeline: { label: 'タイムライン', icon: Clock },
-  radial: { label: 'ラジアル', icon: Target },
+const PATTERN_CONFIG: Record<
+  WorkflowViewPattern,
+  { label: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  n8n: { label: "フロー", icon: LayoutGrid },
+  timeline: { label: "タイムライン", icon: Clock },
+  radial: { label: "ラジアル", icon: Target },
 };
 
-const STORAGE_KEY = 'workflow-view-pattern';
+const STORAGE_KEY = "workflow-view-pattern";
 
 export function WorkflowProgressView({
   steps,
@@ -42,13 +45,13 @@ export function WorkflowProgressView({
   onApprove,
   onReject,
   onRetry,
-  defaultPattern = 'n8n',
+  defaultPattern = "n8n",
 }: WorkflowProgressViewProps) {
   // Load saved pattern from localStorage
   const [pattern, setPattern] = useState<WorkflowViewPattern>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved && (saved === 'n8n' || saved === 'timeline' || saved === 'radial')) {
+      if (saved && (saved === "n8n" || saved === "timeline" || saved === "radial")) {
         return saved as WorkflowViewPattern;
       }
     }
@@ -57,7 +60,7 @@ export function WorkflowProgressView({
 
   const handlePatternChange = (newPattern: WorkflowViewPattern) => {
     setPattern(newPattern);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, newPattern);
     }
   };
@@ -65,7 +68,7 @@ export function WorkflowProgressView({
   return (
     <div className="relative">
       {/* Pattern Switcher */}
-      <div className="absolute top-4 right-4 z-10 flex rounded-lg overflow-hidden border border-white/20 bg-black/20 backdrop-blur-sm">
+      <div className="absolute top-4 right-4 z-10 flex rounded-lg overflow-hidden border border-gray-300 dark:border-white/20 bg-white/80 dark:bg-black/20 backdrop-blur-sm">
         {(Object.keys(PATTERN_CONFIG) as WorkflowViewPattern[]).map((key) => {
           const config = PATTERN_CONFIG[key];
           const Icon = config.icon;
@@ -78,8 +81,8 @@ export function WorkflowProgressView({
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-all",
                 isActive
-                  ? "bg-white/20 text-white"
-                  : "text-white/60 hover:text-white hover:bg-white/10"
+                  ? "bg-gray-200 dark:bg-white/20 text-gray-900 dark:text-white"
+                  : "text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10",
               )}
               title={config.label}
             >
@@ -92,14 +95,15 @@ export function WorkflowProgressView({
 
       {/* Workflow View - each pattern handles sub-step expansion internally */}
       <div className="transition-all duration-300">
-        {pattern === 'n8n' && (
+        {pattern === "n8n" && (
           <WorkflowPattern1_N8nStyle
             steps={steps}
             currentStep={currentStep}
             waitingApproval={waitingApproval}
+            onRetry={onRetry}
           />
         )}
-        {pattern === 'timeline' && (
+        {pattern === "timeline" && (
           <WorkflowPattern4_VerticalTimeline
             steps={steps}
             currentStep={currentStep}
@@ -107,7 +111,7 @@ export function WorkflowProgressView({
             onRetry={onRetry}
           />
         )}
-        {pattern === 'radial' && (
+        {pattern === "radial" && (
           <WorkflowPattern5_RadialProgress
             steps={steps}
             currentStep={currentStep}

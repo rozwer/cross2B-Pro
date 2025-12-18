@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Markdown Viewer Component
@@ -10,9 +10,9 @@
  * - 外部リンクは noopener/noreferrer 付与
  */
 
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { Components } from 'react-markdown';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 
 interface MarkdownViewerProps {
   content: string;
@@ -31,16 +31,16 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
   const components: Components = {
     // Security: External links open in new tab with proper rel attributes
     a: ({ href, children, ...props }) => {
-      const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
+      const isExternal = href?.startsWith("http://") || href?.startsWith("https://");
       // Block dangerous URI schemes
-      if (href?.startsWith('javascript:') || href?.startsWith('data:')) {
+      if (href?.startsWith("javascript:") || href?.startsWith("data:")) {
         return <span className="text-gray-500">{children}</span>;
       }
       return (
         <a
           href={href}
-          target={isExternal ? '_blank' : undefined}
-          rel={isExternal ? 'noopener noreferrer' : undefined}
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
           className="text-primary-600 hover:underline"
           {...props}
         >
@@ -60,9 +60,13 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
     // Inline code
     code: ({ children, className, ...props }) => {
       // Check if this is a code block (has language class) or inline
-      const isBlock = className?.includes('language-');
+      const isBlock = className?.includes("language-");
       if (isBlock) {
-        return <code className={className} {...props}>{children}</code>;
+        return (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
       }
       return (
         <code className="px-1 py-0.5 bg-gray-100 rounded text-xs font-mono" {...props}>
@@ -72,36 +76,56 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
     },
     // Headings
     h1: ({ children, ...props }) => (
-      <h1 className="text-xl font-bold mt-4 mb-2" {...props}>{children}</h1>
+      <h1 className="text-xl font-bold mt-4 mb-2" {...props}>
+        {children}
+      </h1>
     ),
     h2: ({ children, ...props }) => (
-      <h2 className="text-lg font-bold mt-3 mb-2" {...props}>{children}</h2>
+      <h2 className="text-lg font-bold mt-3 mb-2" {...props}>
+        {children}
+      </h2>
     ),
     h3: ({ children, ...props }) => (
-      <h3 className="text-base font-bold mt-2 mb-1" {...props}>{children}</h3>
+      <h3 className="text-base font-bold mt-2 mb-1" {...props}>
+        {children}
+      </h3>
     ),
     h4: ({ children, ...props }) => (
-      <h4 className="text-sm font-bold mt-2 mb-1" {...props}>{children}</h4>
+      <h4 className="text-sm font-bold mt-2 mb-1" {...props}>
+        {children}
+      </h4>
     ),
     h5: ({ children, ...props }) => (
-      <h5 className="text-sm font-semibold mt-1 mb-1" {...props}>{children}</h5>
+      <h5 className="text-sm font-semibold mt-1 mb-1" {...props}>
+        {children}
+      </h5>
     ),
     h6: ({ children, ...props }) => (
-      <h6 className="text-sm font-medium mt-1 mb-1" {...props}>{children}</h6>
+      <h6 className="text-sm font-medium mt-1 mb-1" {...props}>
+        {children}
+      </h6>
     ),
     // Lists
     ul: ({ children, ...props }) => (
-      <ul className="ml-4 list-disc my-2" {...props}>{children}</ul>
+      <ul className="ml-4 list-disc my-2" {...props}>
+        {children}
+      </ul>
     ),
     ol: ({ children, ...props }) => (
-      <ol className="ml-4 list-decimal my-2" {...props}>{children}</ol>
+      <ol className="ml-4 list-decimal my-2" {...props}>
+        {children}
+      </ol>
     ),
     li: ({ children, ...props }) => (
-      <li className="my-0.5" {...props}>{children}</li>
+      <li className="my-0.5" {...props}>
+        {children}
+      </li>
     ),
     // Paragraphs
     p: ({ children, ...props }) => (
-      <p className="my-1" {...props}>{children}</p>
+      <p className="my-1" {...props}>
+        {children}
+      </p>
     ),
     // Blockquote
     blockquote: ({ children, ...props }) => (
@@ -118,30 +142,35 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
       </div>
     ),
     thead: ({ children, ...props }) => (
-      <thead className="bg-gray-50" {...props}>{children}</thead>
+      <thead className="bg-gray-50" {...props}>
+        {children}
+      </thead>
     ),
-    tbody: ({ children, ...props }) => (
-      <tbody {...props}>{children}</tbody>
-    ),
+    tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
     tr: ({ children, ...props }) => (
-      <tr className="border-b border-gray-200" {...props}>{children}</tr>
+      <tr className="border-b border-gray-200" {...props}>
+        {children}
+      </tr>
     ),
     th: ({ children, ...props }) => (
-      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-200" {...props}>
+      <th
+        className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border border-gray-200"
+        {...props}
+      >
         {children}
       </th>
     ),
     td: ({ children, ...props }) => (
-      <td className="px-3 py-2 text-xs border border-gray-200" {...props}>{children}</td>
+      <td className="px-3 py-2 text-xs border border-gray-200" {...props}>
+        {children}
+      </td>
     ),
     // Horizontal rule
-    hr: ({ ...props }) => (
-      <hr className="my-4 border-gray-300" {...props} />
-    ),
+    hr: ({ ...props }) => <hr className="my-4 border-gray-300" {...props} />,
     // Images - sanitize src (only allow HTTPS)
     img: ({ src, alt, ...props }) => {
       // Only allow https images
-      if (src && !src.startsWith('https://')) {
+      if (src && !src.startsWith("https://")) {
         return (
           <span className="inline-block p-2 bg-gray-100 rounded text-gray-400 text-xs">
             [Image blocked: insecure source]
@@ -151,7 +180,7 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
       return (
         <img
           src={src}
-          alt={alt || ''}
+          alt={alt || ""}
           className="max-w-full h-auto rounded my-2"
           loading="lazy"
           {...props}
@@ -160,24 +189,27 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
     },
     // Strong/Bold
     strong: ({ children, ...props }) => (
-      <strong className="font-bold" {...props}>{children}</strong>
+      <strong className="font-bold" {...props}>
+        {children}
+      </strong>
     ),
     // Emphasis/Italic
     em: ({ children, ...props }) => (
-      <em className="italic" {...props}>{children}</em>
+      <em className="italic" {...props}>
+        {children}
+      </em>
     ),
     // Strikethrough (GFM)
     del: ({ children, ...props }) => (
-      <del className="line-through text-gray-500" {...props}>{children}</del>
+      <del className="line-through text-gray-500" {...props}>
+        {children}
+      </del>
     ),
   };
 
   return (
     <div className="prose prose-sm max-w-none p-4 bg-white rounded-lg">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={components}
-      >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
     </div>

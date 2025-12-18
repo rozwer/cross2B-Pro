@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * HTML Preview Component
@@ -9,10 +9,10 @@
  * - 許可タグ/属性を限定
  */
 
-import { useState, useMemo } from 'react';
-import { Code, Eye, AlertTriangle } from 'lucide-react';
-import DOMPurify from 'dompurify';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from "react";
+import { Code, Eye, AlertTriangle } from "lucide-react";
+import DOMPurify from "dompurify";
+import { cn } from "@/lib/utils";
 
 interface HtmlPreviewProps {
   content: string;
@@ -22,26 +22,65 @@ interface HtmlPreviewProps {
 const DOMPURIFY_CONFIG = {
   // 許可するタグ
   ALLOWED_TAGS: [
-    'p', 'div', 'span', 'br', 'hr',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'ul', 'ol', 'li',
-    'table', 'thead', 'tbody', 'tr', 'th', 'td',
-    'strong', 'em', 'b', 'i', 'u', 's', 'del',
-    'a', 'img',
-    'blockquote', 'pre', 'code',
-    'figure', 'figcaption',
-    'article', 'section', 'header', 'footer', 'main',
+    "p",
+    "div",
+    "span",
+    "br",
+    "hr",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "strong",
+    "em",
+    "b",
+    "i",
+    "u",
+    "s",
+    "del",
+    "a",
+    "img",
+    "blockquote",
+    "pre",
+    "code",
+    "figure",
+    "figcaption",
+    "article",
+    "section",
+    "header",
+    "footer",
+    "main",
   ],
   // 許可する属性
   ALLOWED_ATTR: [
-    'class', 'id', 'style',
-    'href', 'target', 'rel',
-    'src', 'alt', 'title', 'width', 'height',
-    'colspan', 'rowspan',
+    "class",
+    "id",
+    "style",
+    "href",
+    "target",
+    "rel",
+    "src",
+    "alt",
+    "title",
+    "width",
+    "height",
+    "colspan",
+    "rowspan",
   ],
   // スクリプト関連を完全に除去
-  FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
-  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+  FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input", "button"],
+  FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
   // href/src の制限
   ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
   // javascript: URI を禁止
@@ -49,20 +88,20 @@ const DOMPURIFY_CONFIG = {
 };
 
 export function HtmlPreview({ content }: HtmlPreviewProps) {
-  const [mode, setMode] = useState<'preview' | 'source'>('preview');
+  const [mode, setMode] = useState<"preview" | "source">("preview");
 
   // VULN-001: DOMPurify でサニタイズ
   const sanitizedContent = useMemo(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       // SSR時は空を返す
-      return '';
+      return "";
     }
     return DOMPurify.sanitize(content, DOMPURIFY_CONFIG);
   }, [content]);
 
   // 危険なコンテンツが検出された場合の警告
   const hasRemovedContent = useMemo(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     const original = content.length;
     const sanitized = sanitizedContent.length;
     // サニタイズで20%以上減少した場合は警告
@@ -73,24 +112,24 @@ export function HtmlPreview({ content }: HtmlPreviewProps) {
     <div>
       <div className="flex gap-2 mb-3">
         <button
-          onClick={() => setMode('preview')}
+          onClick={() => setMode("preview")}
           className={cn(
-            'inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-            mode === 'preview'
-              ? 'bg-primary-100 text-primary-700'
-              : 'text-gray-600 hover:bg-gray-100'
+            "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+            mode === "preview"
+              ? "bg-primary-100 text-primary-700"
+              : "text-gray-600 hover:bg-gray-100",
           )}
         >
           <Eye className="h-3.5 w-3.5" />
           プレビュー
         </button>
         <button
-          onClick={() => setMode('source')}
+          onClick={() => setMode("source")}
           className={cn(
-            'inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-            mode === 'source'
-              ? 'bg-primary-100 text-primary-700'
-              : 'text-gray-600 hover:bg-gray-100'
+            "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+            mode === "source"
+              ? "bg-primary-100 text-primary-700"
+              : "text-gray-600 hover:bg-gray-100",
           )}
         >
           <Code className="h-3.5 w-3.5" />
@@ -106,7 +145,7 @@ export function HtmlPreview({ content }: HtmlPreviewProps) {
         </div>
       )}
 
-      {mode === 'preview' ? (
+      {mode === "preview" ? (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           {/* VULN-001: sandbox を空文字列に（ほぼ全て無効化） */}
           <iframe

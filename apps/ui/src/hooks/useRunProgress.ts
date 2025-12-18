@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ProgressEvent, RunStatus } from '@/lib/types';
-import { createRunProgressWebSocket, type WebSocketStatus } from '@/lib/websocket';
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { ProgressEvent, RunStatus } from "@/lib/types";
+import { createRunProgressWebSocket, type WebSocketStatus } from "@/lib/websocket";
 
 interface UseRunProgressOptions {
   autoConnect?: boolean;
@@ -20,13 +20,13 @@ interface UseRunProgressReturn {
 
 export function useRunProgress(
   runId: string,
-  options: UseRunProgressOptions = {}
+  options: UseRunProgressOptions = {},
 ): UseRunProgressReturn {
   const { autoConnect = true, onEvent } = options;
 
   const [events, setEvents] = useState<ProgressEvent[]>([]);
-  const [status, setStatus] = useState<RunStatus>('pending');
-  const [wsStatus, setWsStatus] = useState<WebSocketStatus>('disconnected');
+  const [status, setStatus] = useState<RunStatus>("pending");
+  const [wsStatus, setWsStatus] = useState<WebSocketStatus>("disconnected");
 
   const wsRef = useRef<ReturnType<typeof createRunProgressWebSocket> | null>(null);
   const onEventRef = useRef(onEvent);
@@ -37,18 +37,18 @@ export function useRunProgress(
 
     // ステータス更新
     switch (event.type) {
-      case 'step_started':
-        setStatus('running');
+      case "step_started":
+        setStatus("running");
         break;
-      case 'approval_requested':
-        setStatus('waiting_approval');
+      case "approval_requested":
+        setStatus("waiting_approval");
         break;
-      case 'run_completed':
-        setStatus('completed');
+      case "run_completed":
+        setStatus("completed");
         break;
-      case 'run_failed':
-      case 'error':
-        setStatus('failed');
+      case "run_failed":
+      case "error":
+        setStatus("failed");
         break;
     }
 
@@ -65,7 +65,7 @@ export function useRunProgress(
       onMessage: handleMessage,
       onStatusChange: setWsStatus,
       onError: (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
       },
     });
 

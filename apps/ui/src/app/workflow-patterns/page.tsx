@@ -1,51 +1,135 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import type { Step } from '@/lib/types';
+import { useState } from "react";
+import type { Step } from "@/lib/types";
 import {
   WorkflowPattern1_N8nStyle,
   WorkflowPattern4_VerticalTimeline,
   WorkflowPattern5_RadialProgress,
   WorkflowProgressView,
-} from '@/components/workflow';
+} from "@/components/workflow";
 
 // Mock data for demonstration
 const MOCK_STEPS: Step[] = [
-  { id: '1', run_id: 'run1', step_name: 'step-1', status: 'completed', attempts: [], started_at: '2024-01-01T10:00:00Z', completed_at: '2024-01-01T10:00:05Z' },
-  { id: '2', run_id: 'run1', step_name: 'step0', status: 'completed', attempts: [], started_at: '2024-01-01T10:00:05Z', completed_at: '2024-01-01T10:00:10Z' },
-  { id: '3', run_id: 'run1', step_name: 'step1', status: 'completed', attempts: [], started_at: '2024-01-01T10:00:10Z', completed_at: '2024-01-01T10:00:30Z' },
-  { id: '4', run_id: 'run1', step_name: 'step2', status: 'completed', attempts: [], started_at: '2024-01-01T10:00:30Z', completed_at: '2024-01-01T10:01:00Z' },
-  { id: '5', run_id: 'run1', step_name: 'step3', status: 'completed', attempts: [], started_at: '2024-01-01T10:01:00Z', completed_at: '2024-01-01T10:01:30Z' },
-  { id: '6', run_id: 'run1', step_name: 'step3a', status: 'completed', attempts: [], started_at: '2024-01-01T10:01:30Z', completed_at: '2024-01-01T10:02:00Z' },
-  { id: '7', run_id: 'run1', step_name: 'step3b', status: 'completed', attempts: [], started_at: '2024-01-01T10:01:30Z', completed_at: '2024-01-01T10:02:10Z' },
-  { id: '8', run_id: 'run1', step_name: 'step3c', status: 'running', attempts: [{ id: 'a1', step_id: '8', attempt_num: 1, status: 'running', started_at: '2024-01-01T10:01:30Z' }], started_at: '2024-01-01T10:01:30Z' },
-  { id: '9', run_id: 'run1', step_name: 'step4', status: 'pending', attempts: [] },
-  { id: '10', run_id: 'run1', step_name: 'step5', status: 'pending', attempts: [] },
-  { id: '11', run_id: 'run1', step_name: 'step6', status: 'pending', attempts: [] },
-  { id: '12', run_id: 'run1', step_name: 'step6.5', status: 'pending', attempts: [] },
-  { id: '13', run_id: 'run1', step_name: 'step7a', status: 'pending', attempts: [] },
-  { id: '14', run_id: 'run1', step_name: 'step7b', status: 'pending', attempts: [] },
-  { id: '15', run_id: 'run1', step_name: 'step8', status: 'pending', attempts: [] },
-  { id: '16', run_id: 'run1', step_name: 'step9', status: 'pending', attempts: [] },
-  { id: '17', run_id: 'run1', step_name: 'step10', status: 'pending', attempts: [] },
+  {
+    id: "1",
+    run_id: "run1",
+    step_name: "step-1",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:00:00Z",
+    completed_at: "2024-01-01T10:00:05Z",
+  },
+  {
+    id: "2",
+    run_id: "run1",
+    step_name: "step0",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:00:05Z",
+    completed_at: "2024-01-01T10:00:10Z",
+  },
+  {
+    id: "3",
+    run_id: "run1",
+    step_name: "step1",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:00:10Z",
+    completed_at: "2024-01-01T10:00:30Z",
+  },
+  {
+    id: "4",
+    run_id: "run1",
+    step_name: "step2",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:00:30Z",
+    completed_at: "2024-01-01T10:01:00Z",
+  },
+  {
+    id: "5",
+    run_id: "run1",
+    step_name: "step3",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:01:00Z",
+    completed_at: "2024-01-01T10:01:30Z",
+  },
+  {
+    id: "6",
+    run_id: "run1",
+    step_name: "step3a",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:01:30Z",
+    completed_at: "2024-01-01T10:02:00Z",
+  },
+  {
+    id: "7",
+    run_id: "run1",
+    step_name: "step3b",
+    status: "completed",
+    attempts: [],
+    started_at: "2024-01-01T10:01:30Z",
+    completed_at: "2024-01-01T10:02:10Z",
+  },
+  {
+    id: "8",
+    run_id: "run1",
+    step_name: "step3c",
+    status: "running",
+    attempts: [
+      {
+        id: "a1",
+        step_id: "8",
+        attempt_num: 1,
+        status: "running",
+        started_at: "2024-01-01T10:01:30Z",
+      },
+    ],
+    started_at: "2024-01-01T10:01:30Z",
+  },
+  { id: "9", run_id: "run1", step_name: "step4", status: "pending", attempts: [] },
+  { id: "10", run_id: "run1", step_name: "step5", status: "pending", attempts: [] },
+  { id: "11", run_id: "run1", step_name: "step6", status: "pending", attempts: [] },
+  { id: "12", run_id: "run1", step_name: "step6.5", status: "pending", attempts: [] },
+  { id: "13", run_id: "run1", step_name: "step7a", status: "pending", attempts: [] },
+  { id: "14", run_id: "run1", step_name: "step7b", status: "pending", attempts: [] },
+  { id: "15", run_id: "run1", step_name: "step8", status: "pending", attempts: [] },
+  { id: "16", run_id: "run1", step_name: "step9", status: "pending", attempts: [] },
+  { id: "17", run_id: "run1", step_name: "step10", status: "pending", attempts: [] },
 ];
 
-const MOCK_STEPS_WAITING: Step[] = MOCK_STEPS.map(s => ({
+const MOCK_STEPS_WAITING: Step[] = MOCK_STEPS.map((s) => ({
   ...s,
-  status: ['step-1', 'step0', 'step1', 'step2', 'step3', 'step3a', 'step3b', 'step3c', 'step4', 'step5'].includes(s.step_name)
-    ? 'completed' as const
-    : s.step_name === 'step6' ? 'running' as const : 'pending' as const,
+  status: [
+    "step-1",
+    "step0",
+    "step1",
+    "step2",
+    "step3",
+    "step3a",
+    "step3b",
+    "step3c",
+    "step4",
+    "step5",
+  ].includes(s.step_name)
+    ? ("completed" as const)
+    : s.step_name === "step6"
+      ? ("running" as const)
+      : ("pending" as const),
 }));
 
-type ViewMode = 'all' | 'integrated';
+type ViewMode = "all" | "integrated";
 
 export default function WorkflowPatternsPage() {
-  const [scenario, setScenario] = useState<'running' | 'waiting'>('running');
-  const [viewMode, setViewMode] = useState<ViewMode>('integrated');
+  const [scenario, setScenario] = useState<"running" | "waiting">("running");
+  const [viewMode, setViewMode] = useState<ViewMode>("integrated");
 
-  const steps = scenario === 'running' ? MOCK_STEPS : MOCK_STEPS_WAITING;
-  const currentStep = scenario === 'running' ? 'step3c' : 'step6';
-  const waitingApproval = scenario === 'waiting';
+  const steps = scenario === "running" ? MOCK_STEPS : MOCK_STEPS_WAITING;
+  const currentStep = scenario === "running" ? "step3c" : "step6";
+  const waitingApproval = scenario === "waiting";
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
@@ -66,21 +150,21 @@ export default function WorkflowPatternsPage() {
               <span className="text-sm text-gray-600 dark:text-gray-400">表示:</span>
               <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                 <button
-                  onClick={() => setViewMode('integrated')}
+                  onClick={() => setViewMode("integrated")}
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    viewMode === 'integrated'
-                      ? 'bg-violet-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    viewMode === "integrated"
+                      ? "bg-violet-600 text-white"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
                   統合ビュー
                 </button>
                 <button
-                  onClick={() => setViewMode('all')}
+                  onClick={() => setViewMode("all")}
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    viewMode === 'all'
-                      ? 'bg-violet-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    viewMode === "all"
+                      ? "bg-violet-600 text-white"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
                   全パターン
@@ -93,21 +177,21 @@ export default function WorkflowPatternsPage() {
               <span className="text-sm text-gray-600 dark:text-gray-400">シナリオ:</span>
               <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                 <button
-                  onClick={() => setScenario('running')}
+                  onClick={() => setScenario("running")}
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    scenario === 'running'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    scenario === "running"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
                   実行中
                 </button>
                 <button
-                  onClick={() => setScenario('waiting')}
+                  onClick={() => setScenario("waiting")}
                   className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    scenario === 'waiting'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    scenario === "waiting"
+                      ? "bg-amber-600 text-white"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
                   承認待ち
@@ -123,7 +207,7 @@ export default function WorkflowPatternsPage() {
         </div>
 
         {/* Content */}
-        {viewMode === 'integrated' ? (
+        {viewMode === "integrated" ? (
           <section>
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -137,8 +221,8 @@ export default function WorkflowPatternsPage() {
               steps={steps}
               currentStep={currentStep}
               waitingApproval={waitingApproval}
-              onApprove={() => alert('承認しました')}
-              onReject={() => alert('却下しました')}
+              onApprove={() => alert("承認しました")}
+              onReject={() => alert("却下しました")}
               onRetry={(step) => alert(`${step}をリトライします`)}
             />
           </section>
@@ -148,7 +232,9 @@ export default function WorkflowPatternsPage() {
             <section>
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded bg-violet-600 text-white text-sm flex items-center justify-center">1</span>
+                  <span className="w-6 h-6 rounded bg-violet-600 text-white text-sm flex items-center justify-center">
+                    1
+                  </span>
                   n8n スタイル
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -166,7 +252,9 @@ export default function WorkflowPatternsPage() {
             <section>
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded bg-cyan-600 text-white text-sm flex items-center justify-center">4</span>
+                  <span className="w-6 h-6 rounded bg-cyan-600 text-white text-sm flex items-center justify-center">
+                    4
+                  </span>
                   垂直タイムライン
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -185,7 +273,9 @@ export default function WorkflowPatternsPage() {
             <section>
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded bg-emerald-600 text-white text-sm flex items-center justify-center">5</span>
+                  <span className="w-6 h-6 rounded bg-emerald-600 text-white text-sm flex items-center justify-center">
+                    5
+                  </span>
                   ラジアルプログレス
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -196,15 +286,15 @@ export default function WorkflowPatternsPage() {
                 steps={steps}
                 currentStep={currentStep}
                 waitingApproval={waitingApproval}
-                onApprove={() => alert('承認しました')}
-                onReject={() => alert('却下しました')}
+                onApprove={() => alert("承認しました")}
+                onReject={() => alert("却下しました")}
               />
             </section>
           </div>
         )}
 
         {/* Summary - Only show in all patterns view */}
-        {viewMode === 'all' && (
+        {viewMode === "all" && (
           <div className="mt-12 p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               採用パターン比較
@@ -213,11 +303,21 @@ export default function WorkflowPatternsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">パターン</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">テーマ</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">レイアウト</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">特徴</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">推奨用途</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">
+                      パターン
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">
+                      テーマ
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">
+                      レイアウト
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">
+                      特徴
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">
+                      推奨用途
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-700 dark:text-gray-300">

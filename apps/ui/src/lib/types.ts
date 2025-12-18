@@ -3,25 +3,20 @@
 // ============================================
 
 export type RunStatus =
-  | 'pending'
-  | 'running'
-  | 'waiting_approval'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+  | "pending"
+  | "running"
+  | "waiting_approval"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
-export type StepStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'skipped';
+export type StepStatus = "pending" | "running" | "completed" | "failed" | "skipped";
 
 // ============================================
 // Model Configuration Types
 // ============================================
 
-export type LLMPlatform = 'gemini' | 'openai' | 'anthropic';
+export type LLMPlatform = "gemini" | "openai" | "anthropic";
 
 export interface ModelConfig {
   platform: LLMPlatform;
@@ -129,7 +124,7 @@ export interface StepAttempt {
   id: string;
   step_id: string;
   attempt_num: number;
-  status: 'running' | 'succeeded' | 'failed';
+  status: "running" | "succeeded" | "failed";
   started_at: string;
   completed_at?: string;
   error?: StepError;
@@ -137,7 +132,7 @@ export interface StepAttempt {
 }
 
 export interface StepError {
-  type: 'RETRYABLE' | 'NON_RETRYABLE' | 'VALIDATION_FAIL';
+  type: "RETRYABLE" | "NON_RETRYABLE" | "VALIDATION_FAIL";
   code: string;
   message: string;
   details?: Record<string, unknown>;
@@ -166,7 +161,7 @@ export interface ArtifactRef {
 export interface ArtifactContent {
   ref: ArtifactRef;
   content: string;
-  encoding: 'utf-8' | 'base64';
+  encoding: "utf-8" | "base64";
 }
 
 // ============================================
@@ -174,7 +169,7 @@ export interface ArtifactContent {
 // ============================================
 
 export interface ValidationReport {
-  format: 'json' | 'csv' | 'html' | 'markdown';
+  format: "json" | "csv" | "html" | "markdown";
   valid: boolean;
   errors: ValidationError[];
   warnings: ValidationWarning[];
@@ -200,20 +195,21 @@ export interface ValidationWarning {
 // ============================================
 
 export type ProgressEventType =
-  | 'step_started'
-  | 'step_completed'
-  | 'step_failed'
-  | 'step_retrying'
-  | 'repair_applied'
-  | 'approval_requested'
-  | 'run_completed'
-  | 'run_failed'
-  | 'error';
+  | "step_started"
+  | "step_completed"
+  | "step_failed"
+  | "step_retrying"
+  | "repair_applied"
+  | "approval_requested"
+  | "run_completed"
+  | "run_failed"
+  | "error";
 
 export interface ProgressEvent {
   type: ProgressEventType;
   run_id: string;
   step?: string;
+  status?: StepStatus;
   attempt?: number;
   progress: number;
   message: string;
@@ -255,46 +251,127 @@ export interface PaginatedResponse<T> {
 // ============================================
 
 export const STEP_NAMES = [
-  'step-1',
-  'step0',
-  'step1',
-  'step3',
-  'step2',
-  'step3a',
-  'step3b',
-  'step3c',
-  'step4',
-  'step5',
-  'step6',
-  'step6.5',
-  'step7a',
-  'step7b',
-  'step8',
-  'step9',
-  'step10',
+  "step-1",
+  "step0",
+  "step1",
+  "step3",
+  "step2",
+  "step3a",
+  "step3b",
+  "step3c",
+  "step4",
+  "step5",
+  "step6",
+  "step6.5",
+  "step7a",
+  "step7b",
+  "step8",
+  "step9",
+  "step10",
 ] as const;
 
 export type StepName = (typeof STEP_NAMES)[number];
 
 export const STEP_LABELS: Record<string, string> = {
-  'step-1': '入力',
-  step0: '準備',
-  step1: '分析',
-  step3: '構成',
-  step2: '調査',
-  step3a: '並列処理A',
-  step3b: '並列処理B',
-  step3c: '並列処理C',
-  step4: '執筆準備',
-  step5: '本文生成',
-  step6: '編集',
-  'step6.5': '統合パッケージ',
-  step7a: 'HTML生成',
-  step7b: 'メタ情報',
-  step8: '検証',
-  step9: '最終調整',
-  step10: '完了',
+  "step-1": "入力",
+  step0: "準備",
+  step1: "分析",
+  step3: "構成",
+  step2: "調査",
+  step3a: "並列処理A",
+  step3b: "並列処理B",
+  step3c: "並列処理C",
+  step4: "執筆準備",
+  step5: "本文生成",
+  step6: "編集",
+  "step6.5": "統合パッケージ",
+  step7a: "HTML生成",
+  step7b: "メタ情報",
+  step8: "検証",
+  step9: "最終調整",
+  step10: "完了",
 };
+
+// ============================================
+// Prompt Types (JSON file-based)
+// ============================================
+
+export interface PromptVariableInfo {
+  required: boolean;
+  type: string;
+  description?: string;
+  default?: string | number | boolean | object | unknown[];
+}
+
+/** JSON ファイルから取得するプロンプト */
+export interface Prompt {
+  step: string;
+  version: number;
+  content: string;
+  variables: Record<string, PromptVariableInfo> | null;
+}
+
+export interface PromptListResponse {
+  pack_id: string;
+  prompts: Prompt[];
+  total: number;
+}
+
+export interface UpdatePromptInput {
+  content: string;
+  variables?: Record<string, PromptVariableInfo>;
+}
+
+// ============================================
+// Cost Types
+// ============================================
+
+export interface CostBreakdown {
+  step: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cost: number;
+}
+
+export interface CostResponse {
+  run_id: string;
+  total_cost: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  breakdown: CostBreakdown[];
+  currency: string;
+}
+
+// ============================================
+// Config Types (from Backend)
+// ============================================
+
+export interface ProviderConfig {
+  provider: LLMPlatform;
+  default_model: string;
+  available_models: string[];
+  supports_grounding: boolean;
+}
+
+export interface StepDefaultConfig {
+  step_id: string;
+  label: string;
+  description: string;
+  ai_model: LLMPlatform;
+  model_name: string;
+  temperature: number;
+  grounding: boolean;
+  retry_limit: number;
+  repair_enabled: boolean;
+  is_configurable: boolean;
+  recommended_model: LLMPlatform;
+}
+
+export interface ModelsConfigResponse {
+  providers: ProviderConfig[];
+  step_defaults: StepDefaultConfig[];
+}
 
 // ============================================
 // Helper Functions
@@ -302,40 +379,40 @@ export const STEP_LABELS: Record<string, string> = {
 
 export function getStatusColor(status: RunStatus | StepStatus): string {
   switch (status) {
-    case 'pending':
-      return 'bg-gray-100 text-gray-800';
-    case 'running':
-      return 'bg-blue-100 text-blue-800';
-    case 'waiting_approval':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'failed':
-      return 'bg-red-100 text-red-800';
-    case 'cancelled':
-    case 'skipped':
-      return 'bg-gray-100 text-gray-500';
+    case "pending":
+      return "bg-gray-100 text-gray-800";
+    case "running":
+      return "bg-blue-100 text-blue-800";
+    case "waiting_approval":
+      return "bg-yellow-100 text-yellow-800";
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "failed":
+      return "bg-red-100 text-red-800";
+    case "cancelled":
+    case "skipped":
+      return "bg-gray-100 text-gray-500";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 }
 
 export function getStatusIcon(status: RunStatus | StepStatus): string {
   switch (status) {
-    case 'pending':
-      return '○';
-    case 'running':
-      return '◐';
-    case 'waiting_approval':
-      return '⏸';
-    case 'completed':
-      return '●';
-    case 'failed':
-      return '✗';
-    case 'cancelled':
-    case 'skipped':
-      return '○';
+    case "pending":
+      return "○";
+    case "running":
+      return "◐";
+    case "waiting_approval":
+      return "⏸";
+    case "completed":
+      return "●";
+    case "failed":
+      return "✗";
+    case "cancelled":
+    case "skipped":
+      return "○";
     default:
-      return '○';
+      return "○";
   }
 }

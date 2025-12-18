@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import type { RunSummary, PaginatedResponse } from '@/lib/types';
-import { api } from '@/lib/api';
+import { useState, useEffect, useCallback } from "react";
+import type { RunSummary, PaginatedResponse } from "@/lib/types";
+import { api } from "@/lib/api";
 
 interface UseRunsOptions {
   autoFetch?: boolean;
@@ -47,7 +47,7 @@ export function useRuns(options: UseRunsOptions = {}): UseRunsReturn {
       setTotal(response.total);
       setHasMore(response.has_more);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch runs');
+      setError(err instanceof Error ? err.message : "Failed to fetch runs");
     } finally {
       setLoading(false);
     }

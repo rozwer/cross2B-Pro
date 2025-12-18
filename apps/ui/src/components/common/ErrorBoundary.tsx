@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import React from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -13,10 +13,7 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-export class ErrorBoundary extends React.Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -27,7 +24,7 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   handleRetry = () => {
@@ -44,11 +41,9 @@ export class ErrorBoundary extends React.Component<
         <div className="min-h-[200px] flex items-center justify-center">
           <div className="text-center p-6 max-w-md">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              エラーが発生しました
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">エラーが発生しました</h2>
             <p className="text-sm text-gray-600 mb-4">
-              {this.state.error?.message || '予期せぬエラーが発生しました'}
+              {this.state.error?.message || "予期せぬエラーが発生しました"}
             </p>
             <button
               onClick={this.handleRetry}
@@ -72,7 +67,7 @@ interface ErrorMessageProps {
   onRetry?: () => void;
 }
 
-export function ErrorMessage({ title = 'エラー', message, onRetry }: ErrorMessageProps) {
+export function ErrorMessage({ title = "エラー", message, onRetry }: ErrorMessageProps) {
   return (
     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
       <div className="flex items-start gap-3">

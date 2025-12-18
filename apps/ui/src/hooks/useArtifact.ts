@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import type { ArtifactRef, ArtifactContent } from '@/lib/types';
-import { api } from '@/lib/api';
+import { useState, useEffect, useCallback } from "react";
+import type { ArtifactRef, ArtifactContent } from "@/lib/types";
+import { api } from "@/lib/api";
 
 interface UseArtifactsOptions {
   autoFetch?: boolean;
@@ -15,10 +15,7 @@ interface UseArtifactsReturn {
   fetch: () => Promise<void>;
 }
 
-export function useArtifacts(
-  runId: string,
-  options: UseArtifactsOptions = {}
-): UseArtifactsReturn {
+export function useArtifacts(runId: string, options: UseArtifactsOptions = {}): UseArtifactsReturn {
   const { autoFetch = true } = options;
 
   const [artifacts, setArtifacts] = useState<ArtifactRef[]>([]);
@@ -32,7 +29,7 @@ export function useArtifacts(
       const data = await api.artifacts.list(runId);
       setArtifacts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch artifacts');
+      setError(err instanceof Error ? err.message : "Failed to fetch artifacts");
     } finally {
       setLoading(false);
     }
@@ -61,7 +58,7 @@ interface UseArtifactContentReturn {
 
 export function useArtifactContent(
   runId: string,
-  artifactId: string | null
+  artifactId: string | null,
 ): UseArtifactContentReturn {
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +76,7 @@ export function useArtifactContent(
       const data = await api.artifacts.download(runId, artifactId);
       setContent(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch artifact content');
+      setError(err instanceof Error ? err.message : "Failed to fetch artifact content");
     } finally {
       setLoading(false);
     }

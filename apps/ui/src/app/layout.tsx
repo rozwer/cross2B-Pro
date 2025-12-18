@@ -1,19 +1,15 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { Sparkles, Plus, LayoutDashboard } from 'lucide-react';
-import { ThemeProvider, ThemeToggle } from '@/components/theme';
-import './globals.css';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Sparkles, Plus, Settings } from "lucide-react";
+import { ThemeProvider, ThemeToggle } from "@/components/theme";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'SEO Article Generator',
-  description: 'SEO記事自動生成システム - 社内エンジニア向けUI',
+  title: "SEO Article Generator",
+  description: "SEO記事自動生成システム - 社内エンジニア向けUI",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className="font-sans antialiased">
@@ -24,10 +20,7 @@ export default function RootLayout({
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                   {/* Logo */}
-                  <Link
-                    href="/runs"
-                    className="flex items-center gap-3 group"
-                  >
+                  <Link href="/" className="flex items-center gap-3 group">
                     <div className="flex items-center justify-center w-9 h-9 rounded-xl gradient-primary shadow-sm group-hover:shadow-md transition-shadow">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
@@ -40,16 +33,13 @@ export default function RootLayout({
                   <nav className="flex items-center gap-2">
                     <ThemeToggle />
                     <Link
-                      href="/runs"
+                      href="/settings"
                       className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
                     >
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span className="hidden sm:inline">Dashboard</span>
+                      <Settings className="h-4 w-4" />
+                      <span className="hidden sm:inline">Settings</span>
                     </Link>
-                    <Link
-                      href="/runs/new"
-                      className="btn btn-primary"
-                    >
+                    <Link href="/settings/runs/new" className="btn btn-primary">
                       <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">New Run</span>
                     </Link>
@@ -63,9 +53,7 @@ export default function RootLayout({
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="animate-fade-in">
-                {children}
-              </div>
+              <div className="animate-fade-in">{children}</div>
             </main>
 
             {/* Footer */}

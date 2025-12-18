@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { FileText, Code, ImageIcon, File, Download, ChevronDown, ChevronRight } from 'lucide-react';
-import type { ArtifactRef, ArtifactContent } from '@/lib/types';
-import { api } from '@/lib/api';
-import { formatBytes } from '@/lib/utils';
-import { cn } from '@/lib/utils';
-import { JsonViewer } from './JsonViewer';
-import { MarkdownViewer } from './MarkdownViewer';
-import { HtmlPreview } from './HtmlPreview';
-import { Loading } from '@/components/common/Loading';
+import { useState } from "react";
+import { FileText, Code, ImageIcon, File, Download, ChevronDown, ChevronRight } from "lucide-react";
+import type { ArtifactRef, ArtifactContent } from "@/lib/types";
+import { api } from "@/lib/api";
+import { formatBytes } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { JsonViewer } from "./JsonViewer";
+import { MarkdownViewer } from "./MarkdownViewer";
+import { HtmlPreview } from "./HtmlPreview";
+import { Loading } from "@/components/common/Loading";
 
 interface ArtifactViewerProps {
   runId: string;
@@ -23,14 +23,17 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
 
   // グループ化
-  const groupedArtifacts = artifacts.reduce((acc, artifact) => {
-    const stepId = artifact.step_id;
-    if (!acc[stepId]) {
-      acc[stepId] = [];
-    }
-    acc[stepId].push(artifact);
-    return acc;
-  }, {} as Record<string, ArtifactRef[]>);
+  const groupedArtifacts = artifacts.reduce(
+    (acc, artifact) => {
+      const stepId = artifact.step_id;
+      if (!acc[stepId]) {
+        acc[stepId] = [];
+      }
+      acc[stepId].push(artifact);
+      return acc;
+    },
+    {} as Record<string, ArtifactRef[]>,
+  );
 
   const toggleStep = (stepId: string) => {
     const newExpanded = new Set(expandedSteps);
@@ -49,7 +52,7 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
       const data = await api.artifacts.download(runId, artifact.id);
       setContent(data);
     } catch (err) {
-      console.error('Failed to load artifact content:', err);
+      console.error("Failed to load artifact content:", err);
       setContent(null);
     } finally {
       setLoading(false);
@@ -57,10 +60,10 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
   };
 
   const getIcon = (contentType: string) => {
-    if (contentType.includes('json')) return <Code className="h-4 w-4" />;
-    if (contentType.includes('html')) return <FileText className="h-4 w-4" />;
-    if (contentType.includes('markdown')) return <FileText className="h-4 w-4" />;
-    if (contentType.includes('image')) return <ImageIcon className="h-4 w-4" />;
+    if (contentType.includes("json")) return <Code className="h-4 w-4" />;
+    if (contentType.includes("html")) return <FileText className="h-4 w-4" />;
+    if (contentType.includes("markdown")) return <FileText className="h-4 w-4" />;
+    if (contentType.includes("image")) return <ImageIcon className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
 
@@ -70,7 +73,10 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">成果物</h3>
       </div>
 
-      <div className="flex divide-x divide-gray-200 dark:divide-gray-700" style={{ minHeight: '300px' }}>
+      <div
+        className="flex divide-x divide-gray-200 dark:divide-gray-700"
+        style={{ minHeight: "300px" }}
+      >
         {/* ファイルリスト */}
         <div className="w-64 flex-shrink-0 overflow-y-auto">
           {Object.entries(groupedArtifacts).map(([stepId, stepArtifacts]) => (
@@ -97,17 +103,15 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                       key={artifact.id}
                       onClick={() => loadContent(artifact)}
                       className={cn(
-                        'w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors',
+                        "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors",
                         selectedArtifact?.id === artifact.id
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700",
                       )}
                     >
                       {getIcon(artifact.content_type)}
                       <div className="flex-1 min-w-0 text-left">
-                        <p className="truncate text-xs">
-                          {artifact.ref_path.split('/').pop()}
-                        </p>
+                        <p className="truncate text-xs">{artifact.ref_path.split("/").pop()}</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">
                           {formatBytes(artifact.size_bytes)}
                         </p>
@@ -143,8 +147,8 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                 </div>
                 <div className="flex gap-2">
                   <a
-                    href={`data:${selectedArtifact.content_type};base64,${content.encoding === 'base64' ? content.content : btoa(content.content)}`}
-                    download={selectedArtifact.ref_path.split('/').pop()}
+                    href={`data:${selectedArtifact.content_type};base64,${content.encoding === "base64" ? content.content : btoa(content.content)}`}
+                    download={selectedArtifact.ref_path.split("/").pop()}
                     className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -171,12 +175,12 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
 
 // Markdownコンテンツを含むフィールド名
 const MARKDOWN_FIELDS = [
-  'draft',
-  'polished',
-  'final_content',
-  'integration_package',
-  'markdown',
-  'content',
+  "draft",
+  "polished",
+  "final_content",
+  "integration_package",
+  "markdown",
+  "content",
 ];
 
 function ContentRenderer({
@@ -186,21 +190,21 @@ function ContentRenderer({
 }: {
   content: string;
   contentType: string;
-  encoding: 'utf-8' | 'base64';
+  encoding: "utf-8" | "base64";
 }) {
-  const [viewMode, setViewMode] = useState<'json' | 'markdown'>('json');
-  const decodedContent = encoding === 'base64' ? atob(content) : content;
+  const [viewMode, setViewMode] = useState<"json" | "markdown">("json");
+  const decodedContent = encoding === "base64" ? atob(content) : content;
 
   // JSONの場合、Markdownフィールドを検出
-  if (contentType.includes('json')) {
+  if (contentType.includes("json")) {
     let markdownContent: string | null = null;
     let markdownFieldName: string | null = null;
 
     try {
       const parsed = JSON.parse(decodedContent);
-      if (typeof parsed === 'object' && parsed !== null) {
+      if (typeof parsed === "object" && parsed !== null) {
         for (const field of MARKDOWN_FIELDS) {
-          if (field in parsed && typeof parsed[field] === 'string' && parsed[field].length > 100) {
+          if (field in parsed && typeof parsed[field] === "string" && parsed[field].length > 100) {
             markdownContent = parsed[field];
             markdownFieldName = field;
             break;
@@ -218,29 +222,29 @@ function ContentRenderer({
           <div className="flex items-center gap-2 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">
             <span className="text-xs text-gray-500 dark:text-gray-400">表示モード:</span>
             <button
-              onClick={() => setViewMode('json')}
+              onClick={() => setViewMode("json")}
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
-                viewMode === 'json'
-                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                "px-2 py-1 text-xs rounded transition-colors",
+                viewMode === "json"
+                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
               )}
             >
               JSON
             </button>
             <button
-              onClick={() => setViewMode('markdown')}
+              onClick={() => setViewMode("markdown")}
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
-                viewMode === 'markdown'
-                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                "px-2 py-1 text-xs rounded transition-colors",
+                viewMode === "markdown"
+                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700",
               )}
             >
               {markdownFieldName} (Markdown)
             </button>
           </div>
-          {viewMode === 'json' ? (
+          {viewMode === "json" ? (
             <JsonViewer content={decodedContent} />
           ) : (
             <MarkdownViewer content={markdownContent} />
@@ -252,11 +256,11 @@ function ContentRenderer({
     return <JsonViewer content={decodedContent} />;
   }
 
-  if (contentType.includes('html')) {
+  if (contentType.includes("html")) {
     return <HtmlPreview content={decodedContent} />;
   }
 
-  if (contentType.includes('markdown')) {
+  if (contentType.includes("markdown")) {
     return <MarkdownViewer content={decodedContent} />;
   }
 

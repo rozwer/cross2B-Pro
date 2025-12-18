@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { X, Cpu, Thermometer, RotateCcw, Wrench } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { LLMPlatform } from '@/lib/types';
+import { X, Cpu, Thermometer, RotateCcw, Wrench } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { LLMPlatform } from "@/lib/types";
 
 export interface StepConfig {
   stepId: string;
@@ -33,33 +33,40 @@ interface ModelOption {
 
 const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
   gemini: [
-    { id: 'gemini-3-pro', name: 'Gemini 3 Pro', description: '最新・最高性能', isDefault: true },
-    { id: 'gemini-3-deep-think', name: 'Gemini 3 Deep Think', description: '深層推論' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '高速・コスト効率' },
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "高速・コスト効率", isDefault: true },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "標準" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "高精度" },
+    { id: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", description: "最新プレビュー" },
   ],
   openai: [
-    { id: 'gpt-5.2', name: 'GPT-5.2', description: '最新・最高性能', isDefault: true },
-    { id: 'gpt-5.1-thinking', name: 'GPT-5.1 Thinking', description: '推論特化' },
-    { id: 'o4-mini', name: 'o4-mini', description: '推論・軽量' },
+    { id: "gpt-4o", name: "GPT-4o", description: "最新・最高性能", isDefault: true },
+    { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "軽量・高速" },
+    { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "高精度" },
   ],
   anthropic: [
-    { id: 'claude-opus-4.5', name: 'Claude Opus 4.5', description: '最新・最高性能', isDefault: true },
-    { id: 'claude-sonnet-4', name: 'Claude Sonnet 4', description: 'バランス型' },
-    { id: 'claude-opus-4', name: 'Claude Opus 4', description: '高精度' },
+    {
+      id: "claude-sonnet-4-20250514",
+      name: "Claude Sonnet 4",
+      description: "バランス型",
+      isDefault: true,
+    },
+    { id: "claude-opus-4-20250514", name: "Claude Opus 4", description: "最高精度" },
+    { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "高速" },
   ],
 };
 
 const PLATFORM_LABELS: Record<LLMPlatform, { name: string; color: string; emoji: string }> = {
-  gemini: { name: 'Gemini', color: 'bg-blue-500', emoji: '🔵' },
-  anthropic: { name: 'Claude', color: 'bg-orange-500', emoji: '🟠' },
-  openai: { name: 'OpenAI', color: 'bg-green-500', emoji: '🟢' },
+  gemini: { name: "Gemini", color: "bg-blue-500", emoji: "🔵" },
+  anthropic: { name: "Claude", color: "bg-orange-500", emoji: "🟠" },
+  openai: { name: "OpenAI", color: "bg-green-500", emoji: "🟢" },
 };
 
 export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPanelProps) {
   if (!step) return null;
 
   const handlePlatformChange = (platform: LLMPlatform) => {
-    const defaultModel = PLATFORM_MODELS[platform].find(m => m.isDefault) || PLATFORM_MODELS[platform][0];
+    const defaultModel =
+      PLATFORM_MODELS[platform].find((m) => m.isDefault) || PLATFORM_MODELS[platform][0];
     onConfigChange(step.stepId, {
       aiModel: platform,
       modelName: defaultModel.id,
@@ -74,10 +81,7 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
           <h3 className="font-semibold text-gray-900">{step.label}</h3>
           <p className="text-xs text-gray-500">{step.stepId}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-        >
+        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-md transition-colors">
           <X className="w-5 h-5 text-gray-500" />
         </button>
       </div>
@@ -86,9 +90,7 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
       <div className="p-4 space-y-6">
         {/* Description */}
         <div>
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-            説明
-          </label>
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">説明</label>
           <p className="mt-1 text-sm text-gray-700">{step.description}</p>
         </div>
 
@@ -101,13 +103,13 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
             </div>
             <span
               className={cn(
-                'text-sm font-medium',
-                step.recommendedModel === 'gemini' && 'text-blue-700',
-                step.recommendedModel === 'anthropic' && 'text-orange-700',
-                step.recommendedModel === 'openai' && 'text-green-700'
+                "text-sm font-medium",
+                step.recommendedModel === "gemini" && "text-blue-700",
+                step.recommendedModel === "anthropic" && "text-orange-700",
+                step.recommendedModel === "openai" && "text-green-700",
               )}
             >
-              {PLATFORM_LABELS[step.recommendedModel].emoji}{' '}
+              {PLATFORM_LABELS[step.recommendedModel].emoji}{" "}
               {PLATFORM_LABELS[step.recommendedModel].name}
             </span>
           </div>
@@ -121,18 +123,15 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
                 プラットフォーム
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {(['gemini', 'anthropic', 'openai'] as LLMPlatform[]).map((platform) => (
+                {(["gemini", "anthropic", "openai"] as LLMPlatform[]).map((platform) => (
                   <button
                     key={platform}
                     onClick={() => handlePlatformChange(platform)}
                     className={cn(
-                      'py-2 px-3 rounded-lg text-xs font-medium transition-all border-2',
+                      "py-2 px-3 rounded-lg text-xs font-medium transition-all border-2",
                       step.aiModel === platform
-                        ? cn(
-                            'text-white border-transparent',
-                            PLATFORM_LABELS[platform].color
-                          )
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                        ? cn("text-white border-transparent", PLATFORM_LABELS[platform].color)
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300",
                     )}
                   >
                     {PLATFORM_LABELS[platform].emoji}
@@ -161,11 +160,13 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
               </select>
               {/* Model description */}
               {(() => {
-                const selectedModel = PLATFORM_MODELS[step.aiModel].find(m => m.id === step.modelName);
-                return selectedModel?.description && (
-                  <p className="mt-1.5 text-xs text-gray-500">
-                    {selectedModel.description}
-                  </p>
+                const selectedModel = PLATFORM_MODELS[step.aiModel].find(
+                  (m) => m.id === step.modelName,
+                );
+                return (
+                  selectedModel?.description && (
+                    <p className="mt-1.5 text-xs text-gray-500">{selectedModel.description}</p>
+                  )
                 );
               })()}
             </div>
@@ -203,9 +204,7 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
                 <input
                   type="checkbox"
                   checked={step.grounding}
-                  onChange={(e) =>
-                    onConfigChange(step.stepId, { grounding: e.target.checked })
-                  }
+                  onChange={(e) => onConfigChange(step.stepId, { grounding: e.target.checked })}
                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
                 <div>
@@ -218,9 +217,7 @@ export function NodeConfigPanel({ step, onClose, onConfigChange }: NodeConfigPan
                 <input
                   type="checkbox"
                   checked={step.repairEnabled}
-                  onChange={(e) =>
-                    onConfigChange(step.stepId, { repairEnabled: e.target.checked })
-                  }
+                  onChange={(e) => onConfigChange(step.stepId, { repairEnabled: e.target.checked })}
                   className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
                 <div className="flex items-center gap-1.5">

@@ -7,7 +7,7 @@
  * - 401エラー時の自動リフレッシュ
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface AuthTokens {
   access_token: string;
@@ -32,9 +32,9 @@ export interface AuthUser {
  * - 認証失敗時のクリーンアップ
  */
 export class AuthManager {
-  private static readonly TOKEN_KEY = 'auth_token';
-  private static readonly REFRESH_KEY = 'refresh_token';
-  private static readonly USER_KEY = 'auth_user';
+  private static readonly TOKEN_KEY = "auth_token";
+  private static readonly REFRESH_KEY = "refresh_token";
+  private static readonly USER_KEY = "auth_user";
 
   // トークン有効期限（秒）
   private static readonly ACCESS_TOKEN_EXPIRES = 15 * 60; // 15分
@@ -47,7 +47,7 @@ export class AuthManager {
    * アクセストークンを取得
    */
   static getToken(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     return sessionStorage.getItem(this.TOKEN_KEY);
   }
 
@@ -55,7 +55,7 @@ export class AuthManager {
    * リフレッシュトークンを取得
    */
   static getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     return sessionStorage.getItem(this.REFRESH_KEY);
   }
 
@@ -63,7 +63,7 @@ export class AuthManager {
    * ユーザー情報を取得
    */
   static getUser(): AuthUser | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     const userJson = sessionStorage.getItem(this.USER_KEY);
     if (!userJson) return null;
     try {
@@ -77,7 +77,7 @@ export class AuthManager {
    * トークンを保存
    */
   static setToken(accessToken: string, refreshToken?: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     sessionStorage.setItem(this.TOKEN_KEY, accessToken);
     if (refreshToken) {
       sessionStorage.setItem(this.REFRESH_KEY, refreshToken);
@@ -88,7 +88,7 @@ export class AuthManager {
    * ユーザー情報を保存
    */
   static setUser(user: AuthUser): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
@@ -96,7 +96,7 @@ export class AuthManager {
    * 認証情報をクリア（ログアウト）
    */
   static clearToken(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_KEY);
     sessionStorage.removeItem(this.USER_KEY);
@@ -150,8 +150,8 @@ export class AuthManager {
   private static async performRefresh(refreshToken: string): Promise<string | null> {
     try {
       const response = await fetch(`${API_BASE}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
@@ -175,8 +175,8 @@ export class AuthManager {
   static async login(email: string, password: string): Promise<boolean> {
     try {
       const response = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -206,10 +206,10 @@ export class AuthManager {
     if (token) {
       try {
         await fetch(`${API_BASE}/api/auth/logout`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         });
       } catch {
@@ -229,7 +229,7 @@ export class AuthManager {
       return {};
     }
     return {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
   }
 
@@ -240,11 +240,11 @@ export class AuthManager {
    */
   static handleUnauthorized(): void {
     this.clearToken();
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // TODO: 認証機能実装後に有効化
       // const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       // window.location.href = `/login?returnUrl=${returnUrl}`;
-      console.warn('[Auth] Unauthorized - authentication not implemented yet');
+      console.warn("[Auth] Unauthorized - authentication not implemented yet");
     }
   }
 }
@@ -256,13 +256,13 @@ export class AuthManager {
  */
 export async function authenticatedFetch(
   input: RequestInfo | URL,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<Response> {
   const token = AuthManager.getToken();
 
   const headers = new Headers(init?.headers);
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(input, {
@@ -276,7 +276,7 @@ export async function authenticatedFetch(
 
     if (newToken) {
       // 新しいトークンで再試行
-      headers.set('Authorization', `Bearer ${newToken}`);
+      headers.set("Authorization", `Bearer ${newToken}`);
       return fetch(input, {
         ...init,
         headers,
@@ -285,7 +285,7 @@ export async function authenticatedFetch(
 
     // リフレッシュ失敗時はログインページへ
     AuthManager.handleUnauthorized();
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   return response;
