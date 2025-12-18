@@ -11,6 +11,7 @@
 ## Step3a: Query Analysis
 
 ### 対象ファイル
+
 - `apps/worker/activities/step3a.py`
 
 ### 統合するヘルパー
@@ -130,9 +131,11 @@ class Step3aOutput(BaseModel):
 ## Step3b: Cooccurrence Extraction（心臓部）
 
 ### 対象ファイル
+
 - `apps/worker/activities/step3b.py`
 
 ### 特記事項
+
 **ワークフローの心臓部** - 品質基準を厳格に適用
 
 ### 統合するヘルパー
@@ -312,6 +315,7 @@ class Step3bOutput(BaseModel):
 ## Step3c: Competitor Analysis
 
 ### 対象ファイル
+
 - `apps/worker/activities/step3c.py`
 
 ### 統合するヘルパー
@@ -460,6 +464,7 @@ class Step3cOutput(BaseModel):
 ## 完了条件（3ステップ共通）
 
 ### Step3a
+
 - [ ] InputValidator 統合
 - [ ] OutputParser 統合
 - [ ] QualityRetryLoop 統合
@@ -468,6 +473,7 @@ class Step3cOutput(BaseModel):
 - [ ] テスト追加・通過
 
 ### Step3b（心臓部 - 厳格な検証）
+
 - [ ] InputValidator 統合
 - [ ] OutputParser 統合
 - [ ] QualityRetryLoop 統合（厳格な基準）
@@ -477,6 +483,7 @@ class Step3cOutput(BaseModel):
 - [ ] テスト追加・通過
 
 ### Step3c
+
 - [ ] InputValidator 統合
 - [ ] OutputParser 統合
 - [ ] QualityRetryLoop 統合

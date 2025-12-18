@@ -31,6 +31,7 @@ tests/unit/helpers/
 ## 前提条件
 
 **`helpers-parsing` worktree で以下が実装済みであること:**
+
 - `schemas.py` の `QualityResult`, `InputValidationResult`
 
 ```python
@@ -884,8 +885,10 @@ def _is_present(self, value: Any) -> bool:
 ## 依存関係
 
 ### このworktreeが依存するもの
+
 - `helpers-parsing` の `schemas.py` (QualityResult, InputValidationResult)
 
 ### このworktreeに依存するもの
+
 - `helpers-metrics` の `QualityRetryLoop` (QualityValidator を使用)
 - 全ステップ (InputValidator, QualityValidator を使用)

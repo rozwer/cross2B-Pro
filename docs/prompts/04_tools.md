@@ -150,15 +150,15 @@ class ToolRegistry:
 
 ### 各ツールの実装
 
-| tool_id | ファイル | 機能 | I/O | 備考 |
-|---------|---------|------|-----|------|
-| `serp_fetch` | search.py | SERP取得（上位N件URL） | query → urls[] | 実API |
-| `search_volume` | search.py | 検索ボリューム取得 | keyword → volume | **モック** |
-| `related_keywords` | search.py | 関連語取得 | keyword → keywords[] | **モック** |
-| `page_fetch` | fetch.py | ページ取得 + 本文抽出 | url → structured_content | 実API |
-| `pdf_extract` | fetch.py | PDFテキスト抽出 | pdf_path → text | 実装 |
-| `primary_collector` | fetch.py | 一次情報収集器 | query → evidence_refs[] | 実API |
-| `url_verify` | verify.py | URL実在確認 | url → status, final_url, meta | 実API |
+| tool_id             | ファイル  | 機能                   | I/O                           | 備考       |
+| ------------------- | --------- | ---------------------- | ----------------------------- | ---------- |
+| `serp_fetch`        | search.py | SERP取得（上位N件URL） | query → urls[]                | 実API      |
+| `search_volume`     | search.py | 検索ボリューム取得     | keyword → volume              | **モック** |
+| `related_keywords`  | search.py | 関連語取得             | keyword → keywords[]          | **モック** |
+| `page_fetch`        | fetch.py  | ページ取得 + 本文抽出  | url → structured_content      | 実API      |
+| `pdf_extract`       | fetch.py  | PDFテキスト抽出        | pdf_path → text               | 実装       |
+| `primary_collector` | fetch.py  | 一次情報収集器         | query → evidence_refs[]       | 実API      |
+| `url_verify`        | verify.py | URL実在確認            | url → status, final_url, meta | 実API      |
 
 ---
 
@@ -401,6 +401,7 @@ USE_MOCK_GOOGLE_ADS=true  # Google Ads API 未取得のため true
 ```
 
 将来 Google Ads API を取得した場合:
+
 1. `.env` で `USE_MOCK_GOOGLE_ADS=false` に変更
 2. `_execute_real()` メソッドを実装
 3. Google Ads API の環境変数を設定

@@ -2,12 +2,12 @@
 
 ## 概要
 
-| 項目 | 内容 |
-|------|------|
-| ファイル | `apps/worker/activities/step0.py` |
-| Activity名 | `step0_keyword_selection` |
-| 使用LLM | Gemini（デフォルト） |
-| 目的 | 入力キーワードの分析・最適化戦略決定 |
+| 項目       | 内容                                 |
+| ---------- | ------------------------------------ |
+| ファイル   | `apps/worker/activities/step0.py`    |
+| Activity名 | `step0_keyword_selection`            |
+| 使用LLM    | Gemini（デフォルト）                 |
+| 目的       | 入力キーワードの分析・最適化戦略決定 |
 
 ---
 
@@ -16,10 +16,12 @@
 ### リトライ戦略
 
 **現状**:
+
 - Temporal の `RetryPolicy` に依存（最大3回、指数バックオフ）
 - LLM エラーを `RETRYABLE` / `NON_RETRYABLE` に分類
 
 **問題点**:
+
 1. **LLM出力の品質チェックなし**: レスポンスが返ってきたら成功扱い
 2. **Rate Limit対応が単純**: 429エラー時の待機時間が固定的
 3. **部分的失敗の考慮なし**: LLMが不完全な回答を返した場合の対応がない
@@ -27,10 +29,12 @@
 ### フォーマット整形機構
 
 **現状**:
+
 - LLMレスポンスを `response.content` としてそのまま保存
 - JSON構造化なし（自由形式テキスト）
 
 **問題点**:
+
 1. **出力形式が不定**: LLMの気分次第で形式が変わる
 2. **後続ステップでのパースが困難**: step3a等が `analysis` を参照するが形式保証なし
 3. **バリデーションなし**: 必須項目の欠落を検出できない
@@ -38,10 +42,12 @@
 ### 中途開始機構
 
 **現状**:
+
 - `BaseActivity._check_existing_output()` で冪等性チェック可能（だが無効化中）
 - `input_digest` による同一入力検出の仕組みはある
 
 **問題点**:
+
 1. **冪等性キャッシュが無効**: Line 337 で `return None` 固定
 2. **部分結果の保存なし**: LLM呼び出し前後で中間状態がない
 3. **再開ポイントがない**: 失敗したら最初からやり直し
@@ -120,7 +126,7 @@ class KeywordAnalysisOutput(BaseModel):
 
 #### 2.2 出力パーサーの実装
 
-```python
+````python
 class Step0OutputParser:
     """Step0出力のパース・バリデーション"""
 
@@ -173,11 +179,11 @@ class Step0OutputParser:
         # ... 他の必須項目も同様に抽出 ...
 
         return KeywordAnalysisOutput(**extracted)
-```
+````
 
 #### 2.3 プロンプトでの形式指定
 
-```python
+````python
 STEP0_OUTPUT_FORMAT = """
 出力は以下のJSON形式で返してください：
 ```json
@@ -190,9 +196,11 @@ STEP0_OUTPUT_FORMAT = """
   "content_type_suggestion": "記事|比較表|ガイド|FAQ等",
   "raw_analysis": "詳細な分析内容"
 }
-```
+````
+
 """
-```
+
+````
 
 ### 3. 中途開始機構の実装
 
@@ -232,7 +240,7 @@ async def _check_existing_output(self, path: str, input_digest: str) -> Artifact
     except Exception as e:
         activity.logger.warning(f"Idempotency check failed: {e}")
         return None
-```
+````
 
 #### 3.2 チェックポイントの概念（将来拡張）
 
@@ -252,13 +260,13 @@ class StepCheckpoint(BaseModel):
 
 ## 優先度と実装順序
 
-| 優先度 | 改善項目 | 工数見積 | 理由 |
-|--------|----------|----------|------|
-| **高** | 構造化出力スキーマ | 2h | 後続ステップの安定性に直結 |
-| **高** | 出力パーサー | 3h | フォーマット整形の基盤 |
-| **中** | 品質チェック付きリトライ | 2h | 出力品質向上 |
-| **中** | 冪等性キャッシュ有効化 | 1h | 再実行時の効率化 |
-| **低** | Rate Limit対応改善 | 1h | 現状でも動作する |
+| 優先度 | 改善項目                 | 工数見積 | 理由                       |
+| ------ | ------------------------ | -------- | -------------------------- |
+| **高** | 構造化出力スキーマ       | 2h       | 後続ステップの安定性に直結 |
+| **高** | 出力パーサー             | 3h       | フォーマット整形の基盤     |
+| **中** | 品質チェック付きリトライ | 2h       | 出力品質向上               |
+| **中** | 冪等性キャッシュ有効化   | 1h       | 再実行時の効率化           |
+| **低** | Rate Limit対応改善       | 1h       | 現状でも動作する           |
 
 ---
 

@@ -112,7 +112,23 @@
     "packs_directory": "apps/api/prompts/packs/",
     "default_pack": {
       "file": "apps/api/prompts/packs/default.json",
-      "steps": ["step0", "step1", "step2", "step3a", "step3b", "step3c", "step4", "step5", "step6", "step6_5", "step7a", "step7b", "step8", "step9", "step10"],
+      "steps": [
+        "step0",
+        "step1",
+        "step2",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b",
+        "step8",
+        "step9",
+        "step10"
+      ],
       "all_prompts_include_json_output_instructions": true
     }
   },

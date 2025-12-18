@@ -115,10 +115,7 @@
       "id": "TEST-004",
       "phase": "承認",
       "task": "承認ダイアログで承認を実行",
-      "steps": [
-        "1. 「承認待ち」ボタンをクリック",
-        "2. 承認ダイアログで「承認」を選択"
-      ],
+      "steps": ["1. 「承認待ち」ボタンをクリック", "2. 承認ダイアログで「承認」を選択"],
       "expected": "statusが 'running' に戻り、step4以降が実行開始",
       "status": "pending"
     },
@@ -133,10 +130,7 @@
       "id": "TEST-006",
       "phase": "成果物確認",
       "task": "生成された成果物を確認",
-      "steps": [
-        "1. 「成果物」タブを開く",
-        "2. 各ステップの出力JSONを確認"
-      ],
+      "steps": ["1. 「成果物」タブを開く", "2. 各ステップの出力JSONを確認"],
       "expected": "各ステップのartifactが表示される",
       "status": "pending"
     }
@@ -148,17 +142,11 @@
         "Temporal clientが接続されていない (health/detailed で確認)",
         "Temporal Workerが起動していない"
       ],
-      "solutions": [
-        "APIサーバーを再起動",
-        "Workerを起動: uv run python -m apps.worker.main"
-      ]
+      "solutions": ["APIサーバーを再起動", "Workerを起動: uv run python -m apps.worker.main"]
     },
     {
       "symptom": "Runが 'running' だが current_step が変わらない",
-      "causes": [
-        "Workerがタスクを処理していない",
-        "LLM API呼び出しでエラーが発生"
-      ],
+      "causes": ["Workerがタスクを処理していない", "LLM API呼び出しでエラーが発生"],
       "solutions": [
         "Workerのログを確認",
         "Temporal UI (localhost:8080) でワークフロー履歴を確認",
@@ -167,14 +155,8 @@
     },
     {
       "symptom": "500 Internal Server Error",
-      "causes": [
-        "テナントDBが存在しない",
-        "DB接続情報が間違っている"
-      ],
-      "solutions": [
-        "PRE-004 のテナントDB確認を実行",
-        ".env の COMMON_DATABASE_URL を確認"
-      ]
+      "causes": ["テナントDBが存在しない", "DB接続情報が間違っている"],
+      "solutions": ["PRE-004 のテナントDB確認を実行", ".env の COMMON_DATABASE_URL を確認"]
     }
   ],
   "api_test_commands": {

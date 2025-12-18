@@ -65,25 +65,26 @@
 - **P2**: 運用改善系（残り全て）
 
 **修正順序**: P0-Security → P0-Correctness → P1 → P2
+
 - 認証なしでは他のセキュリティ対策が無意味なため、認証を最優先
 - worktree による並列実装を活用（衝突しないファイルは並列可）
 
 ### 影響範囲（改訂版）
 
-| 優先度 | 影響ファイル |
-|--------|-------------|
-| P0-Security | `apps/ui/src/lib/api.ts`, `apps/ui/src/lib/websocket.ts`, `apps/api/main.py` (認証middleware) |
-| P0-Correctness | `apps/worker/`, `apps/api/llm/`, `apps/api/tools/`, `apps/api/validation/`, `apps/api/prompts/` |
-| P1-Security | `apps/ui/src/components/`, `apps/api/tools/fetch.py`, `apps/api/db/tenant.py`, `apps/api/storage/`, `apps/api/audit/` |
-| P2 | `docker/`, `apps/api/main.py`, `apps/ui/middleware.ts`, 複数ファイル |
+| 優先度         | 影響ファイル                                                                                                          |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| P0-Security    | `apps/ui/src/lib/api.ts`, `apps/ui/src/lib/websocket.ts`, `apps/api/main.py` (認証middleware)                         |
+| P0-Correctness | `apps/worker/`, `apps/api/llm/`, `apps/api/tools/`, `apps/api/validation/`, `apps/api/prompts/`                       |
+| P1-Security    | `apps/ui/src/components/`, `apps/api/tools/fetch.py`, `apps/api/db/tenant.py`, `apps/api/storage/`, `apps/api/audit/` |
+| P2             | `docker/`, `apps/api/main.py`, `apps/ui/middleware.ts`, 複数ファイル                                                  |
 
 ### 新規追加項目（レビュー結果）
 
-| ID | 優先度 | カテゴリ | 概要 |
-|----|--------|----------|------|
-| VULN-010 | P1 | LLM Security | プロンプトインジェクション対策 |
-| VULN-011 | P1 | Audit | 監査ログの完全性保証（チェーンハッシュ） |
-| VULN-012 | P1 | Storage | Storageアクセス制御（テナント分離） |
+| ID       | 優先度 | カテゴリ     | 概要                                     |
+| -------- | ------ | ------------ | ---------------------------------------- |
+| VULN-010 | P1     | LLM Security | プロンプトインジェクション対策           |
+| VULN-011 | P1     | Audit        | 監査ログの完全性保証（チェーンハッシュ） |
+| VULN-012 | P1     | Storage      | Storageアクセス制御（テナント分離）      |
 
 ---
 
@@ -111,6 +112,7 @@ APIクライアントに認証トークン（Bearer token等）を付与する�
 #### 修正内容（改訂版）
 
 **対象ファイル**:
+
 - `apps/ui/src/lib/api.ts` (20-46行)
 - 新規: `apps/ui/src/lib/auth.ts`
 - 新規: `apps/api/auth/middleware.py`
@@ -253,6 +255,7 @@ WebSocket接続に認証情報が含まれていない。runIdを知っていれ
 #### 修正内容（改訂版）
 
 **対象ファイル**:
+
 - `apps/ui/src/lib/websocket.ts` (40-43行)
 - `apps/api/websockets.py`
 
@@ -398,6 +401,7 @@ Worker activity が `llm.generate(prompt=..., max_tokens=..., temperature=...)` 
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/worker/activities/step0.py` (64-99行)
 - `apps/worker/activities/step3a.py` (87-106行)
 - その他全 step activities
@@ -460,6 +464,7 @@ Graph内の `llm.generate(prompt=..., max_tokens=...)` や `grounding=True` な�
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/worker/graphs/pre_approval.py` (30-46行, 143-172行)
 - `apps/worker/graphs/post_approval.py` (全体)
 
@@ -514,6 +519,7 @@ response = await llm.generate(
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/worker/activities/step1.py` (51-119行)
 - `apps/worker/graphs/pre_approval.py` (63-99行)
 
@@ -558,6 +564,7 @@ urls = [r.get("url") for r in results if r.get("url")]
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/worker/graphs/wrapper.py` (24-80行)
 
 **修正方針**:
@@ -600,6 +607,7 @@ Graph/wrapper は同期 `load(pack_id)` を使用しているが、この実装�
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/prompts/loader.py` (131-164行, 247-276行)
 - `apps/worker/graphs/wrapper.py` (83-99行)
 - `apps/worker/activities/step0.py` (64-65行)
@@ -652,6 +660,7 @@ srcDoc属性にユーザー/LLM生成のHTMLを直接渡している。sandbox="
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/ui/src/components/artifacts/HtmlPreview.tsx` (45-49行)
 
 **修正方針**:
@@ -701,6 +710,7 @@ page_fetchツールでURL検証が不十分。内部ネットワークやクラ�
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/tools/fetch.py` (133-165行)
 
 **修正方針**:
@@ -823,6 +833,7 @@ pdf_pathパラメータにユーザー入力が渡されると、任意のファ
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/tools/fetch.py` (366-374行)
 
 **修正方針**:
@@ -901,6 +912,7 @@ tenant_id から作られる `db_name` を f-string で SQL 文に埋め込ん�
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/db/tenant.py` (172-190行, 233-261行)
 
 **修正方針**:
@@ -969,6 +981,7 @@ APIクライアントに認証トークン（Bearer token等）を付与する�
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/ui/src/lib/api.ts` (20-46行)
 
 **修正方針**:
@@ -1036,6 +1049,7 @@ WebSocket接続に認証情報が含まれていない。runIdを知っていれ
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/ui/src/lib/websocket.ts` (40-43行)
 
 **修正方針**:
@@ -1124,6 +1138,7 @@ Dockerfile は `pip install ".[dev]"` を実行するが、pyproject は `[depen
 ##### 修正内容
 
 **対象ファイル**:
+
 - `docker/Dockerfile.worker` (15-17行)
 - `pyproject.toml` (32-38行)
 
@@ -1179,6 +1194,7 @@ HEAD が拒否された場合のフォールバックとして `httpx.HTTPStatus
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/tools/verify.py` (100-111行)
 
 **修正方針**:
@@ -1232,6 +1248,7 @@ async def execute(self, url: str, **kwargs) -> ToolResult:
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/ui/src/components/artifacts/MarkdownViewer.tsx` (1-183行)
 
 **修正方針**:
@@ -1281,6 +1298,7 @@ export function MarkdownViewer({ content }: { content: string }) {
 ##### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/main.py` (全体)
 
 **修正方針**:
@@ -1338,6 +1356,7 @@ app.add_middleware(
 ##### 修正内容
 
 **対象ファイル**:
+
 - 複数ファイル（LLM/Tools/API）
 
 **修正方針**:
@@ -1419,33 +1438,33 @@ worktree-error-fix/       → VULN-009: エラーメッセージ修正
 
 ### P0 テスト
 
-| テスト項目 | 確認内容 |
-|-----------|---------|
-| LLM契約テスト | Worker/Graph が LLMInterface 契約に準拠 |
-| Tool契約テスト | Worker/Graph が ToolRegistry API に準拠 |
-| Import テスト | pytest 収集が成功する |
-| Prompt テスト | Graph/wrapper が prompt pack を正しくロード |
+| テスト項目     | 確認内容                                    |
+| -------------- | ------------------------------------------- |
+| LLM契約テスト  | Worker/Graph が LLMInterface 契約に準拠     |
+| Tool契約テスト | Worker/Graph が ToolRegistry API に準拠     |
+| Import テスト  | pytest 収集が成功する                       |
+| Prompt テスト  | Graph/wrapper が prompt pack を正しくロード |
 
 ### P1 テスト
 
-| テスト項目 | 確認内容 |
-|-----------|---------|
-| XSS テスト | 悪意あるHTMLがサニタイズされる |
-| SSRF テスト | 内部IPへのアクセスがブロックされる |
+| テスト項目            | 確認内容                                       |
+| --------------------- | ---------------------------------------------- |
+| XSS テスト            | 悪意あるHTMLがサニタイズされる                 |
+| SSRF テスト           | 内部IPへのアクセスがブロックされる             |
 | Path Traversal テスト | 許可されたディレクトリ外へのアクセスがブロック |
-| SQL注入テスト | 不正な tenant_id が拒否される |
-| API認証テスト | トークンなしのリクエストが拒否される |
-| WebSocket認証テスト | トークンなしの接続が拒否される |
+| SQL注入テスト         | 不正な tenant_id が拒否される                  |
+| API認証テスト         | トークンなしのリクエストが拒否される           |
+| WebSocket認証テスト   | トークンなしの接続が拒否される                 |
 
 ### P2 テスト
 
-| テスト項目 | 確認内容 |
-|-----------|---------|
-| Docker Build テスト | Docker build が成功する |
-| HTTP Fallback テスト | HEAD非対応サイトで GET にフォールバック |
-| Markdown テスト | Markdownが正しくレンダリングされる |
-| CORS テスト | 許可されたオリジンからのアクセスが成功 |
-| エラーメッセージテスト | 内部エラーがユーザーに露出しない |
+| テスト項目             | 確認内容                                |
+| ---------------------- | --------------------------------------- |
+| Docker Build テスト    | Docker build が成功する                 |
+| HTTP Fallback テスト   | HEAD非対応サイトで GET にフォールバック |
+| Markdown テスト        | Markdownが正しくレンダリングされる      |
+| CORS テスト            | 許可されたオリジンからのアクセスが成功  |
+| エラーメッセージテスト | 内部エラーがユーザーに露出しない        |
 
 ---
 
@@ -1471,6 +1490,7 @@ worktree-error-fix/       → VULN-009: エラーメッセージ修正
 #### 修正内容
 
 **対象ファイル**:
+
 - `apps/worker/activities/step*.py` (全工程)
 - `apps/worker/graphs/pre_approval.py`
 - `apps/worker/graphs/post_approval.py`
@@ -1556,6 +1576,7 @@ class PromptInjectionDefense:
 #### 修正内容
 
 **対象ファイル**:
+
 - `apps/api/db/models.py` (audit_logs テーブル)
 - 新規: `apps/api/audit/logger.py`
 
@@ -1656,6 +1677,7 @@ MinIO ストレージのテナント分離とアクセス制御が実装され�
 #### 修正内容
 
 **対象ファイル**:
+
 - 新規: `apps/api/storage/client.py`
 - `apps/api/main.py` (storage 初期化)
 
@@ -1730,14 +1752,14 @@ class SecureStorageClient:
 
 ### Activity/Graph 間の責務分離
 
-| 責務 | Activity | Graph |
-|------|----------|-------|
-| 外部I/O（LLM/Tool/DB/Storage） | ○ | × |
-| エラーハンドリング | ○ | × |
-| 冪等性担保 | ○ | × |
-| 監査ログ記録 | ○ | × |
-| データ整形 | × | ○ |
-| フロー制御 | × | ○ |
+| 責務                           | Activity | Graph |
+| ------------------------------ | -------- | ----- |
+| 外部I/O（LLM/Tool/DB/Storage） | ○        | ×     |
+| エラーハンドリング             | ○        | ×     |
+| 冪等性担保                     | ○        | ×     |
+| 監査ログ記録                   | ○        | ×     |
+| データ整形                     | ×        | ○     |
+| フロー制御                     | ×        | ○     |
 
 ### LLM呼び出しパターン（metadata必須化）
 

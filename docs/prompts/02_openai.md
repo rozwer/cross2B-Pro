@@ -34,6 +34,7 @@ ls apps/api/llm/base.py 2>/dev/null || echo "base.py not found"
 ```
 
 **base.py が存在しない場合**:
+
 1. Session 1 のマージを待つ（推奨）
 2. または、自分で base.py を作成する（以下の最小実装を使用）
 

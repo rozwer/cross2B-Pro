@@ -9,13 +9,13 @@
 
 ### 概要
 
-| 項目 | 内容 |
-|------|------|
-| ファイル | `apps/worker/activities/step7b.py` |
-| 目的 | ドラフトの自然言語ポリッシング・読みやすさ向上 |
-| 使用LLM | Gemini（デフォルト） |
-| 特記 | max_tokens=16000、temperature=0.8（創造性重視） |
-| 主要改善 | ポリッシング品質検証、変更追跡 |
+| 項目     | 内容                                            |
+| -------- | ----------------------------------------------- |
+| ファイル | `apps/worker/activities/step7b.py`              |
+| 目的     | ドラフトの自然言語ポリッシング・読みやすさ向上  |
+| 使用LLM  | Gemini（デフォルト）                            |
+| 特記     | max_tokens=16000、temperature=0.8（創造性重視） |
+| 主要改善 | ポリッシング品質検証、変更追跡                  |
 
 ### 統合するヘルパー
 
@@ -176,13 +176,13 @@ def test_step7b_structure_preserved():
 
 ### 概要
 
-| 項目 | 内容 |
-|------|------|
-| ファイル | `apps/worker/activities/step8.py` |
-| 目的 | 記事内の事実・主張の検証 + FAQ生成 |
-| 使用LLM | Gemini（グラウンディング対応） |
-| 特記 | 3回のLLM呼び出し（claims抽出 → 検証 → FAQ生成） |
-| 主要改善 | 構造化出力、確信度評価、チェックポイント |
+| 項目     | 内容                                            |
+| -------- | ----------------------------------------------- |
+| ファイル | `apps/worker/activities/step8.py`               |
+| 目的     | 記事内の事実・主張の検証 + FAQ生成              |
+| 使用LLM  | Gemini（グラウンディング対応）                  |
+| 特記     | 3回のLLM呼び出し（claims抽出 → 検証 → FAQ生成） |
+| 主要改善 | 構造化出力、確信度評価、チェックポイント        |
 
 ### 統合するヘルパー
 
@@ -401,7 +401,7 @@ def _determine_rejection_recommendation(
 
 ### テスト要件
 
-```python
+````python
 @pytest.mark.unit
 def test_step8_claims_extraction():
     """Claims抽出の構造化"""
@@ -428,7 +428,7 @@ def test_step8_contradiction_detection():
 async def test_step8_checkpoint_recovery():
     """チェックポイントからの復旧"""
     # claims抽出後に失敗 → 再実行時に検証から開始
-```
+````
 
 ---
 
@@ -436,13 +436,13 @@ async def test_step8_checkpoint_recovery():
 
 ### 概要
 
-| 項目 | 内容 |
-|------|------|
-| ファイル | `apps/worker/activities/step9.py` |
-| 目的 | ファクトチェック結果とFAQを反映した最終リライト |
-| 使用LLM | Claude（デフォルト: anthropic） |
-| 特記 | max_tokens=16000 |
-| 主要改善 | FAQ統合検証、メタディスクリプション抽出 |
+| 項目     | 内容                                            |
+| -------- | ----------------------------------------------- |
+| ファイル | `apps/worker/activities/step9.py`               |
+| 目的     | ファクトチェック結果とFAQを反映した最終リライト |
+| 使用LLM  | Claude（デフォルト: anthropic）                 |
+| 特記     | max_tokens=16000                                |
+| 主要改善 | FAQ統合検証、メタディスクリプション抽出         |
 
 ### 統合するヘルパー
 
@@ -653,6 +653,7 @@ def test_step9_meta_generation():
 ## 完了チェックリスト
 
 ### Step7b
+
 - [ ] InputValidator 統合（step7aドラフト検証）
 - [ ] QualityValidator 統合（ポリッシング品質検証）
 - [ ] ContentMetrics 統合（変更追跡）
@@ -661,6 +662,7 @@ def test_step9_meta_generation():
 - [ ] ユニットテスト追加
 
 ### Step8
+
 - [ ] InputValidator 統合（step7b検証）
 - [ ] OutputParser 統合（3つの形式）
 - [ ] QualityValidator 統合（claims/検証/FAQ品質）
@@ -670,6 +672,7 @@ def test_step9_meta_generation():
 - [ ] ユニットテスト追加
 
 ### Step9
+
 - [ ] InputValidator 統合（step7b/step8検証）
 - [ ] QualityValidator 統合（リライト品質検証）
 - [ ] OutputParser 統合（メタディスクリプション抽出）

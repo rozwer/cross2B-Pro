@@ -5,6 +5,7 @@
 **顧客別DB物理分離**を採用。
 
 理由：
+
 - 物理的なデータ分離保証
 - 顧客単位のバックアップ/削除が容易
 - オンプレ移行時に顧客DBを切り出し可能
@@ -192,12 +193,12 @@ storage/{tenant_id}/{run_id}/{step}/artifacts/
 
 ### 成果物契約
 
-| フィールド | 説明 |
-|------------|------|
-| `output_path` | storage上のパス |
-| `output_digest` | sha256 |
-| `summary` | UI/ログ用の短い要約 |
-| `metrics` | token usage / 文字数 |
+| フィールド      | 説明                 |
+| --------------- | -------------------- |
+| `output_path`   | storage上のパス      |
+| `output_digest` | sha256               |
+| `summary`       | UI/ログ用の短い要約  |
+| `metrics`       | token usage / 文字数 |
 
 ### 禁止事項
 

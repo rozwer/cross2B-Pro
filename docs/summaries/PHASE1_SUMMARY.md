@@ -8,11 +8,11 @@ SEO記事自動生成システムの Phase 1（LLM API呼び出しの有効化�
 
 ### PR履歴
 
-| PR | タイトル | 状態 |
-|----|---------|------|
-| #3 | feat(llm): Gemini クライアント + 共通インターフェース | Merged |
-| #2 | feat(llm): OpenAI クライアント実装 | Closed (統合コミットで対応) |
-| #1 | feat(llm): Anthropic Claude クライアント実装 | Closed (統合コミットで対応) |
+| PR  | タイトル                                              | 状態                        |
+| --- | ----------------------------------------------------- | --------------------------- |
+| #3  | feat(llm): Gemini クライアント + 共通インターフェース | Merged                      |
+| #2  | feat(llm): OpenAI クライアント実装                    | Closed (統合コミットで対応) |
+| #1  | feat(llm): Anthropic Claude クライアント実装          | Closed (統合コミットで対応) |
 
 ### 実装ファイル
 
@@ -48,12 +48,12 @@ tests/unit/llm/
 
 ## 対応モデル
 
-| プロバイダ | モデル |
-|-----------|--------|
-| Gemini | gemini-3-pro-preview, gemini-2.5-pro, gemini-2.5-flash |
-| OpenAI | gpt-4o, gpt-4-turbo, gpt-4, gpt-3.5-turbo, o3 |
-| Anthropic | claude-sonnet-4, claude-opus-4, claude-3-5-sonnet, claude-3-5-haiku |
-| Nano Banana | gemini-2.5-flash-image, gemini-3-pro-image-preview |
+| プロバイダ  | モデル                                                              |
+| ----------- | ------------------------------------------------------------------- |
+| Gemini      | gemini-3-pro-preview, gemini-2.5-pro, gemini-2.5-flash              |
+| OpenAI      | gpt-4o, gpt-4-turbo, gpt-4, gpt-3.5-turbo, o3                       |
+| Anthropic   | claude-sonnet-4, claude-opus-4, claude-3-5-sonnet, claude-3-5-haiku |
+| Nano Banana | gemini-2.5-flash-image, gemini-3-pro-image-preview                  |
 
 ## 設計原則
 
@@ -137,4 +137,4 @@ Phase 2: Tools (SERP/Fetch/Verify) + Validation の実装
 
 ---
 
-*Updated: 2025-12-16*
+_Updated: 2025-12-16_

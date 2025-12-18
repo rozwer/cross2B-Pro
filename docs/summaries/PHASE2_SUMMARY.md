@@ -8,11 +8,11 @@ SEO記事自動生成システムの Phase 2（外部ツール群 + JSON/CSV検�
 
 ### PR履歴
 
-| PR | タイトル | 状態 |
-|----|---------|------|
-| #4 | feat(validation): JSON/CSV検証システム | Merged |
-| #5 | feat(tools): 外部ツール群 (SERP/Fetch/Verify + Google Ads モック) | Merged |
-| #6 | chore(deps): Phase 2 依存関係追加 | Merged |
+| PR  | タイトル                                                          | 状態   |
+| --- | ----------------------------------------------------------------- | ------ |
+| #4  | feat(validation): JSON/CSV検証システム                            | Merged |
+| #5  | feat(tools): 外部ツール群 (SERP/Fetch/Verify + Google Ads モック) | Merged |
+| #6  | chore(deps): Phase 2 依存関係追加                                 | Merged |
 
 ### 実装ファイル
 
@@ -73,27 +73,29 @@ tests/unit/validation/
 
 ## 登録ツール一覧
 
-| ツール名 | 説明 | モック |
-|---------|------|--------|
-| serp_fetch | SERP取得 (SerpApi) | No |
-| search_volume | 検索ボリューム取得 | Yes* |
-| related_keywords | 関連キーワード取得 | Yes* |
-| page_fetch | Webページ取得 + 本文抽出 | No |
-| pdf_extract | PDFテキスト抽出 | No |
-| primary_collector | 一次情報収集器 | No |
-| url_verify | URL実在確認 | No |
+| ツール名          | 説明                     | モック |
+| ----------------- | ------------------------ | ------ |
+| serp_fetch        | SERP取得 (SerpApi)       | No     |
+| search_volume     | 検索ボリューム取得       | Yes\*  |
+| related_keywords  | 関連キーワード取得       | Yes\*  |
+| page_fetch        | Webページ取得 + 本文抽出 | No     |
+| pdf_extract       | PDFテキスト抽出          | No     |
+| primary_collector | 一次情報収集器           | No     |
+| url_verify        | URL実在確認              | No     |
 
-*Google Ads API未取得のためモック。`USE_MOCK_GOOGLE_ADS=true` で制御。
+\*Google Ads API未取得のためモック。`USE_MOCK_GOOGLE_ADS=true` で制御。
 
 ## 検証機能
 
 ### JsonValidator
+
 - 構文破損検出 (末尾カンマ、未終端文字列等)
 - JSON Schema検証
 - 位置情報付きエラー報告
 - ハッシュ計算
 
 ### CsvValidator
+
 - 列不一致検出
 - クオート崩れ検出
 - エンコーディング検証 (UTF-8)
@@ -101,6 +103,7 @@ tests/unit/validation/
 - BOM警告
 
 ### Repairer
+
 - **決定的修正のみ許可**（ログ必須）
   - 末尾カンマ除去
   - 改行正規化 (CRLF/CR → LF)
@@ -164,4 +167,4 @@ Phase 3: Contract + Store基盤の実装
 
 ---
 
-*Updated: 2025-12-16*
+_Updated: 2025-12-16_

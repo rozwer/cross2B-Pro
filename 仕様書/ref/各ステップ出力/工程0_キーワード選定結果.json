@@ -1,99 +1,95 @@
 {
-    "project_date": "2025-11-22",
-    "business_info": {
-        "business_content": "求人広告代理店（Indeed、求人ボックス、スタンバイ、Google広告、Yahoo広告などWebマーケティング全般）。人材紹介・派遣の知見、AI活用、求職者心理の解析に強み。",
-        "target_cv": "問い合わせ獲得",
-        "target_audience": "ドライバーの人材獲得に悩んでいる採用担当者",
-        "company_strengths": "求人広告全般得意。Indeed、求人ボックスが得意。Google広告やWebマーケティングは全般得意。人材紹介や派遣といった人材系の知見、運用ノウハウが豊富。AIについても知見あり。求人原稿の作成や文章作成、求職者の心理解析など。"
+  "project_date": "2025-11-22",
+  "business_info": {
+    "business_content": "求人広告代理店（Indeed、求人ボックス、スタンバイ、Google広告、Yahoo広告などWebマーケティング全般）。人材紹介・派遣の知見、AI活用、求職者心理の解析に強み。",
+    "target_cv": "問い合わせ獲得",
+    "target_audience": "ドライバーの人材獲得に悩んでいる採用担当者",
+    "company_strengths": "求人広告全般得意。Indeed、求人ボックスが得意。Google広告やWebマーケティングは全般得意。人材紹介や派遣といった人材系の知見、運用ノウハウが豊富。AIについても知見あり。求人原稿の作成や文章作成、求職者の心理解析など。"
+  },
+  "keyword_info": {
+    "main_keyword": "ドライバー 採用 難しい",
+    "search_volume": 40,
+    "competition": "中",
+    "related_keywords": [
+      {
+        "keyword": "ドライバー 採用",
+        "volume": "100～1000"
+      },
+      {
+        "keyword": "ドライバー 求人",
+        "volume": "1万～10万"
+      },
+      {
+        "keyword": "運転 手 求人",
+        "volume": "1000～1万"
+      },
+      {
+        "keyword": "ドライバー 転職",
+        "volume": "1000～1万"
+      }
+    ]
+  },
+  "article_strategy": {
+    "article_type": "comprehensive_guide",
+    "background_and_purpose": {
+      "why_now": "物流・運送業界の「2024年問題」によりドライバー不足が深刻化しており、従来の採用手法が通用しなくなっているため。",
+      "target_pain": "応募が来ない、採用コストが高騰している、定着率が悪い。",
+      "key_message": "「採用難」は市場のせいだけではない。求職者心理に基づいた原稿と適切な媒体運用の組み合わせで解決できる。",
+      "urgency": "高"
     },
-    "keyword_info": {
-        "main_keyword": "ドライバー 採用 難しい",
-        "search_volume": 40,
-        "competition": "中",
-        "related_keywords": [
-            {
-                "keyword": "ドライバー 採用",
-                "volume": "100～1000"
-            },
-            {
-                "keyword": "ドライバー 求人",
-                "volume": "1万～10万"
-            },
-            {
-                "keyword": "運転 手 求人",
-                "volume": "1000～1万"
-            },
-            {
-                "keyword": "ドライバー 転職",
-                "volume": "1000～1万"
-            }
-        ]
-    },
-    "article_strategy": {
-        "article_type": "comprehensive_guide",
-        "background_and_purpose": {
-            "why_now": "物流・運送業界の「2024年問題」によりドライバー不足が深刻化しており、従来の採用手法が通用しなくなっているため。",
-            "target_pain": "応募が来ない、採用コストが高騰している、定着率が悪い。",
-            "key_message": "「採用難」は市場のせいだけではない。求職者心理に基づいた原稿と適切な媒体運用の組み合わせで解決できる。",
-            "urgency": "高"
-        },
-        "conversion_design": {
-            "primary_cta": "ドライバーの応募について相談する（LPへ誘導）",
-            "conversion_points": [
-                "導入部：採用難の現状への共感",
-                "中盤：クロスリンク社のノウハウ提示による信頼構築",
-                "終盤：解決策としてのプロへの相談誘導"
-            ]
-        }
-    },
-    "strategy": {
-        "type": "standard",
-        "child_articles": []
-    },
-    "target_word_count": 10000,
-    "cta_specification": {
-        "design_type": "single",
-        "single_cta": {
-            "url": "https://crosslink.jp.net/kyujinnavi/kyujin_lp/",
-            "text": "ドライバーの応募について相談する",
-            "description": "クロスリンクが行なっている集客サービスのLP",
-            "placement": {
-                "early": 650,
-                "mid": 2800,
-                "final": "9500"
-            }
-        },
-        "staged_cta": null,
-        "constraint_notes": [
-            "工程0のフォーム回答で指定されたCTAのみ使用",
-            "AIが独自にCTAを考案することは禁止",
-            "単一CTAの場合：全てのCTA（Early/Mid/Final）で同じURL・テキストを使用"
-        ]
-    },
-    "four_pillars_evaluation": {
-        "neuroscience": {
-            "phase": "Phase 1",
-            "score": 18,
-            "rationale": "「難しい」というキーワードは課題認識段階（Phase 1）を示唆。扁桃体（不安・危機感）が活性化しており、論理よりも情動的な「痛みからの解放」を求める状態。"
-        },
-        "behavioral_economics": {
-            "applicable_principles": [
-                "損失回避",
-                "社会的証明",
-                "権威性"
-            ],
-            "score": 85,
-            "rationale": "ネガティブな感情（採用難）が出発点のため、「このままでは事業が止まる」という損失回避の訴求が極めて有効。社会的証明（他社の苦戦と成功）も刺さりやすい。"
-        },
-        "llmo": {
-            "citation_probability": "high",
-            "score": 80,
-            "rationale": "「理由」と「対策」の論理構造が明確に作れるため、AIが引用しやすい。2024年問題などの背景要因を含めることで網羅性が高まる。"
-        },
-        "kgi": {
-            "expected_cvr": "1.5%",
-            "score": 65,
-            "rationale": "検索ボリュームは少ないが、悩み・緊急度が深いユーザー層のためCVRは高めに見積もれる。CTA配置との整合性も高く、質の高いリード獲得が期待できる。"
-        }
+    "conversion_design": {
+      "primary_cta": "ドライバーの応募について相談する（LPへ誘導）",
+      "conversion_points": [
+        "導入部：採用難の現状への共感",
+        "中盤：クロスリンク社のノウハウ提示による信頼構築",
+        "終盤：解決策としてのプロへの相談誘導"
+      ]
     }
+  },
+  "strategy": {
+    "type": "standard",
+    "child_articles": []
+  },
+  "target_word_count": 10000,
+  "cta_specification": {
+    "design_type": "single",
+    "single_cta": {
+      "url": "https://crosslink.jp.net/kyujinnavi/kyujin_lp/",
+      "text": "ドライバーの応募について相談する",
+      "description": "クロスリンクが行なっている集客サービスのLP",
+      "placement": {
+        "early": 650,
+        "mid": 2800,
+        "final": "9500"
+      }
+    },
+    "staged_cta": null,
+    "constraint_notes": [
+      "工程0のフォーム回答で指定されたCTAのみ使用",
+      "AIが独自にCTAを考案することは禁止",
+      "単一CTAの場合：全てのCTA（Early/Mid/Final）で同じURL・テキストを使用"
+    ]
+  },
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": "Phase 1",
+      "score": 18,
+      "rationale": "「難しい」というキーワードは課題認識段階（Phase 1）を示唆。扁桃体（不安・危機感）が活性化しており、論理よりも情動的な「痛みからの解放」を求める状態。"
+    },
+    "behavioral_economics": {
+      "applicable_principles": ["損失回避", "社会的証明", "権威性"],
+      "score": 85,
+      "rationale": "ネガティブな感情（採用難）が出発点のため、「このままでは事業が止まる」という損失回避の訴求が極めて有効。社会的証明（他社の苦戦と成功）も刺さりやすい。"
+    },
+    "llmo": {
+      "citation_probability": "high",
+      "score": 80,
+      "rationale": "「理由」と「対策」の論理構造が明確に作れるため、AIが引用しやすい。2024年問題などの背景要因を含めることで網羅性が高まる。"
+    },
+    "kgi": {
+      "expected_cvr": "1.5%",
+      "score": 65,
+      "rationale": "検索ボリュームは少ないが、悩み・緊急度が深いユーザー層のためCVRは高めに見積もれる。CTA配置との整合性も高く、質の高いリード獲得が期待できる。"
+    }
+  }
 }

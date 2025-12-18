@@ -17,31 +17,21 @@
       "expected": "Run/Step/Artifact/AuditLog の永続化",
       "current": "インメモリ dict (_runs_store) のみ使用",
       "gap_level": "CRITICAL",
-      "affected_files": [
-        "apps/api/main.py",
-        "apps/api/db/tenant.py",
-        "apps/api/db/models.py"
-      ]
+      "affected_files": ["apps/api/main.py", "apps/api/db/tenant.py", "apps/api/db/models.py"]
     },
     {
       "connection": "API → Temporal",
       "expected": "create_run() から ArticleWorkflow を起動",
       "current": "Temporal client の呼び出しなし",
       "gap_level": "CRITICAL",
-      "affected_files": [
-        "apps/api/main.py",
-        "apps/worker/workflows/article_workflow.py"
-      ]
+      "affected_files": ["apps/api/main.py", "apps/worker/workflows/article_workflow.py"]
     },
     {
       "connection": "API → Storage",
       "expected": "成果物参照（ArtifactRef）をAPI経由で返却",
       "current": "/files エンドポイントが空リスト返却",
       "gap_level": "CRITICAL",
-      "affected_files": [
-        "apps/api/main.py",
-        "apps/api/storage/artifact_store.py"
-      ]
+      "affected_files": ["apps/api/main.py", "apps/api/storage/artifact_store.py"]
     },
     {
       "connection": "Worker → Storage",
@@ -59,10 +49,7 @@
       "expected": "Worker main.py で全Activityを登録",
       "current": "Activity登録なし（Workflow → Activity呼び出し不可）",
       "gap_level": "CRITICAL",
-      "affected_files": [
-        "apps/worker/main.py",
-        "apps/worker/activities/"
-      ]
+      "affected_files": ["apps/worker/main.py", "apps/worker/activities/"]
     },
     {
       "connection": "API → Observability",
@@ -80,140 +67,98 @@
       "expected": "Approve/Reject/Retry エンドポイントが機能",
       "current": "501 Not Implemented 返却",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/api/main.py",
-        "apps/ui/src/lib/api.ts"
-      ]
+      "affected_files": ["apps/api/main.py", "apps/ui/src/lib/api.ts"]
     },
     {
       "connection": "API → WebSocket",
       "expected": "Run状態変更をリアルタイム配信",
       "current": "ping/pong のみ（イベント配信なし）",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/api/main.py",
-        "apps/ui/src/lib/websocket.ts"
-      ]
+      "affected_files": ["apps/api/main.py", "apps/ui/src/lib/websocket.ts"]
     },
     {
       "connection": "Temporal → LangGraph",
       "expected": "Activity が LangGraph グラフを invoke",
       "current": "Activity が直接LLM呼び出し（GraphState未使用）",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/worker/activities/",
-        "apps/worker/graphs/"
-      ]
+      "affected_files": ["apps/worker/activities/", "apps/worker/graphs/"]
     },
     {
       "connection": "LLM → Metadata記録",
       "expected": "token usage / コストを Step レコードに保存",
       "current": "response に含まれるが DB 未保存",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/worker/graphs/pre_approval.py",
-        "apps/api/db/models.py"
-      ]
+      "affected_files": ["apps/worker/graphs/pre_approval.py", "apps/api/db/models.py"]
     },
     {
       "connection": "Tools → Registry",
       "expected": "registry.get() でツール取得・実行",
       "current": "serp_fetch 等が未登録/未実装",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/api/tools/registry.py",
-        "apps/worker/graphs/pre_approval.py"
-      ]
+      "affected_files": ["apps/api/tools/registry.py", "apps/worker/graphs/pre_approval.py"]
     },
     {
       "connection": "Core State 統合",
       "expected": "GraphState / ExecutionContext を統一使用",
       "current": "main.py が独自 Pydantic モデル使用",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/api/core/state.py",
-        "apps/api/core/context.py",
-        "apps/api/main.py"
-      ]
+      "affected_files": ["apps/api/core/state.py", "apps/api/core/context.py", "apps/api/main.py"]
     },
     {
       "connection": "Error分類統合",
       "expected": "RETRYABLE/NON_RETRYABLE/VALIDATION_FAIL分類",
       "current": "HTTPException のみ使用",
       "gap_level": "HIGH",
-      "affected_files": [
-        "apps/api/core/errors.py",
-        "apps/api/main.py"
-      ]
+      "affected_files": ["apps/api/core/errors.py", "apps/api/main.py"]
     },
     {
       "connection": "Prompt DB管理",
       "expected": "PromptPackLoader.load(pack_id) でDB取得",
       "current": "プロンプト機能未実装",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/prompts/loader.py",
-        "apps/api/db/models.py"
-      ]
+      "affected_files": ["apps/api/prompts/loader.py", "apps/api/db/models.py"]
     },
     {
       "connection": "LLM Sanitizer",
       "expected": "プロンプトインジェクション対策",
       "current": "sanitizer.py 定義済みだが未使用",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/llm/sanitizer.py",
-        "apps/worker/graphs/"
-      ]
+      "affected_files": ["apps/api/llm/sanitizer.py", "apps/worker/graphs/"]
     },
     {
       "connection": "StructuredLogger",
       "expected": "コンテキスト変数付き構造化ログ",
       "current": "標準 logging.getLogger() 使用",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/observability/logger.py",
-        "apps/api/main.py"
-      ]
+      "affected_files": ["apps/api/observability/logger.py", "apps/api/main.py"]
     },
     {
       "connection": "ArtifactRef 統一",
       "expected": "storage の ArtifactRef を全体で使用",
       "current": "main.py で別途 ArtifactRef 定義",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/storage/schemas.py",
-        "apps/api/main.py"
-      ]
+      "affected_files": ["apps/api/storage/schemas.py", "apps/api/main.py"]
     },
     {
       "connection": "Tool Evidence追跡",
       "expected": "URL/取得日時/抜粋/ハッシュを記録",
       "current": "Tool結果の永続化なし",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/tools/",
-        "apps/worker/graphs/"
-      ]
+      "affected_files": ["apps/api/tools/", "apps/worker/graphs/"]
     },
     {
       "connection": "Validation統合",
       "expected": "JSON/CSV出力の検証実行",
       "current": "validation/ モジュール未使用",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/validation/",
-        "apps/worker/graphs/"
-      ]
+      "affected_files": ["apps/api/validation/", "apps/worker/graphs/"]
     },
     {
       "connection": "Cost集計API",
       "expected": "/api/runs/{id}/cost でコスト返却",
       "current": "エンドポイント未実装",
       "gap_level": "MEDIUM",
-      "affected_files": [
-        "apps/api/main.py"
-      ]
+      "affected_files": ["apps/api/main.py"]
     }
   ],
   "gap_details": {
@@ -398,17 +343,12 @@
     },
     "phase3_ui": {
       "description": "UI 完成",
-      "tasks": [
-        "GAP-008: WebSocket イベント配信",
-        "GAP-014: Retry/Cancel 実装"
-      ],
+      "tasks": ["GAP-008: WebSocket イベント配信", "GAP-014: Retry/Cancel 実装"],
       "estimated_files": 2
     },
     "phase4_polish": {
       "description": "仕上げ",
-      "tasks": [
-        "GAP-009〜024: 残りの MEDIUM ギャップ対応"
-      ],
+      "tasks": ["GAP-009〜024: 残りの MEDIUM ギャップ対応"],
       "estimated_files": 10
     }
   },

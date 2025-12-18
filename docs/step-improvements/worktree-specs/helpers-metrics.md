@@ -33,9 +33,11 @@ tests/unit/helpers/
 ## 前提条件
 
 **`helpers-parsing` worktree で以下が実装済みであること:**
+
 - `schemas.py` の `TextMetrics`, `MarkdownMetrics`, `CheckpointMetadata`
 
 **`helpers-validation` worktree で以下が実装済みであること:**
+
 - `quality_validator.py` の `QualityValidator` プロトコル, `QualityResult`
 
 ```python
@@ -50,7 +52,7 @@ from apps.worker.helpers.quality_validator import QualityValidator, QualityResul
 
 ### 1.1 クラス定義
 
-```python
+````python
 import re
 from apps.worker.helpers.schemas import TextMetrics, MarkdownMetrics
 
@@ -156,7 +158,7 @@ class ContentMetrics:
         Returns:
             int: 推定読了時間（分、切り上げ）
         """
-```
+````
 
 ### 1.2 使用例
 
@@ -483,7 +485,7 @@ else:
 
 ### test_content_metrics.py
 
-```python
+````python
 import pytest
 from apps.worker.helpers import ContentMetrics
 
@@ -580,13 +582,14 @@ class TestMarkdownMetrics:
         content = """
 ```python
 code here
-```
+````
 
 ```
 more code
 ```
+
 """
-        result = metrics.markdown_metrics(content)
+result = metrics.markdown_metrics(content)
 
         assert result.code_block_count == 2
 
@@ -606,9 +609,8 @@ more code
 
         assert result.image_count == 2
 
-
 class TestKeywordDensity:
-    """keyword_density のテスト"""
+"""keyword_density のテスト"""
 
     def test_basic_density(self):
         """基本的な密度計算"""
@@ -635,9 +637,8 @@ class TestKeywordDensity:
 
         assert density > 0
 
-
 class TestCompareContent:
-    """compare_content のテスト"""
+"""compare_content のテスト"""
 
     def test_word_diff(self):
         """単語数の差"""
@@ -665,7 +666,8 @@ class TestCompareContent:
         result = metrics.compare_content(original, modified)
 
         assert result["h2_diff"] == 1
-```
+
+````
 
 ### test_checkpoint_manager.py
 
@@ -798,7 +800,7 @@ class TestCheckpointManager:
 
         assert digest1 == digest2
         assert digest1 != digest3
-```
+````
 
 ### test_quality_retry_loop.py
 
@@ -1039,9 +1041,11 @@ if attempt < self.max_retries:
 ## 依存関係
 
 ### このworktreeが依存するもの
+
 - `helpers-parsing` の `schemas.py` (TextMetrics, MarkdownMetrics, CheckpointMetadata)
 - `helpers-validation` の `quality_validator.py` (QualityValidator, QualityResult)
 - `apps/worker/storage` の `ArtifactStore`
 
 ### このworktreeに依存するもの
+
 - 全ステップ（特にStep5, 7a, 8, 10でチェックポイントを活用）

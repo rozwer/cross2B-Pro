@@ -1,6 +1,7 @@
 # SEO記事自動生成システム ロードマップ
 
 > **運用前提**
+>
 > - 実装者：AI（主実装 ClaudeCode、コード調査・レビュー Codex）
 > - 区切り：成果物（動く縦切り）+ ゲート条件（DoD）
 > - 実装思想：分割実装→統合（境界・呼び出し・バリデーション・永続化・冪等性を先に固め、後から中身を埋める）
@@ -14,26 +15,31 @@
 ## Step 1. 各種LLM API呼び出しの有効化
 
 ### 目的
+
 後続すべての工程で必要な「LLM呼び出し」を先に安定化する。
 
 ### 前提
+
 - 一時的に `.env` の閲覧編集を許可
 - ユーザーが手動でAPIキーを `.env` に格納後、疎通作業を開始
 
 ### 対象プラットフォーム
-| プラットフォーム | 対象モデル（直近3程度） | 備考 |
-|------------------|------------------------|------|
-| Gemini | gemini-2.0-flash, gemini-2.5-pro 等 | grounding オプション必須 |
-| OpenAI | gpt-4o, gpt-4-turbo, o3 等 | |
-| Anthropic | claude-sonnet-4, claude-opus-4 等 | |
-| Nano Banana | （画像生成系） | |
+
+| プラットフォーム | 対象モデル（直近3程度）             | 備考                     |
+| ---------------- | ----------------------------------- | ------------------------ |
+| Gemini           | gemini-2.0-flash, gemini-2.5-pro 等 | grounding オプション必須 |
+| OpenAI           | gpt-4o, gpt-4-turbo, o3 等          |                          |
+| Anthropic        | claude-sonnet-4, claude-opus-4 等   |                          |
+| Nano Banana      | （画像生成系）                      |                          |
 
 ### 成果物
+
 1. **プラットフォーム別クライアントモジュール**（1プラットフォーム=1ファイル、複数モデル対応）
 2. **検証済みリクエストヘッダーJSON**（プラットフォーム・モデルごと）
 3. **オプション切替機構**（ファイル上部で変更可能）
 
 ### 並列分担（worktree 分離）
+
 ```
 worktree-gemini/    → Gemini クライアント
 worktree-openai/    → OpenAI クライアント
@@ -41,6 +47,7 @@ worktree-anthropic/ → Anthropic クライアント
 ```
 
 ### ゲート条件（DoD）
+
 - [ ] `.env` にキー投入後、各プラットフォームで「呼び出し→レスポンス取得」確認
 - [ ] grounding 等の重要オプション切替が意図通り動作
 - [ ] モデル自動切替などのフォールバック経路が存在しない（明示選択のみ）
@@ -53,36 +60,42 @@ worktree-anthropic/ → Anthropic クライアント
 > ※ Step 2 と順序入替（1 → 3 → 2 の順で実施）
 
 ### 目的
+
 検索・取得・抽出・検証・SEO指標など、LLM単体より強い処理をツールとして呼べるようにし、論拠の脆弱性を下げる。
 
 ### 前提
+
 - 必要ツールの洗い出しを優先
 - フォールバック禁止（失敗時に別ツールへ自動切替しない）
 
 ### 実装スコープ
 
 #### A. 必須ツール
-| tool_id | 機能 | I/O |
-|---------|------|-----|
-| `serp_fetch` | SERP取得（上位N件URL） | query → urls[] |
-| `page_fetch` | ページ取得 + 本文抽出 | url → structured_content |
-| `primary_collector` | 一次情報収集器（SERP→取得→保存） | query → evidence_refs[] |
-| `url_verify` | URL実在確認 | url → status, final_url, meta |
-| `pdf_extract` | PDFテキスト抽出 | pdf_path → text |
+
+| tool_id             | 機能                             | I/O                           |
+| ------------------- | -------------------------------- | ----------------------------- |
+| `serp_fetch`        | SERP取得（上位N件URL）           | query → urls[]                |
+| `page_fetch`        | ページ取得 + 本文抽出            | url → structured_content      |
+| `primary_collector` | 一次情報収集器（SERP→取得→保存） | query → evidence_refs[]       |
+| `url_verify`        | URL実在確認                      | url → status, final_url, meta |
+| `pdf_extract`       | PDFテキスト抽出                  | pdf_path → text               |
 
 #### B. 拡張ツール（SEO強化）
-| tool_id | 機能 | 備考 |
-|---------|------|------|
-| `search_volume` | 検索ボリューム取得 | Google Ads API |
-| `related_keywords` | 関連語取得 | Google Ads API |
+
+| tool_id            | 機能               | 備考           |
+| ------------------ | ------------------ | -------------- |
+| `search_volume`    | 検索ボリューム取得 | Google Ads API |
+| `related_keywords` | 関連語取得         | Google Ads API |
 
 ### 共通設計
+
 - **Tool Manifest**（一覧定義）で `tool_id` 明示呼び出し
 - I/O は原則 JSON
 - 取得結果は「証拠」として追跡可能（URL / 取得日時 / 抜粋 / ハッシュ）
 - エラー分類を統一（`RETRYABLE` / `NON_RETRYABLE` / `VALIDATION_FAIL`）
 
 ### 並列分担（worktree 分離）
+
 ```
 worktree-search/    → SERP, Search Volume
 worktree-fetch/     → Page Fetch, PDF Extract
@@ -91,6 +104,7 @@ worktree-registry/  → Tool Manifest, Registry
 ```
 
 ### ゲート条件（DoD）
+
 - [ ] Tool Manifest により「何が呼べるか / 必要ENVは何か / 何が返るか」が一意
 - [ ] SERP → 取得 → 抽出 → 保存（参照可能な形）まで一連で通る
 - [ ] 失敗時に自動で別手段へ切替しない（必ず失敗として表出）
@@ -103,29 +117,34 @@ worktree-registry/  → Tool Manifest, Registry
 > ※ Step 3 の後に実施
 
 ### 目的
+
 LangGraph に組み込む前段として、全工程で必要になる「テスト形式」と「出力検証」を共通化する。
 
 ### 対象フォーマット
-| 形式 | 検査項目 |
-|------|----------|
-| JSON | 構文破損（末尾カンマ等）、スキーマ違反 |
-| CSV | 列不一致、クオート崩れ、エンコーディング |
+
+| 形式 | 検査項目                                 |
+| ---- | ---------------------------------------- |
+| JSON | 構文破損（末尾カンマ等）、スキーマ違反   |
+| CSV  | 列不一致、クオート崩れ、エンコーディング |
 
 ### 成果物
+
 1. **Validator モジュール**（JSON / CSV）
 2. **ValidationReport 型**（機械可読な検査結果）
 3. **Repairer モジュール**（決定的修正のみ、ログ必須）
 4. **破壊パターンテストスイート**
 
 ### 修正ポリシー
-| 条件 | 許可 | 備考 |
-|------|------|------|
-| 決定的修正（JSON末尾カンマ除去等） | ✅ | 実施ログ必須 |
-| 同一条件リトライ（上限3回） | ✅ | attempt 記録必須 |
-| 外部LLMによる再生成 | ⚠️ 明示ON時のみ | 上限・失敗時停止を厳格化 |
-| 別モデル/別ツールへの自動切替 | ❌ | 禁止 |
+
+| 条件                               | 許可            | 備考                     |
+| ---------------------------------- | --------------- | ------------------------ |
+| 決定的修正（JSON末尾カンマ除去等） | ✅              | 実施ログ必須             |
+| 同一条件リトライ（上限3回）        | ✅              | attempt 記録必須         |
+| 外部LLMによる再生成                | ⚠️ 明示ON時のみ | 上限・失敗時停止を厳格化 |
+| 別モデル/別ツールへの自動切替      | ❌              | 禁止                     |
 
 ### ゲート条件（DoD）
+
 - [ ] JSON/CSV 入力に対して ValidationReport が必ず機械可読で得られる
 - [ ] 修正を行う場合は必ずログに残り、黙って採用されない
 - [ ] リトライ/修正の許容範囲がコードで固定されている
@@ -136,11 +155,13 @@ LangGraph に組み込む前段として、全工程で必要になる「テス�
 ## Step 4. 契約・実行コンテキスト基盤の構築（LangGraph共通）
 
 ### 目的
+
 Step 1/3/2 を「組み立て可能」にするための共通契約（State / Context / Error / Retry）を固定する。
 
 ### 成果物
 
 #### 1. Graph State スキーマ
+
 ```python
 class GraphState(TypedDict):
     run_id: str
@@ -153,6 +174,7 @@ class GraphState(TypedDict):
 ```
 
 #### 2. 実行コンテキスト
+
 ```python
 class ExecutionContext:
     run_id: str
@@ -164,13 +186,15 @@ class ExecutionContext:
 ```
 
 #### 3. エラー分類
-| 分類 | 意味 | リトライ可否 |
-|------|------|-------------|
-| `RETRYABLE` | 一時的失敗（タイムアウト等） | ✅ 同一条件のみ |
-| `NON_RETRYABLE` | 永続的失敗（認証エラー等） | ❌ |
-| `VALIDATION_FAIL` | 出力検証失敗 | ⚠️ 修正可能なら |
+
+| 分類              | 意味                         | リトライ可否    |
+| ----------------- | ---------------------------- | --------------- |
+| `RETRYABLE`       | 一時的失敗（タイムアウト等） | ✅ 同一条件のみ |
+| `NON_RETRYABLE`   | 永続的失敗（認証エラー等）   | ❌              |
+| `VALIDATION_FAIL` | 出力検証失敗                 | ⚠️ 修正可能なら |
 
 ### 並列分担（worktree 分離）
+
 ```
 worktree-contract/  → State, Step I/O 契約
 worktree-context/   → ExecutionContext, Error 分類
@@ -178,6 +202,7 @@ worktree-adapter/   → Step 1/3/2 との統合アダプタ
 ```
 
 ### ゲート条件（DoD）
+
 - [ ] Step 1/3/2 の出力がすべて同一契約（GraphState）に載る
 - [ ] 失敗時に「再試行可能か」が機械判定できる
 - [ ] フォールバック経路が設計上存在しない
@@ -188,11 +213,13 @@ worktree-adapter/   → Step 1/3/2 との統合アダプタ
 ## Step 5. 成果物ストア・観測・プロンプト差し替え基盤（LangGraph共通）
 
 ### 目的
+
 出力の置き場・追跡・差し替えを先に確定し、後工程の統合で破綻しないようにする。
 
 ### 成果物
 
 #### 1. Artifact Store I/F（MinIO）
+
 ```python
 class ArtifactStore:
     def put(content, content_type) -> ArtifactRef  # path, digest
@@ -201,6 +228,7 @@ class ArtifactStore:
 ```
 
 #### 2. DB スキーマ（Postgres）
+
 ```sql
 -- 最小スキーマ（後で拡張可能）
 runs         (id, tenant_id, status, config, created_at, ...)
@@ -211,15 +239,17 @@ events       (id, run_id, step_id, event_type, payload, ...)
 ```
 
 #### 3. 観測（イベント/ログ）
-| イベント | タイミング |
-|----------|----------|
-| `step.started` | step 開始時 |
-| `step.succeeded` | step 成功時 |
-| `step.failed` | step 失敗時 |
-| `step.retrying` | リトライ開始時 |
-| `repair.applied` | 修正適用時 |
+
+| イベント         | タイミング     |
+| ---------------- | -------------- |
+| `step.started`   | step 開始時    |
+| `step.succeeded` | step 成功時    |
+| `step.failed`    | step 失敗時    |
+| `step.retrying`  | リトライ開始時 |
+| `repair.applied` | 修正適用時     |
 
 #### 4. Prompt Pack ローダ
+
 ```python
 class PromptPackLoader:
     def load(pack_id: str) -> PromptPack
@@ -228,6 +258,7 @@ class PromptPackLoader:
 ```
 
 ### 並列分担（worktree 分離）
+
 ```
 worktree-artifact/  → Artifact Store
 worktree-db/        → DB スキーマ, migrations
@@ -236,6 +267,7 @@ worktree-prompt/    → Prompt Pack Loader
 ```
 
 ### ゲート条件（DoD）
+
 - [ ] 出力が保存され ref で参照でき、run/step と紐づけて追跡できる
 - [ ] prompt pack 未設定で自動実行されない
 - [ ] イベントが DB に永続化され、後から追跡可能
@@ -246,15 +278,18 @@ worktree-prompt/    → Prompt Pack Loader
 ## Step 6. LangGraphメインシステムの構築
 
 ### 目的
+
 仕様書の工程に従い、Step 1/3/2/4/5 で分割実装した要素を組み立てて E2E の骨格を完成させる。
 
 ### 前提
+
 - 顧客プロンプト未入手のためプロンプト内容はモック
 - `mock_pack` 明示指定時のみ動作（未指定は fail）
 
 ### 2段構成 Graph
 
 #### pre-approval graph
+
 ```
 工程-1（入力）
     ↓
@@ -276,6 +311,7 @@ worktree-prompt/    → Prompt Pack Loader
 ```
 
 #### post-approval graph
+
 ```
 [承認後 State 復元]
     ↓
@@ -299,6 +335,7 @@ worktree-prompt/    → Prompt Pack Loader
 ```
 
 ### 共通ノードラッパ
+
 ```python
 def step_wrapper(step_fn, ctx: ExecutionContext, state: GraphState):
     # 1. prompt load
@@ -310,6 +347,7 @@ def step_wrapper(step_fn, ctx: ExecutionContext, state: GraphState):
 ```
 
 ### 並列分担（worktree 分離）
+
 ```
 worktree-pre/       → pre-approval graph
 worktree-post/      → post-approval graph
@@ -318,6 +356,7 @@ worktree-e2e/       → E2E テスト, fixtures
 ```
 
 ### ゲート条件（DoD）
+
 - [ ] `mock_pack` 指定で pre が並列含め完走し承認待ち State が保存される
 - [ ] 承認後 post が進み、工程6.5 の統合パッケージが生成・保存される
 - [ ] 全工程で検証・保存・イベント記録が行われ、黙って採用がない
@@ -328,23 +367,27 @@ worktree-e2e/       → E2E テスト, fixtures
 ## Step 7. UI実装（最小B、社内エンジニア向け）
 
 ### 目的
+
 社内エンジニアが運用・デバッグできる UI を提供する。
 
 ### 利用者・表示方針
+
 - 利用者：社内エンジニア
 - 全情報閲覧可能（後で非表示化を追加できる構造）
 
 ### 必須画面/機能
 
 #### 1. Runs 一覧
-| 項目 | 内容 |
-|------|------|
-| 状態 | pending / running / waiting_approval / completed / failed |
-| 最終更新 | timestamp |
-| 要約 | 入力キーワード、現在工程 |
-| 設定サマリ | 選択モデル、オプション |
+
+| 項目       | 内容                                                      |
+| ---------- | --------------------------------------------------------- |
+| 状態       | pending / running / waiting_approval / completed / failed |
+| 最終更新   | timestamp                                                 |
+| 要約       | 入力キーワード、現在工程                                  |
+| 設定サマリ | 選択モデル、オプション                                    |
 
 #### 2. Run 作成
+
 - **工程-1 入力 UI**（スプレッドシート代替）
 - **実行オプション切替 UI**
   - プラットフォーム / モデル選択
@@ -353,6 +396,7 @@ worktree-e2e/       → E2E テスト, fixtures
   - repair / retry 上限
 
 #### 3. Run 詳細
+
 - Step タイムライン（attempt 含む）
 - Validation Report 閲覧
 - Artifacts 閲覧
@@ -360,19 +404,24 @@ worktree-e2e/       → E2E テスト, fixtures
 - **承認ボタン**（Approve / Reject）
 
 #### 4. Retry（step 単位）
+
 - 同一条件のみ（フォールバック禁止）
 - Retry ボタンで step 単位再実行
 
 #### 5. Clone Run
+
 - 条件変更は別 run として明示作成
 
 #### 6. Preview リンク
+
 - 生成 HTML のビルド成果への遷移リンク
 
 ### リアルタイム
+
 - WebSocket でリアルタイム更新（ローカル実行前提）
 
 ### ゲート条件（DoD）
+
 - [ ] UI から Run 作成 → 承認 → step retry → Preview 参照が一通りできる
 - [ ] モデル/ツールの自動切替や黙った回復が存在しない
 - [ ] 全画面でエラー状態が明示される
@@ -383,11 +432,13 @@ worktree-e2e/       → E2E テスト, fixtures
 ## Step 8. ローカル運用単位の整備
 
 ### 目的
+
 「別ディレクトリに落としてテスト」まで含め、誰が落としても再現できる状態を作る。
 
 ### 成果物
 
 #### 1. docker-compose.yml
+
 ```yaml
 services:
   postgres:
@@ -406,21 +457,25 @@ services:
 ```
 
 #### 2. 環境変数
+
 - `.env.example`（必須 ENV 一覧）
 - 起動時に必須 ENV 未設定なら即 fail
 
 #### 3. スクリプト
-| スクリプト | 内容 |
-|-----------|------|
-| `scripts/bootstrap.sh` | compose 起動 → DB migrate → MinIO バケット初期化 |
-| `scripts/reset.sh` | 完全初期化 |
-| `scripts/clean-room-verify.sh` | 別ディレクトリ検証 |
+
+| スクリプト                     | 内容                                             |
+| ------------------------------ | ------------------------------------------------ |
+| `scripts/bootstrap.sh`         | compose 起動 → DB migrate → MinIO バケット初期化 |
+| `scripts/reset.sh`             | 完全初期化                                       |
+| `scripts/clean-room-verify.sh` | 別ディレクトリ検証                               |
 
 #### 4. Preview 実体
+
 - `html_bundle` artifact の保存・参照
 - `/runs/:id/preview` でアクセス可能
 
 #### 5. クリーンディレクトリ検証
+
 ```bash
 # 2段階 smoke
 1. secrets 未設定 → 明確に失敗すること
@@ -428,12 +483,14 @@ services:
 ```
 
 #### 6. 手順書
-| ドキュメント | 内容 |
-|--------------|------|
-| `docs/LOCAL_RUNBOOK.md` | 導入、起動、操作、トラブルシュート |
+
+| ドキュメント                      | 内容                                   |
+| --------------------------------- | -------------------------------------- |
+| `docs/LOCAL_RUNBOOK.md`           | 導入、起動、操作、トラブルシュート     |
 | `docs/CLEAN_ROOM_VERIFICATION.md` | 別ディレクトリ検証の実行手順と合格基準 |
 
 ### ゲート条件（DoD）
+
 - [ ] 別ディレクトリで `.env` 未設定 → API/Worker が明確に起動失敗
 - [ ] 別ディレクトリで `.env` 設定 → `bootstrap` だけで一式が立つ
 - [ ] UI から E2E（作成→承認→retry→preview）が再現できる
@@ -475,29 +532,29 @@ Step 3 (Tools) ←── Step 2 (Validation) ※3の後に2
 
 ### テストレベル
 
-| レベル | LLM | 頻度 | 目的 |
-|--------|-----|------|------|
-| ユニット | モック | 毎commit | ロジック検証 |
-| 統合 | モック | 毎PR | ワークフロー構造検証 |
-| E2E（smoke） | モック | 毎PR | 起動・疎通確認 |
-| E2E（本番） | 実LLM | 毎週 | 実運用相当の検証 |
-| カオステスト | 実LLM | 毎月 | JSON破損、タイムアウト等の異常系 |
+| レベル       | LLM    | 頻度     | 目的                             |
+| ------------ | ------ | -------- | -------------------------------- |
+| ユニット     | モック | 毎commit | ロジック検証                     |
+| 統合         | モック | 毎PR     | ワークフロー構造検証             |
+| E2E（smoke） | モック | 毎PR     | 起動・疎通確認                   |
+| E2E（本番）  | 実LLM  | 毎週     | 実運用相当の検証                 |
+| カオステスト | 実LLM  | 毎月     | JSON破損、タイムアウト等の異常系 |
 
 ### 特殊テスト
 
-| テスト種別 | 目的 | 実行頻度 |
-|-----------|------|---------|
-| 決定性テスト | 同一入力で複数回実行、digest一致確認 | 毎PR |
+| テスト種別               | 目的                                           | 実行頻度 |
+| ------------------------ | ---------------------------------------------- | -------- |
+| 決定性テスト             | 同一入力で複数回実行、digest一致確認           | 毎PR     |
 | フォールバック不在テスト | コードに `fallback` 文字列がないことを静的検証 | 毎commit |
-| マルチテナント分離テスト | tenant_id 越境が発生しないことを確認 | 毎PR |
-| Temporal Replay テスト | Workflow の決定性違反を検出 | 毎PR |
+| マルチテナント分離テスト | tenant_id 越境が発生しないことを確認           | 毎PR     |
+| Temporal Replay テスト   | Workflow の決定性違反を検出                    | 毎PR     |
 
 ### テストカバレッジ目標
 
-| 対象 | 目標 |
-|------|------|
-| クリティカルパス | 100% |
-| 全体 | 80%以上 |
+| 対象             | 目標    |
+| ---------------- | ------- |
+| クリティカルパス | 100%    |
+| 全体             | 80%以上 |
 
 ---
 
@@ -573,24 +630,24 @@ run_config = {"use_mock_llm": True, "mock_pack_id": "v1"}
 
 ## 禁止事項チェックリスト（全 Step 共通）
 
-| 禁止事項 | 確認項目 |
-|----------|----------|
-| 別モデルへの自動切替 | コードに fallback model の記述がないこと |
-| 別プロバイダへの自動切替 | コードに fallback provider の記述がないこと |
-| 別ツールへの自動切替 | コードに fallback tool の記述がないこと |
-| モックへの自動逃げ | mock は明示指定時のみ動作すること |
-| 壊れた出力の黙った採用 | 修正時は必ずログが残ること |
-| prompt pack 未指定での自動実行 | 未指定時は例外を投げること |
+| 禁止事項                       | 確認項目                                    |
+| ------------------------------ | ------------------------------------------- |
+| 別モデルへの自動切替           | コードに fallback model の記述がないこと    |
+| 別プロバイダへの自動切替       | コードに fallback provider の記述がないこと |
+| 別ツールへの自動切替           | コードに fallback tool の記述がないこと     |
+| モックへの自動逃げ             | mock は明示指定時のみ動作すること           |
+| 壊れた出力の黙った採用         | 修正時は必ずログが残ること                  |
+| prompt pack 未指定での自動実行 | 未指定時は例外を投げること                  |
 
 ---
 
 ## 許容事項（正常系として明文化）
 
-| 許容事項 | 条件 |
-|----------|------|
-| 同一条件でのリトライ | 上限回数あり（デフォルト3回）、attempt 記録必須 |
-| 決定的修正（JSON末尾カンマ除去等） | 実施ログ必須、repair イベント記録 |
-| 外部LLMによるフォーマット再生成 | 明示 ON 時のみ、上限あり、失敗時停止 |
+| 許容事項                           | 条件                                            |
+| ---------------------------------- | ----------------------------------------------- |
+| 同一条件でのリトライ               | 上限回数あり（デフォルト3回）、attempt 記録必須 |
+| 決定的修正（JSON末尾カンマ除去等） | 実施ログ必須、repair イベント記録               |
+| 外部LLMによるフォーマット再生成    | 明示 ON 時のみ、上限あり、失敗時停止            |
 
 ---
 

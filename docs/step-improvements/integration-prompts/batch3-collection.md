@@ -7,6 +7,7 @@
 ## Step0: Keyword Selection
 
 ### 対象ファイル
+
 - `apps/worker/activities/step0.py`
 
 ### 統合するヘルパー
@@ -113,6 +114,7 @@ class Step0Output(BaseModel):
 ## Step1: Competitor Fetch
 
 ### 対象ファイル
+
 - `apps/worker/activities/step1.py`
 
 ### 統合するヘルパー
@@ -294,6 +296,7 @@ class Step1Output(BaseModel):
 ## Step2: CSV Validation
 
 ### 対象ファイル
+
 - `apps/worker/activities/step2.py`
 
 ### 統合するヘルパー
@@ -482,12 +485,14 @@ class Step2Output(BaseModel):
 ## 完了条件
 
 ### Step0
+
 - [ ] OutputParser 統合
 - [ ] QualityRetryLoop 統合
 - [ ] 構造化出力スキーマ追加
 - [ ] テスト追加・通過
 
 ### Step1
+
 - [ ] CheckpointManager 統合（SERP、ページ取得）
 - [ ] 個別ページリトライ実装
 - [ ] コンテンツ品質チェック
@@ -495,6 +500,7 @@ class Step2Output(BaseModel):
 - [ ] テスト追加・通過
 
 ### Step2
+
 - [ ] InputValidator 統合
 - [ ] CheckpointManager 統合（バッチ処理）
 - [ ] 自動修復機能実装

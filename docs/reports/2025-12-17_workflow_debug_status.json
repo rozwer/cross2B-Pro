@@ -65,7 +65,20 @@
     {
       "run_id": "eda13ebe-5b07-42e5-b0ce-505992ef6044",
       "result": "FAILED at step8 (missing prompt)",
-      "completed_steps": ["step0", "step1", "step2", "step3a", "step3b", "step3c", "step4", "step5", "step6", "step6_5", "step7a", "step7b"],
+      "completed_steps": [
+        "step0",
+        "step1",
+        "step2",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b"
+      ],
       "note": "Step7a and Step7b both completed successfully - JSON parsing fix verified!"
     }
   ],
