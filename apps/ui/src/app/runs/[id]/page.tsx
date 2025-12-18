@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
+import { use, useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,6 +13,8 @@ import {
   Wifi,
   WifiOff,
   Network,
+  X,
+  Loader2,
 } from "lucide-react";
 import { useRun } from "@/hooks/useRun";
 import { useRunProgress } from "@/hooks/useRunProgress";
@@ -20,7 +22,7 @@ import { useArtifacts } from "@/hooks/useArtifact";
 import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
-import { ApprovalDialog } from "@/components/approval/ApprovalDialog";
+import { ApprovalDialog } from "@/components/common/ApprovalDialog";
 import { ResumeConfirmDialog } from "@/components/approval/ResumeConfirmDialog";
 import { ArtifactViewer } from "@/components/artifacts/ArtifactViewer";
 import { LoadingPage } from "@/components/common/Loading";
@@ -34,6 +36,14 @@ import { cn } from "@/lib/utils";
 type TabType = "timeline" | "artifacts" | "events" | "settings" | "network";
 // ===== DEBUG_LOG_END =====
 
+// プレビューモーダル用状態の型
+interface PreviewModalState {
+  isOpen: boolean;
+  loading: boolean;
+  error: string | null;
+  content: string | null;
+}
+
 export default function RunDetailPage({
   params,
 }: {
@@ -46,9 +56,16 @@ export default function RunDetailPage({
   const [activeTab, setActiveTab] = useState<TabType>("timeline");
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalLoading, setApprovalLoading] = useState(false);
   const [resumeStep, setResumeStep] = useState<string | null>(null);
+  const [previewModal, setPreviewModal] = useState<PreviewModalState>({
+    isOpen: false,
+    loading: false,
+    error: null,
+    content: null,
+  });
 
-  const { run, loading, error, fetch, approve, reject, retry, resume } = useRun(id);
+  const { run, loading, error, fetch, approve, reject, retry, resume, isPolling } = useRun(id);
   const { events, wsStatus } = useRunProgress(id, {
     onEvent: (event) => {
       if (
@@ -87,6 +104,49 @@ export default function RunDetailPage({
     }
   }, [resumeStep, resume, router]);
 
+  const handleApprove = useCallback(async () => {
+    setApprovalLoading(true);
+    try {
+      await approve();
+      setShowApprovalDialog(false);
+    } catch (err) {
+      console.error("Approval failed:", err);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, [approve]);
+
+  const handleReject = useCallback(async (reason: string) => {
+    setApprovalLoading(true);
+    try {
+      await reject(reason);
+      setShowApprovalDialog(false);
+    } catch (err) {
+      console.error("Rejection failed:", err);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, [reject]);
+
+  const handleOpenPreview = useCallback(async () => {
+    setPreviewModal({ isOpen: true, loading: true, error: null, content: null });
+    try {
+      const htmlContent = await api.artifacts.getPreview(id);
+      setPreviewModal({ isOpen: true, loading: false, error: null, content: htmlContent });
+    } catch (err) {
+      setPreviewModal({
+        isOpen: true,
+        loading: false,
+        error: err instanceof Error ? err.message : "プレビューの取得に失敗しました",
+        content: null,
+      });
+    }
+  }, [id]);
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewModal({ isOpen: false, loading: false, error: null, content: null });
+  }, []);
+
   if (loading) {
     return <LoadingPage text="Run を読み込み中..." />;
   }
@@ -96,7 +156,6 @@ export default function RunDetailPage({
   }
 
   const step = run.steps.find((s) => s.step_name === selectedStep);
-  const previewUrl = api.artifacts.getPreviewUrl(id);
 
   return (
     <div>
@@ -129,12 +188,21 @@ export default function RunDetailPage({
               </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {isPolling && (
+              <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                自動更新中
+              </span>
+            )}
             <button
-              onClick={fetch}
+              onClick={() => fetch()}
               className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className={cn("h-4 w-4", isPolling && "animate-spin")} />
               更新
             </button>
             {run.status === "waiting_approval" && (
@@ -146,15 +214,13 @@ export default function RunDetailPage({
               </button>
             )}
             {run.status === "completed" && (
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleOpenPreview}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
                 プレビュー
-              </a>
+              </button>
             )}
           </div>
         </div>
@@ -208,10 +274,12 @@ export default function RunDetailPage({
               <WorkflowProgressView
                 steps={run.steps}
                 currentStep={run.current_step ?? ""}
+                runStatus={run.status}
                 waitingApproval={run.status === "waiting_approval"}
                 onApprove={approve}
                 onReject={reject}
                 onRetry={handleRetry}
+                onResumeFrom={handleResume}
               />
             </div>
           </div>
@@ -239,9 +307,11 @@ export default function RunDetailPage({
       <ApprovalDialog
         isOpen={showApprovalDialog}
         onClose={() => setShowApprovalDialog(false)}
-        onApprove={approve}
-        onReject={reject}
+        onApprove={handleApprove}
+        onReject={handleReject}
         runId={id}
+        artifacts={artifacts}
+        loading={approvalLoading}
       />
 
       {resumeStep && (
@@ -252,6 +322,62 @@ export default function RunDetailPage({
           stepName={resumeStep}
           stepLabel={STEP_LABELS[resumeStep] || resumeStep}
         />
+      )}
+
+      {/* HTMLプレビューモーダル */}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* オーバーレイ */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={handleClosePreview}
+          />
+          {/* モーダル */}
+          <div className="relative w-[90vw] h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col">
+            {/* ヘッダー */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                HTMLプレビュー
+              </h2>
+              <button
+                onClick={handleClosePreview}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+            {/* コンテンツ */}
+            <div className="flex-1 overflow-hidden">
+              {previewModal.loading && (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">読み込み中...</span>
+                </div>
+              )}
+              {previewModal.error && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-red-600 dark:text-red-400 mb-2">{previewModal.error}</p>
+                    <button
+                      onClick={handleOpenPreview}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                    >
+                      再試行
+                    </button>
+                  </div>
+                </div>
+              )}
+              {previewModal.content && (
+                <iframe
+                  srcDoc={previewModal.content}
+                  title="HTML Preview"
+                  className="w-full h-full border-0"
+                  sandbox="allow-same-origin"
+                />
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -335,6 +461,18 @@ function EventsList({
   );
 }
 
+const PLATFORM_DISPLAY_NAMES: Record<string, string> = {
+  gemini: "Gemini",
+  openai: "OpenAI",
+  anthropic: "Claude",
+};
+
+const PLATFORM_COLORS: Record<string, string> = {
+  gemini: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+  openai: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300",
+  anthropic: "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300",
+};
+
 function SettingsPanel({
   run,
 }: {
@@ -344,6 +482,15 @@ function SettingsPanel({
       model: string;
       options: { grounding?: boolean; temperature?: number };
     };
+    step_configs?: Array<{
+      step_id: string;
+      platform: string;
+      model: string;
+      temperature: number;
+      grounding: boolean;
+      retry_limit: number;
+      repair_enabled: boolean;
+    }>;
     tool_config?: {
       serp_fetch: boolean;
       page_fetch: boolean;
@@ -354,99 +501,174 @@ function SettingsPanel({
   };
 }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Run設定</h3>
+    <div className="space-y-6">
+      {/* デフォルトモデル設定 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          デフォルトモデル設定
+        </h3>
 
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">モデル設定</h4>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-gray-500 dark:text-gray-400">プラットフォーム</dt>
+            <dd className="font-medium text-gray-900 dark:text-gray-100">
+              <span
+                className={cn(
+                  "inline-block px-2 py-0.5 rounded text-xs font-medium",
+                  PLATFORM_COLORS[run.model_config.platform] ||
+                    "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+                )}
+              >
+                {PLATFORM_DISPLAY_NAMES[run.model_config.platform] || run.model_config.platform}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500 dark:text-gray-400">モデル</dt>
+            <dd className="font-medium text-gray-900 dark:text-gray-100">
+              {run.model_config.model}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500 dark:text-gray-400">Grounding</dt>
+            <dd className="font-medium text-gray-900 dark:text-gray-100">
+              {run.model_config.options?.grounding ? "有効" : "無効"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500 dark:text-gray-400">Temperature</dt>
+            <dd className="font-medium text-gray-900 dark:text-gray-100">
+              {run.model_config.options?.temperature ?? 0.7}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* ステップ別モデル設定 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          ステップ別モデル設定
+        </h3>
+        {run.step_configs && run.step_configs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">
+                    ステップ
+                  </th>
+                  <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">
+                    プラットフォーム
+                  </th>
+                  <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">
+                    モデル
+                  </th>
+                  <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">
+                    Temperature
+                  </th>
+                  <th className="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">
+                    Grounding
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {run.step_configs.map((config) => (
+                  <tr
+                    key={config.step_id}
+                    className="border-b border-gray-100 dark:border-gray-700/50"
+                  >
+                    <td className="py-2 px-3 text-gray-900 dark:text-gray-100 font-medium">
+                      {STEP_LABELS[config.step_id] || config.step_id}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span
+                        className={cn(
+                          "inline-block px-2 py-0.5 rounded text-xs font-medium",
+                          PLATFORM_COLORS[config.platform] ||
+                            "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+                        )}
+                      >
+                        {PLATFORM_DISPLAY_NAMES[config.platform] || config.platform}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">{config.model}</td>
+                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                      {config.temperature}
+                    </td>
+                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                      {config.grounding ? "有効" : "無効"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500 dark:text-gray-400 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+            <p>このRunはステップ別モデル設定なしで作成されました。</p>
+            <p className="mt-1">全ステップでデフォルトモデル設定が使用されます。</p>
+          </div>
+        )}
+      </div>
+
+      {/* ツール設定 */}
+      {run.tool_config && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            ツール設定
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {run.tool_config.serp_fetch && (
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
+                SERP取得
+              </span>
+            )}
+            {run.tool_config.page_fetch && (
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
+                ページ取得
+              </span>
+            )}
+            {run.tool_config.url_verify && (
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
+                URL検証
+              </span>
+            )}
+            {run.tool_config.pdf_extract && (
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
+                PDF抽出
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 実行オプション */}
+      {run.options && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            実行オプション
+          </h3>
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">プラットフォーム</dt>
+              <dt className="text-gray-500 dark:text-gray-400">リトライ上限</dt>
               <dd className="font-medium text-gray-900 dark:text-gray-100">
-                {run.model_config.platform}
+                {run.options.retry_limit}回
               </dd>
             </div>
             <div>
-              <dt className="text-gray-500 dark:text-gray-400">モデル</dt>
+              <dt className="text-gray-500 dark:text-gray-400">決定的修正</dt>
               <dd className="font-medium text-gray-900 dark:text-gray-100">
-                {run.model_config.model}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-500 dark:text-gray-400">Grounding</dt>
-              <dd className="font-medium text-gray-900 dark:text-gray-100">
-                {run.model_config.options?.grounding ? "有効" : "無効"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-500 dark:text-gray-400">Temperature</dt>
-              <dd className="font-medium text-gray-900 dark:text-gray-100">
-                {run.model_config.options?.temperature ?? 0.7}
+                {run.options.repair_enabled ? "有効" : "無効"}
               </dd>
             </div>
           </dl>
         </div>
-
-        {run.tool_config && (
-          <div>
-            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-              ツール設定
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {run.tool_config.serp_fetch && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
-                  SERP取得
-                </span>
-              )}
-              {run.tool_config.page_fetch && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
-                  ページ取得
-                </span>
-              )}
-              {run.tool_config.url_verify && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
-                  URL検証
-                </span>
-              )}
-              {run.tool_config.pdf_extract && (
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
-                  PDF抽出
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {run.options && (
-          <div>
-            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-              実行オプション
-            </h4>
-            <dl className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400">リトライ上限</dt>
-                <dd className="font-medium text-gray-900 dark:text-gray-100">
-                  {run.options.retry_limit}回
-                </dd>
-              </div>
-              <div>
-                <dt className="text-gray-500 dark:text-gray-400">決定的修正</dt>
-                <dd className="font-medium text-gray-900 dark:text-gray-100">
-                  {run.options.repair_enabled ? "有効" : "無効"}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 // ===== DEBUG_LOG_START =====
-import { useEffect, useRef } from "react";
-
 interface NetworkLog {
   timestamp: string;
   method: string;
