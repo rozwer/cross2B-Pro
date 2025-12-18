@@ -2279,26 +2279,28 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
 
         async with db_manager.get_session(tenant_id) as session:
             # UPSERT step record
+            # Note: Cast :status to VARCHAR to avoid asyncpg type inference issues
+            # (inconsistent types: text vs character varying)
             await session.execute(
                 text("""
                     INSERT INTO steps (id, run_id, step_name, status, started_at, retry_count)
                     VALUES (
                         gen_random_uuid(),
-                        :run_id,
-                        :step_name,
-                        :status,
-                        CASE WHEN :status = 'running' THEN NOW() ELSE NULL END,
+                        CAST(:run_id AS UUID),
+                        CAST(:step_name AS VARCHAR),
+                        CAST(:status AS VARCHAR),
+                        CASE WHEN CAST(:status AS VARCHAR) = 'running' THEN NOW() ELSE NULL END,
                         :retry_count
                     )
                     ON CONFLICT (run_id, step_name)
                     DO UPDATE SET
-                        status = :status,
+                        status = CAST(:status AS VARCHAR),
                         started_at = CASE
-                            WHEN :status = 'running' THEN NOW()
+                            WHEN CAST(:status AS VARCHAR) = 'running' THEN NOW()
                             ELSE steps.started_at
                         END,
                         completed_at = CASE
-                            WHEN :status IN ('completed', 'failed') THEN NOW()
+                            WHEN CAST(:status AS VARCHAR) IN ('completed', 'failed') THEN NOW()
                             ELSE NULL
                         END,
                         error_message = :error_message,
