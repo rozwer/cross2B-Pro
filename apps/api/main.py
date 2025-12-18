@@ -780,6 +780,210 @@ async def list_events(
 
 
 # =============================================================================
+# Diagnostics Endpoints
+# =============================================================================
+
+
+class ErrorLogResponse(BaseModel):
+    """Error log entry response."""
+
+    id: int
+    step_id: str | None
+    error_category: str
+    error_type: str
+    error_message: str
+    context: dict[str, Any] | None = None
+    attempt: int
+    created_at: str
+
+
+class DiagnosticReportResponse(BaseModel):
+    """Diagnostic report response."""
+
+    id: int
+    run_id: str
+    root_cause_analysis: str
+    recommended_actions: list[dict[str, Any]]
+    resume_step: str | None = None
+    confidence_score: float | None = None
+    llm_provider: str
+    llm_model: str
+    created_at: str
+
+
+class DiagnosticsRequest(BaseModel):
+    """Request to generate diagnostics."""
+
+    llm_provider: str | None = None  # anthropic, openai, gemini
+
+
+@app.get("/api/runs/{run_id}/errors", response_model=list[ErrorLogResponse])
+async def list_error_logs(
+    run_id: str,
+    step: str | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    user: AuthUser = Depends(get_current_user),
+) -> list[ErrorLogResponse]:
+    """List error logs for a run."""
+    from apps.api.db.tenant import get_tenant_manager
+    from apps.api.observability.error_collector import ErrorCollector
+
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Listing error logs",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "step": step, "user_id": user.user_id},
+    )
+
+    try:
+        manager = get_tenant_manager()
+        async with manager.get_session(tenant_id) as session:
+            collector = ErrorCollector(session)
+            errors = await collector.get_errors_for_run(run_id, step_id=step, limit=limit)
+
+            return [
+                ErrorLogResponse(
+                    id=e.id,
+                    step_id=e.step_id,
+                    error_category=e.error_category,
+                    error_type=e.error_type,
+                    error_message=e.error_message,
+                    context=e.context,
+                    attempt=e.attempt,
+                    created_at=e.created_at.isoformat(),
+                )
+                for e in errors
+            ]
+    except Exception as e:
+        logger.error(f"Failed to list error logs: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve error logs")
+
+
+@app.get("/api/runs/{run_id}/errors/summary")
+async def get_error_summary(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get error summary for a run."""
+    from apps.api.db.tenant import get_tenant_manager
+    from apps.api.observability.error_collector import ErrorCollector
+
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Getting error summary",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    try:
+        manager = get_tenant_manager()
+        async with manager.get_session(tenant_id) as session:
+            collector = ErrorCollector(session)
+            return await collector.get_error_summary(run_id)
+    except Exception as e:
+        logger.error(f"Failed to get error summary: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve error summary")
+
+
+@app.post("/api/runs/{run_id}/diagnose", response_model=DiagnosticReportResponse)
+async def diagnose_run(
+    run_id: str,
+    request: DiagnosticsRequest | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> DiagnosticReportResponse:
+    """Generate LLM-based diagnostic analysis for a failed run.
+
+    Analyzes collected error logs and provides:
+    - Root cause analysis
+    - Recommended recovery actions
+    - Suggested step to resume from
+    """
+    from apps.api.db.tenant import get_tenant_manager
+    from apps.api.observability.diagnostics import DiagnosticsService
+
+    tenant_id = user.tenant_id
+    llm_provider = request.llm_provider if request else None
+
+    logger.info(
+        "Generating diagnostics",
+        extra={
+            "run_id": run_id,
+            "tenant_id": tenant_id,
+            "llm_provider": llm_provider,
+            "user_id": user.user_id,
+        },
+    )
+
+    try:
+        manager = get_tenant_manager()
+        async with manager.get_session(tenant_id) as session:
+            diagnostics = DiagnosticsService(session, llm_provider=llm_provider)
+            report = await diagnostics.analyze_failure(run_id, tenant_id)
+
+            return DiagnosticReportResponse(
+                id=report.id,
+                run_id=run_id,
+                root_cause_analysis=report.root_cause_analysis,
+                recommended_actions=report.recommended_actions,
+                resume_step=report.resume_step,
+                confidence_score=float(report.confidence_score) if report.confidence_score else None,
+                llm_provider=report.llm_provider,
+                llm_model=report.llm_model,
+                created_at=report.created_at.isoformat(),
+            )
+    except Exception as e:
+        logger.error(f"Failed to generate diagnostics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate diagnostics: {str(e)}")
+
+
+@app.get("/api/runs/{run_id}/diagnostics", response_model=list[DiagnosticReportResponse])
+async def list_diagnostics(
+    run_id: str,
+    limit: int = Query(default=10, ge=1, le=50),
+    user: AuthUser = Depends(get_current_user),
+) -> list[DiagnosticReportResponse]:
+    """List all diagnostic reports for a run."""
+    from sqlalchemy import select
+
+    from apps.api.db.models import DiagnosticReport
+    from apps.api.db.tenant import get_tenant_manager
+
+    tenant_id = user.tenant_id
+    logger.debug(
+        "Listing diagnostics",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    try:
+        manager = get_tenant_manager()
+        async with manager.get_session(tenant_id) as session:
+            stmt = (
+                select(DiagnosticReport)
+                .where(DiagnosticReport.run_id == run_id)
+                .order_by(DiagnosticReport.created_at.desc())
+                .limit(limit)
+            )
+            result = await session.execute(stmt)
+            reports = result.scalars().all()
+
+            return [
+                DiagnosticReportResponse(
+                    id=r.id,
+                    run_id=run_id,
+                    root_cause_analysis=r.root_cause_analysis,
+                    recommended_actions=r.recommended_actions,
+                    resume_step=r.resume_step,
+                    confidence_score=float(r.confidence_score) if r.confidence_score else None,
+                    llm_provider=r.llm_provider,
+                    llm_model=r.llm_model,
+                    created_at=r.created_at.isoformat(),
+                )
+                for r in reports
+            ]
+    except Exception as e:
+        logger.error(f"Failed to list diagnostics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve diagnostics")
+
+
+# =============================================================================
 # WebSocket Progress Streaming (VULN-006: 認証対応)
 # =============================================================================
 
