@@ -148,48 +148,61 @@ class Run(Base):
 
 
 class Step(Base):
-    """Step execution log within a run."""
+    """Step execution log within a run.
+
+    NOTE: Matches init-db.sql schema:
+    - id: UUID (not Integer)
+    - step_name: VARCHAR(100) (not 'step')
+    """
 
     __tablename__ = "steps"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
+    )
     run_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False
     )
-    step: Mapped[str] = mapped_column(String(64), nullable=False)
-    status: Mapped[str] = mapped_column(String(32), nullable=False)
-    llm_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    token_usage: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    error_type: Mapped[str | None] = mapped_column(
-        String(32), nullable=True
-    )  # RETRYABLE, NON_RETRYABLE, VALIDATION_FAIL
+    step_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     run: Mapped["Run"] = relationship(back_populates="steps")
 
 
 class Artifact(Base):
-    """Generated file reference."""
+    """Generated file reference.
+
+    NOTE: Matches init-db.sql schema:
+    - id: UUID (not Integer)
+    - step_id: UUID FK to steps (optional)
+    - artifact_type: VARCHAR(100)
+    - ref_path: TEXT
+    - content_type: VARCHAR(100)
+    """
 
     __tablename__ = "artifacts"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
+    )
     run_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False
     )
-    step: Mapped[str] = mapped_column(String(64), nullable=False)
-    file_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    file_path: Mapped[str] = mapped_column(Text, nullable=False)
-    digest: Mapped[str | None] = mapped_column(String(64), nullable=True)  # SHA256
-    size_bytes: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    step_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True
+    )
+    artifact_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    ref_path: Mapped[str] = mapped_column(Text, nullable=False)
+    digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     extra_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata", JSON, nullable=True
-    )  # 'metadata' is reserved in SQLAlchemy
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, nullable=False
     )
