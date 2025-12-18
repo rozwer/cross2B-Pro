@@ -329,7 +329,7 @@ class AnthropicClient(LLMInterface):
 
                 response = await self.client.messages.create(
                     model=self.model,
-                    max_tokens=4096,
+                    max_tokens=config.max_tokens,
                     system=system_prompt,
                     messages=anthropic_messages,
                     tools=tools,
