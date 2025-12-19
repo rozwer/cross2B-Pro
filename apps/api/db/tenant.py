@@ -355,3 +355,53 @@ class TenantDBManager:
         await self._common_engine.dispose()
         self._engines.clear()
         self._session_factories.clear()
+
+    async def get_engine(self, tenant_id: str) -> AsyncEngine:
+        """Get or create engine for tenant.
+
+        Args:
+            tenant_id: Tenant identifier
+
+        Returns:
+            AsyncEngine for the tenant's database
+
+        Raises:
+            TenantIdValidationError: If tenant_id format is invalid
+            TenantNotFoundError: If tenant does not exist
+        """
+        if not validate_tenant_id(tenant_id):
+            raise TenantIdValidationError(
+                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
+            )
+
+        db_url = await self._get_tenant_db_url(tenant_id)
+        return self._get_or_create_engine(tenant_id, db_url)
+
+
+# =============================================================================
+# Module-level convenience functions
+# =============================================================================
+
+# Global manager instance (lazy initialized)
+_tenant_manager: TenantDBManager | None = None
+
+
+def get_tenant_manager() -> TenantDBManager:
+    """Get the global TenantDBManager instance."""
+    global _tenant_manager
+    if _tenant_manager is None:
+        _tenant_manager = TenantDBManager()
+    return _tenant_manager
+
+
+async def get_tenant_engine(tenant_id: str) -> AsyncEngine:
+    """Get engine for a tenant (convenience function).
+
+    Args:
+        tenant_id: Tenant identifier
+
+    Returns:
+        AsyncEngine for the tenant's database
+    """
+    manager = get_tenant_manager()
+    return await manager.get_engine(tenant_id)

@@ -124,7 +124,7 @@ class Run(Base):
     )  # マルチテナント分離必須
     status: Mapped[str] = mapped_column(
         String(32), nullable=False
-    )  # pending, running, waiting_approval, completed, failed, cancelled
+    )  # pending, running, waiting_approval, waiting_image_input, completed, failed, cancelled
     current_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
     input_data: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, nullable=True
@@ -132,6 +132,9 @@ class Run(Base):
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    step11_state: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, nullable=True
+    )  # Step11 画像生成の状態（Temporal不使用）
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, nullable=False
     )
@@ -143,6 +146,12 @@ class Run(Base):
 
     steps: Mapped[list["Step"]] = relationship(back_populates="run", cascade="all, delete-orphan")
     artifacts: Mapped[list["Artifact"]] = relationship(
+        back_populates="run", cascade="all, delete-orphan"
+    )
+    error_logs: Mapped[list["ErrorLog"]] = relationship(
+        back_populates="run", cascade="all, delete-orphan"
+    )
+    diagnostic_reports: Mapped[list["DiagnosticReport"]] = relationship(
         back_populates="run", cascade="all, delete-orphan"
     )
 
@@ -251,3 +260,89 @@ class Prompt(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     __table_args__ = (UniqueConstraint("step", "version", name="uq_prompt_step_version"),)
+
+
+# =============================================================================
+# Error Logging and Diagnostics Models
+# =============================================================================
+
+
+class ErrorLog(Base):
+    """Detailed error log for diagnostics.
+
+    Collects all errors within a run/session for LLM-based failure analysis.
+    Supports multiple sources: llm, tool, validation, storage, activity, api.
+    """
+
+    __tablename__ = "error_logs"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
+    )
+    run_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True
+    )
+    step_id: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, index=True
+    )  # References steps.id (Integer, no FK due to legacy schema)
+    source: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="activity", index=True
+    )  # llm, tool, validation, storage, activity, api
+    error_category: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # retryable, non_retryable, validation_fail
+    error_type: Mapped[str] = mapped_column(
+        String(128), nullable=False
+    )  # Exception class name
+    error_message: Mapped[str] = mapped_column(Text, nullable=False)
+    stack_trace: Mapped[str | None] = mapped_column(Text, nullable=True)
+    context: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, nullable=True
+    )  # LLM model, tool name, input params, etc.
+    attempt: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now, nullable=False, index=True
+    )
+
+    run: Mapped["Run"] = relationship(back_populates="error_logs")
+
+
+class DiagnosticReport(Base):
+    """LLM-generated failure diagnosis and recovery recommendation.
+
+    Generated when a run fails to help understand root cause and next steps.
+    """
+
+    __tablename__ = "diagnostic_reports"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
+    )
+    run_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True
+    )
+    # LLM diagnostics results
+    root_cause_analysis: Mapped[str] = mapped_column(
+        Text, nullable=False
+    )  # LLM's analysis of failure cause
+    recommended_actions: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False
+    )  # Ordered list of recommended steps
+    resume_step: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # Suggested step to resume from
+    confidence_score: Mapped[float | None] = mapped_column(
+        Numeric(3, 2), nullable=True
+    )  # LLM's confidence (0.0-1.0)
+    # LLM metadata
+    llm_provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    llm_model: Mapped[str] = mapped_column(String(128), nullable=False)
+    prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now, nullable=False
+    )
+
+    run: Mapped["Run"] = relationship(back_populates="diagnostic_reports")
