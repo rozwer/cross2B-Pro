@@ -6,6 +6,7 @@ export type RunStatus =
   | "pending"
   | "running"
   | "waiting_approval"
+  | "waiting_image_input"  // Step11画像生成のユーザー入力待ち
   | "completed"
   | "failed"
   | "cancelled";
@@ -270,6 +271,7 @@ export const STEP_NAMES = [
   "step8",
   "step9",
   "step10",
+  "step11",
 ] as const;
 
 export type StepName = (typeof STEP_NAMES)[number];
@@ -292,6 +294,7 @@ export const STEP_LABELS: Record<string, string> = {
   step8: "検証",
   step9: "最終調整",
   step10: "完了",
+  step11: "画像生成",
 };
 
 // Helper to normalize step names (step6_5 -> step6.5)
@@ -384,6 +387,69 @@ export interface StepDefaultConfig {
 export interface ModelsConfigResponse {
   providers: ProviderConfig[];
   step_defaults: StepDefaultConfig[];
+}
+
+// ============================================
+// Step11 Image Generation Types
+// ============================================
+
+export interface ImagePosition {
+  section_title: string;
+  section_index: number;
+  position: "before" | "after";
+  source_text: string;
+  description: string;
+}
+
+export interface Section {
+  level: string;
+  title: string;
+  start_pos: number;
+}
+
+export interface GeneratedImage {
+  index: number;
+  position: ImagePosition;
+  user_instruction: string;
+  generated_prompt: string;
+  image_path: string;
+  image_digest: string;
+  image_base64: string;
+  alt_text: string;
+  mime_type: string;
+  file_size: number;
+  retry_count: number;
+  accepted: boolean;
+}
+
+export type Step11Phase =
+  | "waiting_11A"  // 設定入力待ち
+  | "11B_analyzing"  // 位置分析中
+  | "waiting_11B"  // 位置確認待ち
+  | "waiting_11C"  // 画像指示待ち
+  | "11D_generating"  // 画像生成中
+  | "waiting_11D"  // 画像確認待ち
+  | "11E_inserting"  // 挿入中
+  | "waiting_11E"  // プレビュー確認待ち
+  | "completed"
+  | "skipped";
+
+// Helper to determine current step11 phase from current_step
+export function getStep11Phase(currentStep: string | null): Step11Phase | null {
+  if (!currentStep) return null;
+
+  const phaseMap: Record<string, Step11Phase> = {
+    waiting_image_generation: "waiting_11A",
+    step11_analyzing: "11B_analyzing",
+    step11_position_review: "waiting_11B",
+    step11_image_instructions: "waiting_11C",
+    step11_generating: "11D_generating",
+    step11_image_review: "waiting_11D",
+    step11_inserting: "11E_inserting",
+    step11_preview: "waiting_11E",
+  };
+
+  return phaseMap[currentStep] || null;
 }
 
 // ============================================

@@ -16,6 +16,9 @@ import type {
   PromptListResponse,
   UpdatePromptInput,
   ModelsConfigResponse,
+  ImagePosition,
+  Section,
+  GeneratedImage,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -222,6 +225,215 @@ class ApiClient {
         {
           method: "POST",
           body: JSON.stringify({ run_ids: ids }),
+        },
+      );
+    },
+
+    /**
+     * Step11 画像生成を開始
+     */
+    startImageGeneration: async (
+      id: string,
+      config: {
+        enabled: boolean;
+        image_count?: number;
+        position_request?: string;
+      },
+    ): Promise<{ success: boolean; message?: string }> => {
+      return this.request<{ success: boolean; message?: string }>(
+        `/api/runs/${id}/step11/start`,
+        {
+          method: "POST",
+          body: JSON.stringify(config),
+        },
+      );
+    },
+
+    /**
+     * Step11 画像生成をスキップ
+     */
+    skipImageGeneration: async (id: string): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/skip`,
+        { method: "POST" },
+      );
+    },
+
+    /**
+     * Step11を完了済みとしてマーク（既存runのstep11スキップ用）
+     */
+    completeStep11: async (id: string): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/complete`,
+        { method: "POST" },
+      );
+    },
+
+    // ========== Step11 Multi-phase API ==========
+
+    /**
+     * Step11 設定を送信 (Phase 11A)
+     */
+    submitStep11Settings: async (
+      id: string,
+      settings: {
+        image_count: number;
+        position_request: string;
+      },
+    ): Promise<{ success: boolean; message?: string }> => {
+      return this.request<{ success: boolean; message?: string }>(
+        `/api/runs/${id}/step11/settings`,
+        {
+          method: "POST",
+          body: JSON.stringify(settings),
+        },
+      );
+    },
+
+    /**
+     * Step11 位置情報を取得 (Phase 11B)
+     */
+    getStep11Positions: async (
+      id: string,
+    ): Promise<{
+      positions: ImagePosition[];
+      sections: Section[];
+      analysis_summary: string;
+    }> => {
+      return this.request<{
+        positions: ImagePosition[];
+        sections: Section[];
+        analysis_summary: string;
+      }>(`/api/runs/${id}/step11/positions`);
+    },
+
+    /**
+     * Step11 位置確認を送信 (Phase 11B)
+     */
+    submitPositionReview: async (
+      id: string,
+      review: {
+        approved: boolean;
+        modified_positions?: ImagePosition[];
+        reanalyze?: boolean;
+        reanalyze_request?: string;
+      },
+    ): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/positions`,
+        {
+          method: "POST",
+          body: JSON.stringify(review),
+        },
+      );
+    },
+
+    /**
+     * Step11 画像指示を送信 (Phase 11C)
+     */
+    submitImageInstructions: async (
+      id: string,
+      data: {
+        instructions: Array<{ index: number; instruction: string }>;
+      },
+    ): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/instructions`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      );
+    },
+
+    /**
+     * Step11 生成画像を取得 (Phase 11D)
+     */
+    getStep11Images: async (
+      id: string,
+    ): Promise<{
+      images: GeneratedImage[];
+      warnings: string[];
+    }> => {
+      return this.request<{
+        images: GeneratedImage[];
+        warnings: string[];
+      }>(`/api/runs/${id}/step11/images`);
+    },
+
+    /**
+     * Step11 画像レビューを送信 (Phase 11D)
+     */
+    submitImageReview: async (
+      id: string,
+      data: {
+        reviews: Array<{
+          index: number;
+          accepted: boolean;
+          retry?: boolean;
+          retry_instruction?: string;
+        }>;
+      },
+    ): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/images/review`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      );
+    },
+
+    /**
+     * Step11 プレビューを取得 (Phase 11E)
+     */
+    getStep11Preview: async (
+      id: string,
+    ): Promise<{
+      preview_html: string;
+      preview_available: boolean;
+    }> => {
+      return this.request<{
+        preview_html: string;
+        preview_available: boolean;
+      }>(`/api/runs/${id}/step11/preview`);
+    },
+
+    /**
+     * Step11 完了確認を送信 (Phase 11E)
+     */
+    finalizeStep11: async (
+      id: string,
+      data: {
+        confirmed: boolean;
+        restart_from?: string;
+      },
+    ): Promise<{ success: boolean }> => {
+      return this.request<{ success: boolean }>(
+        `/api/runs/${id}/step11/finalize`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      );
+    },
+
+    /**
+     * 完了済みRunに画像を追加（Phase 11A開始）
+     * 新API: /step11/settings を使用（Temporal不要）
+     */
+    addImagesToRun: async (
+      id: string,
+      data: {
+        image_count: number;
+        position_request: string;
+      },
+    ): Promise<{ success: boolean; message: string }> => {
+      return this.request<{ success: boolean; message: string }>(
+        `/api/runs/${id}/step11/settings`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
         },
       );
     },

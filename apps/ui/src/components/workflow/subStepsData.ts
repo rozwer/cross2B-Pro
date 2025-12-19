@@ -81,6 +81,12 @@ export const SUB_STEPS: Record<string, SubStep[]> = {
     { id: "complete-save", name: "保存処理", description: "成果物の最終保存" },
     { id: "complete-notify", name: "完了通知", description: "完了ステータスの更新" },
   ],
+  step11: [
+    { id: "image-analyze", name: "挿入位置分析", description: "記事を分析して画像挿入ポイントを特定" },
+    { id: "image-generate", name: "画像生成", description: "各位置に対して画像を生成" },
+    { id: "image-insert", name: "画像挿入", description: "HTML/Markdownに画像を挿入" },
+    { id: "image-preview", name: "プレビュー", description: "最終プレビューの生成" },
+  ],
 };
 
 /**

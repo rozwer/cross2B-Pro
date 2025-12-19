@@ -261,6 +261,19 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
     isConfigurable: true,
     recommendedModel: "anthropic",
   },
+  {
+    stepId: "step11",
+    label: "画像生成",
+    description: "AI画像生成と記事への挿入",
+    aiModel: "gemini",
+    modelName: "gemini-2.0-flash",
+    temperature: 0.7,
+    grounding: false,
+    retryLimit: 3,
+    repairEnabled: true,
+    isConfigurable: true,
+    recommendedModel: "gemini",
+  },
 ];
 
 // Layout positions
@@ -347,14 +360,14 @@ function createInitialNodes(
   const postApprovalSteps = [
     ["step4", "step5", "step6", "step6.5"],
     ["step7a", "step7b", "step8"],
-    ["step9", "step10"],
+    ["step9", "step10", "step11"],
   ];
 
   postApprovalSteps.forEach((rowSteps, rowIndex) => {
     rowSteps.forEach((stepId, colIndex) => {
       const step = steps.find((s) => s.stepId === stepId);
       if (step) {
-        const offsetX = rowIndex === 2 ? 0.75 : rowIndex === 1 ? 0.5 : 0;
+        const offsetX = rowIndex === 2 ? 0.5 : rowIndex === 1 ? 0.5 : 0;
         nodes.push({
           id: stepId,
           type: "workflowNode",
@@ -370,7 +383,7 @@ function createInitialNodes(
             modelName: step.modelName,
             status: "pending",
             stepType:
-              stepId === "step10" ? "output" : stepId === "step8" ? "verification" : "generation",
+              stepId === "step10" || stepId === "step11" ? "output" : stepId === "step8" ? "verification" : "generation",
             onNodeClick,
           },
         });
@@ -513,6 +526,13 @@ function createInitialEdges(): Edge[] {
       id: "e-step9-step10",
       source: "step9",
       target: "step10",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+      id: "e-step10-step11",
+      source: "step10",
+      target: "step11",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
     },

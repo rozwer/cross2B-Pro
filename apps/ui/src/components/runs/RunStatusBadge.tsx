@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, XCircle, Clock, Loader2, Pause, Ban, SkipForward } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Loader2, Pause, Ban, SkipForward, ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RunStatus, StepStatus } from "@/lib/types";
 
@@ -38,6 +38,12 @@ const statusConfig: Record<
     bgColor: "bg-warning-100 dark:bg-warning-900/40",
     textColor: "text-warning-700 dark:text-warning-300",
     icon: Pause,
+  },
+  waiting_image_input: {
+    label: "画像入力待ち",
+    bgColor: "bg-purple-100 dark:bg-purple-900/40",
+    textColor: "text-purple-700 dark:text-purple-300",
+    icon: ImagePlus,
   },
   completed: {
     label: "完了",
@@ -87,11 +93,12 @@ export function RunStatusBadge({
   pulse = false,
   className,
 }: RunStatusBadgeProps) {
-  const config = statusConfig[status];
+  // フォールバック: 未知のステータスの場合はpendingとして扱う
+  const config = statusConfig[status] || statusConfig.pending;
   const sizeClass = sizeConfig[size];
   const IconComponent = config.icon;
   const shouldAnimate = status === "running";
-  const shouldPulse = pulse || status === "waiting_approval";
+  const shouldPulse = pulse || status === "waiting_approval" || status === "waiting_image_input";
 
   return (
     <span
@@ -128,6 +135,7 @@ export function StatusDot({
     pending: "bg-gray-400",
     running: "bg-accent-500",
     waiting_approval: "bg-warning-500",
+    waiting_image_input: "bg-purple-500",
     completed: "bg-success-500",
     failed: "bg-error-500",
     cancelled: "bg-gray-400",
@@ -140,14 +148,16 @@ export function StatusDot({
     lg: "w-2.5 h-2.5",
   };
 
-  const shouldPulse = pulse || status === "running" || status === "waiting_approval";
+  const shouldPulse = pulse || status === "running" || status === "waiting_approval" || status === "waiting_image_input";
+  // フォールバック: 未知のステータスの場合はgray
+  const dotColor = dotColors[status] || "bg-gray-400";
 
   return (
     <span className="relative inline-flex">
-      <span className={cn("rounded-full", dotColors[status], dotSizes[size])} />
+      <span className={cn("rounded-full", dotColor, dotSizes[size])} />
       {shouldPulse && (
         <span
-          className={cn("absolute inset-0 rounded-full animate-ping opacity-75", dotColors[status])}
+          className={cn("absolute inset-0 rounded-full animate-ping opacity-75", dotColor)}
         />
       )}
     </span>

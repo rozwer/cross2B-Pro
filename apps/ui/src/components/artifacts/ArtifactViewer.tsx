@@ -50,6 +50,7 @@ const STEP_ORDER = [
   "step8",
   "step9",
   "step10",
+  "step11",
 ];
 
 // ステップ名から数値部分を抽出してソート用の値を返す

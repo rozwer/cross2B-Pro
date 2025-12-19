@@ -18,7 +18,7 @@ export default function Home() {
     total: runs.length,
     completed: runs.filter((r) => r.status === "completed").length,
     running: runs.filter((r) => r.status === "running").length,
-    waiting: runs.filter((r) => r.status === "waiting_approval").length,
+    waiting: runs.filter((r) => r.status === "waiting_approval" || r.status === "waiting_image_input").length,
     failed: runs.filter((r) => r.status === "failed").length,
   };
 

@@ -18,6 +18,7 @@ import {
   X,
   RotateCcw,
   Play,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -39,11 +40,14 @@ interface WorkflowPattern5Props {
   currentStep: string;
   runStatus?: string;
   waitingApproval: boolean;
+  waitingImageGeneration?: boolean;
   onApprove?: () => void;
   onReject?: (reason: string) => void;
   onStepClick?: (stepName: string) => void;
   onRetry?: (stepName: string) => void;
   onResumeFrom?: (stepName: string) => void;
+  onImageGenerate?: () => void;
+  onImageGenSkip?: () => void;
 }
 
 const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
@@ -64,6 +68,7 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
   step8: { icon: Eye, color: "#eab308" },
   step9: { icon: Sparkles, color: "#a855f7" },
   step10: { icon: CheckCircle, color: "#10b981" },
+  step11: { icon: Image, color: "#ec4899" },
 };
 
 // Simplified steps for radial view
@@ -84,6 +89,7 @@ const RADIAL_STEPS = [
   "step8",
   "step9",
   "step10",
+  "step11",
 ];
 
 // Parallel step groups: parent step is completed when ALL children are completed
@@ -103,10 +109,13 @@ export function WorkflowPattern5_RadialProgress({
   currentStep,
   runStatus,
   waitingApproval,
+  waitingImageGeneration,
   onApprove,
   onReject,
   onRetry,
   onResumeFrom,
+  onImageGenerate,
+  onImageGenSkip,
 }: WorkflowPattern5Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
 
@@ -531,6 +540,34 @@ export function WorkflowPattern5_RadialProgress({
                   {!selectedEffectiveStatus && "待機中"}
                 </div>
 
+                {/* Step11: Image Generation Yes/No buttons - 常に表示 */}
+                {selectedStep === "step11" && (
+                  <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-white/10">
+                    <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                      画像を生成しますか？
+                    </p>
+                    <button
+                      onClick={() => {
+                        onImageGenerate?.();
+                        setSelectedStep(null);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      画像を生成する
+                    </button>
+                    <button
+                      onClick={() => {
+                        onImageGenSkip?.();
+                        setSelectedStep(null);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      スキップして完了
+                    </button>
+                  </div>
+                )}
+
                 {/* Action buttons - show retry for failed, resume for completed/failed */}
                 {(selectedEffectiveStatus === "failed" || selectedEffectiveStatus === "completed") &&
                  (onRetry || onResumeFrom) && (
@@ -573,41 +610,59 @@ export function WorkflowPattern5_RadialProgress({
           </div>
         )}
 
-        {/* Floating labels for key steps - show only major milestones */}
+        {/* Floating labels for key steps - rendered inside SVG for proper positioning */}
         {!selectedStep && (
-          <div className="absolute inset-0 pointer-events-none">
+          <svg
+            width="400"
+            height="400"
+            className="absolute pointer-events-none"
+            style={{ left: 0, top: 0 }}
+          >
             {stepPositions
               .filter((pos) => KEY_LABEL_STEPS.includes(pos.step))
               .map((pos) => {
                 // Use effective status for label styling
                 const effectiveStatus = getEffectiveStatus(pos.step);
-                const labelX = pos.x > centerX ? pos.x + 30 : pos.x - 30;
+                // Position label outside the node
+                const isRight = pos.x > centerX;
+                const labelX = isRight ? pos.x + 28 : pos.x - 28;
                 const labelY = pos.y;
 
+                // Determine colors based on status
+                let bgColor = "rgba(229, 231, 235, 0.8)"; // gray-200
+                let textColor = "#6b7280"; // gray-500
+                if (effectiveStatus === "completed") {
+                  bgColor = "rgba(16, 185, 129, 0.2)"; // emerald-500/20
+                  textColor = "#10b981"; // emerald-500
+                } else if (effectiveStatus === "running") {
+                  bgColor = "rgba(6, 182, 212, 0.2)"; // cyan-500/20
+                  textColor = "#06b6d4"; // cyan-500
+                }
+
                 return (
-                  <div
-                    key={`label-${pos.step}`}
-                    className="absolute transform -translate-y-1/2"
-                    style={{
-                      left: `${(labelX / 400) * 100}%`,
-                      top: `${(labelY / 400) * 100}%`,
-                      textAlign: pos.x > centerX ? "left" : "right",
-                    }}
-                  >
-                    <span
-                      className={cn(
-                        "text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
-                        effectiveStatus === "completed" && "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
-                        effectiveStatus === "running" && "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
-                        !effectiveStatus && "bg-gray-200 dark:bg-gray-700/50 text-gray-500",
-                      )}
+                  <g key={`label-${pos.step}`}>
+                    <rect
+                      x={isRight ? labelX : labelX - 80}
+                      y={labelY - 10}
+                      width="80"
+                      height="20"
+                      rx="10"
+                      fill={bgColor}
+                    />
+                    <text
+                      x={isRight ? labelX + 40 : labelX - 40}
+                      y={labelY + 4}
+                      textAnchor="middle"
+                      fontSize="11"
+                      fontWeight="500"
+                      fill={textColor}
                     >
                       {STEP_LABELS[pos.step]}
-                    </span>
-                  </div>
+                    </text>
+                  </g>
                 );
               })}
-          </div>
+          </svg>
         )}
       </div>
 

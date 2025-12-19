@@ -82,6 +82,8 @@ export function StepContentViewer({ content, stepName }: StepContentViewerProps)
     case "step7a":
     case "step7b":
       return <Step7Viewer data={parsed} />;
+    case "step11":
+      return <Step11Viewer data={parsed} />;
     default:
       return <GenericViewer data={parsed} />;
   }
@@ -2104,6 +2106,195 @@ function GenericViewer({ data }: { data: ParsedContent }) {
           ))}
       </div>
 
+      <ModelUsageBadges model={data.model} usage={data.usage} />
+    </div>
+  );
+}
+
+// Step11: 画像生成ビューア
+interface Step11Data extends ParsedContent {
+  enabled?: boolean;
+  image_count?: number;
+  images?: Array<{
+    request?: {
+      position?: {
+        section_title?: string;
+        section_index?: number;
+        position?: string;
+        source_text?: string;
+        description?: string;
+      };
+      user_instruction?: string;
+      generated_prompt?: string;
+      alt_text?: string;
+    };
+    image_path?: string;
+    image_base64?: string;
+    mime_type?: string;
+    width?: number;
+    height?: number;
+    file_size?: number;
+    accepted?: boolean;
+  }>;
+  markdown_with_images?: string;
+  html_with_images?: string;
+  warnings?: string[];
+}
+
+function Step11Viewer({ data }: { data: Step11Data }) {
+  const enabled = data.enabled !== false;
+  const images = data.images || [];
+  const imageCount = data.image_count || images.length;
+  const hasMarkdown = !!data.markdown_with_images;
+  const hasHtml = !!data.html_with_images;
+  const warnings = data.warnings || [];
+
+  if (!enabled) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-gray-400" />
+          <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            画像生成 (スキップ)
+          </span>
+        </div>
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm text-gray-600 dark:text-gray-400">
+          画像生成はスキップされました
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            画像生成
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+            {imageCount} 画像生成
+          </span>
+        </div>
+      </div>
+
+      {/* 警告 */}
+      {warnings.length > 0 && (
+        <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 mt-0.5" />
+            <div className="space-y-1">
+              {warnings.map((warning, i) => (
+                <p key={i} className="text-sm text-yellow-700 dark:text-yellow-400">
+                  {warning}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 生成画像一覧 */}
+      {images.length > 0 && (
+        <Section icon={Sparkles} title="生成画像">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {images.map((img, idx) => (
+              <div
+                key={idx}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+              >
+                {/* 画像プレビュー */}
+                {img.image_base64 && (
+                  <div className="relative aspect-video bg-gray-100 dark:bg-gray-800">
+                    <img
+                      src={`data:${img.mime_type || "image/png"};base64,${img.image_base64}`}
+                      alt={img.request?.alt_text || `Generated image ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                    {img.accepted && (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 画像情報 */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      画像 #{idx + 1}
+                    </span>
+                    {img.width && img.height && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {img.width} × {img.height}
+                      </span>
+                    )}
+                  </div>
+
+                  {img.request?.position?.section_title && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">挿入先:</span> {img.request.position.section_title}
+                    </div>
+                  )}
+
+                  {img.request?.alt_text && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Alt:</span> {img.request.alt_text}
+                    </div>
+                  )}
+
+                  {img.request?.generated_prompt && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                        生成プロンプトを表示
+                      </summary>
+                      <p className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                        {img.request.generated_prompt}
+                      </p>
+                    </details>
+                  )}
+
+                  {img.file_size && img.file_size > 0 && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      サイズ: {(img.file_size / 1024).toFixed(1)} KB
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Markdownプレビュー */}
+      {hasMarkdown && (
+        <Section icon={FileText} title="画像挿入済みMarkdown">
+          <div className="max-h-96 overflow-auto">
+            <MarkdownViewer content={data.markdown_with_images || ""} />
+          </div>
+        </Section>
+      )}
+
+      {/* HTMLプレビュー */}
+      {hasHtml && (
+        <Section icon={Globe} title="画像挿入済みHTML">
+          <details>
+            <summary className="cursor-pointer text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+              HTMLコードを表示
+            </summary>
+            <pre className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-64 whitespace-pre-wrap font-mono">
+              {data.html_with_images}
+            </pre>
+          </details>
+        </Section>
+      )}
+
+      {/* モデル使用情報 */}
       <ModelUsageBadges model={data.model} usage={data.usage} />
     </div>
   );

@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Play,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -39,9 +40,12 @@ interface WorkflowPattern4Props {
   currentStep: string;
   runStatus?: string;
   waitingApproval: boolean;
+  waitingImageGeneration?: boolean;
   onRetry?: (stepName: string) => void;
   onResumeFrom?: (stepName: string) => void;
   onStepClick?: (stepName: string) => void;
+  onImageGenerate?: () => void;
+  onImageGenSkip?: () => void;
 }
 
 const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string; description: string }> = {
@@ -62,6 +66,7 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string; description
   step8: { icon: Eye, color: "#f59e0b", description: "最終検証" },
   step9: { icon: Sparkles, color: "#8b5cf6", description: "最終調整" },
   step10: { icon: CheckCircle, color: "#10b981", description: "ワークフロー完了" },
+  step11: { icon: Image, color: "#ec4899", description: "AI画像生成と挿入" },
 };
 
 const ORDERED_STEPS = [
@@ -82,6 +87,7 @@ const ORDERED_STEPS = [
   "step8",
   "step9",
   "step10",
+  "step11",
 ];
 
 // Parallel step groups: parent step is completed when ALL children are completed
@@ -98,8 +104,11 @@ export function WorkflowPattern4_VerticalTimeline({
   currentStep,
   runStatus,
   waitingApproval,
+  waitingImageGeneration,
   onRetry,
   onResumeFrom,
+  onImageGenerate,
+  onImageGenSkip,
 }: WorkflowPattern4Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set([currentStep]));
@@ -264,6 +273,7 @@ export function WorkflowPattern4_VerticalTimeline({
                     const status = getEffectiveStatus(stepName);
                     const isCurrent = stepName === currentStep;
                     const isWaiting = waitingApproval && isCurrent;
+                    const isWaitingImageGen = waitingImageGeneration && stepName === "step11";
                     const isExpanded = expandedSteps.has(stepName);
                     const config = STEP_CONFIG[stepName];
                     const statusColors = getStatusColor(status, isWaiting);
@@ -471,6 +481,35 @@ export function WorkflowPattern4_VerticalTimeline({
                                 {isWaiting && (
                                   <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
                                     <p className="text-xs text-amber-600 dark:text-amber-400">承認待ち状態です</p>
+                                  </div>
+                                )}
+                                {/* Step11: Image Generation Yes/No buttons - 常に表示 */}
+                                {stepName === "step11" && (
+                                  <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 space-y-3">
+                                    <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                                      画像を生成しますか？
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onImageGenerate?.();
+                                        }}
+                                        className="flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs font-medium rounded-lg transition-colors"
+                                      >
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        画像を生成する
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onImageGenSkip?.();
+                                        }}
+                                        className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors"
+                                      >
+                                        スキップして完了
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
