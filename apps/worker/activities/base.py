@@ -68,6 +68,45 @@ async def load_step_data(
         return None
 
 
+async def save_step_data(
+    store: ArtifactStore,
+    tenant_id: str,
+    run_id: str,
+    step: str,
+    data: dict[str, Any],
+    filename: str = "output.json",
+) -> ArtifactRef | None:
+    """Save step output data to storage.
+
+    Helper function for activities that need to save intermediate or final step data.
+
+    Args:
+        store: ArtifactStore instance
+        tenant_id: Tenant identifier
+        run_id: Run identifier
+        step: Step identifier (e.g., 'step11')
+        data: Data to save
+        filename: Output filename (default: output.json)
+
+    Returns:
+        ArtifactRef with path and digest, or None if failed
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"[save_step_data] Saving {step}/{filename} for tenant={tenant_id}, run={run_id}")
+
+    try:
+        path = store.build_path(tenant_id, run_id, step, filename)
+        content = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+        ref = await store.put(content, path, "application/json")
+        logger.info(f"[save_step_data] Saved {step}/{filename}: {len(content)} bytes")
+        return ref
+    except Exception as e:
+        logger.error(f"[save_step_data] Failed to save {step}/{filename}: {type(e).__name__}: {e}")
+        return None
+
+
 class ActivityError(Exception):
     """Base exception for activity errors."""
 
@@ -293,6 +332,14 @@ class BaseActivity(ABC):
                     "details": e.details,
                 },
             )
+            # Collect error for diagnostics
+            await self._collect_error(
+                ctx=ctx,
+                error=e,
+                category=e.category,
+                source="activity",
+                context=e.details,
+            )
             # Update step status in DB via API
             await self._update_step_status(
                 run_id=run_id,
@@ -312,6 +359,14 @@ class BaseActivity(ABC):
                     "category": ErrorCategory.RETRYABLE.value,
                     "unexpected": True,
                 },
+            )
+            # Collect error for diagnostics
+            await self._collect_error(
+                ctx=ctx,
+                error=e,
+                category=ErrorCategory.RETRYABLE,
+                source="activity",
+                context={"unexpected": True},
             )
             # Update step status in DB via API
             await self._update_step_status(
@@ -492,3 +547,81 @@ class BaseActivity(ABC):
             occurred_at=datetime.now(),
             attempt=activity.info().attempt,
         )
+
+    async def _collect_error(
+        self,
+        ctx: ExecutionContext,
+        error: Exception,
+        category: ErrorCategory,
+        source: str = "activity",
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Collect error for LLM-based diagnostics.
+
+        Stores error details in the error_logs table for later analysis
+        by the diagnostics service.
+
+        Args:
+            ctx: Execution context
+            error: The exception that occurred
+            category: Error classification
+            source: Error source (activity, llm, tool, validation, storage, api)
+            context: Additional context (LLM model, tool, params, etc.)
+        """
+        import traceback
+
+        try:
+            from sqlalchemy import text
+
+            from apps.api.db.tenant import get_tenant_engine
+
+            # Get tenant database engine
+            engine = await get_tenant_engine(ctx.tenant_id)
+
+            # Build error context
+            error_context = context or {}
+            error_context.update({
+                "step_id": ctx.step_id,
+                "timeout_seconds": ctx.timeout_seconds,
+                "config_keys": list(ctx.config.keys()) if ctx.config else [],
+            })
+
+            # Get stack trace
+            stack_trace = "".join(
+                traceback.format_exception(type(error), error, error.__traceback__)
+            )
+
+            async with engine.connect() as conn:
+                await conn.execute(
+                    text(
+                        """
+                        INSERT INTO error_logs
+                        (run_id, source, error_category, error_type,
+                         error_message, stack_trace, context, attempt)
+                        VALUES
+                        (:run_id, :source, :error_category, :error_type,
+                         :error_message, :stack_trace, :context::jsonb, :attempt)
+                        """
+                    ),
+                    {
+                        "run_id": ctx.run_id,
+                        "source": source,
+                        "error_category": category.value,
+                        "error_type": type(error).__name__,
+                        "error_message": str(error),
+                        "stack_trace": stack_trace,
+                        "context": json.dumps(error_context),
+                        "attempt": ctx.attempt,
+                    },
+                )
+                await conn.commit()
+
+            activity.logger.debug(
+                f"Error logged for diagnostics: {type(error).__name__} in {ctx.step_id}"
+            )
+
+        except Exception as log_error:
+            # Don't fail the activity if error logging fails
+            activity.logger.warning(
+                f"Failed to log error for diagnostics: {log_error}"
+            )

@@ -16,6 +16,14 @@ from .step7b import step7b_brush_up
 from .step8 import step8_fact_check
 from .step9 import step9_final_rewrite
 from .step10 import step10_final_output
+from .step11 import (
+    step11_image_generation,
+    step11_mark_skipped,
+    step11_analyze_positions,
+    step11_generate_images,
+    step11_retry_image,
+    step11_insert_images,
+)
 from .sync_status import sync_run_status
 
 __all__ = [
@@ -35,5 +43,11 @@ __all__ = [
     "step8_fact_check",
     "step9_final_rewrite",
     "step10_final_output",
+    "step11_image_generation",
+    "step11_mark_skipped",
+    "step11_analyze_positions",
+    "step11_generate_images",
+    "step11_retry_image",
+    "step11_insert_images",
     "sync_run_status",
 ]

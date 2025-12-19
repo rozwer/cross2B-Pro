@@ -11,6 +11,13 @@ Integrated helpers:
 - ContentMetrics: Calculates text and markdown metrics
 - CheckpointManager: Manages intermediate checkpoints for idempotency
 - QualityRetryLoop: Retries LLM calls when quality is insufficient
+
+Error Handling Strategy:
+- Step9データ欠損: NON_RETRYABLE (step9を再実行する必要がある)
+- Step9データ破損: NON_RETRYABLE (データ形式が不正)
+- LLM呼び出し失敗: RETRYABLE (一時的なエラーの可能性)
+- HTML検証失敗: 警告として記録、処理は継続
+- チェックリスト生成失敗: 警告として記録、空文字列を返す（フォールバック禁止）
 """
 
 import re
@@ -41,6 +48,16 @@ from apps.worker.helpers import (
 )
 
 from .base import ActivityError, BaseActivity, load_step_data
+
+
+class Step9DataCorruptionError(Exception):
+    """Step9データ破損エラー."""
+
+    def __init__(self, message: str, field: str, expected: str, actual: str):
+        super().__init__(message)
+        self.field = field
+        self.expected = expected
+        self.actual = actual
 
 
 class HTMLStructureValidator:
@@ -137,6 +154,8 @@ class Step10FinalOutput(BaseActivity):
     """Activity for final output generation."""
 
     MIN_CONTENT_LENGTH = 1000
+    MIN_HEADING_COUNT = 2  # 最低見出し数
+    MAX_CONTENT_LENGTH = 100000  # 異常に長いコンテンツの検出
 
     def __init__(self) -> None:
         """Initialize with helpers."""
@@ -153,6 +172,150 @@ class Step10FinalOutput(BaseActivity):
 
         # チェックリスト品質検証
         self.checklist_validator = ChecklistValidator(min_length=100)
+
+    def _validate_step9_data_integrity(
+        self,
+        step9_data: dict[str, Any],
+    ) -> tuple[bool, list[str], list[str]]:
+        """Step9データの整合性を詳細に検証.
+
+        Returns:
+            tuple: (is_valid, errors, warnings)
+            - is_valid: 致命的なエラーがないか
+            - errors: 処理を中断すべきエラーリスト
+            - warnings: 警告リスト（処理は継続）
+        """
+        errors: list[str] = []
+        warnings: list[str] = []
+
+        # 1. 必須フィールドの存在チェック
+        final_content = step9_data.get("final_content")
+        if final_content is None:
+            errors.append(
+                "step9.final_content is missing - step9 may not have completed successfully"
+            )
+            return False, errors, warnings
+
+        # 2. データ型チェック
+        if not isinstance(final_content, str):
+            errors.append(
+                f"step9.final_content has invalid type: expected str, got {type(final_content).__name__}"
+            )
+            return False, errors, warnings
+
+        # 3. 明らかな破損パターンの検出（長さチェックより先に実行）
+        # 短いコンテンツでも破損パターンを検出できるようにする
+        corruption_patterns = [
+            (r"^\s*\{", "Content starts with JSON - possible serialization error"),
+            (r"^\s*<\?xml", "Content starts with XML declaration - wrong format"),
+            (r"^null$", "Content is literal 'null'"),
+            (r"^\s*undefined\s*$", "Content is literal 'undefined'"),
+            (r"^\[object Object\]$", "Content is '[object Object]' - serialization error"),
+        ]
+
+        for pattern, message in corruption_patterns:
+            if re.match(pattern, final_content.strip(), re.IGNORECASE):
+                errors.append(f"step9.final_content appears corrupted: {message}")
+                return False, errors, warnings
+
+        # 4. コンテンツ長チェック
+        content_length = len(final_content)
+        if content_length == 0:
+            errors.append("step9.final_content is empty")
+            return False, errors, warnings
+
+        if content_length < self.MIN_CONTENT_LENGTH:
+            errors.append(
+                f"step9.final_content is too short: {content_length} chars "
+                f"(minimum: {self.MIN_CONTENT_LENGTH}). "
+                "This may indicate step9 failed or produced incomplete output."
+            )
+            return False, errors, warnings
+
+        if content_length > self.MAX_CONTENT_LENGTH:
+            warnings.append(
+                f"step9.final_content is unusually long: {content_length} chars "
+                f"(expected < {self.MAX_CONTENT_LENGTH})"
+            )
+
+        # 5. マークダウン構造チェック
+        heading_pattern = r"^#{1,6}\s+"
+        headings = re.findall(heading_pattern, final_content, re.MULTILINE)
+        if len(headings) < self.MIN_HEADING_COUNT:
+            warnings.append(
+                f"step9.final_content has insufficient headings: {len(headings)} "
+                f"(expected >= {self.MIN_HEADING_COUNT}). "
+                "Article structure may be incomplete."
+            )
+
+        # 6. meta_description の検証（推奨）
+        meta_desc = step9_data.get("meta_description")
+        if meta_desc:
+            if not isinstance(meta_desc, str):
+                warnings.append(
+                    f"step9.meta_description has invalid type: expected str, "
+                    f"got {type(meta_desc).__name__}"
+                )
+            elif len(meta_desc) > 300:
+                warnings.append(
+                    f"step9.meta_description is too long: {len(meta_desc)} chars "
+                    "(recommended < 160)"
+                )
+
+        # 7. article_title の検証（推奨）
+        article_title = step9_data.get("article_title")
+        if article_title:
+            if not isinstance(article_title, str):
+                warnings.append(
+                    f"step9.article_title has invalid type: expected str, "
+                    f"got {type(article_title).__name__}"
+                )
+            elif len(article_title) > 200:
+                warnings.append(
+                    f"step9.article_title is unusually long: {len(article_title)} chars"
+                )
+
+        return True, errors, warnings
+
+    def _build_error_details(
+        self,
+        errors: list[str],
+        warnings: list[str],
+        step9_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """エラー詳細情報を構築."""
+        details: dict[str, Any] = {
+            "errors": errors,
+            "warnings": warnings,
+            "recovery_suggestions": [],
+        }
+
+        # リカバリー提案を追加
+        if any("missing" in e.lower() for e in errors):
+            details["recovery_suggestions"].append(
+                "Re-run step9 to generate final_content"
+            )
+        if any("too short" in e.lower() for e in errors):
+            details["recovery_suggestions"].append(
+                "Check step9 output quality - content may have been truncated"
+            )
+        if any("corrupted" in e.lower() for e in errors):
+            details["recovery_suggestions"].append(
+                "Investigate step9 output format - data serialization may have failed"
+            )
+
+        # デバッグ用のデータサマリー
+        if step9_data:
+            details["data_summary"] = {
+                "has_final_content": "final_content" in step9_data,
+                "final_content_type": type(step9_data.get("final_content")).__name__,
+                "final_content_length": len(step9_data.get("final_content", "")),
+                "has_meta_description": "meta_description" in step9_data,
+                "has_article_title": "article_title" in step9_data,
+                "available_keys": list(step9_data.keys()),
+            }
+
+        return details
 
     @property
     def step_id(self) -> str:
@@ -198,9 +361,50 @@ class Step10FinalOutput(BaseActivity):
         # Load step data from storage
         step9_data = await load_step_data(
             self.store, ctx.tenant_id, ctx.run_id, "step9"
-        ) or {}
+        )
 
-        # === InputValidator統合 ===
+        # === Step9データ存在チェック ===
+        if step9_data is None:
+            activity.logger.error(
+                f"Step9 data not found for run_id={ctx.run_id}, tenant_id={ctx.tenant_id}"
+            )
+            raise ActivityError(
+                "Step9 output not found - step9 must complete before step10",
+                category=ErrorCategory.NON_RETRYABLE,
+                details={
+                    "run_id": str(ctx.run_id),
+                    "tenant_id": ctx.tenant_id,
+                    "recovery_suggestions": [
+                        "Verify step9 completed successfully",
+                        "Check storage for step9/output.json",
+                        "Re-run step9 if necessary",
+                    ],
+                },
+            )
+
+        # === Step9データ整合性検証（新しい詳細検証） ===
+        is_valid, integrity_errors, integrity_warnings = (
+            self._validate_step9_data_integrity(step9_data)
+        )
+
+        if not is_valid:
+            activity.logger.error(
+                f"Step9 data integrity check failed: {integrity_errors}"
+            )
+            raise ActivityError(
+                f"Step9 data integrity check failed: {integrity_errors[0]}",
+                category=ErrorCategory.NON_RETRYABLE,
+                details=self._build_error_details(
+                    integrity_errors, integrity_warnings, step9_data
+                ),
+            )
+
+        # 警告をログに記録
+        for warning in integrity_warnings:
+            activity.logger.warning(f"Step9 data warning: {warning}")
+            warnings.append(warning)
+
+        # === InputValidator統合（追加の検証） ===
         validation = self.input_validator.validate(
             data={"step9": step9_data},
             required=["step9.final_content"],
@@ -212,7 +416,12 @@ class Step10FinalOutput(BaseActivity):
             raise ActivityError(
                 f"Input validation failed: {validation.missing_required}",
                 category=ErrorCategory.NON_RETRYABLE,
-                details={"missing": validation.missing_required},
+                details={
+                    "missing": validation.missing_required,
+                    "recovery_suggestions": [
+                        "Re-run step9 to generate required fields",
+                    ],
+                },
             )
 
         if validation.missing_recommended:

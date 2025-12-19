@@ -36,6 +36,7 @@ STEP_TIMEOUTS: dict[str, int] = {
     "step8": 300,
     "step9": 300,
     "step10": 120,
+    "step11": 600,  # 画像生成は時間がかかる
 }
 
 # Default retry policy: max 3 attempts with same conditions
@@ -69,6 +70,19 @@ class ArticleWorkflow:
         self.rejected: bool = False
         self.rejection_reason: str | None = None
         self.current_step: str = "init"
+        # Step11 (image generation) state - Legacy (backward compatibility)
+        self.image_gen_decision_made: bool = False
+        self.image_gen_enabled: bool = False
+        self.image_gen_config: dict[str, Any] | None = None
+        # Step11 Multi-phase state (new)
+        self.step11_phase: str = "idle"  # idle, 11A, 11B, 11C, 11D, 11E, skipped, completed
+        self.step11_settings: dict[str, Any] | None = None
+        self.step11_positions: list[dict[str, Any]] | None = None
+        self.step11_positions_confirmed: dict[str, Any] | None = None
+        self.step11_instructions: list[dict[str, Any]] | None = None
+        self.step11_generated_images: list[dict[str, Any]] | None = None
+        self.step11_image_reviews: list[dict[str, Any]] | None = None
+        self.step11_finalized: dict[str, Any] | None = None
 
     @workflow.signal
     async def approve(self) -> None:
@@ -81,6 +95,100 @@ class ArticleWorkflow:
         self.rejected = True
         self.rejection_reason = reason
 
+    @workflow.signal
+    async def start_image_generation(self, config: dict[str, Any]) -> None:
+        """Signal handler to start image generation.
+
+        Args:
+            config: Image generation config with:
+                - enabled: bool (True to generate, False to skip)
+                - image_count: int (number of images to generate)
+                - position_request: str (optional user request for positions)
+        """
+        self.image_gen_decision_made = True
+        self.image_gen_enabled = config.get("enabled", True)
+        self.image_gen_config = config
+
+    @workflow.signal
+    async def skip_image_generation(self) -> None:
+        """Signal handler to skip image generation."""
+        self.image_gen_decision_made = True
+        self.image_gen_enabled = False
+        self.image_gen_config = None
+
+    # ========== Step11 Multi-phase Signals ==========
+
+    @workflow.signal
+    async def step11_start_settings(self, config: dict[str, Any]) -> None:
+        """Phase 11A: User provides initial settings.
+
+        Args:
+            config: Settings with:
+                - image_count: int (1-10)
+                - position_request: str (optional user preference)
+        """
+        self.step11_phase = "11A"
+        self.step11_settings = config
+        # Also set legacy flags for compatibility
+        self.image_gen_decision_made = True
+        self.image_gen_enabled = True
+
+    @workflow.signal
+    async def step11_skip(self) -> None:
+        """Skip image generation entirely."""
+        self.step11_phase = "skipped"
+        self.image_gen_decision_made = True
+        self.image_gen_enabled = False
+
+    @workflow.signal
+    async def step11_confirm_positions(self, payload: dict[str, Any]) -> None:
+        """Phase 11B: User confirms or modifies positions.
+
+        Args:
+            payload:
+                - approved: bool
+                - modified_positions: list[dict] | None (if user edited)
+                - reanalyze: bool (request re-analysis)
+                - reanalyze_request: str (additional instructions)
+        """
+        self.step11_positions_confirmed = payload
+
+    @workflow.signal
+    async def step11_submit_instructions(self, payload: dict[str, Any]) -> None:
+        """Phase 11C: User submits per-image instructions.
+
+        Args:
+            payload:
+                - instructions: list[{index: int, instruction: str}]
+        """
+        self.step11_instructions = payload.get("instructions", [])
+
+    @workflow.signal
+    async def step11_review_images(self, payload: dict[str, Any]) -> None:
+        """Phase 11D: User reviews generated images.
+
+        Args:
+            payload:
+                - reviews: list[{
+                    index: int,
+                    accepted: bool,
+                    retry: bool,
+                    retry_instruction: str
+                }]
+        """
+        self.step11_image_reviews = payload.get("reviews", [])
+
+    @workflow.signal
+    async def step11_finalize(self, payload: dict[str, Any]) -> None:
+        """Phase 11E: User confirms final preview.
+
+        Args:
+            payload:
+                - confirmed: bool
+                - restart_from: str | None (e.g., "11C" to go back)
+        """
+        self.step11_finalized = payload
+
     @workflow.query
     def get_status(self) -> dict[str, Any]:
         """Query handler for workflow status."""
@@ -89,6 +197,13 @@ class ArticleWorkflow:
             "approved": self.approved,
             "rejected": self.rejected,
             "rejection_reason": self.rejection_reason,
+            "image_gen_decision_made": self.image_gen_decision_made,
+            "image_gen_enabled": self.image_gen_enabled,
+            # Step11 multi-phase state
+            "step11_phase": self.step11_phase,
+            "step11_settings": self.step11_settings,
+            "step11_positions_count": len(self.step11_positions or []),
+            "step11_images_count": len(self.step11_generated_images or []),
         }
 
     @workflow.run
@@ -177,7 +292,7 @@ class ArticleWorkflow:
 
         # ========== APPROVAL WAIT ==========
         # Skip approval wait if resuming from post-approval step
-        post_approval_steps = ["step4", "step5", "step6", "step6_5", "step7a", "step7b", "step8", "step9", "step10"]
+        post_approval_steps = ["step4", "step5", "step6", "step6_5", "step7a", "step7b", "step8", "step9", "step10", "step11"]
         skip_approval = resume_from is not None and resume_from in post_approval_steps
 
         if not skip_approval:
@@ -300,6 +415,13 @@ class ArticleWorkflow:
             )
             artifact_refs["step10"] = step10_result.get("artifact_ref", {})
 
+        # ========== STEP 11: MULTI-PHASE IMAGE GENERATION ==========
+        if self._should_run("step11", resume_from):
+            step11_result = await self._run_step11_multiphase(
+                tenant_id, run_id, config, activity_args, resume_from
+            )
+            artifact_refs["step11"] = step11_result.get("artifact_ref", {})
+
         # ========== COMPLETED ==========
         self.current_step = "completed"
 
@@ -341,6 +463,7 @@ class ArticleWorkflow:
             "step8",
             "step9",
             "step10",
+            "step11",
         ]
 
         try:
@@ -417,3 +540,618 @@ class ArticleWorkflow:
             start_to_close_timeout=timedelta(seconds=30),
             retry_policy=RetryPolicy(maximum_attempts=2),
         )
+
+    async def _run_step11_multiphase(
+        self,
+        tenant_id: str,
+        run_id: str,
+        config: dict[str, Any],
+        activity_args: dict[str, Any],
+        resume_from: str | None,
+    ) -> dict[str, Any]:
+        """Execute Step11 with multi-phase interactive workflow.
+
+        Phases:
+            11A: Initial settings (image count, position request)
+            11B: Position review (approve/edit/reanalyze)
+            11C: Image instructions (per-image user instructions)
+            11D: Image review (accept/retry per image)
+            11E: Final preview (confirm or restart from 11C)
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+            config: Workflow configuration
+            activity_args: Base activity arguments
+            resume_from: Optional step to resume from
+
+        Returns:
+            Step11 result with artifact_ref
+        """
+        self.current_step = "step11"
+        MAX_RETRIES_PER_IMAGE = 3
+
+        # Skip waiting phases if resuming from step11
+        skip_initial_wait = resume_from == "step11"
+
+        # ========== Phase 11A: Wait for initial settings or skip ==========
+        if not skip_initial_wait:
+            self.step11_phase = "waiting_11A"
+            self.current_step = "waiting_image_generation"
+            await self._sync_run_status(
+                tenant_id, run_id, "waiting_approval", "waiting_image_generation"
+            )
+
+            # Wait for settings signal or skip signal
+            await workflow.wait_condition(
+                lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made
+            )
+
+            # Handle legacy skip signal
+            if self.image_gen_decision_made and not self.image_gen_enabled:
+                self.step11_phase = "skipped"
+
+        # Handle skip
+        if self.step11_phase == "skipped":
+            self.current_step = "step11"
+            skip_args = {
+                **activity_args,
+                "config": {**config, "step11_enabled": False},
+            }
+            return await self._execute_activity(
+                "step11_mark_skipped",
+                skip_args,
+                "step11",
+            )
+
+        # ========== Phase 11B: Analyze positions and wait for confirmation ==========
+        self.step11_phase = "11B_analyzing"
+        self.current_step = "step11_analyzing"
+        await self._sync_run_status(
+            tenant_id, run_id, "running", "step11_analyzing"
+        )
+
+        # Execute position analysis activity
+        analyze_args = {
+            **activity_args,
+            "config": {
+                **config,
+                "step11_enabled": True,
+                "step11_image_count": (self.step11_settings or {}).get("image_count", 3),
+                "step11_position_request": (self.step11_settings or {}).get("position_request", ""),
+            },
+        }
+        position_result = await self._execute_activity(
+            "step11_analyze_positions",
+            analyze_args,
+            "step11",
+        )
+        self.step11_positions = position_result.get("positions", [])
+
+        # Wait for position confirmation with reanalyze loop
+        while True:
+            self.step11_phase = "waiting_11B"
+            self.current_step = "step11_position_review"
+            self.step11_positions_confirmed = None
+            await self._sync_run_status(
+                tenant_id, run_id, "waiting_image_input", "step11_position_review"
+            )
+
+            await workflow.wait_condition(
+                lambda: self.step11_positions_confirmed is not None
+            )
+
+            # Check if reanalyze requested
+            if self.step11_positions_confirmed.get("reanalyze"):
+                self.step11_phase = "11B_reanalyzing"
+                self.current_step = "step11_analyzing"
+                await self._sync_run_status(
+                    tenant_id, run_id, "running", "step11_analyzing"
+                )
+
+                # Reanalyze with additional request
+                reanalyze_args = {
+                    **activity_args,
+                    "config": {
+                        **config,
+                        "step11_enabled": True,
+                        "step11_image_count": (self.step11_settings or {}).get("image_count", 3),
+                        "step11_position_request": (
+                            (self.step11_settings or {}).get("position_request", "")
+                            + "\n"
+                            + self.step11_positions_confirmed.get("reanalyze_request", "")
+                        ),
+                    },
+                }
+                position_result = await self._execute_activity(
+                    "step11_analyze_positions",
+                    reanalyze_args,
+                    "step11",
+                )
+                self.step11_positions = position_result.get("positions", [])
+                continue  # Loop back to wait for confirmation
+
+            # Apply modified positions if provided
+            if self.step11_positions_confirmed.get("modified_positions"):
+                self.step11_positions = self.step11_positions_confirmed["modified_positions"]
+
+            break  # Positions confirmed, proceed to next phase
+
+        # ========== Phase 11C: Wait for per-image instructions ==========
+        # This is where we can restart from 11E
+        phase_11c_start = True
+        while phase_11c_start:
+            phase_11c_start = False  # Only loop if restart_from == "11C"
+
+            self.step11_phase = "waiting_11C"
+            self.current_step = "step11_image_instructions"
+            self.step11_instructions = None
+            await self._sync_run_status(
+                tenant_id, run_id, "waiting_image_input", "step11_image_instructions"
+            )
+
+            await workflow.wait_condition(
+                lambda: self.step11_instructions is not None
+            )
+
+            # ========== Phase 11D: Generate images and wait for review ==========
+            self.step11_phase = "11D_generating"
+            self.current_step = "step11_generating"
+            await self._sync_run_status(
+                tenant_id, run_id, "running", "step11_generating"
+            )
+
+            # Execute image generation activity
+            generate_args = {
+                **activity_args,
+                "config": {
+                    **config,
+                    "step11_enabled": True,
+                },
+                "positions": self.step11_positions,
+                "instructions": self.step11_instructions,
+            }
+            generation_result = await self._execute_activity(
+                "step11_generate_images",
+                generate_args,
+                "step11",
+            )
+            self.step11_generated_images = generation_result.get("images", [])
+
+            # Initialize retry counts
+            retry_counts = [0] * len(self.step11_generated_images)
+
+            # Wait for image review with retry loop
+            while True:
+                self.step11_phase = "waiting_11D"
+                self.current_step = "step11_image_review"
+                self.step11_image_reviews = None
+                await self._sync_run_status(
+                    tenant_id, run_id, "waiting_image_input", "step11_image_review"
+                )
+
+                await workflow.wait_condition(
+                    lambda: self.step11_image_reviews is not None
+                )
+
+                # Process retries
+                retries_needed = [
+                    r for r in self.step11_image_reviews
+                    if r.get("retry") and retry_counts[r["index"]] < MAX_RETRIES_PER_IMAGE
+                ]
+
+                if not retries_needed:
+                    break  # All images accepted or max retries reached
+
+                self.step11_phase = "11D_retrying"
+                self.current_step = "step11_generating"
+                await self._sync_run_status(
+                    tenant_id, run_id, "running", "step11_generating"
+                )
+
+                for retry_req in retries_needed:
+                    idx = retry_req["index"]
+                    retry_counts[idx] += 1
+
+                    retry_args = {
+                        **activity_args,
+                        "config": {**config, "step11_enabled": True},
+                        "image_index": idx,
+                        "position": self.step11_positions[idx],
+                        "instruction": retry_req.get("retry_instruction", ""),
+                        "original_instruction": (
+                            self.step11_instructions[idx].get("instruction", "")
+                            if idx < len(self.step11_instructions)
+                            else ""
+                        ),
+                    }
+                    retry_result = await self._execute_activity(
+                        "step11_retry_image",
+                        retry_args,
+                        "step11",
+                    )
+                    if retry_result.get("success"):
+                        self.step11_generated_images[idx] = retry_result["image"]
+                        self.step11_generated_images[idx]["retry_count"] = retry_counts[idx]
+
+            # ========== Phase 11E: Insert images and show preview ==========
+            self.step11_phase = "11E_inserting"
+            self.current_step = "step11_inserting"
+            await self._sync_run_status(
+                tenant_id, run_id, "running", "step11_inserting"
+            )
+
+            insert_args = {
+                **activity_args,
+                "config": {**config, "step11_enabled": True},
+                "images": self.step11_generated_images,
+                "positions": self.step11_positions,
+            }
+            insert_result = await self._execute_activity(
+                "step11_insert_images",
+                insert_args,
+                "step11",
+            )
+
+            # Wait for final confirmation
+            self.step11_phase = "waiting_11E"
+            self.current_step = "step11_preview"
+            self.step11_finalized = None
+            await self._sync_run_status(
+                tenant_id, run_id, "waiting_image_input", "step11_preview"
+            )
+
+            await workflow.wait_condition(
+                lambda: self.step11_finalized is not None
+            )
+
+            # Check if restart requested
+            if self.step11_finalized.get("restart_from") == "11C":
+                phase_11c_start = True
+                continue  # Loop back to phase 11C
+
+        # ========== Completed ==========
+        self.step11_phase = "completed"
+        return insert_result
+
+
+@workflow.defn
+class ImageAdditionWorkflow:
+    """Temporal Workflow for adding images to completed runs.
+
+    This workflow is used when a run has already completed but the user
+    wants to add images afterward. It runs the same Step11 multi-phase
+    logic as ArticleWorkflow but as an independent workflow.
+
+    Signals:
+        step11_confirm_positions(payload): Confirm or modify image positions
+        step11_submit_instructions(payload): Submit per-image instructions
+        step11_review_images(payload): Review generated images
+        step11_finalize(payload): Confirm final preview
+        skip(): Skip image generation
+    """
+
+    def __init__(self) -> None:
+        """Initialize workflow state."""
+        # Step11 multi-phase state
+        self.step11_phase: str = "idle"
+        self.step11_settings: dict[str, Any] | None = None
+        self.step11_positions: list[dict[str, Any]] | None = None
+        self.step11_positions_confirmed: dict[str, Any] | None = None
+        self.step11_instructions: list[dict[str, Any]] | None = None
+        self.step11_generated_images: list[dict[str, Any]] | None = None
+        self.step11_image_reviews: list[dict[str, Any]] | None = None
+        self.step11_finalized: dict[str, Any] | None = None
+        self.skipped: bool = False
+        self.current_step: str = "step11"
+
+    # ========== Signals ==========
+
+    @workflow.signal
+    async def step11_confirm_positions(self, payload: dict[str, Any]) -> None:
+        """Phase 11B: User confirms or modifies positions."""
+        self.step11_positions_confirmed = payload
+
+    @workflow.signal
+    async def step11_submit_instructions(self, payload: dict[str, Any]) -> None:
+        """Phase 11C: User submits per-image instructions."""
+        self.step11_instructions = payload.get("instructions", [])
+
+    @workflow.signal
+    async def step11_review_images(self, payload: dict[str, Any]) -> None:
+        """Phase 11D: User reviews generated images."""
+        self.step11_image_reviews = payload.get("reviews", [])
+
+    @workflow.signal
+    async def step11_finalize(self, payload: dict[str, Any]) -> None:
+        """Phase 11E: User confirms final preview."""
+        self.step11_finalized = payload
+
+    @workflow.signal
+    async def skip(self) -> None:
+        """Skip image generation."""
+        self.skipped = True
+        self.step11_phase = "skipped"
+
+    @workflow.query
+    def get_status(self) -> dict[str, Any]:
+        """Query handler for workflow status."""
+        return {
+            "step11_phase": self.step11_phase,
+            "step11_settings": self.step11_settings,
+            "step11_positions_count": len(self.step11_positions or []),
+            "step11_images_count": len(self.step11_generated_images or []),
+            "current_step": self.current_step,
+            "skipped": self.skipped,
+        }
+
+    @workflow.run
+    async def run(
+        self,
+        tenant_id: str,
+        run_id: str,
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Execute image addition workflow.
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+            config: Configuration with:
+                - image_count: Number of images to generate
+                - position_request: User preference for positions
+                - article_markdown: The article content (from step10 output)
+
+        Returns:
+            Result dictionary with artifact_ref
+        """
+        self.step11_settings = {
+            "image_count": config.get("image_count", 3),
+            "position_request": config.get("position_request", ""),
+        }
+
+        # Helper for executing activities
+        with workflow.unsafe.imports_passed_through():
+            from apps.worker.activities import (
+                step11_analyze_positions,
+                step11_generate_images,
+                step11_retry_image,
+                step11_insert_images,
+                sync_run_status,
+            )
+
+        async def execute_activity(
+            activity_name: str,
+            activity_input: dict[str, Any],
+            step_name: str = "step11",
+        ) -> dict[str, Any]:
+            """Execute an activity with standard settings."""
+            activities = {
+                "step11_analyze_positions": step11_analyze_positions,
+                "step11_generate_images": step11_generate_images,
+                "step11_retry_image": step11_retry_image,
+                "step11_insert_images": step11_insert_images,
+                "sync_run_status": sync_run_status,
+            }
+            activity = activities.get(activity_name)
+            if not activity:
+                raise ValueError(f"Unknown activity: {activity_name}")
+
+            timeout = STEP_TIMEOUTS.get(step_name, 300)
+            return cast(
+                dict[str, Any],
+                await workflow.execute_activity(
+                    activity,
+                    activity_input,
+                    start_to_close_timeout=timedelta(seconds=timeout),
+                    retry_policy=DEFAULT_RETRY_POLICY,
+                ),
+            )
+
+        async def update_status(status: str, current_step: str) -> None:
+            """Update run status in database."""
+            await execute_activity(
+                "sync_run_status",
+                {
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "status": status,
+                    "current_step": current_step,
+                },
+                "step11",
+            )
+
+        # ========== Phase 11B: Position Analysis ==========
+        self.step11_phase = "11B_analyzing"
+        self.current_step = "step11_analyzing"
+        await update_status("running", "step11_analyzing")
+
+        position_result = await execute_activity(
+            "step11_analyze_positions",
+            {
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "config": {
+                    **config,
+                    "step11_enabled": True,
+                    "step11_image_count": self.step11_settings.get("image_count", 3),
+                    "step11_position_request": self.step11_settings.get("position_request", ""),
+                },
+            },
+        )
+        self.step11_positions = position_result.get("positions", [])
+
+        # Wait for position confirmation loop
+        while True:
+            self.step11_phase = "waiting_11B"
+            self.current_step = "step11_position_review"
+            self.step11_positions_confirmed = None
+            await update_status("waiting_image_input", "step11_position_review")
+
+            await workflow.wait_condition(
+                lambda: self.step11_positions_confirmed is not None or self.skipped
+            )
+
+            if self.skipped:
+                await update_status("completed", "step11")
+                return {"artifact_ref": {}, "skipped": True}
+
+            if self.step11_positions_confirmed.get("reanalyze"):
+                self.step11_phase = "11B_reanalyzing"
+                self.current_step = "step11_analyzing"
+                await update_status("running", "step11_analyzing")
+
+                position_result = await execute_activity(
+                    "step11_analyze_positions",
+                    {
+                        "tenant_id": tenant_id,
+                        "run_id": run_id,
+                        "config": {
+                            **config,
+                            "step11_enabled": True,
+                            "step11_image_count": self.step11_settings.get("image_count", 3),
+                            "step11_position_request": (
+                                self.step11_settings.get("position_request", "")
+                                + " "
+                                + self.step11_positions_confirmed.get("reanalyze_request", "")
+                            ),
+                        },
+                    },
+                )
+                self.step11_positions = position_result.get("positions", [])
+                continue
+
+            if self.step11_positions_confirmed.get("modified_positions"):
+                self.step11_positions = self.step11_positions_confirmed["modified_positions"]
+
+            break
+
+        # ========== Phase 11C-11E: Main loop ==========
+        phase_11c_start = True
+        insert_result: dict[str, Any] = {}
+
+        while True:
+            # ===== Phase 11C: Image Instructions =====
+            if phase_11c_start:
+                phase_11c_start = False
+                self.step11_phase = "waiting_11C"
+                self.current_step = "step11_image_instructions"
+                self.step11_instructions = None
+                await update_status("waiting_image_input", "step11_image_instructions")
+
+                await workflow.wait_condition(
+                    lambda: self.step11_instructions is not None or self.skipped
+                )
+
+                if self.skipped:
+                    await update_status("completed", "step11")
+                    return {"artifact_ref": {}, "skipped": True}
+
+            # ===== Phase 11D: Image Generation =====
+            self.step11_phase = "11D_generating"
+            self.current_step = "step11_generating"
+            await update_status("running", "step11_generating")
+
+            generation_result = await execute_activity(
+                "step11_generate_images",
+                {
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "config": {**config, "step11_enabled": True},
+                    "positions": self.step11_positions,
+                    "instructions": self.step11_instructions,
+                },
+            )
+            self.step11_generated_images = generation_result.get("images", [])
+
+            # Image review loop
+            retry_counts = [0] * len(self.step11_generated_images)
+            max_retries = 3
+
+            while True:
+                self.step11_phase = "waiting_11D"
+                self.current_step = "step11_image_review"
+                self.step11_image_reviews = None
+                await update_status("waiting_image_input", "step11_image_review")
+
+                await workflow.wait_condition(
+                    lambda: self.step11_image_reviews is not None or self.skipped
+                )
+
+                if self.skipped:
+                    await update_status("completed", "step11")
+                    return {"artifact_ref": {}, "skipped": True}
+
+                retries_requested = [
+                    r for r in self.step11_image_reviews
+                    if r.get("retry") and retry_counts[r["index"]] < max_retries
+                ]
+
+                if not retries_requested:
+                    break
+
+                self.step11_phase = "11D_retrying"
+                self.current_step = "step11_generating"
+                await update_status("running", "step11_generating")
+
+                for r in retries_requested:
+                    idx = r["index"]
+                    retry_counts[idx] += 1
+                    retry_result = await execute_activity(
+                        "step11_retry_image",
+                        {
+                            "tenant_id": tenant_id,
+                            "run_id": run_id,
+                            "config": {**config, "step11_enabled": True},
+                            "position": self.step11_positions[idx],
+                            "instruction": (
+                                self.step11_instructions[idx].get("instruction", "")
+                                if idx < len(self.step11_instructions)
+                                else ""
+                            ),
+                            "retry_instruction": r.get("retry_instruction", ""),
+                        },
+                    )
+                    self.step11_generated_images[idx] = retry_result["image"]
+                    self.step11_generated_images[idx]["retry_count"] = retry_counts[idx]
+
+            # ===== Phase 11E: Insert Images =====
+            self.step11_phase = "11E_inserting"
+            self.current_step = "step11_inserting"
+            await update_status("running", "step11_inserting")
+
+            insert_result = await execute_activity(
+                "step11_insert_images",
+                {
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "config": {**config, "step11_enabled": True},
+                    "images": self.step11_generated_images,
+                    "positions": self.step11_positions,
+                },
+            )
+
+            # Preview confirmation
+            self.step11_phase = "waiting_11E"
+            self.current_step = "step11_preview"
+            self.step11_finalized = None
+            await update_status("waiting_image_input", "step11_preview")
+
+            await workflow.wait_condition(
+                lambda: self.step11_finalized is not None or self.skipped
+            )
+
+            if self.skipped:
+                await update_status("completed", "step11")
+                return {"artifact_ref": {}, "skipped": True}
+
+            if self.step11_finalized.get("restart_from") == "11C":
+                phase_11c_start = True
+                continue
+
+            break
+
+        # ========== Completed ==========
+        self.step11_phase = "completed"
+        await update_status("completed", "step11")
+        return insert_result
