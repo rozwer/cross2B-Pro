@@ -17,6 +17,7 @@ import {
   ChevronRight,
   RotateCcw,
   Play,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -37,9 +38,12 @@ interface WorkflowPattern1Props {
   currentStep: string;
   runStatus?: string;
   waitingApproval: boolean;
+  waitingImageGeneration?: boolean;
   onStepClick?: (stepName: string) => void;
   onRetry?: (stepName: string) => void;
   onResumeFrom?: (stepName: string) => void;
+  onImageGenerate?: () => void;
+  onImageGenSkip?: () => void;
 }
 
 const STEP_ICONS: Record<string, LucideIcon> = {
@@ -60,6 +64,7 @@ const STEP_ICONS: Record<string, LucideIcon> = {
   step8: Eye,
   step9: Sparkles,
   step10: CheckCircle,
+  step11: Image,
 };
 
 const STEP_COLORS: Record<string, string> = {
@@ -80,6 +85,7 @@ const STEP_COLORS: Record<string, string> = {
   step8: "#f59e0b",
   step9: "#8b5cf6",
   step10: "#10b981",
+  step11: "#ec4899",
 };
 
 // Simplified step groups for visualization
@@ -97,6 +103,7 @@ const STEP_GROUPS = [
   ["step8"],
   ["step9"],
   ["step10"],
+  ["step11"],
 ];
 
 function getStatusIcon(status?: string, isWaiting?: boolean) {
@@ -127,8 +134,11 @@ export function WorkflowPattern1_N8nStyle({
   currentStep,
   runStatus,
   waitingApproval,
+  waitingImageGeneration,
   onRetry,
   onResumeFrom,
+  onImageGenerate,
+  onImageGenSkip,
 }: WorkflowPattern1Props) {
   const stepMap = new Map(steps.map((s) => [s.step_name, s]));
 
@@ -398,6 +408,34 @@ export function WorkflowPattern1_N8nStyle({
                               );
                             })}
                           </div>
+
+                          {/* Step11: Image Generation Yes/No buttons - 常に表示 */}
+                          {stepName === "step11" && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
+                              <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-2">
+                                画像を生成しますか？
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onImageGenerate?.();
+                                }}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs font-medium rounded-lg transition-colors"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                画像を生成する
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onImageGenSkip?.();
+                                }}
+                                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors"
+                              >
+                                スキップして完了
+                              </button>
+                            </div>
+                          )}
 
                           {/* Action buttons for completed or failed steps */}
                           {(status === "completed" || status === "failed") && (onRetry || onResumeFrom) && (

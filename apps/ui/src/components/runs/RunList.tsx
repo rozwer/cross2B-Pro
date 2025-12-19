@@ -19,7 +19,7 @@ const STATUS_FILTERS: Array<{ value: RunStatus | "all"; label: string; color: st
 ];
 
 // Statuses that can be deleted (all statuses are deletable)
-const DELETABLE_STATUSES: RunStatus[] = ["pending", "running", "waiting_approval", "completed", "failed", "cancelled"];
+const DELETABLE_STATUSES: RunStatus[] = ["pending", "running", "waiting_approval", "waiting_image_input", "completed", "failed", "cancelled"];
 
 export function RunList() {
   const [runs, setRuns] = useState<RunSummary[]>([]);

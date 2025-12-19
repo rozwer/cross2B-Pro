@@ -22,10 +22,13 @@ interface WorkflowProgressViewProps {
   currentStep: string;
   runStatus?: string;
   waitingApproval: boolean;
+  waitingImageGeneration?: boolean;
   onApprove?: () => void;
   onReject?: (reason: string) => void;
   onRetry?: (stepName: string) => void;
   onResumeFrom?: (stepName: string) => void;
+  onImageGenerate?: () => void;
+  onImageGenSkip?: () => void;
   defaultPattern?: WorkflowViewPattern;
 }
 
@@ -45,10 +48,13 @@ export function WorkflowProgressView({
   currentStep,
   runStatus,
   waitingApproval,
+  waitingImageGeneration,
   onApprove,
   onReject,
   onRetry,
   onResumeFrom,
+  onImageGenerate,
+  onImageGenSkip,
   defaultPattern = "n8n",
 }: WorkflowProgressViewProps) {
   // Load saved pattern from localStorage
@@ -105,8 +111,11 @@ export function WorkflowProgressView({
             currentStep={currentStep}
             runStatus={runStatus}
             waitingApproval={waitingApproval}
+            waitingImageGeneration={waitingImageGeneration}
             onRetry={onRetry}
             onResumeFrom={onResumeFrom}
+            onImageGenerate={onImageGenerate}
+            onImageGenSkip={onImageGenSkip}
           />
         )}
         {pattern === "timeline" && (
@@ -115,8 +124,11 @@ export function WorkflowProgressView({
             currentStep={currentStep}
             runStatus={runStatus}
             waitingApproval={waitingApproval}
+            waitingImageGeneration={waitingImageGeneration}
             onRetry={onRetry}
             onResumeFrom={onResumeFrom}
+            onImageGenerate={onImageGenerate}
+            onImageGenSkip={onImageGenSkip}
           />
         )}
         {pattern === "radial" && (
@@ -125,10 +137,13 @@ export function WorkflowProgressView({
             currentStep={currentStep}
             runStatus={runStatus}
             waitingApproval={waitingApproval}
+            waitingImageGeneration={waitingImageGeneration}
             onApprove={onApprove}
             onReject={onReject}
             onRetry={onRetry}
             onResumeFrom={onResumeFrom}
+            onImageGenerate={onImageGenerate}
+            onImageGenSkip={onImageGenSkip}
           />
         )}
       </div>

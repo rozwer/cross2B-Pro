@@ -36,7 +36,7 @@ export function RunCard({ run, onDelete, selectMode, isSelected, isDeletable, on
     setDeleting(true);
     try {
       // For running/pending runs, cancel first then delete
-      const isRunning = run.status === "running" || run.status === "pending" || run.status === "waiting_approval";
+      const isRunning = run.status === "running" || run.status === "pending" || run.status === "waiting_approval" || run.status === "waiting_image_input";
       if (isRunning) {
         await api.runs.cancel(run.id);
       }
@@ -58,7 +58,7 @@ export function RunCard({ run, onDelete, selectMode, isSelected, isDeletable, on
     setShowDeleteConfirm(false);
   };
   const stepLabel = run.current_step ? STEP_LABELS[run.current_step] || run.current_step : "待機中";
-  const isActive = run.status === "running" || run.status === "waiting_approval";
+  const isActive = run.status === "running" || run.status === "waiting_approval" || run.status === "waiting_image_input";
 
   // Handle card click in select mode
   const handleCardClick = (e: React.MouseEvent) => {

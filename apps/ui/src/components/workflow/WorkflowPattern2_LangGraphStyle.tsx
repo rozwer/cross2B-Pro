@@ -13,6 +13,7 @@ import {
   Eye,
   Package,
   ChevronRight,
+  Image,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
@@ -50,6 +51,7 @@ const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   step8: Eye,
   step9: Sparkles,
   step10: CheckCircle,
+  step11: Image,
 };
 
 // Simplified layout: rows with items
@@ -67,6 +69,7 @@ const FLOW_LAYOUT = [
   { row: 10, items: ["step8"] },
   { row: 11, items: ["step9"] },
   { row: 12, items: ["step10"] },
+  { row: 13, items: ["step11"] },
 ];
 
 export function WorkflowPattern2_LangGraphStyle({

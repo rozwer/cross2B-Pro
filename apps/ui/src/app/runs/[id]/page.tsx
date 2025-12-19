@@ -15,6 +15,7 @@ import {
   Network,
   X,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { useRun } from "@/hooks/useRun";
 import { useRunProgress } from "@/hooks/useRunProgress";
@@ -23,12 +24,13 @@ import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
 import { ApprovalDialog } from "@/components/common/ApprovalDialog";
+import { ImageGenerationWizard } from "@/components/imageGeneration";
 import { ResumeConfirmDialog } from "@/components/approval/ResumeConfirmDialog";
 import { ArtifactViewer } from "@/components/artifacts/ArtifactViewer";
 import { LoadingPage } from "@/components/common/Loading";
 import { ErrorMessage } from "@/components/common/ErrorBoundary";
 import { formatDate } from "@/lib/utils";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, getStep11Phase } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +66,8 @@ export default function RunDetailPage({
     error: null,
     content: null,
   });
+  const [showImageGenDialog, setShowImageGenDialog] = useState(false);
+  const [imageGenLoading, setImageGenLoading] = useState(false);
 
   const { run, loading, error, fetch, approve, reject, retry, resume, isPolling } = useRun(id);
   const { events, wsStatus } = useRunProgress(id, {
@@ -147,6 +151,68 @@ export default function RunDetailPage({
     setPreviewModal({ isOpen: false, loading: false, error: null, content: null });
   }, []);
 
+  // Step11 画像生成完了ハンドラー
+  const handleImageGenComplete = useCallback(() => {
+    setShowImageGenDialog(false);
+    fetch(); // ステータスを更新
+  }, [fetch]);
+
+  const handleImageGenSkip = useCallback(async () => {
+    setImageGenLoading(true);
+    try {
+      // waiting_approval状態の場合はTemporalにsignalを送る
+      // それ以外（completed等）の場合は直接DBを更新
+      if (run?.status === "waiting_approval") {
+        await api.runs.skipImageGeneration(id);
+      } else {
+        await api.runs.completeStep11(id);
+      }
+      setShowImageGenDialog(false);
+      fetch(); // ステータスを更新
+    } catch (err) {
+      console.error("Skip image generation failed:", err);
+    } finally {
+      setImageGenLoading(false);
+    }
+  }, [id, fetch, run?.status]);
+
+  // Step10完了後、画像生成の判断待ち/マルチフェーズ待ちかどうか判定
+  const isWaitingForImageGeneration = useCallback(() => {
+    if (!run) return false;
+
+    // Runが既に完了・失敗・キャンセルの場合は待機していない
+    if (run.status === "completed" || run.status === "failed" || run.status === "cancelled") {
+      return false;
+    }
+
+    // Step11のマルチフェーズのいずれかで待機中かチェック
+    const step11Phase = getStep11Phase(run.current_step);
+    if (step11Phase && step11Phase.startsWith("waiting_")) {
+      return true;
+    }
+
+    // waiting_image_input状態の場合は常に画像生成ダイアログを表示
+    if (run.status === "waiting_image_input") {
+      return true;
+    }
+
+    // ワークフローが waiting_approval で current_step が waiting_image_generation の場合
+    if (run.status === "waiting_approval" && run.current_step === "waiting_image_generation") {
+      return true;
+    }
+    // フォールバック: step10完了済み、step11がpending、かつステータスがwaiting_approval
+    const step10 = run.steps.find(s => s.step_name === "step10");
+    const step11 = run.steps.find(s => s.step_name === "step11");
+    return (
+      run.status === "waiting_approval" &&
+      step10?.status === "completed" &&
+      (!step11 || step11.status === "pending")
+    );
+  }, [run]);
+
+  // 現在のStep11フェーズを取得
+  const currentStep11Phase = run ? getStep11Phase(run.current_step) : null;
+
   if (loading) {
     return <LoadingPage text="Run を読み込み中..." />;
   }
@@ -205,22 +271,41 @@ export default function RunDetailPage({
               <RefreshCw className={cn("h-4 w-4", isPolling && "animate-spin")} />
               更新
             </button>
-            {run.status === "waiting_approval" && (
+            {/* 画像生成待ち（step10完了後）の場合は画像生成ボタン */}
+            {isWaitingForImageGeneration() ? (
+              <button
+                onClick={() => setShowImageGenDialog(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-colors"
+              >
+                <Sparkles className="h-4 w-4" />
+                画像を生成
+              </button>
+            ) : run.status === "waiting_approval" ? (
+              /* step3完了後の承認待ちの場合は承認ボタン */
               <button
                 onClick={() => setShowApprovalDialog(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
               >
                 承認待ち
               </button>
-            )}
+            ) : null}
             {run.status === "completed" && (
-              <button
-                onClick={handleOpenPreview}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-              >
-                <ExternalLink className="h-4 w-4" />
-                プレビュー
-              </button>
+              <>
+                <button
+                  onClick={() => setShowImageGenDialog(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-colors"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  画像を追加
+                </button>
+                <button
+                  onClick={handleOpenPreview}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  プレビュー
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -276,10 +361,13 @@ export default function RunDetailPage({
                 currentStep={run.current_step ?? ""}
                 runStatus={run.status}
                 waitingApproval={run.status === "waiting_approval"}
+                waitingImageGeneration={isWaitingForImageGeneration()}
                 onApprove={approve}
                 onReject={reject}
                 onRetry={handleRetry}
                 onResumeFrom={handleResume}
+                onImageGenerate={() => setShowImageGenDialog(true)}
+                onImageGenSkip={handleImageGenSkip}
               />
             </div>
           </div>
@@ -312,6 +400,15 @@ export default function RunDetailPage({
         runId={id}
         artifacts={artifacts}
         loading={approvalLoading}
+      />
+
+      <ImageGenerationWizard
+        isOpen={showImageGenDialog}
+        runId={id}
+        currentPhase={currentStep11Phase}
+        isCompletedRun={run.status === "completed"}
+        onClose={() => setShowImageGenDialog(false)}
+        onComplete={handleImageGenComplete}
       />
 
       {resumeStep && (
