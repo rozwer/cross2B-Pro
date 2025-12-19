@@ -38,9 +38,16 @@ from .activities import (
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
+    step11_image_generation,
+    # Step11 multi-phase activities
+    step11_mark_skipped,
+    step11_analyze_positions,
+    step11_generate_images,
+    step11_retry_image,
+    step11_insert_images,
     sync_run_status,
 )
-from .workflows import ArticleWorkflow
+from .workflows import ArticleWorkflow, ImageAdditionWorkflow
 
 # Configure logging
 logging.basicConfig(
@@ -73,12 +80,20 @@ ACTIVITIES = [
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
+    step11_image_generation,
+    # Step11 multi-phase activities
+    step11_mark_skipped,
+    step11_analyze_positions,
+    step11_generate_images,
+    step11_retry_image,
+    step11_insert_images,
     sync_run_status,
 ]
 
 # All workflows to register
 WORKFLOWS = [
     ArticleWorkflow,
+    ImageAdditionWorkflow,
 ]
 
 

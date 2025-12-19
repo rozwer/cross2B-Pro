@@ -84,6 +84,16 @@ from apps.worker.activities.schemas.step10 import (
     PublicationReadiness,
     Step10Output,
 )
+from apps.worker.activities.schemas.step11 import (
+    GeneratedImage,
+    ImageGenerationRequest,
+    ImageInsertionPosition,
+    PositionAnalysisResult,
+    Step11Config,
+    Step11Output,
+    Step11State,
+    Step11SubStep,
+)
 
 __all__ = [
     # Step0
@@ -157,4 +167,13 @@ __all__ = [
     "HTMLValidationResult",
     "PublicationReadiness",
     "Step10Output",
+    # Step11
+    "GeneratedImage",
+    "ImageGenerationRequest",
+    "ImageInsertionPosition",
+    "PositionAnalysisResult",
+    "Step11Config",
+    "Step11Output",
+    "Step11State",
+    "Step11SubStep",
 ]
