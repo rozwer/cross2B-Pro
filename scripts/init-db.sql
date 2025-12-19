@@ -146,6 +146,44 @@ CREATE TABLE IF NOT EXISTS prompts (
     UNIQUE(step_name, version)
 );
 
+-- Error logs table: detailed error tracking for diagnostics
+CREATE TABLE IF NOT EXISTS error_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    run_id UUID NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    step_id UUID REFERENCES steps(id) ON DELETE SET NULL,
+    source VARCHAR(32) NOT NULL DEFAULT 'activity',
+    error_category VARCHAR(32) NOT NULL,
+    error_type VARCHAR(128) NOT NULL,
+    error_message TEXT NOT NULL,
+    stack_trace TEXT,
+    context JSONB,
+    attempt INT DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT valid_error_source CHECK (source IN (
+        'llm', 'tool', 'validation', 'storage', 'activity', 'api'
+    )),
+    CONSTRAINT valid_error_category CHECK (error_category IN (
+        'retryable', 'non_retryable', 'validation_fail'
+    ))
+);
+
+-- Diagnostic reports table: LLM-generated failure analysis
+CREATE TABLE IF NOT EXISTS diagnostic_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    run_id UUID NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    root_cause_analysis TEXT NOT NULL,
+    recommended_actions JSONB NOT NULL,
+    resume_step VARCHAR(64),
+    confidence_score DECIMAL(3, 2),
+    llm_provider VARCHAR(32) NOT NULL,
+    llm_model VARCHAR(128) NOT NULL,
+    prompt_tokens INT,
+    completion_tokens INT,
+    latency_ms INT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- =============================================================================
 -- Indexes
 -- =============================================================================
@@ -169,6 +207,13 @@ CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_prompts_step_name ON prompts(step_name);
 CREATE INDEX IF NOT EXISTS idx_prompts_active ON prompts(step_name, is_active) WHERE is_active = true;
+
+CREATE INDEX IF NOT EXISTS idx_error_logs_run_id ON error_logs(run_id);
+CREATE INDEX IF NOT EXISTS idx_error_logs_step_id ON error_logs(step_id);
+CREATE INDEX IF NOT EXISTS idx_error_logs_source ON error_logs(source);
+CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_diagnostic_reports_run_id ON diagnostic_reports(run_id);
 
 -- =============================================================================
 -- Functions
