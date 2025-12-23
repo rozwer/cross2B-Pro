@@ -69,8 +69,41 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         Returns:
             dict with related keyword competitor data, or skip info
         """
+        from .base import load_step_data
+
         config = ctx.config
         related_keywords: list[str] = config.get("related_keywords", [])
+
+        # Load step0 data to leverage recommended_angles for keyword selection
+        step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
+        recommended_angles = step0_data.get("recommended_angles", [])
+
+        # If no related_keywords in config, try to derive from step0
+        if not related_keywords and recommended_angles:
+            logger.info("[STEP1.5] Attempting to derive keywords from step0 recommended_angles")
+            # Extract keywords from recommended angles with strict type checking
+            for angle in recommended_angles[: self.MAX_RELATED_KEYWORDS]:
+                if isinstance(angle, dict):
+                    # keyword field is required; skip if not present
+                    angle_kw = angle.get("keyword")
+                    if not angle_kw:
+                        logger.warning(f"[STEP1.5] Skipping angle without keyword field: {angle}")
+                        continue
+                elif isinstance(angle, str):
+                    angle_kw = angle
+                else:
+                    logger.warning(f"[STEP1.5] Skipping unexpected angle type: {type(angle)}")
+                    continue
+
+                # Validate and add keyword
+                angle_kw_stripped = angle_kw.strip() if isinstance(angle_kw, str) else ""
+                if angle_kw_stripped and angle_kw_stripped not in related_keywords:
+                    related_keywords.append(angle_kw_stripped)
+
+            if related_keywords:
+                logger.info(f"[STEP1.5] Derived {len(related_keywords)} keywords from step0")
+            else:
+                logger.info("[STEP1.5] No valid keywords derived from step0")
 
         # スキップ条件: related_keywordsが空の場合
         if not related_keywords:

@@ -18,7 +18,7 @@ from sqlalchemy import select
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import Run, TenantDBManager
+from apps.api.db import AuditLogger, Run, TenantDBManager
 from apps.api.storage import ArtifactStore
 
 logger = logging.getLogger(__name__)
@@ -183,8 +183,12 @@ async def _get_step12_data(
     run_id: str,
     store: ArtifactStore,
 ) -> dict[str, Any] | None:
-    """Step12の出力データを取得."""
+    """Step12の出力データを取得.
+
+    Uses ArtifactStore.get_by_path for direct path-based retrieval.
+    """
     try:
+        # Use get_by_path for direct path-based retrieval (not get which expects ArtifactRef)
         data = await store.get_by_path(tenant_id, run_id, "step12", "output.json")
         if data:
             try:
@@ -503,28 +507,43 @@ async def generate_wordpress_html(
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-    # Step10から生成
-    try:
-        step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        # Step10から生成
+        try:
+            step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
-    # Storageに保存
-    output_path = f"tenants/{tenant_id}/runs/{run_id}/step12/output.json"
-    await store.put(
-        json.dumps(step12_data, ensure_ascii=False).encode("utf-8"),
-        output_path,
-        "application/json",
-    )
-
-    # 個別記事も保存
-    for article in step12_data.get("articles", []):
-        article_path = f"tenants/{tenant_id}/runs/{run_id}/step12/{article.get('filename')}"
+        # Use build_path for consistent path generation
+        output_path = store.build_path(tenant_id, run_id, "step12", "output.json")
         await store.put(
-            article.get("gutenberg_blocks", "").encode("utf-8"),
-            article_path,
-            "text/html",
+            json.dumps(step12_data, ensure_ascii=False).encode("utf-8"),
+            output_path,
+            "application/json",
         )
+
+        # 個別記事も保存 (using build_path)
+        for article in step12_data.get("articles", []):
+            filename = article.get("filename", f"article_{article.get('article_number', 1)}.html")
+            article_path = store.build_path(tenant_id, run_id, "step12", filename)
+            await store.put(
+                article.get("gutenberg_blocks", "").encode("utf-8"),
+                article_path,
+                "text/html",
+            )
+
+        # 監査ログを記録
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="generate",
+            resource_type="step12",
+            resource_id=run_id,
+            details={
+                "articles_count": len(step12_data.get("articles", [])),
+                "output_path": output_path,
+            },
+        )
+        await session.commit()
 
     return {
         "success": True,

@@ -5,6 +5,7 @@
 """
 
 import html
+import logging
 import re
 from datetime import datetime
 from typing import Any
@@ -23,7 +24,9 @@ from apps.worker.activities.schemas.step12 import (
     WordPressArticle,
 )
 
-from .base import BaseActivity, load_step_data
+from .base import ActivityError, BaseActivity, load_step_data
+
+logger = logging.getLogger(__name__)
 
 
 class Step12WordPressHtmlGeneration(BaseActivity):
@@ -150,8 +153,8 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             )
             wordpress_articles.append(wordpress_article)
 
-            # 個別記事をStorageに保存
-            article_path = f"tenants/{ctx.tenant_id}/runs/{ctx.run_id}/{self.step_id}/article_{article_number}.html"
+            # 個別記事をStorageに保存 (using build_path for consistency)
+            article_path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id, f"article_{article_number}.html")
             await self.store.put(
                 content=gutenberg_html.encode("utf-8"),
                 path=article_path,
@@ -211,7 +214,93 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         # 画像を挿入
         gutenberg_html = self._insert_images_to_gutenberg(gutenberg_html, images)
 
+        # HTML検証
+        validation_result = self._validate_html(gutenberg_html)
+
+        # エラーがある場合は失敗として扱う（フォールバック禁止原則）
+        if validation_result["errors"]:
+            raise ActivityError(f"HTML validation failed for article {article_number}: {validation_result['errors']}")
+
+        # 警告はログのみ（処理は継続）
+        if validation_result["warnings"]:
+            logger.warning(f"HTML validation warnings for article {article_number}: {validation_result['warnings']}")
+
         return gutenberg_html
+
+    def _validate_html(self, html_content: str) -> dict[str, Any]:
+        """HTML5バリデーションを実行.
+
+        Args:
+            html_content: 検証するHTMLコンテンツ
+
+        Returns:
+            dict with is_valid, warnings, errors
+        """
+        warnings: list[str] = []
+        errors: list[str] = []
+
+        try:
+            from html.parser import HTMLParser
+
+            class HTMLValidator(HTMLParser):
+                def __init__(self) -> None:
+                    super().__init__()
+                    self.tag_stack: list[str] = []
+                    self.validation_errors: list[str] = []
+                    self.validation_warnings: list[str] = []
+                    # Self-closing tags that don't need closing
+                    self.void_elements = {
+                        "area",
+                        "base",
+                        "br",
+                        "col",
+                        "embed",
+                        "hr",
+                        "img",
+                        "input",
+                        "link",
+                        "meta",
+                        "param",
+                        "source",
+                        "track",
+                        "wbr",
+                    }
+
+                def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                    if tag.lower() not in self.void_elements:
+                        self.tag_stack.append(tag.lower())
+
+                def handle_endtag(self, tag: str) -> None:
+                    tag_lower = tag.lower()
+                    if tag_lower in self.void_elements:
+                        return
+                    if self.tag_stack and self.tag_stack[-1] == tag_lower:
+                        self.tag_stack.pop()
+                    elif tag_lower in self.tag_stack:
+                        self.validation_warnings.append(f"Unexpected closing tag: </{tag}>")
+                    else:
+                        self.validation_errors.append(f"Unmatched closing tag: </{tag}>")
+
+                def get_result(self) -> tuple[list[str], list[str]]:
+                    if self.tag_stack:
+                        self.validation_warnings.append(f"Unclosed tags: {self.tag_stack}")
+                    return self.validation_errors, self.validation_warnings
+
+            validator = HTMLValidator()
+            # WordPress Gutenberg comments are valid, strip them for validation
+            clean_html = re.sub(r"<!--.*?-->", "", html_content, flags=re.DOTALL)
+            validator.feed(clean_html)
+            errors, warnings = validator.get_result()
+
+        except Exception as e:
+            warnings.append(f"HTML validation failed: {e}")
+
+        is_valid = len(errors) == 0
+        return {
+            "is_valid": is_valid,
+            "errors": errors,
+            "warnings": warnings,
+        }
 
     def _markdown_to_html(self, markdown_content: str) -> str:
         """MarkdownをHTMLに変換（簡易実装）."""
@@ -374,19 +463,26 @@ class Step12WordPressHtmlGeneration(BaseActivity):
     ) -> list[ArticleImage]:
         """記事に関連する画像を抽出.
 
-        Note: 現状は全画像を各記事に適用。
-        将来的には記事番号でフィルタリング可能。
+        article_numberでフィルタリングして、該当記事の画像のみ返す。
+        article_numberが指定されていない画像は全記事に適用される。
         """
         article_images = []
-        for i, img_data in enumerate(images):
+        image_idx = 0
+        for img_data in images:
+            # article_numberでフィルタリング
+            img_article_number = img_data.get("article_number")
+            if img_article_number is not None and img_article_number != article_number:
+                continue
+
             position_data = img_data.get("position", {})
             section_title = position_data.get("section_title", "") if isinstance(position_data, dict) else ""
 
+            image_idx += 1
             article_images.append(
                 ArticleImage(
                     position=section_title,
                     alt_text=img_data.get("alt_text", ""),
-                    suggested_filename=f"image_{article_number}_{i + 1}.png",
+                    suggested_filename=f"image_{article_number}_{image_idx}.png",
                     image_path=img_data.get("image_path", ""),
                     image_base64=img_data.get("image_base64", ""),
                 )

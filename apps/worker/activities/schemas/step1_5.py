@@ -64,3 +64,6 @@ class Step1_5Output(BaseModel):
     )
     skipped: bool = Field(default=False, description="スキップされたかどうか")
     skip_reason: str | None = Field(default=None, description="スキップ理由")
+    # Storage reference fields for downstream consumption
+    output_path: str | None = Field(default=None, description="Storage上の出力パス")
+    output_digest: str | None = Field(default=None, description="出力内容のSHA256ダイジェスト")

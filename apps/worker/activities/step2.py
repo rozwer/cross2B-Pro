@@ -70,9 +70,12 @@ class Step2CSVValidation(BaseActivity):
 
         # Load step1 data from storage
         logger.info("[STEP2] Loading step1 data")
-        step1_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step1"
-        )
+        step1_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1")
+
+        # Load step1_5 data (optional - related keyword competitor data)
+        step1_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1_5")
+        if step1_5_data and not step1_5_data.get("skipped"):
+            logger.info(f"[STEP2] Loaded step1_5 data: {step1_5_data.get('related_keywords_analyzed', 0)} keywords")
 
         # Input validation using InputValidator
         validation_result = self.input_validator.validate(
@@ -91,9 +94,7 @@ class Step2CSVValidation(BaseActivity):
         logger.info(f"[STEP2] Processing {len(competitors)} competitors")
 
         # === Validation Progress Checkpoint ===
-        progress_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "validation_progress"
-        )
+        progress_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "validation_progress")
 
         validated_records: list[dict[str, Any]]
         validation_issues: list[dict[str, Any]]
@@ -103,10 +104,7 @@ class Step2CSVValidation(BaseActivity):
             validated_records = progress_checkpoint.get("validated_records", [])
             validation_issues = progress_checkpoint.get("validation_issues", [])
             auto_fix_count = progress_checkpoint.get("auto_fix_count", 0)
-            logger.info(
-                f"[STEP2] Loaded checkpoint: start_index={start_index}, "
-                f"validated={len(validated_records)}"
-            )
+            logger.info(f"[STEP2] Loaded checkpoint: start_index={start_index}, validated={len(validated_records)}")
         else:
             start_index = 0
             validated_records = []
@@ -130,31 +128,32 @@ class Step2CSVValidation(BaseActivity):
                 issues = self._validate_record(fixed_record, idx)
 
                 if self._has_critical_errors(issues):
-                    validation_issues.append({
-                        "index": idx,
-                        "url": competitor.get("url", "unknown"),
-                        "issues": issues,
-                    })
+                    validation_issues.append(
+                        {
+                            "index": idx,
+                            "url": competitor.get("url", "unknown"),
+                            "issues": issues,
+                        }
+                    )
                 else:
                     # Add content hash and quality score
-                    fixed_record["content_hash"] = self._compute_content_hash(
-                        fixed_record.get("content", "")
-                    )
-                    fixed_record["quality_score"] = self._compute_quality_score(
-                        fixed_record
-                    )
+                    fixed_record["content_hash"] = self._compute_content_hash(fixed_record.get("content", ""))
+                    fixed_record["quality_score"] = self._compute_quality_score(fixed_record)
                     fixed_record["auto_fixes_applied"] = fixes
                     validated_records.append(fixed_record)
 
             # Save checkpoint after each batch
             await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "validation_progress",
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                "validation_progress",
                 {
                     "last_processed_index": batch_end - 1,
                     "validated_records": validated_records,
                     "validation_issues": validation_issues,
                     "auto_fix_count": auto_fix_count,
-                }
+                },
             )
             activity.heartbeat(f"Validated {batch_end}/{len(competitors)}")
 
@@ -164,15 +163,13 @@ class Step2CSVValidation(BaseActivity):
         # Threshold checks
         if len(validated_records) < self.MIN_VALID_RECORDS:
             raise ActivityError(
-                f"Too few valid records: {len(validated_records)} "
-                f"(minimum: {self.MIN_VALID_RECORDS})",
+                f"Too few valid records: {len(validated_records)} (minimum: {self.MIN_VALID_RECORDS})",
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
         if error_rate > self.MAX_ERROR_RATE:
             raise ActivityError(
-                f"Error rate too high: {error_rate:.1%} "
-                f"(maximum: {self.MAX_ERROR_RATE:.0%})",
+                f"Error rate too high: {error_rate:.1%} (maximum: {self.MAX_ERROR_RATE:.0%})",
                 category=ErrorCategory.RETRYABLE,
             )
 
@@ -185,20 +182,14 @@ class Step2CSVValidation(BaseActivity):
             "error_rate": error_rate,
         }
 
-        logger.info(
-            f"[STEP2] Completed: {len(validated_records)} valid, "
-            f"{len(validation_issues)} rejected, {auto_fix_count} auto-fixed"
-        )
+        logger.info(f"[STEP2] Completed: {len(validated_records)} valid, {len(validation_issues)} rejected, {auto_fix_count} auto-fixed")
 
         return {
             "step": self.step_id,
             "is_valid": True,
             "validation_summary": validation_summary,
             "validated_data": validated_records,
-            "rejected_data": [
-                {"url": v["url"], "issues": v["issues"]}
-                for v in validation_issues
-            ],
+            "rejected_data": [{"url": v["url"], "issues": v["issues"]} for v in validation_issues],
             "validation_issues": validation_issues,
         }
 
@@ -279,13 +270,13 @@ class Step2CSVValidation(BaseActivity):
             Normalized content
         """
         # Replace multiple spaces/tabs with single space
-        content = re.sub(r'[ \t]+', ' ', content)
+        content = re.sub(r"[ \t]+", " ", content)
 
         # Replace 3+ newlines with 2 newlines
-        content = re.sub(r'\n{3,}', '\n\n', content)
+        content = re.sub(r"\n{3,}", "\n\n", content)
 
         # Remove control characters
-        content = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', content)
+        content = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]", "", content)
 
         return content.strip()
 
@@ -309,30 +300,36 @@ class Step2CSVValidation(BaseActivity):
         # Check required fields
         for field in required_fields:
             if field not in record or not record[field]:
-                issues.append({
-                    "field": field,
-                    "issue": "missing_or_empty",
-                    "severity": ValidationSeverity.ERROR.value,
-                })
+                issues.append(
+                    {
+                        "field": field,
+                        "issue": "missing_or_empty",
+                        "severity": ValidationSeverity.ERROR.value,
+                    }
+                )
 
         # Check content length
         content = record.get("content", "")
         if len(content) < 100:
-            issues.append({
-                "field": "content",
-                "issue": "content_too_short",
-                "severity": ValidationSeverity.WARNING.value,
-                "value": len(content),
-            })
+            issues.append(
+                {
+                    "field": "content",
+                    "issue": "content_too_short",
+                    "severity": ValidationSeverity.WARNING.value,
+                    "value": len(content),
+                }
+            )
 
         # Check URL format
         url = record.get("url", "")
         if url and not url.startswith(("http://", "https://")):
-            issues.append({
-                "field": "url",
-                "issue": "invalid_url_format",
-                "severity": ValidationSeverity.ERROR.value,
-            })
+            issues.append(
+                {
+                    "field": "url",
+                    "issue": "invalid_url_format",
+                    "severity": ValidationSeverity.ERROR.value,
+                }
+            )
 
         return issues
 
@@ -345,10 +342,7 @@ class Step2CSVValidation(BaseActivity):
         Returns:
             True if any critical error exists
         """
-        return any(
-            i.get("severity") == ValidationSeverity.ERROR.value
-            for i in issues
-        )
+        return any(i.get("severity") == ValidationSeverity.ERROR.value for i in issues)
 
     def _compute_content_hash(self, content: str) -> str:
         """Compute SHA256 hash of content.

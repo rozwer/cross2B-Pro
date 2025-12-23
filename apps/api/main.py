@@ -57,7 +57,7 @@ from apps.api.db import (
     TenantIdValidationError,
 )
 from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
-from apps.api.routers import diagnostics, hearing, keywords, step11
+from apps.api.routers import diagnostics, hearing, keywords, step11, step12
 from apps.api.schemas.article_hearing import (
     ArticleHearingInput,
 )
@@ -612,6 +612,7 @@ app.include_router(diagnostics.router)
 app.include_router(hearing.router)
 app.include_router(keywords.router)
 app.include_router(step11.router)
+app.include_router(step12.router)
 
 
 # =============================================================================
@@ -4067,8 +4068,18 @@ async def get_artifact_content(
 
 
 @app.get("/api/runs/{run_id}/preview", response_class=HTMLResponse)
-async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user)) -> HTMLResponse:
-    """Get HTML preview of generated article."""
+async def get_run_preview(
+    run_id: str,
+    article: int = Query(default=1, ge=1, le=4, description="記事番号 (1-4)"),
+    user: AuthUser = Depends(get_current_user),
+) -> HTMLResponse:
+    """Get HTML preview of generated article.
+
+    Args:
+        run_id: Run ID
+        article: Article number (1-4) for multi-article support
+        user: Authenticated user
+    """
     from sqlalchemy import select
 
     tenant_id = user.tenant_id
@@ -4159,9 +4170,20 @@ async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user
                             import json
 
                             output_data = json.loads(output_bytes.decode("utf-8"))
-                            html_content = output_data.get("html_content")
-                            if html_content:
-                                logger.debug("Extracted html_content from step10/output.json")
+
+                            # Multi-article support: check for articles array
+                            articles = output_data.get("articles", [])
+                            if articles and article <= len(articles):
+                                # Get specific article by number
+                                target_article = articles[article - 1]
+                                html_content = target_article.get("html_content", target_article.get("content", ""))
+                                if html_content:
+                                    logger.debug(f"Extracted article {article} html_content from step10/output.json")
+                            elif not articles:
+                                # Fallback to legacy single article format
+                                html_content = output_data.get("html_content")
+                                if html_content:
+                                    logger.debug("Extracted html_content from step10/output.json (legacy)")
                     except Exception as e:
                         logger.debug(f"Could not extract from output.json: {e}")
 
