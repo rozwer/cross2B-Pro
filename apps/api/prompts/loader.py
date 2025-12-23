@@ -94,9 +94,7 @@ class PromptPack:
             PromptNotFoundError: If no prompt exists for the step
         """
         if step not in self.prompts:
-            raise PromptNotFoundError(
-                f"No prompt found for step '{step}' in pack '{self.pack_id}'"
-            )
+            raise PromptNotFoundError(f"No prompt found for step '{step}' in pack '{self.pack_id}'")
         return self.prompts[step]
 
     def render_prompt(self, step: str, **kwargs: Any) -> str:
@@ -152,9 +150,7 @@ class PromptPackLoader:
             PromptPackNotFoundError: If pack does not exist
         """
         if pack_id is None:
-            raise ValueError(
-                "pack_id is required. Auto-execution without explicit pack_id is forbidden."
-            )
+            raise ValueError("pack_id is required. Auto-execution without explicit pack_id is forbidden.")
 
         # Check cache
         if pack_id in self._cache:
@@ -207,9 +203,7 @@ class PromptPackLoader:
         json_path = self._packs_dir / f"{pack_id}.json"
 
         if not json_path.exists():
-            raise PromptPackNotFoundError(
-                f"Prompt pack '{pack_id}' not found at {json_path}"
-            )
+            raise PromptPackNotFoundError(f"Prompt pack '{pack_id}' not found at {json_path}")
 
         try:
             with open(json_path, encoding="utf-8") as f:
@@ -432,6 +426,7 @@ JSON形式で以下を出力:
 - クエリ分析: {{query_analysis}}
 - 共起語: {{cooccurrence_keywords}}
 - 競合分析: {{competitor_analysis}}
+- 人間味要素: {{human_touch_elements}}
 
 ## タスク
 1. 記事全体の構成設計
@@ -456,6 +451,7 @@ JSON形式で以下を出力:
                         "query_analysis": {"required": False, "type": "string"},
                         "cooccurrence_keywords": {"required": False, "type": "array"},
                         "competitor_analysis": {"required": False, "type": "string"},
+                        "human_touch_elements": {"required": False, "type": "string"},
                     },
                 ),
                 "step5": PromptTemplate(
@@ -532,6 +528,7 @@ JSON形式で以下を出力:
 - クエリ分析: {{query_analysis}}
 - 共起語: {{cooccurrence_keywords}}
 - 一次情報: {{primary_sources}}
+- 人間味要素: {{human_touch_elements}}
 - CTA設定: {{cta_specification}}
 
 ## タスク（ファイル集約）
@@ -552,6 +549,7 @@ Markdown形式で統合パッケージを出力""",
                         "query_analysis": {"required": False, "type": "string"},
                         "cooccurrence_keywords": {"required": False, "type": "array"},
                         "primary_sources": {"required": False, "type": "array"},
+                        "human_touch_elements": {"required": False, "type": "string"},
                         "cta_specification": {"required": False, "type": "object"},
                     },
                 ),
@@ -562,6 +560,7 @@ Markdown形式で統合パッケージを出力""",
 
 ## 入力
 - 統合パッケージ: {{integration_package}}
+- 人間味要素: {{human_touch_elements}}
 
 ## タスク（最長工程）
 1. 統合パッケージに基づき本文を生成
@@ -585,6 +584,7 @@ Markdown形式で統合パッケージを出力""",
 Markdown形式で本文初稿を出力""",
                     variables={
                         "integration_package": {"required": True, "type": "string"},
+                        "human_touch_elements": {"required": False, "type": "string"},
                     },
                 ),
                 "step7b": PromptTemplate(

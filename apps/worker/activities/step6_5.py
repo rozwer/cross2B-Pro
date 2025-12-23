@@ -86,9 +86,7 @@ class Step65IntegrationPackage(BaseActivity):
             )
 
         # === CheckpointManager統合: 全データロードのキャッシュ ===
-        data_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "all_data_loaded"
-        )
+        data_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "all_data_loaded")
 
         if data_checkpoint:
             all_data = data_checkpoint.get("all_data", {})
@@ -100,11 +98,14 @@ class Step65IntegrationPackage(BaseActivity):
             integration_input = self._prepare_integration_input(all_data, keyword)
 
             await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "all_data_loaded",
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                "all_data_loaded",
                 {
                     "all_data": all_data,
                     "integration_input": integration_input,
-                }
+                },
             )
 
         # === InputValidator統合: 7ステップ分の入力検証 ===
@@ -119,6 +120,7 @@ class Step65IntegrationPackage(BaseActivity):
                 "step3a.query_analysis",
                 "step3b.cooccurrence_analysis",
                 "step3c.competitor_analysis",
+                "step3_5.human_touch_elements",
                 "step5.sources",
             ],
         )
@@ -131,9 +133,7 @@ class Step65IntegrationPackage(BaseActivity):
             )
 
         if validation.missing_recommended:
-            activity.logger.warning(
-                f"Recommended inputs missing: {validation.missing_recommended}"
-            )
+            activity.logger.warning(f"Recommended inputs missing: {validation.missing_recommended}")
 
         # Build input summaries
         input_summaries = self._build_input_summaries(all_data)
@@ -251,54 +251,37 @@ class Step65IntegrationPackage(BaseActivity):
 
     async def _load_all_step_data(self, ctx: ExecutionContext) -> dict[str, Any]:
         """Load all step data from storage."""
-        step0_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step0"
-        ) or {}
-        step3a_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3a"
-        ) or {}
-        step3b_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3b"
-        ) or {}
-        step3c_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3c"
-        ) or {}
-        step4_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step4"
-        ) or {}
-        step5_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step5"
-        ) or {}
-        step6_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step6"
-        ) or {}
+        step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
+        step3a_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3a") or {}
+        step3b_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3b") or {}
+        step3c_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3c") or {}
+        step3_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3_5") or {}
+        step4_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step4") or {}
+        step5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step5") or {}
+        step6_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step6") or {}
 
         return {
             "step0": step0_data,
             "step3a": step3a_data,
             "step3b": step3b_data,
             "step3c": step3c_data,
+            "step3_5": step3_5_data,
             "step4": step4_data,
             "step5": step5_data,
             "step6": step6_data,
         }
 
-    def _prepare_integration_input(
-        self, all_data: dict[str, Any], keyword: str
-    ) -> dict[str, Any]:
+    def _prepare_integration_input(self, all_data: dict[str, Any], keyword: str) -> dict[str, Any]:
         """Prepare integration input for prompt rendering."""
         return {
             "keyword": keyword,
             "keyword_analysis": all_data.get("step0", {}).get("analysis", ""),
-            "query_analysis": all_data.get("step3a", {}).get(
-                "query_analysis", all_data.get("step3a", {}).get("analysis", "")
-            ),
+            "query_analysis": all_data.get("step3a", {}).get("query_analysis", all_data.get("step3a", {}).get("analysis", "")),
             "cooccurrence_analysis": all_data.get("step3b", {}).get(
                 "cooccurrence_analysis", all_data.get("step3b", {}).get("analysis", "")
             ),
-            "competitor_analysis": all_data.get("step3c", {}).get(
-                "competitor_analysis", all_data.get("step3c", {}).get("analysis", "")
-            ),
+            "competitor_analysis": all_data.get("step3c", {}).get("competitor_analysis", all_data.get("step3c", {}).get("analysis", "")),
+            "human_touch_elements": all_data.get("step3_5", {}).get("human_touch_elements", ""),
             "strategic_outline": all_data.get("step4", {}).get("outline", ""),
             "sources": all_data.get("step5", {}).get("sources", []),
             "enhanced_outline": all_data.get("step6", {}).get("enhanced_outline", ""),
@@ -313,6 +296,7 @@ class Step65IntegrationPackage(BaseActivity):
             ("step3a", "query_analysis", ["query_analysis", "analysis"]),
             ("step3b", "cooccurrence_analysis", ["cooccurrence_analysis", "analysis"]),
             ("step3c", "competitor_analysis", ["competitor_analysis", "analysis"]),
+            ("step3_5", "human_touch_elements", ["human_touch_elements"]),
             ("step4", "strategic_outline", ["outline"]),
             ("step5", "sources", ["sources"]),
             ("step6", "enhanced_outline", ["enhanced_outline"]),
@@ -328,18 +312,18 @@ class Step65IntegrationPackage(BaseActivity):
                 has_content = any(data.get(f) for f in fields)
                 data_quality = "good" if has_content else "poor"
 
-            summaries.append(InputSummary(
-                step_id=step_id,
-                available=available,
-                key_points=[],
-                data_quality=data_quality,
-            ))
+            summaries.append(
+                InputSummary(
+                    step_id=step_id,
+                    available=available,
+                    key_points=[],
+                    data_quality=data_quality,
+                )
+            )
 
         return summaries
 
-    def _validate_package_quality(
-        self, package: dict[str, Any], all_data: dict[str, Any]
-    ) -> QualityResult:
+    def _validate_package_quality(self, package: dict[str, Any], all_data: dict[str, Any]) -> QualityResult:
         """Validate integration package quality."""
         issues: list[str] = []
         warnings: list[str] = []

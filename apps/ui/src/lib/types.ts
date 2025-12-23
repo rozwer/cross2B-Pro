@@ -376,11 +376,13 @@ export const STEP_NAMES = [
   "step-1",
   "step0",
   "step1",
-  "step3",
+  "step1.5",
   "step2",
+  "step3",
   "step3a",
   "step3b",
   "step3c",
+  "step3.5",
   "step4",
   "step5",
   "step6",
@@ -391,6 +393,7 @@ export const STEP_NAMES = [
   "step9",
   "step10",
   "step11",
+  "step12",
 ] as const;
 
 export type StepName = (typeof STEP_NAMES)[number];
@@ -398,22 +401,25 @@ export type StepName = (typeof STEP_NAMES)[number];
 export const STEP_LABELS: Record<string, string> = {
   "step-1": "入力",
   step0: "準備",
-  step1: "分析",
-  step2: "調査",
+  step1: "競合取得",
+  "step1.5": "関連KW抽出",
+  step2: "検証",
   step3: "構成",
   step3a: "3-A",
   step3b: "3-B",
   step3c: "3-C",
+  "step3.5": "人間味生成",
   step4: "執筆準備",
-  step5: "本文生成",
-  step6: "編集",
-  "step6.5": "構成済み記事",
-  step7a: "HTML生成",
-  step7b: "メタ情報",
+  step5: "一次情報",
+  step6: "強化",
+  "step6.5": "統合",
+  step7a: "本文生成",
+  step7b: "ブラッシュアップ",
   step8: "検証",
   step9: "最終調整",
-  step10: "完了",
+  step10: "記事出力",
   step11: "画像生成",
+  step12: "WP HTML",
 };
 
 // Helper to normalize step names (step6_5 -> step6.5)
@@ -513,6 +519,7 @@ export interface ModelsConfigResponse {
 // ============================================
 
 export interface ImagePosition {
+  article_number?: number | null;
   section_title: string;
   section_index: number;
   position: "before" | "after";
@@ -524,6 +531,10 @@ export interface Section {
   level: string;
   title: string;
   start_pos: number;
+  section_index?: number;
+  section_key?: string;
+  article_number?: number;
+  display_title?: string;
 }
 
 export interface GeneratedImage {
@@ -539,6 +550,7 @@ export interface GeneratedImage {
   file_size: number;
   retry_count: number;
   accepted: boolean;
+  article_number?: number | null;
 }
 
 export type Step11Phase =

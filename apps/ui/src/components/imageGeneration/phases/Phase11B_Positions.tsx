@@ -40,6 +40,7 @@ export function Phase11B_Positions({
   const [reanalyzeRequest, setReanalyzeRequest] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newPosition, setNewPosition] = useState<Partial<ImagePosition>>({
+    article_number: sections[0]?.article_number ?? 1,
     section_title: "",
     section_index: 0,
     position: "after",
@@ -62,6 +63,7 @@ export function Phase11B_Positions({
     if (!newPosition.section_title) return;
 
     const position: ImagePosition = {
+      article_number: newPosition.article_number ?? null,
       section_title: newPosition.section_title!,
       section_index: newPosition.section_index!,
       position: newPosition.position as "before" | "after",
@@ -71,6 +73,7 @@ export function Phase11B_Positions({
     setPositions((prev) => [...prev, position]);
     setShowAddForm(false);
     setNewPosition({
+      article_number: sections[0]?.article_number ?? 1,
       section_title: "",
       section_index: 0,
       position: "after",
@@ -134,15 +137,19 @@ export function Phase11B_Positions({
                             (s) => s.title === e.target.value
                           );
                           if (section) {
+                            const sectionIndex = section.section_index ?? sections.indexOf(section);
                             handleEdit(index, "section_title", section.title);
-                            handleEdit(index, "section_index", sections.indexOf(section));
+                            handleEdit(index, "section_index", sectionIndex);
+                            if (section.article_number !== undefined) {
+                              handleEdit(index, "article_number", section.article_number);
+                            }
                           }
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                       >
                         {sections.map((section, i) => (
-                          <option key={i} value={section.title}>
-                            {section.title}
+                          <option key={section.section_key ?? i} value={section.title}>
+                            {section.article_number ? `記事${section.article_number}: ` : ""}{section.title}
                           </option>
                         ))}
                       </select>
@@ -194,6 +201,11 @@ export function Phase11B_Positions({
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {pos.section_title}
                       </span>
+                      {pos.article_number && (
+                        <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded">
+                          記事{pos.article_number}
+                        </span>
+                      )}
                       <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
                         {pos.position === "before" ? "前" : "後"}
                       </span>
@@ -245,7 +257,8 @@ export function Phase11B_Positions({
                       setNewPosition((prev) => ({
                         ...prev,
                         section_title: section.title,
-                        section_index: sections.indexOf(section),
+                        section_index: section.section_index ?? sections.indexOf(section),
+                        article_number: section.article_number ?? prev.article_number,
                       }));
                     }
                   }}
@@ -253,8 +266,8 @@ export function Phase11B_Positions({
                 >
                   <option value="">選択してください</option>
                   {sections.map((section, i) => (
-                    <option key={i} value={section.title}>
-                      {section.title}
+                    <option key={section.section_key ?? i} value={section.title}>
+                      {section.article_number ? `記事${section.article_number}: ` : ""}{section.title}
                     </option>
                   ))}
                 </select>

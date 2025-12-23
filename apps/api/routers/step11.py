@@ -50,6 +50,7 @@ class Step11SettingsInput(BaseModel):
 class ImagePosition(BaseModel):
     """画像挿入位置"""
 
+    article_number: int | None = Field(default=None, description="対象記事番号（1-4）")
     section_title: str
     section_index: int
     position: str = Field(description="before or after")
@@ -96,6 +97,7 @@ class GeneratedImage(BaseModel):
     accepted: bool = True  # 承認済みか
     status: str = "completed"  # completed, failed, pending
     error: str | None = None
+    article_number: int | None = None
 
 
 class ImageRetryInput(BaseModel):
@@ -232,6 +234,7 @@ async def analyze_positions(
             section_title = str(sections[i].get("title", ""))
             positions.append(
                 ImagePosition(
+                    article_number=1,
                     section_title=section_title,
                     section_index=i,
                     position="after",
@@ -304,6 +307,8 @@ async def generate_image(
     # 画像生成プロンプトを構築
     base_prompt = instruction or position.description or f"{position.section_title}に関連する画像"
     generated_prompt = _enhance_image_prompt(base_prompt, position.section_title)
+    article_number = position.article_number or 1
+    position.article_number = article_number
 
     logger.info(
         f"Generating image for section: {position.section_title}",
@@ -346,6 +351,7 @@ async def generate_image(
             retry_count=retry_count,
             accepted=True,
             status="completed",
+            article_number=article_number,
         )
 
     except Exception as e:
@@ -369,6 +375,7 @@ async def generate_image(
             accepted=False,
             status="failed",
             error=str(e),
+            article_number=article_number,
         )
 
 

@@ -114,12 +114,14 @@ class Step7ADraftGeneration(BaseActivity):
 
         # Load step data from storage
         step6_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step6_5") or {}
+        step3_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3_5") or {}
+        enable_step3_5 = config.get("enable_step3_5", True)
 
         # === InputValidator統合 ===
         validation = self.input_validator.validate(
-            data={"step6_5": step6_5_data},
+            data={"step6_5": step6_5_data, "step3_5": step3_5_data},
             required=["step6_5.integration_package"],
-            recommended=[],
+            recommended=["step3_5.human_touch_elements"] if enable_step3_5 else [],
             min_lengths={"step6_5.integration_package": 500},
         )
 
@@ -131,6 +133,7 @@ class Step7ADraftGeneration(BaseActivity):
             )
 
         integration_package = step6_5_data.get("integration_package", "")
+        human_touch_elements = self._extract_human_touch_elements(step3_5_data)
 
         # === CheckpointManager統合: 部分生成のチェックポイント ===
         draft_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress")
@@ -144,12 +147,23 @@ class Step7ADraftGeneration(BaseActivity):
             activity.logger.info(f"Resuming from checkpoint: {len(current_draft)} chars done")
 
             # 続きを生成
-            continuation = await self._continue_generation(config, current_draft, integration_package)
+            continuation = await self._continue_generation(
+                config,
+                current_draft,
+                integration_package,
+                human_touch_elements=human_touch_elements,
+            )
             current_draft = current_draft + "\n\n" + continuation
             continuation_used = True
         else:
             # 最初から生成
-            current_draft = await self._generate_draft(config, keyword, integration_package, prompt_pack)
+            current_draft = await self._generate_draft(
+                config,
+                keyword,
+                integration_package,
+                prompt_pack,
+                human_touch_elements=human_touch_elements,
+            )
 
         # === OutputParser統合 (ハイブリッド) ===
         parse_result = self.parser.parse_json(current_draft)
@@ -195,7 +209,12 @@ class Step7ADraftGeneration(BaseActivity):
                 },
             )
 
-            continuation = await self._continue_generation(config, draft_content, integration_package)
+            continuation = await self._continue_generation(
+                config,
+                draft_content,
+                integration_package,
+                human_touch_elements=human_touch_elements,
+            )
             draft_content = draft_content + "\n\n" + continuation
             continuation_used = True
 
@@ -280,12 +299,29 @@ class Step7ADraftGeneration(BaseActivity):
 
         return output.model_dump()
 
+    def _extract_human_touch_elements(self, step3_5_data: dict[str, Any]) -> str:
+        """Extract human touch elements as a prompt-ready string."""
+        if not step3_5_data:
+            return ""
+
+        raw = step3_5_data.get("human_touch_elements")
+        if isinstance(raw, str) and raw.strip():
+            return raw
+
+        parts: list[str] = []
+        for key in ["emotional_analysis", "human_touch_patterns", "experience_episodes", "emotional_hooks"]:
+            value = step3_5_data.get(key)
+            if value:
+                parts.append(f"{key}: {value}")
+        return "\n".join(parts)
+
     async def _generate_draft(
         self,
         config: dict[str, Any],
         keyword: str,
         integration_package: str,
         prompt_pack: Any,
+        human_touch_elements: str,
     ) -> str:
         """Generate draft from scratch."""
         # Render prompt
@@ -294,6 +330,7 @@ class Step7ADraftGeneration(BaseActivity):
             prompt = prompt_template.render(
                 keyword=keyword,
                 integration_package=integration_package,
+                human_touch_elements=human_touch_elements,
             )
         except Exception as e:
             raise ActivityError(
@@ -330,6 +367,7 @@ class Step7ADraftGeneration(BaseActivity):
         config: dict[str, Any],
         current_draft: str,
         integration_package: str,
+        human_touch_elements: str,
     ) -> str:
         """Generate continuation of draft."""
         continuation_prompt = f"""
@@ -340,6 +378,9 @@ class Step7ADraftGeneration(BaseActivity):
 
 ## 統合パッケージ（参照用）
 {integration_package[:2000]}
+
+## 人間味要素（参考）
+{human_touch_elements[:2000] if human_touch_elements else ""}
 
 ## 指示
 - 既存の内容と自然につながるように続きを書いてください

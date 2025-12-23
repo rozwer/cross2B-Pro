@@ -333,6 +333,7 @@ class Step10FinalOutput(BaseActivity):
         config = ctx.config
         pack_id = config.get("pack_id")
         warnings: list[str] = []
+        enable_4articles = config.get("enable_4articles", True)
 
         if not pack_id:
             raise ActivityError(
@@ -399,14 +400,18 @@ class Step10FinalOutput(BaseActivity):
         llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
-        # Generate 4 article variations
+        # Generate article variations (default: 4 articles)
         articles: list[ArticleVariation] = []
         previous_summaries: list[str] = []
         total_tokens = 0
+        variations = ARTICLE_VARIATIONS if enable_4articles else ARTICLE_VARIATIONS[:1]
 
-        activity.logger.info(f"Starting 4-article generation for keyword: {keyword}")
+        if not enable_4articles:
+            warnings.append("enable_4articles_disabled")
 
-        for variation_info in ARTICLE_VARIATIONS:
+        activity.logger.info(f"Starting {len(variations)}-article generation for keyword: {keyword}")
+
+        for variation_info in variations:
             article_num = variation_info["number"]
             variation_type = variation_info["type"]
 
@@ -464,7 +469,7 @@ class Step10FinalOutput(BaseActivity):
             articles.append(article)
 
             # Generate summary for next article (avoid duplication)
-            if article_num < 4:
+            if article_num < len(variations):
                 summary = await self._generate_article_summary(llm, prompt_pack, config, article.content)
                 previous_summaries.append(f"記事{article_num}（{variation_type.value}）: {summary}")
 
@@ -476,7 +481,7 @@ class Step10FinalOutput(BaseActivity):
             generated_at=datetime.now(UTC),
             model=llm_provider,
             total_word_count=sum(a.word_count for a in articles),
-            generation_order=[1, 2, 3, 4],
+            generation_order=[a.article_number for a in articles],
         )
 
         # Determine publication readiness

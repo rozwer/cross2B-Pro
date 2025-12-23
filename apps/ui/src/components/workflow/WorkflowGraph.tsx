@@ -17,7 +17,7 @@ import "@xyflow/react/dist/style.css";
 import { WorkflowNode, type WorkflowNodeData } from "./WorkflowNode";
 import { NodeConfigPanel, type StepConfig } from "./NodeConfigPanel";
 import { useModelsConfig } from "@/hooks/useModelsConfig";
-import type { StepDefaultConfig, LLMPlatform } from "@/lib/types";
+import type { StepDefaultConfig } from "@/lib/types";
 
 /**
  * Convert backend StepDefaultConfig to frontend StepConfig format
@@ -73,6 +73,19 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
     aiModel: "gemini",
     modelName: "gemini-2.0-flash",
     temperature: 0.5,
+    grounding: true,
+    retryLimit: 3,
+    repairEnabled: true,
+    isConfigurable: true,
+    recommendedModel: "gemini",
+  },
+  {
+    stepId: "step1_5",
+    label: "関連KW抽出",
+    description: "関連キーワードの競合情報収集",
+    aiModel: "gemini",
+    modelName: "gemini-2.0-flash",
+    temperature: 0.6,
     grounding: true,
     retryLimit: 3,
     repairEnabled: true,
@@ -145,6 +158,19 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
     recommendedModel: "gemini",
   },
   {
+    stepId: "step3_5",
+    label: "人間味生成",
+    description: "心情傾向・体験エピソードの生成",
+    aiModel: "gemini",
+    modelName: "gemini-1.5-pro",
+    temperature: 0.7,
+    grounding: false,
+    retryLimit: 3,
+    repairEnabled: true,
+    isConfigurable: true,
+    recommendedModel: "gemini",
+  },
+  {
     stepId: "step4",
     label: "アウトライン",
     description: "戦略的な記事構成の作成",
@@ -184,7 +210,7 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
     recommendedModel: "anthropic",
   },
   {
-    stepId: "step6.5",
+    stepId: "step6_5",
     label: "統合パッケージ",
     description: "全情報の統合とパッケージ化",
     aiModel: "anthropic",
@@ -274,6 +300,19 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
     isConfigurable: true,
     recommendedModel: "gemini",
   },
+  {
+    stepId: "step12",
+    label: "WordPress HTML",
+    description: "Gutenbergブロック形式でのHTML生成",
+    aiModel: "anthropic",
+    modelName: "claude-sonnet-4-20250514",
+    temperature: 0.3,
+    grounding: false,
+    retryLimit: 3,
+    repairEnabled: true,
+    isConfigurable: true,
+    recommendedModel: "anthropic",
+  },
 ];
 
 // Layout positions
@@ -288,8 +327,8 @@ function createInitialNodes(
 ): WorkflowNode[] {
   const nodes: WorkflowNode[] = [];
 
-  // Row 1: step-1, step0, step1, step2
-  const row1Steps = ["step-1", "step0", "step1", "step2"];
+  // Row 1: step-1, step0, step1, step1_5, step2
+  const row1Steps = ["step-1", "step0", "step1", "step1_5", "step2"];
   row1Steps.forEach((stepId, index) => {
     const step = steps.find((s) => s.stepId === stepId);
     if (step) {
@@ -358,16 +397,16 @@ function createInitialNodes(
 
   // Row 4-6: Sequential steps after approval
   const postApprovalSteps = [
-    ["step4", "step5", "step6", "step6.5"],
-    ["step7a", "step7b", "step8"],
-    ["step9", "step10", "step11"],
+    ["step3_5", "step4", "step5", "step6"],
+    ["step6_5", "step7a", "step7b", "step8"],
+    ["step9", "step10", "step11", "step12"],
   ];
 
   postApprovalSteps.forEach((rowSteps, rowIndex) => {
     rowSteps.forEach((stepId, colIndex) => {
       const step = steps.find((s) => s.stepId === stepId);
       if (step) {
-        const offsetX = rowIndex === 2 ? 0.5 : rowIndex === 1 ? 0.5 : 0;
+        const offsetX = rowSteps.length === 3 ? 0.5 : rowSteps.length === 2 ? 0.75 : 0;
         nodes.push({
           id: stepId,
           type: "workflowNode",
@@ -383,7 +422,11 @@ function createInitialNodes(
             modelName: step.modelName,
             status: "pending",
             stepType:
-              stepId === "step10" || stepId === "step11" ? "output" : stepId === "step8" ? "verification" : "generation",
+              stepId === "step10" || stepId === "step11" || stepId === "step12"
+                ? "output"
+                : stepId === "step8"
+                  ? "verification"
+                  : "generation",
             onNodeClick,
           },
         });
@@ -412,8 +455,15 @@ function createInitialEdges(): Edge[] {
       markerEnd: { type: MarkerType.ArrowClosed },
     },
     {
-      id: "e-step1-step2",
+      id: "e-step1-step1_5",
       source: "step1",
+      target: "step1_5",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+      id: "e-step1_5-step2",
+      source: "step1_5",
       target: "step2",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
@@ -464,11 +514,18 @@ function createInitialEdges(): Edge[] {
     },
     // After approval - Row 4
     {
-      id: "e-approval-step4",
+      id: "e-approval-step3_5",
       source: "approval",
-      target: "step4",
+      target: "step3_5",
       animated: true,
       style: { strokeDasharray: "5,5" },
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+      id: "e-step3_5-step4",
+      source: "step3_5",
+      target: "step4",
+      animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
     },
     {
@@ -486,16 +543,16 @@ function createInitialEdges(): Edge[] {
       markerEnd: { type: MarkerType.ArrowClosed },
     },
     {
-      id: "e-step6-step6.5",
+      id: "e-step6-step6_5",
       source: "step6",
-      target: "step6.5",
+      target: "step6_5",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
     },
     // Row 5
     {
-      id: "e-step6.5-step7a",
-      source: "step6.5",
+      id: "e-step6_5-step7a",
+      source: "step6_5",
       target: "step7a",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
@@ -548,9 +605,9 @@ interface WorkflowGraphProps {
   readOnly?: boolean;
 }
 
-export function WorkflowGraph({ onConfigSave, readOnly = false }: WorkflowGraphProps) {
+export function WorkflowGraph({ onConfigSave: _onConfigSave, readOnly = false }: WorkflowGraphProps) {
   // Fetch models config from backend (source of truth)
-  const { stepDefaults, isLoading: isLoadingConfig, error: configError } = useModelsConfig();
+  const { stepDefaults, isLoading: _isLoadingConfig, error: _configError } = useModelsConfig();
 
   // Use backend config if available, fallback to static defaults
   const initialSteps = useMemo(() => {

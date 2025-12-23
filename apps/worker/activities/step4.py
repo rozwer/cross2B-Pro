@@ -112,23 +112,30 @@ class Step4StrategicOutline(BaseActivity):
         step3a_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3a") or {}
         step3b_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3b") or {}
         step3c_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3c") or {}
+        step3_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3_5") or {}
+        enable_step3_5 = config.get("enable_step3_5", True)
 
         # === InputValidator統合 ===
+        recommended_fields = [
+            "step0.analysis",  # キーワード分析
+            "step3c.competitor_analysis",  # 競合分析は推奨
+        ]
+        if enable_step3_5:
+            recommended_fields.append("step3_5.human_touch_elements")
+
         validation = self.input_validator.validate(
             data={
                 "step0": step0_data,
                 "step3a": step3a_data,
                 "step3b": step3b_data,
                 "step3c": step3c_data,
+                "step3_5": step3_5_data,
             },
             required=[
                 "step3a.query_analysis",  # 検索意図・ペルソナは必須
                 "step3b.cooccurrence_analysis",  # 共起キーワードは必須
             ],
-            recommended=[
-                "step0.analysis",  # キーワード分析
-                "step3c.competitor_analysis",  # 競合分析は推奨
-            ],
+            recommended=recommended_fields,
         )
 
         if not validation.is_valid:
@@ -145,12 +152,20 @@ class Step4StrategicOutline(BaseActivity):
             activity.logger.warning(f"Input quality issues: {validation.quality_issues}")
 
         # === CheckpointManager統合: 統合データのチェックポイント ===
+        human_touch_elements = self._extract_human_touch_elements(step3_5_data)
+        analysis_summary = self._build_analysis_summary(
+            step0_data=step0_data,
+            step3a_data=step3a_data,
+            step3b_data=step3b_data,
+            step3c_data=step3c_data,
+        )
         input_digest = self.checkpoint.compute_digest(
             {
                 "keyword": keyword,
                 "step3a": step3a_data.get("query_analysis", ""),
                 "step3b": step3b_data.get("cooccurrence_analysis", ""),
                 "step3c": step3c_data.get("competitor_analysis", ""),
+                "step3_5": human_touch_elements,
             }
         )
 
@@ -172,6 +187,7 @@ class Step4StrategicOutline(BaseActivity):
                 query_analysis=step3a_data.get("query_analysis", ""),
                 cooccurrence=step3b_data.get("cooccurrence_analysis", ""),
                 competitor=step3c_data.get("competitor_analysis", ""),
+                human_touch=human_touch_elements,
             )
 
             await self.checkpoint.save(
@@ -188,9 +204,11 @@ class Step4StrategicOutline(BaseActivity):
             prompt_template = prompt_pack.get_prompt("step4")
             prompt = prompt_template.render(
                 keyword=keyword,
+                analysis_summary=analysis_summary,
                 query_analysis=step3a_data.get("query_analysis", ""),
                 cooccurrence_analysis=step3b_data.get("cooccurrence_analysis", ""),
                 competitor_analysis=step3c_data.get("competitor_analysis", ""),
+                human_touch_elements=human_touch_elements,
             )
         except Exception as e:
             raise ActivityError(
@@ -332,6 +350,7 @@ class Step4StrategicOutline(BaseActivity):
         query_analysis: str,
         cooccurrence: str,
         competitor: str,
+        human_touch: str,
     ) -> dict[str, Any]:
         """Integrate analysis data from previous steps."""
         return {
@@ -339,8 +358,44 @@ class Step4StrategicOutline(BaseActivity):
             "query_analysis_summary": query_analysis[:500] if query_analysis else "",
             "cooccurrence_summary": cooccurrence[:500] if cooccurrence else "",
             "competitor_summary": competitor[:500] if competitor else "",
+            "human_touch_summary": human_touch[:500] if human_touch else "",
             "integrated": True,
         }
+
+    def _extract_human_touch_elements(self, step3_5_data: dict[str, Any]) -> str:
+        """Extract human touch elements as a prompt-ready string."""
+        if not step3_5_data:
+            return ""
+
+        raw = step3_5_data.get("human_touch_elements")
+        if isinstance(raw, str) and raw.strip():
+            return raw
+
+        parts: list[str] = []
+        for key in ["emotional_analysis", "human_touch_patterns", "experience_episodes", "emotional_hooks"]:
+            value = step3_5_data.get(key)
+            if value:
+                parts.append(f"{key}: {value}")
+        return "\n".join(parts)
+
+    def _build_analysis_summary(
+        self,
+        step0_data: dict[str, Any],
+        step3a_data: dict[str, Any],
+        step3b_data: dict[str, Any],
+        step3c_data: dict[str, Any],
+    ) -> str:
+        """Build a compact analysis summary for prompt context."""
+        parts: list[str] = []
+        if step0_data.get("analysis"):
+            parts.append(f"キーワード分析: {str(step0_data.get('analysis'))[:800]}")
+        if step3a_data.get("query_analysis"):
+            parts.append(f"クエリ分析: {str(step3a_data.get('query_analysis'))[:800]}")
+        if step3b_data.get("cooccurrence_analysis"):
+            parts.append(f"共起語分析: {str(step3b_data.get('cooccurrence_analysis'))[:800]}")
+        if step3c_data.get("competitor_analysis"):
+            parts.append(f"競合分析: {str(step3c_data.get('competitor_analysis'))[:800]}")
+        return "\n\n".join(parts)
 
 
 @activity.defn(name="step4_strategic_outline")

@@ -18,8 +18,10 @@ from temporalio.worker import Worker
 
 from .activities import (
     step0_keyword_selection,
+    step1_5_related_keyword_extraction,
     step1_competitor_fetch,
     step2_csv_validation,
+    step3_5_human_touch_generation,
     step3a_query_analysis,
     step3b_cooccurrence_extraction,
     step3c_competitor_analysis,
@@ -39,6 +41,7 @@ from .activities import (
     # Step11 multi-phase activities
     step11_mark_skipped,
     step11_retry_image,
+    step12_wordpress_html_generation,
     sync_run_status,
 )
 from .workflows import ArticleWorkflow, ImageAdditionWorkflow
@@ -65,10 +68,12 @@ TASK_QUEUE = os.getenv("TEMPORAL_TASK_QUEUE", "seo-article-generation")
 ACTIVITIES = [
     step0_keyword_selection,
     step1_competitor_fetch,
+    step1_5_related_keyword_extraction,
     step2_csv_validation,
     step3a_query_analysis,
     step3b_cooccurrence_extraction,
     step3c_competitor_analysis,
+    step3_5_human_touch_generation,
     step4_strategic_outline,
     step5_primary_collection,
     step6_enhanced_outline,
@@ -78,6 +83,7 @@ ACTIVITIES = [
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
+    step12_wordpress_html_generation,
     step11_image_generation,
     # Step11 multi-phase activities
     step11_mark_skipped,

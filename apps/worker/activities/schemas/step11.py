@@ -33,6 +33,10 @@ class Step11SubStep(str, Enum):
 class ImageInsertionPosition(BaseModel):
     """画像挿入位置."""
 
+    article_number: int | None = Field(
+        default=None,
+        description="対象記事番号（1-4）。None の場合は全記事共通",
+    )
     section_title: str = Field(..., description="挿入先のセクションタイトル")
     section_index: int = Field(..., description="セクションのインデックス（0始まり）")
     position: str = Field(
