@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import {
-  ArrowLeft,
   Check,
   Loader2,
   RotateCcw,
-  ExternalLink,
   Code,
   Eye,
 } from "lucide-react";
@@ -47,7 +45,7 @@ export function Phase11E_Preview({
           className={cn(
             "inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors",
             viewMode === "preview"
-              ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
           )}
         >
@@ -59,7 +57,7 @@ export function Phase11E_Preview({
           className={cn(
             "inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors",
             viewMode === "html"
-              ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+              ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
           )}
         >

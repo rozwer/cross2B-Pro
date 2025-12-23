@@ -105,7 +105,7 @@ export function Phase11B_Positions({
           <button
             onClick={() => setShowAddForm(true)}
             disabled={loading}
-            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg"
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg"
           >
             <Plus className="h-3 w-3" />
             追加
@@ -190,7 +190,7 @@ export function Phase11B_Positions({
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <MapPin className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                      <MapPin className="h-4 w-4 text-primary-500 flex-shrink-0" />
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {pos.section_title}
                       </span>
@@ -302,7 +302,7 @@ export function Phase11B_Positions({
               <button
                 onClick={handleAdd}
                 disabled={!newPosition.section_title}
-                className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 追加
               </button>
@@ -376,7 +376,7 @@ export function Phase11B_Positions({
           disabled={loading || positions.length === 0}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
-            "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700",
+            "bg-primary-600 text-white hover:bg-primary-700",
             (loading || positions.length === 0) && "opacity-50 cursor-not-allowed"
           )}
         >

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   X,
-  Sparkles,
   Loader2,
   CheckCircle,
 } from "lucide-react";
@@ -377,24 +376,19 @@ export function ImageGenerationWizard({
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-600 to-pink-600">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">画像生成ウィザード</h2>
-              <p className="text-sm text-white/80">
-                {PHASE_LABELS[state.phase]}
-              </p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">画像生成</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {PHASE_LABELS[state.phase]}
+            </p>
           </div>
           <button
             onClick={onClose}
             disabled={state.loading}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <X className="h-5 w-5 text-white" />
+            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -415,7 +409,7 @@ export function ImageGenerationWizard({
                         isCompleted
                           ? "bg-green-500 text-white"
                           : isActive
-                            ? "bg-purple-600 text-white"
+                            ? "bg-primary-600 text-white"
                             : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                       )}
                     >
@@ -429,7 +423,7 @@ export function ImageGenerationWizard({
                       className={cn(
                         "text-xs mt-1",
                         isActive
-                          ? "text-purple-600 dark:text-purple-400 font-medium"
+                          ? "text-primary-600 dark:text-primary-400 font-medium"
                           : "text-gray-500 dark:text-gray-400"
                       )}
                     >
@@ -466,7 +460,7 @@ export function ImageGenerationWizard({
             state.phase === "11D_generating" ||
             state.phase === "11E_inserting") && (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+              <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
               <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 {state.phase === "11B_analyzing" && "位置を分析中..."}
                 {state.phase === "11D_generating" && "画像を生成中..."}

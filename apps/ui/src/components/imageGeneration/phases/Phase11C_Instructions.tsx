@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   ArrowLeft,
-  ArrowRight,
   Loader2,
   ImageIcon,
   Lightbulb,
@@ -54,11 +53,11 @@ export function Phase11C_Instructions({
   return (
     <div className="space-y-6">
       {/* 説明 */}
-      <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+      <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="flex items-start gap-3">
-          <Lightbulb className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-purple-800 dark:text-purple-200">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               各挿入位置に対して、どのような画像を生成するか指示してください。
               具体的な説明があるほど、より適切な画像が生成されます。
             </p>
@@ -74,8 +73,8 @@ export function Phase11C_Instructions({
             className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3"
           >
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-6 h-6 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+              <div className="flex items-center justify-center w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full">
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
                   {index + 1}
                 </span>
               </div>
@@ -107,7 +106,7 @@ export function Phase11C_Instructions({
                 placeholder="例：「モダンなオフィスでパソコンを使って作業しているビジネスパーソン」「シンプルな図解で3つのステップを表現」"
                 rows={2}
                 disabled={loading}
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
             </div>
 
@@ -148,7 +147,7 @@ export function Phase11C_Instructions({
           disabled={loading || !allFilled}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
-            "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700",
+            "bg-primary-600 text-white hover:bg-primary-700",
             (loading || !allFilled) && "opacity-50 cursor-not-allowed"
           )}
         >
@@ -179,7 +178,6 @@ export function Phase11C_Instructions({
 function getSuggestions(position: ImagePosition): string[] {
   const suggestions: string[] = [];
   const title = position.section_title.toLowerCase();
-  const desc = position.description?.toLowerCase() || "";
 
   // 導入・はじめにセクション
   if (title.includes("はじめ") || title.includes("導入") || position.section_index === 0) {
