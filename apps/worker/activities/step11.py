@@ -91,10 +91,31 @@ class Step11ImageGeneration(BaseActivity):
         # Step10のデータを読み込み
         step10_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step10") or {}
 
-        markdown_content = step10_data.get("markdown_content", "")
-        html_content = step10_data.get("html_content", "")
+        # 4記事対応: articles配列から読み込み、なければlegacy形式にフォールバック
+        articles_data = step10_data.get("articles", [])
         keyword = step10_data.get("keyword", "")
-        article_title = step10_data.get("article_title", keyword)
+
+        # 後方互換性: 単一記事の場合
+        if not articles_data and step10_data.get("markdown_content"):
+            articles_data = [
+                {
+                    "article_number": 1,
+                    "title": step10_data.get("article_title", keyword),
+                    "content": step10_data.get("markdown_content", ""),
+                    "html_content": step10_data.get("html_content", ""),
+                }
+            ]
+
+        # 最初の記事をメインコンテンツとして使用（互換性維持）
+        if articles_data:
+            first_article = articles_data[0]
+            markdown_content = first_article.get("content", first_article.get("markdown_content", ""))
+            html_content = first_article.get("html_content", "")
+            article_title = first_article.get("title", keyword)
+        else:
+            markdown_content = ""
+            html_content = ""
+            article_title = keyword
 
         if not markdown_content:
             # 画像生成をスキップ

@@ -96,3 +96,7 @@ class Step3_5Output(StepOutputBase):
         default_factory=dict,
         description="Quality validation results",
     )
+    token_usage: dict[str, int] = Field(
+        default_factory=dict,
+        description="Token usage (input/output tokens)",
+    )

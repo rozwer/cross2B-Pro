@@ -111,7 +111,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         if step1_5_data:
             input_files.append("step1_5")
 
-        # Input validation - step1_5 is optional
+        # Input validation - require step0, step1, step3a/3b/3c; step1_5 is optional
         validation = self.input_validator.validate(
             data={
                 "step0": step0_data,
@@ -120,8 +120,8 @@ class Step3_5HumanTouchGeneration(BaseActivity):
                 "step3b": step3b_data,
                 "step3c": step3c_data,
             },
-            required=["step0", "step3a"],
-            recommended=["step1", "step3b", "step3c"],
+            required=["step0", "step1", "step3a", "step3b", "step3c"],
+            recommended=[],
         )
 
         if not validation.is_valid:
@@ -258,33 +258,76 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         if parse_result.success and isinstance(parse_result.data, dict):
             logger.info(f"Parsed JSON output: {list(parse_result.data.keys())}")
 
-        # Calculate content metrics
-        text_metrics = self.metrics.text_metrics(content)
+        # Calculate content metrics (for potential future use)
+        _ = self.metrics.text_metrics(content)
+
+        # Build structured output conforming to Step3_5Output schema
+        parsed_data = parse_result.data if parse_result.success and isinstance(parse_result.data, dict) else {}
+
+        # Extract structured fields from parsed data
+        emotional_analysis = {
+            "primary_emotion": parsed_data.get("primary_emotion", ""),
+            "secondary_emotions": parsed_data.get("secondary_emotions", []),
+            "pain_points": parsed_data.get("pain_points", []),
+            "desires": parsed_data.get("desires", []),
+        }
+
+        # Extract human touch patterns
+        human_touch_patterns = []
+        raw_patterns = parsed_data.get("human_touch_patterns", parsed_data.get("patterns", []))
+        for p in raw_patterns if isinstance(raw_patterns, list) else []:
+            if isinstance(p, dict):
+                human_touch_patterns.append(
+                    {
+                        "type": p.get("type", "experience"),
+                        "content": p.get("content", ""),
+                        "placement_suggestion": p.get("placement_suggestion", p.get("placement", "")),
+                    }
+                )
+
+        # Extract experience episodes
+        experience_episodes = []
+        raw_episodes = parsed_data.get("experience_episodes", parsed_data.get("episodes", []))
+        for ep in raw_episodes if isinstance(raw_episodes, list) else []:
+            if isinstance(ep, dict):
+                experience_episodes.append(
+                    {
+                        "scenario": ep.get("scenario", ""),
+                        "narrative": ep.get("narrative", ""),
+                        "lesson": ep.get("lesson", ""),
+                    }
+                )
+
+        # Extract emotional hooks
+        emotional_hooks = parsed_data.get("emotional_hooks", parsed_data.get("hooks", []))
+        if not isinstance(emotional_hooks, list):
+            emotional_hooks = []
 
         return {
             "step": self.step_id,
             "keyword": keyword,
-            "human_touch_elements": content,
-            "parsed_data": parse_result.data if parse_result.success else None,
-            "format_detected": parse_result.format_detected,
-            "input_files": input_files,
-            "model": response.model,
-            "usage": {
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
-            },
-            "metrics": {
-                "char_count": text_metrics.char_count,
-                "word_count": text_metrics.word_count,
+            # Structured fields conforming to Step3_5Output schema
+            "emotional_analysis": emotional_analysis,
+            "human_touch_patterns": human_touch_patterns,
+            "experience_episodes": experience_episodes,
+            "emotional_hooks": emotional_hooks,
+            # Raw output for debugging and fallback
+            "raw_output": content,
+            "parsed_data": parsed_data if parsed_data else None,
+            # Metadata
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "model": response.model,
+                "input_files": input_files,
             },
             "quality": {
                 "attempts": loop_result.attempts,
                 "issues": loop_result.quality.issues if loop_result.quality else [],
             },
-            "metadata": {
-                "generated_at": datetime.now().isoformat(),
-                "model": response.model,
-                "input_files": input_files,
+            # Token usage
+            "token_usage": {
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
         }
 
