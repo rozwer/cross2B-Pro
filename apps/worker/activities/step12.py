@@ -4,7 +4,9 @@
 4記事分のHTMLをGutenbergブロック形式で出力する。
 """
 
+import hashlib
 import html
+import json
 import logging
 import re
 from datetime import datetime
@@ -190,7 +192,14 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             warnings=warnings,
         )
 
-        return output.model_dump()
+        output_path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
+        output.output_path = output_path
+        output_data = output.model_dump()
+        output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
+            :16
+        ]
+
+        return output_data
 
     async def _convert_to_gutenberg_blocks(
         self,

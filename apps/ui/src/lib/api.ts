@@ -462,15 +462,19 @@ class ApiClient {
       return this.request<ArtifactContent>(`/api/runs/${runId}/files/${encodeURIComponent(artifactId)}/content`);
     },
 
-    getPreviewUrl: (runId: string): string => {
-      return `${this.baseUrl}/api/runs/${runId}/preview`;
+    getPreviewUrl: (runId: string, article?: number): string => {
+      const url = new URL(`${this.baseUrl}/api/runs/${runId}/preview`);
+      if (article) {
+        url.searchParams.set("article", article.toString());
+      }
+      return url.toString();
     },
 
     /**
      * HTMLプレビューを取得（認証ヘッダー付き）
      */
-    getPreview: async (runId: string): Promise<string> => {
-      const url = `${this.baseUrl}/api/runs/${runId}/preview`;
+    getPreview: async (runId: string, article?: number): Promise<string> => {
+      const url = this.artifacts.getPreviewUrl(runId, article);
       const response = await fetch(url, {
         method: "GET",
         headers: {

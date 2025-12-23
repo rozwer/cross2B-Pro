@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Controls,
@@ -23,13 +23,11 @@ import {
   AlertTriangle,
   Maximize2,
   Minimize2,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StepConfig } from "@/components/workflow/NodeConfigPanel";
-import type { Step, StepStatus, RunStatus } from "@/lib/types";
-import type { LLMPlatform } from "@/lib/types";
+import type { Step, StepStatus, RunStatus, LLMPlatform } from "@/lib/types";
+import { normalizeStepName } from "@/lib/types";
 
 interface GraphViewTabProps {
   stepConfigs: StepConfig[];
@@ -184,18 +182,21 @@ function createNodes(
   onNodeClick?: (stepId: string) => void,
 ): WorkflowNode[] {
   const nodes: WorkflowNode[] = [];
+  const normalizedCurrentStep = currentStep ? normalizeStepName(currentStep) : undefined;
 
   const getStepStatus = (stepId: string): StepStatus | "pending" => {
     if (!runSteps) return "pending";
-    const step = runSteps.find((s) => s.step_name === stepId);
+    const normalizedStepId = normalizeStepName(stepId);
+    const step = runSteps.find((s) => normalizeStepName(s.step_name) === normalizedStepId);
     return step?.status || "pending";
   };
 
   // Row 1: step-1, step0, step1, step2
-  const row1Steps = ["step-1", "step0", "step1", "step2"];
+  const row1Steps = ["step-1", "step0", "step1", "step1_5", "step2"];
   row1Steps.forEach((stepId, index) => {
     const step = steps.find((s) => s.stepId === stepId);
     if (step) {
+      const normalizedStepId = normalizeStepName(stepId);
       nodes.push({
         id: stepId,
         type: "workflowNode",
@@ -208,7 +209,7 @@ function createNodes(
           modelName: step.modelName,
           status: getStepStatus(stepId),
           stepType: stepId === "step-1" ? "input" : "analysis",
-          isCurrent: currentStep === stepId,
+          isCurrent: normalizedCurrentStep === normalizedStepId,
           onNodeClick,
         },
       });
@@ -220,6 +221,7 @@ function createNodes(
   row2Steps.forEach((stepId, index) => {
     const step = steps.find((s) => s.stepId === stepId);
     if (step) {
+      const normalizedStepId = normalizeStepName(stepId);
       nodes.push({
         id: stepId,
         type: "workflowNode",
@@ -233,7 +235,7 @@ function createNodes(
           status: getStepStatus(stepId),
           isParallel: true,
           stepType: "analysis",
-          isCurrent: currentStep === stepId,
+          isCurrent: normalizedCurrentStep === normalizedStepId,
           onNodeClick,
         },
       });
@@ -256,7 +258,7 @@ function createNodes(
         status: getStepStatus("approval"),
         isApprovalPoint: true,
         stepType: "approval",
-        isCurrent: currentStep === "approval",
+        isCurrent: normalizedCurrentStep === "approval",
         onNodeClick,
       },
     });
@@ -264,16 +266,17 @@ function createNodes(
 
   // Row 4-6: Sequential steps after approval
   const postApprovalSteps = [
-    ["step4", "step5", "step6", "step6.5"],
-    ["step7a", "step7b", "step8"],
-    ["step9", "step10"],
+    ["step3_5", "step4", "step5", "step6"],
+    ["step6_5", "step7a", "step7b", "step8"],
+    ["step9", "step10", "step11", "step12"],
   ];
 
   postApprovalSteps.forEach((rowSteps, rowIndex) => {
     rowSteps.forEach((stepId, colIndex) => {
       const step = steps.find((s) => s.stepId === stepId);
       if (step) {
-        const offsetX = rowIndex === 2 ? 0.75 : rowIndex === 1 ? 0.5 : 0;
+        const offsetX = rowSteps.length === 3 ? 0.5 : rowSteps.length === 2 ? 0.75 : 0;
+        const normalizedStepId = normalizeStepName(stepId);
         nodes.push({
           id: stepId,
           type: "workflowNode",
@@ -289,8 +292,12 @@ function createNodes(
             modelName: step.modelName,
             status: getStepStatus(stepId),
             stepType:
-              stepId === "step10" ? "output" : stepId === "step8" ? "verification" : "generation",
-            isCurrent: currentStep === stepId,
+              stepId === "step10" || stepId === "step11" || stepId === "step12"
+                ? "output"
+                : stepId === "step8"
+                  ? "verification"
+                  : "generation",
+            isCurrent: normalizedCurrentStep === normalizedStepId,
             onNodeClick,
           },
         });
@@ -339,12 +346,20 @@ function createEdges(runSteps?: Step[]): Edge[] {
       style: getEdgeStyle("step0", "step1"),
     },
     {
-      id: "e-step1-step2",
+      id: "e-step1-step1_5",
       source: "step1",
+      target: "step1_5",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: getEdgeStyle("step1", "step1_5"),
+    },
+    {
+      id: "e-step1_5-step2",
+      source: "step1_5",
       target: "step2",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
-      style: getEdgeStyle("step1", "step2"),
+      style: getEdgeStyle("step1_5", "step2"),
     },
     // Fan-out to parallel steps
     {
@@ -398,12 +413,20 @@ function createEdges(runSteps?: Step[]): Edge[] {
     },
     // After approval - Row 4
     {
-      id: "e-approval-step4",
+      id: "e-approval-step3_5",
       source: "approval",
+      target: "step3_5",
+      animated: true,
+      style: { ...getEdgeStyle("approval", "step3_5"), strokeDasharray: "5,5" },
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+      id: "e-step3_5-step4",
+      source: "step3_5",
       target: "step4",
       animated: true,
-      style: { ...getEdgeStyle("approval", "step4"), strokeDasharray: "5,5" },
       markerEnd: { type: MarkerType.ArrowClosed },
+      style: getEdgeStyle("step3_5", "step4"),
     },
     {
       id: "e-step4-step5",
@@ -422,21 +445,21 @@ function createEdges(runSteps?: Step[]): Edge[] {
       style: getEdgeStyle("step5", "step6"),
     },
     {
-      id: "e-step6-step6.5",
+      id: "e-step6-step6_5",
       source: "step6",
-      target: "step6.5",
+      target: "step6_5",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
-      style: getEdgeStyle("step6", "step6.5"),
+      style: getEdgeStyle("step6", "step6_5"),
     },
     // Row 5
     {
-      id: "e-step6.5-step7a",
-      source: "step6.5",
+      id: "e-step6_5-step7a",
+      source: "step6_5",
       target: "step7a",
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
-      style: getEdgeStyle("step6.5", "step7a"),
+      style: getEdgeStyle("step6_5", "step7a"),
     },
     {
       id: "e-step7a-step7b",
@@ -470,6 +493,22 @@ function createEdges(runSteps?: Step[]): Edge[] {
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
       style: getEdgeStyle("step9", "step10"),
+    },
+    {
+      id: "e-step10-step11",
+      source: "step10",
+      target: "step11",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: getEdgeStyle("step10", "step11"),
+    },
+    {
+      id: "e-step11-step12",
+      source: "step11",
+      target: "step12",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: getEdgeStyle("step11", "step12"),
     },
   ];
 }

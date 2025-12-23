@@ -776,11 +776,20 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
     # Load step10 data
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
-    markdown_content = step10_data.get("markdown_content", "")
     keyword = step10_data.get("keyword", "")
-    article_title = step10_data.get("article_title", keyword)
+    articles_data = step10_data.get("articles", [])
 
-    if not markdown_content:
+    # Backward compatibility: single-article output
+    if not articles_data and step10_data.get("markdown_content"):
+        articles_data = [
+            {
+                "article_number": 1,
+                "title": step10_data.get("article_title", keyword),
+                "content": step10_data.get("markdown_content", ""),
+            }
+        ]
+
+    if not articles_data:
         return {
             "positions": [],
             "analysis_summary": "No markdown content available",
@@ -791,26 +800,50 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
     image_count = config.get("step11_image_count", 3)
     position_request = config.get("step11_position_request", "")
 
-    activity.logger.info(f"Step11 (11B): Analyzing positions for {article_title}, count={image_count}")
+    positions: list[dict[str, Any]] = []
+    sections: list[dict[str, Any]] = []
+    summaries: list[str] = []
 
-    # Analyze positions
-    position_result = await step._analyze_positions(
-        markdown_content=markdown_content,
-        article_title=article_title,
-        keyword=keyword,
-        image_count=image_count,
-        position_request=position_request,
-    )
+    for article_data in articles_data:
+        article_number = article_data.get("article_number", 1)
+        article_title = article_data.get("title", keyword)
+        markdown_content = article_data.get("content", article_data.get("markdown_content", ""))
 
-    # Extract sections for UI to display
-    sections = step._extract_sections(markdown_content)
+        if not markdown_content:
+            continue
+
+        activity.logger.info(f"Step11 (11B): Analyzing positions for article {article_number} ({article_title}), count={image_count}")
+
+        # Analyze positions per article
+        position_result = await step._analyze_positions(
+            markdown_content=markdown_content,
+            article_title=article_title,
+            keyword=keyword,
+            image_count=image_count,
+            position_request=position_request,
+        )
+
+        for pos in position_result.positions:
+            pos.article_number = article_number
+            positions.append(pos.model_dump())
+
+        # Extract sections for UI to display
+        article_sections = step._extract_sections(markdown_content)
+        for idx, section in enumerate(article_sections):
+            section["section_index"] = idx
+            section["article_number"] = article_number
+            section["section_key"] = f"{article_number}:{idx}"
+        sections.extend(article_sections)
+
+        if position_result.analysis_summary:
+            summaries.append(f"記事{article_number}: {position_result.analysis_summary}")
 
     # Save intermediate result
     result_data = {
-        "positions": [p.model_dump() for p in position_result.positions],
-        "analysis_summary": position_result.analysis_summary,
+        "positions": positions,
+        "analysis_summary": " / ".join(summaries) if summaries else "",
         "sections": sections,
-        "model": position_result.model,
+        "model": "gemini",
     }
 
     await save_step_data(
@@ -857,7 +890,21 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     keyword = step10_data.get("keyword", "")
-    article_title = step10_data.get("article_title", keyword)
+    articles_data = step10_data.get("articles", [])
+
+    # Backward compatibility: single-article output
+    if not articles_data and step10_data.get("markdown_content"):
+        articles_data = [
+            {
+                "article_number": 1,
+                "title": step10_data.get("article_title", keyword),
+                "content": step10_data.get("markdown_content", ""),
+                "html_content": step10_data.get("html_content", ""),
+            }
+        ]
+
+    articles_by_number = {int(article.get("article_number", 1)): article for article in articles_data if article}
+    default_article_title = step10_data.get("article_title", keyword)
 
     positions = args.get("positions", [])
     instructions = args.get("instructions", [])
@@ -868,10 +915,23 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
     generated_images: list[dict[str, Any]] = []
     warnings: list[str] = []
 
+    article_image_indices: dict[int, int] = {}
+
     for i, pos_data in enumerate(positions):
         position = ImageInsertionPosition(**pos_data) if isinstance(pos_data, dict) else pos_data
 
-        activity.logger.info(f"Generating image {i + 1}/{len(positions)}: {position.section_title}")
+        article_number = position.article_number or (pos_data.get("article_number") if isinstance(pos_data, dict) else None) or 1
+        try:
+            article_number = int(article_number)
+        except (TypeError, ValueError):
+            article_number = 1
+        position.article_number = article_number
+        article_data = articles_by_number.get(article_number)
+        article_title = article_data.get("title", default_article_title) if article_data else default_article_title
+        article_image_index = article_image_indices.get(article_number, 0)
+        article_image_indices[article_number] = article_image_index + 1
+
+        activity.logger.info(f"Generating image {i + 1}/{len(positions)}: article {article_number} {position.section_title}")
 
         user_instruction = instruction_map.get(i, "")
 
@@ -892,15 +952,16 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
 
             if image_result:
                 # Save to storage
-                image_path = await step._save_image_to_storage(
+                image_path = await step._save_image_to_storage_with_article(
                     ctx=ctx,
                     image_data=image_result["image_data"],
-                    image_index=i,
+                    article_number=article_number,
+                    image_index=article_image_index,
                 )
 
                 generated_image = {
                     "index": i,
-                    "position": pos_data,
+                    "position": position.model_dump(),
                     "user_instruction": user_instruction,
                     "generated_prompt": image_prompt,
                     "image_path": image_path,
@@ -911,6 +972,7 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
                     "file_size": len(image_result["image_data"]),
                     "retry_count": 0,
                     "accepted": False,  # User must accept
+                    "article_number": article_number,
                 }
                 generated_images.append(generated_image)
             else:
@@ -970,11 +1032,33 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     keyword = step10_data.get("keyword", "")
-    article_title = step10_data.get("article_title", keyword)
+    articles_data = step10_data.get("articles", [])
+
+    # Backward compatibility: single-article output
+    if not articles_data and step10_data.get("markdown_content"):
+        articles_data = [
+            {
+                "article_number": 1,
+                "title": step10_data.get("article_title", keyword),
+                "content": step10_data.get("markdown_content", ""),
+                "html_content": step10_data.get("html_content", ""),
+            }
+        ]
+
+    articles_by_number = {int(article.get("article_number", 1)): article for article in articles_data if article}
+    default_article_title = step10_data.get("article_title", keyword)
 
     image_index = args.get("image_index", 0)
     pos_data = args.get("position", {})
     position = ImageInsertionPosition(**pos_data) if isinstance(pos_data, dict) else pos_data
+    article_number = position.article_number or (pos_data.get("article_number") if isinstance(pos_data, dict) else None) or 1
+    try:
+        article_number = int(article_number)
+    except (TypeError, ValueError):
+        article_number = 1
+    position.article_number = article_number
+    article_data = articles_by_number.get(article_number)
+    article_title = article_data.get("title", default_article_title) if article_data else default_article_title
 
     retry_instruction = args.get("instruction", "")
     original_instruction = args.get("original_instruction", "")
@@ -1003,9 +1087,10 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
 
         if image_result:
             # Save to storage (overwrite)
-            image_path = await step._save_image_to_storage(
+            image_path = await step._save_image_to_storage_with_article(
                 ctx=ctx,
                 image_data=image_result["image_data"],
+                article_number=article_number,
                 image_index=image_index,
             )
 
@@ -1013,7 +1098,7 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
                 "success": True,
                 "image": {
                     "index": image_index,
-                    "position": pos_data,
+                    "position": position.model_dump(),
                     "user_instruction": combined_instruction,
                     "generated_prompt": image_prompt,
                     "image_path": image_path,
@@ -1023,6 +1108,7 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
                     "mime_type": "image/png",
                     "file_size": len(image_result["image_data"]),
                     "accepted": False,
+                    "article_number": article_number,
                 },
             }
 
@@ -1058,8 +1144,34 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
     # Load step10 data
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
-    markdown_content = step10_data.get("markdown_content", "")
-    html_content = step10_data.get("html_content", "")
+    articles_data = step10_data.get("articles", [])
+
+    # Backward compatibility: single-article output
+    if not articles_data and step10_data.get("markdown_content"):
+        articles_data = [
+            {
+                "article_number": 1,
+                "title": step10_data.get("article_title", ""),
+                "content": step10_data.get("markdown_content", ""),
+                "html_content": step10_data.get("html_content", ""),
+            }
+        ]
+
+    main_article = None
+    for article in articles_data:
+        if article.get("article_number") == 1:
+            main_article = article
+            break
+    if not main_article and articles_data:
+        main_article = articles_data[0]
+
+    markdown_content = ""
+    html_content = ""
+    main_article_number = 1
+    if main_article:
+        markdown_content = main_article.get("content", main_article.get("markdown_content", ""))
+        html_content = main_article.get("html_content", "")
+        main_article_number = main_article.get("article_number", 1)
 
     images_data = args.get("images", [])
     # Note: positions_data is available in args but extracted from images_data below
@@ -1070,6 +1182,15 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
         # Create GeneratedImage from dict
         pos_data = img_data.get("position", {})
         position = ImageInsertionPosition(**pos_data) if isinstance(pos_data, dict) else pos_data
+
+        article_number = img_data.get("article_number") or pos_data.get("article_number")
+        if article_number is not None:
+            try:
+                article_number = int(article_number)
+            except (TypeError, ValueError):
+                article_number = None
+        if article_number is not None:
+            position.article_number = article_number
 
         generated_images.append(
             GeneratedImage(
@@ -1086,12 +1207,14 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
                 file_size=img_data.get("file_size", 0),
                 retry_count=img_data.get("retry_count", 0),
                 accepted=True,  # All images at this point are accepted
+                article_number=article_number,
             )
         )
 
     # Insert images into markdown and HTML
-    final_markdown = step._insert_images_to_markdown(markdown_content, generated_images)
-    final_html = step._insert_images_to_html(html_content, generated_images)
+    article_images = [img for img in generated_images if img.article_number in (None, main_article_number)]
+    final_markdown = step._insert_images_to_markdown(markdown_content, article_images)
+    final_html = step._insert_images_to_html(html_content, article_images)
 
     # Save preview HTML
     preview_path = f"tenants/{args['tenant_id']}/runs/{args['run_id']}/step11/preview.html"

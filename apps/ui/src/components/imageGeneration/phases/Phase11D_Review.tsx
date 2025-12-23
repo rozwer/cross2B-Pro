@@ -179,9 +179,15 @@ export function Phase11D_Review({
 
               {/* 情報とアクション */}
               <div className="p-3 space-y-2">
-                <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                  {image.position.section_title} - {image.user_instruction}
-                </p>
+                <div className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 flex flex-wrap gap-1">
+                  <span>{image.position.section_title}</span>
+                  {image.article_number && (
+                    <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded">
+                      記事{image.article_number}
+                    </span>
+                  )}
+                  <span>- {image.user_instruction}</span>
+                </div>
 
                 {showRetryInput === image.index ? (
                   // リトライ指示入力

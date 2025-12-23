@@ -1,9 +1,9 @@
 """Main Temporal Workflow for SEO article generation.
 
 ArticleWorkflow orchestrates the entire article generation process:
-- Pre-approval phase: step0 → step1 → step2 → step3 (parallel)
+- Pre-approval phase: step0 → step1 → step1_5 → step2 → step3 (parallel)
 - Approval wait: Pauses for human approval via Temporal signal
-- Post-approval phase: step4 → step5 → ... → step10
+- Post-approval phase: step3_5 → step4 → ... → step12
 
 IMPORTANT:
 - No fallback to different models/tools
@@ -23,10 +23,12 @@ from .parallel import run_parallel_steps
 STEP_TIMEOUTS: dict[str, int] = {
     "step0": 60,
     "step1": 300,
+    "step1_5": 300,
     "step2": 60,
     "step3a": 120,
     "step3b": 120,
     "step3c": 120,
+    "step3_5": 180,
     "step4": 180,
     "step5": 300,
     "step6": 180,
@@ -37,6 +39,7 @@ STEP_TIMEOUTS: dict[str, int] = {
     "step9": 300,
     "step10": 120,
     "step11": 600,  # 画像生成は時間がかかる
+    "step12": 300,
 }
 
 # Default retry policy: max 3 attempts with same conditions
@@ -70,6 +73,7 @@ class ArticleWorkflow:
         self.rejected: bool = False
         self.rejection_reason: str | None = None
         self.current_step: str = "init"
+        self.config: dict[str, Any] = {}
         # Step11 (image generation) state - Legacy (backward compatibility)
         self.image_gen_decision_made: bool = False
         self.image_gen_enabled: bool = False
@@ -236,6 +240,8 @@ class ArticleWorkflow:
                 "error": "pack_id required. Auto-execution without pack_id is forbidden.",
             }
 
+        self.config = config
+
         # Build activity args (passed to all activities)
         # IMPORTANT: Do NOT accumulate step data in config to avoid gRPC size limits
         # Each activity should load required data from storage via load_step_data()
@@ -271,6 +277,16 @@ class ArticleWorkflow:
             )
             artifact_refs["step1"] = step1_result.get("artifact_ref", {})
 
+        # Step 1.5: Related Keyword Competitor Extraction (optional)
+        if self._should_run("step1_5", resume_from):
+            self.current_step = "step1_5"
+            step1_5_result = await self._execute_activity(
+                "step1_5_related_keyword_extraction",
+                activity_args,
+                "step1_5",
+            )
+            artifact_refs["step1_5"] = step1_5_result.get("artifact_ref", {})
+
         # Step 2: CSV Validation
         if self._should_run("step2", resume_from):
             self.current_step = "step2"
@@ -292,7 +308,20 @@ class ArticleWorkflow:
 
         # ========== APPROVAL WAIT ==========
         # Skip approval wait if resuming from post-approval step
-        post_approval_steps = ["step4", "step5", "step6", "step6_5", "step7a", "step7b", "step8", "step9", "step10", "step11"]
+        post_approval_steps = [
+            "step3_5",
+            "step4",
+            "step5",
+            "step6",
+            "step6_5",
+            "step7a",
+            "step7b",
+            "step8",
+            "step9",
+            "step10",
+            "step11",
+            "step12",
+        ]
         skip_approval = resume_from is not None and resume_from in post_approval_steps
 
         if not skip_approval:
@@ -322,6 +351,16 @@ class ArticleWorkflow:
 
         # ========== POST-APPROVAL PHASE ==========
         self.current_step = "post_approval"
+
+        # Step 3.5: Human Touch Generation (first post-approval step)
+        if self._should_run("step3_5", resume_from):
+            self.current_step = "step3_5"
+            step3_5_result = await self._execute_activity(
+                "step3_5_human_touch_generation",
+                activity_args,
+                "step3_5",
+            )
+            artifact_refs["step3_5"] = step3_5_result.get("artifact_ref", {})
 
         # Step 4: Strategic Outline
         if self._should_run("step4", resume_from):
@@ -418,6 +457,16 @@ class ArticleWorkflow:
             step11_result = await self._run_step11_multiphase(tenant_id, run_id, config, activity_args, resume_from)
             artifact_refs["step11"] = step11_result.get("artifact_ref", {})
 
+        # Step 12: WordPress HTML Generation
+        if self._should_run("step12", resume_from):
+            self.current_step = "step12"
+            step12_result = await self._execute_activity(
+                "step12_wordpress_html_generation",
+                activity_args,
+                "step12",
+            )
+            artifact_refs["step12"] = step12_result.get("artifact_ref", {})
+
         # ========== COMPLETED ==========
         self.current_step = "completed"
 
@@ -442,14 +491,16 @@ class ArticleWorkflow:
             True if the step should be executed
         """
         if resume_from is None:
-            return True
+            return self._step_enabled(step)
 
         # Step order for comparison
         step_order = [
             "step0",
             "step1",
+            "step1_5",
             "step2",
             "step3",  # Represents 3a/3b/3c as a group
+            "step3_5",
             "step4",
             "step5",
             "step6",
@@ -460,15 +511,27 @@ class ArticleWorkflow:
             "step9",
             "step10",
             "step11",
+            "step12",
         ]
 
         try:
             current_idx = step_order.index(step)
             resume_idx = step_order.index(resume_from)
-            return current_idx >= resume_idx
+            return current_idx >= resume_idx and self._step_enabled(step)
         except ValueError:
             # Unknown step, run it
-            return True
+            return self._step_enabled(step)
+
+    def _step_enabled(self, step: str) -> bool:
+        """Check feature flags for optional steps."""
+        config = self.config or {}
+        if step == "step1_5":
+            return config.get("enable_step1_5", True)
+        if step == "step3_5":
+            return config.get("enable_step3_5", True)
+        if step == "step12":
+            return config.get("enable_step12", True)
+        return True
 
     async def _execute_activity(
         self,

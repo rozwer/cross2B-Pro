@@ -79,9 +79,16 @@ export function Phase11C_Instructions({
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">
-                  {position.section_title}
-                </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">
+                    {position.section_title}
+                  </span>
+                  {position.article_number && (
+                    <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded">
+                      記事{position.article_number}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {position.position === "before" ? "見出し前" : "見出し後"}
                 </span>

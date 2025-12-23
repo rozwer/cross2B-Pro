@@ -114,13 +114,18 @@
     "step4": {
       "step": "step4",
       "version": 1,
-      "content": "キーワード「{{keyword}}」の戦略的アウトライン（構成案）を作成してください。\n分析結果: {{analysis_summary}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"title\": \"記事タイトル案\",\n  \"outline\": [\n    {\"heading\": \"H2見出し\", \"subheadings\": [\"H3見出し1\", \"H3見出し2\"], \"key_points\": []}\n  ],\n  \"target_word_count\": 3000,\n  \"cta_positions\": [\"導入後\", \"結論前\"]\n}\n```",
+      "content": "キーワード「{{keyword}}」の戦略的アウトライン（構成案）を作成してください。\n分析結果:\n{{analysis_summary}}\n\n人間味要素:\n{{human_touch_elements}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"title\": \"記事タイトル案\",\n  \"outline\": [\n    {\"heading\": \"H2見出し\", \"subheadings\": [\"H3見出し1\", \"H3見出し2\"], \"key_points\": []}\n  ],\n  \"target_word_count\": 3000,\n  \"cta_positions\": [\"導入後\", \"結論前\"]\n}\n```",
       "variables": {
         "keyword": {
           "required": true,
           "type": "string"
         },
         "analysis_summary": {
+          "required": false,
+          "type": "string",
+          "default": ""
+        },
+        "human_touch_elements": {
           "required": false,
           "type": "string",
           "default": ""
@@ -176,7 +181,7 @@
     "step6_5": {
       "step": "step6_5",
       "version": 1,
-      "content": "統合パッケージを作成してください。\nキーワード: {{keyword}}\nキーワード分析: {{keyword_analysis}}\nクエリ分析: {{query_analysis}}\n共起語分析: {{cooccurrence_analysis}}\n競合分析: {{competitor_analysis}}\n戦略的アウトライン: {{strategic_outline}}\n一次情報: {{sources}}\n強化アウトライン: {{enhanced_outline}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"integration_package\": \"統合パッケージ全文（Markdown形式の文字列）\",\n  \"outline_summary\": \"構成の概要\",\n  \"section_count\": 0,\n  \"total_sources\": 0\n}\n```",
+      "content": "統合パッケージを作成してください。\nキーワード: {{keyword}}\nキーワード分析: {{keyword_analysis}}\nクエリ分析: {{query_analysis}}\n共起語分析: {{cooccurrence_analysis}}\n競合分析: {{competitor_analysis}}\n人間味要素: {{human_touch_elements}}\n戦略的アウトライン: {{strategic_outline}}\n一次情報: {{sources}}\n強化アウトライン: {{enhanced_outline}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"integration_package\": \"統合パッケージ全文（Markdown形式の文字列）\",\n  \"outline_summary\": \"構成の概要\",\n  \"section_count\": 0,\n  \"total_sources\": 0\n}\n```",
       "variables": {
         "keyword": {
           "required": true,
@@ -202,6 +207,11 @@
           "type": "object",
           "default": {}
         },
+        "human_touch_elements": {
+          "required": false,
+          "type": "string",
+          "default": ""
+        },
         "strategic_outline": {
           "required": false,
           "type": "object",
@@ -222,7 +232,7 @@
     "step7a": {
       "step": "step7a",
       "version": 1,
-      "content": "記事の初稿を作成してください。\nキーワード: {{keyword}}\n統合パッケージ:\n{{integration_package}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"draft\": \"記事本文（Markdown形式）\",\n  \"word_count\": 0,\n  \"section_count\": 0,\n  \"cta_positions\": []\n}\n```",
+      "content": "記事の初稿を作成してください。\nキーワード: {{keyword}}\n統合パッケージ:\n{{integration_package}}\n\n人間味要素:\n{{human_touch_elements}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"draft\": \"記事本文（Markdown形式）\",\n  \"word_count\": 0,\n  \"section_count\": 0,\n  \"cta_positions\": []\n}\n```",
       "variables": {
         "keyword": {
           "required": true,
@@ -231,6 +241,11 @@
         "integration_package": {
           "required": true,
           "type": "string"
+        },
+        "human_touch_elements": {
+          "required": false,
+          "type": "string",
+          "default": ""
         }
       }
     },

@@ -11,7 +11,7 @@ from datetime import datetime
 from io import BytesIO
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -347,7 +347,7 @@ async def get_status(
 @router.get("/preview")
 async def get_preview(
     run_id: str,
-    article: int | None = None,
+    article: int | None = Query(default=None, ge=1, le=4, description="記事番号（1-4）"),
     user: AuthUser = Depends(get_current_user),
 ) -> Step12PreviewResponse:
     """Step12のプレビューを取得.
@@ -408,6 +408,9 @@ async def get_preview(
             )
         )
 
+    if article is not None and not articles_response:
+        raise HTTPException(status_code=404, detail=f"Article {article} not found")
+
     return Step12PreviewResponse(
         articles=articles_response,
         common_assets=step12_data.get("common_assets", {}),
@@ -418,7 +421,7 @@ async def get_preview(
 @router.get("/preview/{article_number}")
 async def get_article_preview(
     run_id: str,
-    article_number: int,
+    article_number: int = Path(..., ge=1, le=4, description="記事番号（1-4）"),
     user: AuthUser = Depends(get_current_user),
 ) -> WordPressArticleResponse:
     """特定の記事のプレビューを取得."""
@@ -507,7 +510,7 @@ async def download_all(
 @router.get("/download/{article_number}")
 async def download_article(
     run_id: str,
-    article_number: int,
+    article_number: int = Path(..., ge=1, le=4, description="記事番号（1-4）"),
     user: AuthUser = Depends(get_current_user),
 ) -> StreamingResponse:
     """特定の記事をダウンロード."""
