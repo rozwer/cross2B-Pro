@@ -126,9 +126,7 @@ class ArtifactStore:
         self.endpoint: str = endpoint or os.getenv("MINIO_ENDPOINT") or "localhost:9000"
         self.access_key: str = access_key or os.getenv("MINIO_ACCESS_KEY") or "minioadmin"
         self.secret_key: str = secret_key or os.getenv("MINIO_SECRET_KEY") or "minioadmin"
-        self.secure: bool = secure if secure is not None else (
-            os.getenv("MINIO_USE_SSL", "false").lower() == "true"
-        )
+        self.secure: bool = secure if secure is not None else (os.getenv("MINIO_USE_SSL", "false").lower() == "true")
         self.bucket: str = bucket or os.getenv("MINIO_BUCKET") or "seo-gen-artifacts"
 
         self._client: Minio | None = None
@@ -198,12 +196,8 @@ class ArtifactStore:
         expected_prefix = f"storage/{tenant_id}/"
 
         if not path.startswith(expected_prefix):
-            logger.warning(
-                f"Tenant isolation violation: path={path}, tenant_id={tenant_id}"
-            )
-            raise ArtifactAccessDeniedError(
-                f"Access denied: path does not belong to tenant {tenant_id}"
-            )
+            logger.warning(f"Tenant isolation violation: path={path}, tenant_id={tenant_id}")
+            raise ArtifactAccessDeniedError(f"Access denied: path does not belong to tenant {tenant_id}")
 
     async def put(
         self,
@@ -272,10 +266,7 @@ class ArtifactStore:
         if verify:
             actual_digest = self._compute_digest(content)
             if actual_digest != ref.digest:
-                raise ArtifactIntegrityError(
-                    f"Digest mismatch for {ref.path}: "
-                    f"expected {ref.digest}, got {actual_digest}"
-                )
+                raise ArtifactIntegrityError(f"Digest mismatch for {ref.path}: expected {ref.digest}, got {actual_digest}")
 
         return content
 
@@ -371,6 +362,53 @@ class ArtifactStore:
                 object_name=path,
             )
         return len(paths)
+
+    async def delete_step_artifacts(
+        self,
+        tenant_id: str,
+        run_id: str,
+        step: str,
+    ) -> int:
+        """Delete all artifacts for a specific step.
+
+        VULN-012: tenant_id, run_id, step を検証
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+            step: Step name (e.g., "step9", "step10")
+
+        Returns:
+            Number of artifacts deleted
+        """
+        # VULN-012: パラメータ検証
+        _validate_tenant_id(tenant_id)
+        _validate_path_component(run_id, "run_id")
+        _validate_path_component(step, "step")
+
+        prefix = f"storage/{tenant_id}/{run_id}/{step}/"
+        objects = self.client.list_objects(
+            bucket_name=self.bucket,
+            prefix=prefix,
+            recursive=True,
+        )
+
+        deleted_count = 0
+        for obj in objects:
+            self.client.remove_object(
+                bucket_name=self.bucket,
+                object_name=obj.object_name,
+            )
+            deleted_count += 1
+            logger.debug(f"Deleted artifact: {obj.object_name}")
+
+        if deleted_count > 0:
+            logger.info(
+                f"Deleted {deleted_count} artifacts for step",
+                extra={"tenant_id": tenant_id, "run_id": run_id, "step": step},
+            )
+
+        return deleted_count
 
     def get_presigned_url(
         self,
