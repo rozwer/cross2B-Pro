@@ -21,7 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
 
@@ -140,7 +140,8 @@ export function WorkflowPattern1_N8nStyle({
   onImageGenerate,
   onImageGenSkip,
 }: WorkflowPattern1Props) {
-  const stepMap = new Map(steps.map((s) => [s.step_name, s]));
+  // Normalize step names (step6_5 -> step6.5) for consistent lookup
+  const stepMap = new Map(steps.map((s) => [normalizeStepName(s.step_name), s]));
 
   // Track expanded steps
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
