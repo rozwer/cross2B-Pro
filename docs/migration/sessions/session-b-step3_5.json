@@ -1,0 +1,156 @@
+{
+  "session_id": "B",
+  "phase": "1B",
+  "title": "工程3.5（人間味・体験エピソード生成）新規追加",
+  "description": "心情傾向・人間味・体験エピソードを生成する工程を新規実装。承認後の最初の工程として配置。",
+  "dependencies": [],
+  "estimated_files": 7,
+
+  "tasks": [
+    {
+      "id": "B-1",
+      "type": "schema",
+      "description": "step3_5のスキーマ定義を作成",
+      "file": "apps/worker/activities/schemas/step3_5.py",
+      "details": {
+        "input": {
+          "step0_output": "dict (キーワード分析結果)",
+          "step1_output": "dict (競合記事データ)",
+          "step1_5_output": "dict (関連KW競合データ、オプション)",
+          "step3a_output": "dict (クエリ分析・ペルソナ)",
+          "step3b_output": "dict (共起語・関連KW)",
+          "step3c_output": "dict (競合分析・差別化)",
+          "tenant_id": "string",
+          "run_id": "string"
+        },
+        "output": {
+          "human_touch_elements": "dict",
+          "output_path": "string",
+          "output_digest": "string"
+        }
+      }
+    },
+    {
+      "id": "B-2",
+      "type": "activity",
+      "description": "step3_5のActivity実装",
+      "file": "apps/worker/activities/step3_5.py",
+      "details": {
+        "activity_name": "step3_5_human_touch_generation",
+        "ai_model": "Gemini（自然な表現担当）",
+        "timeout": "180秒",
+        "retry_policy": "最大3回",
+        "input_files_count": 6
+      }
+    },
+    {
+      "id": "B-3",
+      "type": "prompt",
+      "description": "step3_5用プロンプトテンプレート作成",
+      "file": "apps/api/prompts/packs/step3_5.json",
+      "details": {
+        "template_name": "human_touch_generation",
+        "variables": [
+          "keyword",
+          "persona",
+          "competitor_insights",
+          "cooccurrence_keywords"
+        ],
+        "output_format": "JSON",
+        "key_elements": [
+          "心情傾向分析",
+          "人間味のある表現パターン",
+          "体験エピソード候補",
+          "感情的フック"
+        ]
+      }
+    },
+    {
+      "id": "B-4",
+      "type": "workflow",
+      "description": "post_approval.pyの先頭に工程3.5を追加",
+      "file": "apps/worker/graphs/post_approval.py",
+      "details": {
+        "position": "[承認] → step3_5 → step4 → ...",
+        "note": "承認後の最初の工程として配置"
+      }
+    },
+    {
+      "id": "B-5",
+      "type": "note",
+      "description": "__init__.pyへのエクスポートはSession Fで一括追加",
+      "file": "apps/worker/activities/__init__.py",
+      "details": {
+        "action": "このセッションでは編集しない",
+        "reason": "Session F で一括追加することでマージ競合を回避",
+        "verification": "step3_5.py 内で @activity.defn デコレータが正しく設定されていることを確認"
+      }
+    },
+    {
+      "id": "B-6",
+      "type": "test",
+      "description": "step3_5のユニットテスト作成",
+      "file": "tests/unit/test_step3_5.py",
+      "details": {
+        "test_cases": [
+          "正常系: 6ファイル入力から人間味要素生成",
+          "部分入力: step1_5がない場合でも動作",
+          "出力検証: 必須フィールドの存在確認"
+        ]
+      }
+    },
+    {
+      "id": "B-7",
+      "type": "llm_config",
+      "description": "Geminiモデル設定の確認・追加",
+      "file": "apps/api/llm/gemini.py",
+      "details": {
+        "model": "gemini-1.5-pro",
+        "temperature": 0.7,
+        "note": "人間味生成は創造性が必要なため少し高めの温度",
+        "path_note": "LLM設定は apps/api/llm/ 配下（apps/worker/llm/ ではない）"
+      }
+    }
+  ],
+
+  "output_spec": {
+    "file_name": "工程3.5_人間味.json",
+    "storage_path": "storage/{tenant_id}/{run_id}/step3_5/output.json",
+    "format": {
+      "emotional_analysis": {
+        "primary_emotion": "string",
+        "secondary_emotions": ["string"],
+        "pain_points": ["string"],
+        "desires": ["string"]
+      },
+      "human_touch_patterns": [
+        {
+          "type": "string (体験談/感情表現/共感フレーズ)",
+          "content": "string",
+          "placement_suggestion": "string"
+        }
+      ],
+      "experience_episodes": [
+        {
+          "scenario": "string",
+          "narrative": "string",
+          "lesson": "string"
+        }
+      ],
+      "emotional_hooks": ["string"],
+      "metadata": {
+        "generated_at": "datetime",
+        "model": "string",
+        "input_files": ["string"]
+      }
+    }
+  },
+
+  "acceptance_criteria": [
+    "承認後に自動実行される",
+    "6ファイル（step0, 1, 1.5, 3A, 3B, 3C）を入力として処理",
+    "step1_5がない場合でもエラーにならない",
+    "出力がstep4以降で参照可能",
+    "冪等性が保証される"
+  ]
+}
