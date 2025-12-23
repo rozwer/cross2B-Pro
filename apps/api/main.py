@@ -4103,31 +4103,55 @@ async def get_run_preview(
 
             html_content = None
 
-            # First priority: Step11 output with images (if completed)
-            step11_state = run.step11_state or {}
-            if step11_state.get("phase") == "completed":
-                try:
-                    # Step11 uses a different path convention: tenants/{tenant_id}/runs/{run_id}/step11/output.json
-                    step11_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
-                    response = store.client.get_object(
-                        bucket_name=store.bucket,
-                        object_name=step11_path,
-                    )
-                    step11_bytes = response.read()
-                    response.close()
-                    response.release_conn()
+            # First priority: Step12 output (if completed)
+            try:
+                step12_bytes = await store.get_by_path(
+                    tenant_id=tenant_id,
+                    run_id=run_id,
+                    step="step12",
+                    filename="output.json",
+                )
+                if step12_bytes:
+                    import json
 
-                    if step11_bytes:
-                        import json
-
-                        step11_data = json.loads(step11_bytes.decode("utf-8"))
-                        html_content = step11_data.get("html_with_images")
+                    step12_data = json.loads(step12_bytes.decode("utf-8"))
+                    step12_articles = step12_data.get("articles", [])
+                    if step12_articles and article <= len(step12_articles):
+                        target_article = step12_articles[article - 1]
+                        html_content = target_article.get("html_content", target_article.get("gutenberg_blocks", ""))
                         if html_content:
-                            logger.debug("Found HTML with images at step11/output.json")
-                except Exception as e:
-                    logger.debug(f"Could not get step11 output: {e}")
+                            logger.debug(f"Found HTML for article {article} at step12/output.json")
+            except Exception as e:
+                logger.debug(f"Could not get step12 output: {e}")
 
-            # Second priority: step10/preview.html
+            # Second priority: Step11 output with images (if completed)
+            if not html_content:
+                step11_state = run.step11_state or {}
+                if step11_state.get("phase") == "completed":
+                    try:
+                        # Step11 uses a different path convention: tenants/{tenant_id}/runs/{run_id}/step11/output.json
+                        step11_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
+                        response = store.client.get_object(
+                            bucket_name=store.bucket,
+                            object_name=step11_path,
+                        )
+                        step11_bytes = response.read()
+                        response.close()
+                        response.release_conn()
+
+                        if step11_bytes:
+                            import json
+
+                            step11_data = json.loads(step11_bytes.decode("utf-8"))
+                            # For step11, html_with_images is legacy single article
+                            # Multi-article support: check images array for article_number filtering
+                            html_content = step11_data.get("html_with_images")
+                            if html_content:
+                                logger.debug("Found HTML with images at step11/output.json")
+                    except Exception as e:
+                        logger.debug(f"Could not get step11 output: {e}")
+
+            # Third priority: step10/preview.html
             if not html_content:
                 try:
                     content_bytes = await store.get_by_path(

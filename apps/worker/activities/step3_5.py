@@ -265,12 +265,22 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         parsed_data = parse_result.data if parse_result.success and isinstance(parse_result.data, dict) else {}
 
         # Extract structured fields from parsed data
-        emotional_analysis = {
-            "primary_emotion": parsed_data.get("primary_emotion", ""),
-            "secondary_emotions": parsed_data.get("secondary_emotions", []),
-            "pain_points": parsed_data.get("pain_points", []),
-            "desires": parsed_data.get("desires", []),
-        }
+        # emotional_analysis can be nested inside parsed_data or at top level
+        raw_emotional = parsed_data.get("emotional_analysis", {})
+        if isinstance(raw_emotional, dict):
+            emotional_analysis = {
+                "primary_emotion": raw_emotional.get("primary_emotion", parsed_data.get("primary_emotion", "")),
+                "secondary_emotions": raw_emotional.get("secondary_emotions", parsed_data.get("secondary_emotions", [])),
+                "pain_points": raw_emotional.get("pain_points", parsed_data.get("pain_points", [])),
+                "desires": raw_emotional.get("desires", parsed_data.get("desires", [])),
+            }
+        else:
+            emotional_analysis = {
+                "primary_emotion": parsed_data.get("primary_emotion", ""),
+                "secondary_emotions": parsed_data.get("secondary_emotions", []),
+                "pain_points": parsed_data.get("pain_points", []),
+                "desires": parsed_data.get("desires", []),
+            }
 
         # Extract human touch patterns
         human_touch_patterns = []
