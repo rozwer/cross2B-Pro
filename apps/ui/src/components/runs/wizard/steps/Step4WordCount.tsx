@@ -137,11 +137,12 @@ export function Step4WordCount({
               type="number"
               id="target_word_count"
               value={data.target || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value, 10);
                 onChange({
-                  target: e.target.value ? parseInt(e.target.value, 10) : undefined,
-                })
-              }
+                  target: !isNaN(parsed) ? parsed : undefined,
+                });
+              }}
               min={1000}
               max={50000}
               step={1000}
