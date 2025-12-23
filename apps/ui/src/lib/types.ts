@@ -614,3 +614,44 @@ export function getStatusIcon(status: RunStatus | StepStatus): string {
       return "○";
   }
 }
+
+// ============================================
+// Hearing Template Types
+// ============================================
+
+export interface HearingTemplateData {
+  business: BusinessInput;
+  keyword: KeywordInput;
+  strategy: StrategyInput;
+  word_count: WordCountInput;
+  cta: CTAInput;
+}
+
+export interface HearingTemplate {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description: string | null;
+  data: HearingTemplateData;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HearingTemplateCreate {
+  name: string;
+  description?: string;
+  data: HearingTemplateData;
+}
+
+export interface HearingTemplateUpdate {
+  name?: string;
+  description?: string;
+  data?: HearingTemplateData;
+}
+
+export interface HearingTemplateList {
+  items: HearingTemplate[];
+  total: number;
+  limit: number;
+  offset: number;
+}

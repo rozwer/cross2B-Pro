@@ -2,10 +2,14 @@
 
 This module defines the comprehensive input structure for the article generation workflow,
 replacing the simple RunInput with a detailed 6-section hearing form.
+
+Also includes HearingTemplate schemas for template save/reuse functionality.
 """
 
+from datetime import datetime
 from enum import Enum
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
@@ -458,3 +462,80 @@ class KeywordSuggestionResponse(BaseModel):
     )
     model_used: str = Field(..., description="使用したモデル")
     generated_at: str = Field(..., description="生成日時（ISO 8601）")
+
+
+# =============================================================================
+# Hearing Template Schemas
+# =============================================================================
+
+
+class HearingTemplateData(BaseModel):
+    """Template data structure (ArticleHearingInput without confirmed field)."""
+
+    business: BusinessInput = Field(..., description="セクション1: 事業内容とターゲット")
+    keyword: KeywordInput = Field(..., description="セクション2: キーワード選定")
+    strategy: StrategyInput = Field(..., description="セクション3: 記事戦略")
+    word_count: WordCountInput = Field(..., description="セクション4: 文字数設定")
+    cta: CTAInput = Field(..., description="セクション5: CTA設定")
+
+
+class HearingTemplateBase(BaseModel):
+    """Base schema for hearing template."""
+
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="テンプレート名",
+        json_schema_extra={"example": "派遣社員向けeラーニング記事"},
+    )
+    description: str | None = Field(
+        None,
+        max_length=1000,
+        description="テンプレートの説明",
+        json_schema_extra={"example": "派遣社員教育に関する記事のテンプレート"},
+    )
+
+
+class HearingTemplateCreate(HearingTemplateBase):
+    """Schema for creating a new hearing template."""
+
+    data: HearingTemplateData = Field(..., description="テンプレートデータ")
+
+
+class HearingTemplateUpdate(BaseModel):
+    """Schema for updating a hearing template."""
+
+    name: str | None = Field(
+        None,
+        min_length=1,
+        max_length=255,
+        description="テンプレート名",
+    )
+    description: str | None = Field(
+        None,
+        max_length=1000,
+        description="テンプレートの説明",
+    )
+    data: HearingTemplateData | None = Field(None, description="テンプレートデータ")
+
+
+class HearingTemplate(HearingTemplateBase):
+    """Full hearing template schema with all fields."""
+
+    id: UUID = Field(..., description="テンプレートID")
+    tenant_id: str = Field(..., description="テナントID")
+    data: HearingTemplateData = Field(..., description="テンプレートデータ")
+    created_at: datetime = Field(..., description="作成日時")
+    updated_at: datetime = Field(..., description="更新日時")
+
+    model_config = {"from_attributes": True}
+
+
+class HearingTemplateList(BaseModel):
+    """Paginated list of hearing templates."""
+
+    items: list[HearingTemplate] = Field(..., description="テンプレート一覧")
+    total: int = Field(..., description="総数")
+    limit: int = Field(..., description="取得件数上限")
+    offset: int = Field(..., description="オフセット")

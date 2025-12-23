@@ -184,6 +184,19 @@ CREATE TABLE IF NOT EXISTS diagnostic_reports (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Hearing templates table: reusable workflow input configurations
+CREATE TABLE IF NOT EXISTS hearing_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id VARCHAR(64) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    data JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_hearing_template_tenant_name UNIQUE (tenant_id, name)
+);
+
 -- =============================================================================
 -- Indexes
 -- =============================================================================
@@ -215,6 +228,9 @@ CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at DE
 
 CREATE INDEX IF NOT EXISTS idx_diagnostic_reports_run_id ON diagnostic_reports(run_id);
 
+CREATE INDEX IF NOT EXISTS idx_hearing_templates_tenant_id ON hearing_templates(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_hearing_templates_name ON hearing_templates(name);
+
 -- =============================================================================
 -- Functions
 -- =============================================================================
@@ -232,6 +248,13 @@ $$ language 'plpgsql';
 DROP TRIGGER IF EXISTS update_runs_updated_at ON runs;
 CREATE TRIGGER update_runs_updated_at
     BEFORE UPDATE ON runs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Apply trigger to hearing_templates table
+DROP TRIGGER IF EXISTS update_hearing_templates_updated_at ON hearing_templates;
+CREATE TRIGGER update_hearing_templates_updated_at
+    BEFORE UPDATE ON hearing_templates
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

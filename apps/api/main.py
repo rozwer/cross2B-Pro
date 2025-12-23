@@ -57,7 +57,7 @@ from apps.api.db import (
     TenantIdValidationError,
 )
 from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
-from apps.api.routers import diagnostics, keywords, step11
+from apps.api.routers import diagnostics, hearing, keywords, step11
 from apps.api.schemas.article_hearing import (
     ArticleHearingInput,
 )
@@ -609,6 +609,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(diagnostics.router)
+app.include_router(hearing.router)
 app.include_router(keywords.router)
 app.include_router(step11.router)
 
