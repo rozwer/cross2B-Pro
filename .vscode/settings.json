@@ -10,7 +10,7 @@
     "**/.next": true,
     ".worktrees": true,
     ".githooks": true,
-    ".codex": true,
+    ".codex": false,
     "uv.lock": true,
     ".python-version": true,
     ".dockerignore": true,

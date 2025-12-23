@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "claude-code-config-structure",
+  "title": ".claude ディレクトリ構成と各ファイルの役割",
+  "description": "Claude Code の設定ディレクトリ構成。テンプレート化の参考用。",
+  "version": "1.0.0",
+  "generated": "2025-12-19",
+  "structure": {
+    "CLAUDE.md": {
+      "path": ".claude/CLAUDE.md",
+      "type": "markdown",
+      "role": "プロジェクト固有の指示書（最高優先度）",
+      "description": "Claude Code がプロジェクトで作業する際の基本ルール、コード規約、禁止事項、参照先ドキュメント、リポジトリ構造などを定義する最上位設定ファイル。他ドキュメントと矛盾がある場合はこのファイルが正。",
+      "templateType": "project-specific",
+      "templateizable": false,
+      "sections": [
+        "Source of Truth（参照先ドキュメント）",
+        "並列作業（worktree）戦略",
+        "Codex 連携",
+        "テスト戦略",
+        "開発スタイル（パッケージ管理、コミット方針）",
+        "重要ルール（フォールバック禁止、アーキテクチャ原則）",
+        "サブエージェント一覧",
+        "リポジトリ構造",
+        "クイックリファレンス"
+      ]
+    },
+    "settings.json": {
+      "path": ".claude/settings.json",
+      "type": "json",
+      "role": "グローバル権限設定",
+      "description": "Claude Code のツール使用権限を定義。どのBashコマンド、ファイル操作、ツールが許可されるかを指定する。リポジトリにコミットされる共有設定。",
+      "templateType": "mostly-template",
+      "templateizable": true,
+      "structure": {
+        "permissions": {
+          "allow": "許可するツール/コマンドのパターン配列",
+          "deny": "拒否するパターン配列"
+        }
+      }
+    },
+    "settings.local.json": {
+      "path": ".claude/settings.local.json",
+      "type": "json",
+      "role": "ローカル権限設定（.gitignore推奨）",
+      "description": "settings.json を拡張するローカル固有の権限設定。セッション中に許可した一時的な権限が蓄積される。通常は .gitignore に追加。",
+      "templateType": "generated",
+      "templateizable": false
+    },
+    "agents/": {
+      "path": ".claude/agents/",
+      "type": "directory",
+      "role": "サブエージェント定義",
+      "description": "Task tool で呼び出せる専門サブエージェントの定義。各 .md ファイルが1つのエージェントを定義。frontmatter で name/description を指定し、本文で役割・参照先・出力形式を記述。",
+      "templateType": "project-specific",
+      "templateizable": false,
+      "files": {
+        "architect.md": {
+          "name": "architect",
+          "description": "仕様書から設計判断をまとめ、Temporal/LangGraph/API/DB/Storage の責務分割と実装方針を提示する。",
+          "role": "設計判断・分割方針の提示"
+        },
+        "backend-implementer.md": {
+          "name": "backend-implementer",
+          "description": "FastAPI/Temporal/DB/Storage を中心に、仕様書準拠で実装する（越境防止・監査・冪等性）。",
+          "role": "バックエンド実装"
+        },
+        "frontend-implementer.md": {
+          "name": "frontend-implementer",
+          "description": "レビューUI（承認/却下/再実行/生成物閲覧）を仕様書に沿って実装し、運用導線を整える。",
+          "role": "フロントエンド実装"
+        },
+        "prompt-engineer.md": {
+          "name": "prompt-engineer",
+          "description": "DB管理プロンプトの設計/差分/変数/レンダリング/評価観点を整備し、品質を上げる。",
+          "role": "プロンプト設計・管理"
+        },
+        "temporal-debugger.md": {
+          "name": "temporal-debugger",
+          "description": "Temporal の履歴/リプレイ/決定性違反を中心にデバッグし、最初の原因点を特定する。",
+          "role": "Temporal ワークフローのデバッグ"
+        },
+        "security-reviewer.md": {
+          "name": "security-reviewer",
+          "description": "マルチテナント越境、監査、秘密情報、LLM安全性の観点でレビューし、指摘と修正案を返す。",
+          "role": "セキュリティレビュー"
+        }
+      }
+    },
+    "commands/": {
+      "path": ".claude/commands/",
+      "type": "directory",
+      "role": "スラッシュコマンド定義",
+      "description": "ユーザーが /command で呼び出せるショートカット。サブディレクトリでカテゴリ分け。各 .md ファイルが1つのコマンドを定義。frontmatter で description を指定し、本文で手順・コマンド例を記述。",
+      "templateType": "mixed",
+      "templateizable": "partial",
+      "categories": {
+        "dev/": {
+          "description": "開発環境の起動・停止・確認系コマンド",
+          "commands": {
+            "up.md": {
+              "description": "ローカル起動（Docker Compose で全サービスを起動）",
+              "templateizable": true
+            },
+            "down.md": {
+              "description": "ローカル停止（開発サーバ/コンテナ）",
+              "templateizable": true
+            },
+            "smoke.md": {
+              "description": "簡易スモーク（環境/依存/構文/起動の最低限チェック）",
+              "templateizable": true
+            },
+            "seed.md": {
+              "description": "初期データ投入（将来の共通DB/顧客DB seed を含む）",
+              "templateizable": true
+            },
+            "worktree-new.md": {
+              "description": "git worktree を作って並列実装を始める（.worktrees 配下）",
+              "templateizable": true
+            },
+            "worktree-list.md": {
+              "description": "worktree 一覧を確認する",
+              "templateizable": true
+            },
+            "worktree-remove.md": {
+              "description": "worktree を安全に削除する（ローカルのみ）",
+              "templateizable": true
+            }
+          }
+        },
+        "debug/": {
+          "description": "デバッグ・調査系コマンド",
+          "commands": {
+            "trace-run.md": {
+              "description": "run の障害解析（API→DB→Temporal→storage の順に辿る）",
+              "templateizable": false
+            },
+            "replay.md": {
+              "description": "Temporal リプレイ（決定性違反/履歴起因バグの切り分け）",
+              "templateizable": false
+            }
+          }
+        },
+        "prompts/": {
+          "description": "プロンプト管理系コマンド",
+          "commands": {
+            "preview-render.md": {
+              "description": "プロンプトのレンダリング結果をプレビュー（変数解決/差分確認）",
+              "templateizable": false
+            },
+            "bump-version.md": {
+              "description": "プロンプトのバージョン更新（DBの新規 row 追加＋切替）",
+              "templateizable": false
+            }
+          }
+        },
+        "review/": {
+          "description": "レビュー系コマンド",
+          "commands": {
+            "codex-review.md": {
+              "description": "Codex にセカンドオピニオンのコードレビューを依頼する",
+              "templateizable": true
+            }
+          }
+        },
+        "workflow/": {
+          "description": "ワークフロー操作系コマンド",
+          "commands": {
+            "new-run.md": {
+              "description": "新規 run/workflow を開始（API 経由）",
+              "templateizable": false
+            },
+            "start-run.md": {
+              "description": "既存 run を開始（API が start 分離の場合の手順）",
+              "templateizable": false
+            },
+            "approve-run.md": {
+              "description": "工程3のレビュー承認（Temporal signal で再開）",
+              "templateizable": false
+            },
+            "fetch-artifacts.md": {
+              "description": "生成物取得（files 一覧→工程別出力→storage）",
+              "templateizable": false
+            }
+          }
+        }
+      }
+    },
+    "rules/": {
+      "path": ".claude/rules/",
+      "type": "directory",
+      "role": "詳細ルール定義",
+      "description": "CLAUDE.md から参照される詳細ルール。特定トピックに関する深い制約や手順を定義。Claude Code は CLAUDE.md 経由でこれらを参照。",
+      "templateType": "project-specific",
+      "templateizable": false,
+      "files": {
+        "workflow-contract.md": {
+          "description": "工程と承認（Human-in-the-loop）、成果物の基本契約、AI実行ルールを定義",
+          "topics": ["承認待ち", "監査ログ", "成果物参照", "出力マーカー"]
+        },
+        "git-worktree.md": {
+          "description": "git worktree を使った並列開発のルールを定義",
+          "topics": ["worktree配置", "venv分離", "リモート操作禁止"]
+        },
+        "implementation.md": {
+          "description": "API契約、Temporal+LangGraph、成果物、セキュリティ、プロンプト管理、フロントエンド、環境構築、テスト戦略、CI/CD、トラブルシューティングの詳細実装ルール",
+          "topics": ["エンドポイント一覧", "冪等性", "越境防止", "監査ログ", "テストレベル"]
+        }
+      }
+    },
+    "skills/": {
+      "path": ".claude/skills/",
+      "type": "directory",
+      "role": "スキル定義",
+      "description": "Claude Code が特定タスクを実行する際に参照するスキル（ナレッジ＋手順）。各サブディレクトリが1つのスキルを定義。SKILL.md がメイン、templates/ に実装テンプレートを配置可能。",
+      "templateType": "mixed",
+      "templateizable": "partial",
+      "skills": {
+        "langgraph-fundamentals/": {
+          "name": "langgraph-fundamentals",
+          "description": "Core concepts for building LangGraph applications. Use when creating StateGraph workflows, defining nodes and edges, managing state with TypedDict/Pydantic, or understanding basic graph structure.",
+          "templateizable": true,
+          "contents": ["SKILL.md"]
+        },
+        "langgraph-persistence/": {
+          "name": "langgraph-persistence",
+          "description": "Persistence and human-in-the-loop patterns for LangGraph. Use when implementing checkpointing, saving/restoring graph state, adding human approval workflows, managing conversation memory across sessions.",
+          "templateizable": true,
+          "contents": ["SKILL.md"]
+        },
+        "langgraph-patterns/": {
+          "name": "langgraph-patterns",
+          "description": "Advanced LangGraph patterns for production applications. Use when implementing streaming, parallel node execution, subgraphs, error handling and retries, or Command-based control flow.",
+          "templateizable": true,
+          "contents": ["SKILL.md"]
+        },
+        "langgraph-multi-agent/": {
+          "name": "langgraph-multi-agent",
+          "description": "Multi-agent architectures with LangGraph. Use when building systems with multiple collaborating agents, implementing supervisor or swarm patterns, creating hierarchical agent workflows.",
+          "templateizable": true,
+          "contents": ["SKILL.md"]
+        },
+        "workflow-step-impl/": {
+          "name": "workflow-step-impl",
+          "description": "Temporal+LangGraph の工程（step）追加/修正の実装テンプレ。Activity 冪等性、output_path/output_digest、承認待ち、監査ログを含む。",
+          "templateizable": false,
+          "contents": [
+            "SKILL.md",
+            "templates/activity_skeleton.py",
+            "templates/step_node_skeleton.py"
+          ]
+        },
+        "prompt-authoring/": {
+          "name": "prompt-authoring",
+          "description": "DB管理プロンプトの作成/更新（versioning、variables、レンダリング確認、出力マーカー準拠）に使う。",
+          "templateizable": false,
+          "contents": ["SKILL.md"]
+        },
+        "tenant-db-ops/": {
+          "name": "tenant-db-ops",
+          "description": "マルチテナント（顧客別DB分離）のDB運用・マイグレーション・調査に使う。",
+          "templateizable": false,
+          "contents": ["SKILL.md"]
+        },
+        "security-review/": {
+          "name": "security-review",
+          "description": "RBAC/監査ログ/秘密情報/マルチテナント越境/LLMプロンプト注入の観点でレビューする。",
+          "templateizable": false,
+          "contents": ["SKILL.md"]
+        }
+      }
+    }
+  },
+  "templateCategories": {
+    "universal": {
+      "description": "どのプロジェクトでもそのまま使えるテンプレート",
+      "items": [
+        "settings.json（ベース権限設定）",
+        "commands/dev/worktree-*.md",
+        "skills/langgraph-*/"
+      ]
+    },
+    "adaptable": {
+      "description": "プロジェクトに合わせて調整が必要なテンプレート",
+      "items": [
+        "commands/dev/up.md",
+        "commands/dev/down.md",
+        "commands/dev/smoke.md",
+        "commands/review/codex-review.md"
+      ]
+    },
+    "project-specific": {
+      "description": "プロジェクト固有で作成が必要",
+      "items": [
+        "CLAUDE.md",
+        "agents/*",
+        "rules/*",
+        "skills/（プロジェクト固有スキル）",
+        "commands/（プロジェクト固有コマンド）"
+      ]
+    }
+  },
+  "fileNamingConventions": {
+    "agents": "{role-name}.md",
+    "commands": "{action-name}.md（ディレクトリでカテゴリ分け）",
+    "rules": "{topic-name}.md",
+    "skills": "{skill-name}/SKILL.md（テンプレートは templates/ 配下）"
+  },
+  "frontmatterSpec": {
+    "agents": {
+      "required": ["name", "description"],
+      "optional": []
+    },
+    "commands": {
+      "required": ["description"],
+      "optional": []
+    },
+    "skills": {
+      "required": ["name", "description"],
+      "optional": []
+    }
+  }
+}
