@@ -4043,22 +4043,43 @@ async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            # First, try to get HTML from storage directly (step10/preview.html)
-            # This is the preferred method for new runs
             html_content = None
-            try:
-                content_bytes = await store.get_by_path(
-                    tenant_id=tenant_id,
-                    run_id=run_id,
-                    step="step10",
-                    filename="preview.html",
-                )
-                if content_bytes:
-                    html_content = content_bytes.decode("utf-8")
-                    logger.debug("Found HTML preview at step10/preview.html")
-            except Exception:
-                # Fallback: look for HTML artifact in DB (legacy support)
-                logger.debug("No preview.html at step10, checking DB artifacts")
+
+            # First priority: Step11 output with images (if completed)
+            step11_state = run.step11_state or {}
+            if step11_state.get("phase") == "completed":
+                try:
+                    step11_bytes = await store.get_by_path(
+                        tenant_id=tenant_id,
+                        run_id=run_id,
+                        step="step11",
+                        filename="output.json",
+                    )
+                    if step11_bytes:
+                        import json
+
+                        step11_data = json.loads(step11_bytes.decode("utf-8"))
+                        html_content = step11_data.get("html_with_images")
+                        if html_content:
+                            logger.debug("Found HTML with images at step11/output.json")
+                except Exception as e:
+                    logger.debug(f"Could not get step11 output: {e}")
+
+            # Second priority: step10/preview.html
+            if not html_content:
+                try:
+                    content_bytes = await store.get_by_path(
+                        tenant_id=tenant_id,
+                        run_id=run_id,
+                        step="step10",
+                        filename="preview.html",
+                    )
+                    if content_bytes:
+                        html_content = content_bytes.decode("utf-8")
+                        logger.debug("Found HTML preview at step10/preview.html")
+                except Exception:
+                    # Fallback: look for HTML artifact in DB (legacy support)
+                    logger.debug("No preview.html at step10, checking DB artifacts")
 
             if not html_content:
                 # Look for HTML artifact from final step in DB
