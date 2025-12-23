@@ -422,13 +422,13 @@ async def get_article_preview(
     user: AuthUser = Depends(get_current_user),
 ) -> WordPressArticleResponse:
     """特定の記事のプレビューを取得."""
-    preview = await get_preview(run_id, user)
+    # Use article parameter to filter at source level
+    preview = await get_preview(run_id, article=article_number, user=user)
 
-    for article in preview.articles:
-        if article.article_number == article_number:
-            return article
+    if not preview.articles:
+        raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
 
-    raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
+    return preview.articles[0]
 
 
 @router.get("/download")

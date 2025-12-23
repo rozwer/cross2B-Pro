@@ -264,23 +264,44 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         # Build structured output conforming to Step3_5Output schema
         parsed_data = parse_result.data if parse_result.success and isinstance(parse_result.data, dict) else {}
 
-        # Extract structured fields from parsed data
-        # emotional_analysis can be nested inside parsed_data or at top level
-        raw_emotional = parsed_data.get("emotional_analysis", {})
+        # Extract emotional_analysis with robust parsing
+        # Initialize with default values
+        emotional_analysis = {
+            "primary_emotion": "",
+            "secondary_emotions": [],
+            "pain_points": [],
+            "desires": [],
+        }
+
+        # Try nested structure first, then flat structure as fallback
+        raw_emotional = parsed_data.get("emotional_analysis")
         if isinstance(raw_emotional, dict):
-            emotional_analysis = {
-                "primary_emotion": raw_emotional.get("primary_emotion", parsed_data.get("primary_emotion", "")),
-                "secondary_emotions": raw_emotional.get("secondary_emotions", parsed_data.get("secondary_emotions", [])),
-                "pain_points": raw_emotional.get("pain_points", parsed_data.get("pain_points", [])),
-                "desires": raw_emotional.get("desires", parsed_data.get("desires", [])),
-            }
+            emotional_analysis.update(
+                {
+                    "primary_emotion": raw_emotional.get("primary_emotion", ""),
+                    "secondary_emotions": raw_emotional.get("secondary_emotions", []),
+                    "pain_points": raw_emotional.get("pain_points", []),
+                    "desires": raw_emotional.get("desires", []),
+                }
+            )
         else:
-            emotional_analysis = {
-                "primary_emotion": parsed_data.get("primary_emotion", ""),
-                "secondary_emotions": parsed_data.get("secondary_emotions", []),
-                "pain_points": parsed_data.get("pain_points", []),
-                "desires": parsed_data.get("desires", []),
-            }
+            # Fallback to flat structure
+            if raw_emotional is not None:
+                logger.warning(f"emotional_analysis is not a dict: {type(raw_emotional)}, using flat structure")
+            emotional_analysis.update(
+                {
+                    "primary_emotion": parsed_data.get("primary_emotion", ""),
+                    "secondary_emotions": parsed_data.get("secondary_emotions", []),
+                    "pain_points": parsed_data.get("pain_points", []),
+                    "desires": parsed_data.get("desires", []),
+                }
+            )
+
+        # Validate array fields (ensure they are lists)
+        for field in ["secondary_emotions", "pain_points", "desires"]:
+            if not isinstance(emotional_analysis[field], list):
+                logger.warning(f"emotional_analysis.{field} is not a list: {type(emotional_analysis[field])}")
+                emotional_analysis[field] = []
 
         # Extract human touch patterns
         human_touch_patterns = []
