@@ -194,7 +194,7 @@ export function Step3Strategy({ data, onChange, errors }: Step3StrategyProps) {
               type="text"
               value={newTopic}
               onChange={(e) => setNewTopic(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   addChildTopic();

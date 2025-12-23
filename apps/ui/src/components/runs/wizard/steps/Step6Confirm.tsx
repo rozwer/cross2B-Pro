@@ -19,8 +19,7 @@ interface WizardFormData {
 
 interface Step6ConfirmProps {
   formData: WizardFormData;
-  onChange: (confirmed: boolean) => void;
-  onConfirm: () => void;
+  onConfirm: (confirmed: boolean) => void;
   errors: string[];
 }
 
@@ -46,7 +45,6 @@ const CTA_POSITION_LABELS: Record<string, string> = {
 
 export function Step6Confirm({
   formData,
-  onChange,
   onConfirm,
   errors,
 }: Step6ConfirmProps) {
@@ -267,12 +265,7 @@ export function Step6Confirm({
           <input
             type="checkbox"
             checked={confirmed}
-            onChange={(e) => {
-              onChange(e.target.checked);
-              if (e.target.checked) {
-                onConfirm();
-              }
-            }}
+            onChange={(e) => onConfirm(e.target.checked)}
             className="h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 mt-0.5"
           />
           <span className="ml-3 text-sm text-gray-700">

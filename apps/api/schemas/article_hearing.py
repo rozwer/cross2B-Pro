@@ -7,7 +7,7 @@ replacing the simple RunInput with a detailed 6-section hearing form.
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 # =============================================================================
 # Enums
@@ -104,12 +104,12 @@ class BusinessInput(BaseModel):
         json_schema_extra={"example": "中小企業特化、低予算での教育プラン提供、導入実績300社以上"},
     )
 
-    @field_validator("target_cv_other")
-    @classmethod
-    def validate_target_cv_other(cls, v: str | None, info: Any) -> str | None:
+    @model_validator(mode="after")
+    def validate_target_cv_other(self) -> "BusinessInput":
         """Validate that target_cv_other is provided when target_cv is 'other'."""
-        # Note: Cross-field validation is handled at the parent model level
-        return v
+        if self.target_cv == TargetCV.OTHER and not self.target_cv_other:
+            raise ValueError("target_cv='other'の場合、target_cv_otherは必須です")
+        return self
 
 
 # =============================================================================
@@ -171,6 +171,17 @@ class KeywordInput(BaseModel):
         description="関連キーワード一覧（任意）",
     )
 
+    @model_validator(mode="after")
+    def validate_conditional_fields(self) -> "KeywordInput":
+        """Validate fields based on keyword status."""
+        if self.status == KeywordStatus.DECIDED:
+            if not self.main_keyword:
+                raise ValueError("status='decided'の場合、main_keywordは必須です")
+        else:  # UNDECIDED
+            if not self.theme_topics and not self.selected_keyword:
+                raise ValueError("status='undecided'の場合、theme_topicsまたはselected_keywordが必要です")
+        return self
+
 
 # =============================================================================
 # Section 3: Article Strategy
@@ -217,6 +228,13 @@ class WordCountInput(BaseModel):
         json_schema_extra={"example": 12000},
     )
 
+    @model_validator(mode="after")
+    def validate_manual_target(self) -> "WordCountInput":
+        """Validate that target is provided when mode is manual."""
+        if self.mode == WordCountMode.MANUAL and self.target is None:
+            raise ValueError("mode='manual'の場合、targetは必須です")
+        return self
+
 
 # =============================================================================
 # Section 5: CTA Settings
@@ -226,18 +244,19 @@ class WordCountInput(BaseModel):
 class SingleCTA(BaseModel):
     """Single CTA configuration."""
 
-    url: str = Field(
+    url: HttpUrl = Field(
         ...,
         description="CTA誘導先URL",
         json_schema_extra={"example": "https://cross-learning.jp/"},
     )
     text: str = Field(
         ...,
+        min_length=1,
         description="CTAテキスト",
         json_schema_extra={"example": "クロスラーニングの詳細を見る"},
     )
     description: str = Field(
-        ...,
+        "",
         description="誘導先の説明",
         json_schema_extra={"example": "クロスラーニング広報サイトのTOPページ"},
     )
@@ -246,9 +265,9 @@ class SingleCTA(BaseModel):
 class StagedCTAItem(BaseModel):
     """Individual staged CTA item."""
 
-    url: str = Field(..., description="CTA誘導先URL")
-    text: str = Field(..., description="CTAテキスト")
-    description: str = Field(..., description="誘導先の説明")
+    url: HttpUrl = Field(..., description="CTA誘導先URL")
+    text: str = Field(..., min_length=1, description="CTAテキスト")
+    description: str = Field("", description="誘導先の説明")
     position: int | None = Field(
         None,
         description="挿入位置（文字数）。position_mode='fixed'の場合に使用",
@@ -282,6 +301,17 @@ class CTAInput(BaseModel):
         None,
         description="段階的CTA設定（type='staged'の場合）",
     )
+
+    @model_validator(mode="after")
+    def validate_cta_type(self) -> "CTAInput":
+        """Validate CTA configuration based on type."""
+        if self.type == CTAType.SINGLE:
+            if not self.single:
+                raise ValueError("type='single'の場合、single設定は必須です")
+        else:  # STAGED
+            if not self.staged:
+                raise ValueError("type='staged'の場合、staged設定は必須です")
+        return self
 
 
 # =============================================================================
