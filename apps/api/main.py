@@ -2961,7 +2961,80 @@ async def resume_from_step(
                     loaded_config[f"{prev_step}_data"] = step_data
                     logger.debug(f"Loaded artifact for {prev_step}")
 
-            # 3. Start new Temporal workflow with resume_from
+            # 3. Delete artifacts for steps after resume point
+            steps_to_delete = step_order[step_index:]  # Include current step and all subsequent
+            # Also include step11 which is not in step_order but may exist
+            steps_to_delete_with_step11 = steps_to_delete + ["step11"]
+
+            deleted_artifacts_count = 0
+            for step_to_delete in steps_to_delete_with_step11:
+                count = await artifact_store.delete_step_artifacts(
+                    tenant_id=tenant_id,
+                    run_id=run_id,
+                    step=step_to_delete,
+                )
+                deleted_artifacts_count += count
+
+            if deleted_artifacts_count > 0:
+                logger.info(
+                    f"Deleted {deleted_artifacts_count} artifacts for resume",
+                    extra={
+                        "run_id": run_id,
+                        "resume_from": step,
+                        "deleted_steps": steps_to_delete_with_step11,
+                    },
+                )
+
+            # 4. Update step statuses in DB
+            # - Steps before resume point: mark as completed
+            # - Steps at and after resume point: delete records (will be recreated by workflow)
+            from sqlalchemy import delete as sql_delete
+
+            from apps.api.db.models import Step
+
+            # Delete step records for steps at and after resume point
+            await session.execute(
+                sql_delete(Step).where(
+                    Step.run_id == run_id,
+                    Step.step_name.in_(steps_to_delete_with_step11),
+                )
+            )
+
+            # Mark all prior steps as completed
+            for prev_step in steps_to_load:
+                step_query = select(Step).where(
+                    Step.run_id == run_id,
+                    Step.step_name == prev_step,
+                )
+                step_result = await session.execute(step_query)
+                step_record = step_result.scalar_one_or_none()
+
+                if step_record:
+                    step_record.status = StepStatus.COMPLETED.value
+                    if not step_record.completed_at:
+                        step_record.completed_at = datetime.now()
+                else:
+                    # Create completed step record if it doesn't exist
+                    new_step = Step(
+                        run_id=run_id,
+                        step_name=prev_step,
+                        status=StepStatus.COMPLETED.value,
+                        started_at=datetime.now(),
+                        completed_at=datetime.now(),
+                        retry_count=0,
+                    )
+                    session.add(new_step)
+
+            logger.info(
+                "Updated step statuses for resume",
+                extra={
+                    "run_id": run_id,
+                    "completed_steps": steps_to_load,
+                    "deleted_step_records": steps_to_delete_with_step11,
+                },
+            )
+
+            # 5. Start new Temporal workflow with resume_from
             if temporal_client is None:
                 raise HTTPException(
                     status_code=503,
@@ -2978,9 +3051,13 @@ async def resume_from_step(
                 task_queue=TEMPORAL_TASK_QUEUE,
             )
 
-            # Update run status
+            # Update run status and current step, clear error state
             now = datetime.now()
             original_run.status = RunStatus.RUNNING.value
+            original_run.current_step = step
+            original_run.error_message = None
+            original_run.error_code = None
+            original_run.completed_at = None
             original_run.updated_at = now
 
             # Log audit entry
@@ -2990,7 +3067,12 @@ async def resume_from_step(
                 action="resume",
                 resource_type="run",
                 resource_id=run_id,
-                details={"resume_from": step, "workflow_id": new_workflow_id},
+                details={
+                    "resume_from": step,
+                    "workflow_id": new_workflow_id,
+                    "deleted_artifacts_count": deleted_artifacts_count,
+                    "deleted_steps": steps_to_delete_with_step11,
+                },
             )
 
             await session.commit()
@@ -3011,6 +3093,7 @@ async def resume_from_step(
                 "resume_from": step,
                 "workflow_id": new_workflow_id,
                 "loaded_steps": steps_to_load,
+                "deleted_artifacts_count": deleted_artifacts_count,
             }
 
     except HTTPException:

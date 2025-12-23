@@ -128,9 +128,10 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
   const resume = useCallback(
     async (step: string) => {
       const result = await api.runs.resume(runId, step);
+      await fetch();
       return result;
     },
-    [runId],
+    [runId, fetch],
   );
 
   return {
