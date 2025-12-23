@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Loader2,
   Check,
-  X,
   RefreshCw,
   AlertTriangle,
   Image as ImageIcon,
@@ -274,7 +273,7 @@ export function Phase11D_Review({
           disabled={loading}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
-            "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700",
+            "bg-primary-600 text-white hover:bg-primary-700",
             loading && "opacity-50 cursor-not-allowed"
           )}
         >

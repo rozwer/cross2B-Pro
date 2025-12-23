@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   RefreshCw,
   ExternalLink,
-  Copy,
   Settings,
   Activity,
   FileText,
@@ -15,7 +14,6 @@ import {
   Network,
   X,
   Loader2,
-  Sparkles,
 } from "lucide-react";
 import { useRun } from "@/hooks/useRun";
 import { useRunProgress } from "@/hooks/useRunProgress";
@@ -275,9 +273,8 @@ export default function RunDetailPage({
             {isWaitingForImageGeneration() ? (
               <button
                 onClick={() => setShowImageGenDialog(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
               >
-                <Sparkles className="h-4 w-4" />
                 画像を生成
               </button>
             ) : run.status === "waiting_approval" ? (
@@ -293,9 +290,8 @@ export default function RunDetailPage({
               <>
                 <button
                   onClick={() => setShowImageGenDialog(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                 >
-                  <Sparkles className="h-4 w-4" />
                   画像を追加
                 </button>
                 <button

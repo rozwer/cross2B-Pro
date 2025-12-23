@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Sparkles,
   SkipForward,
   ArrowRight,
   Loader2,
@@ -33,8 +32,8 @@ export function Phase11A_Settings({
   return (
     <div className="space-y-6">
       {/* 説明 */}
-      <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-        <p className="text-sm text-purple-800 dark:text-purple-200">
+      <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           AIが記事内容を分析し、画像挿入に適した位置を提案します。
           画像の枚数と挿入位置の希望を指定してください。
         </p>
@@ -52,7 +51,7 @@ export function Phase11A_Settings({
             max={10}
             value={imageCount}
             onChange={(e) => setImageCount(Number(e.target.value))}
-            className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
+            className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
             disabled={loading}
           />
           <span className="w-12 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -74,7 +73,7 @@ export function Phase11A_Settings({
           onChange={(e) => setPositionRequest(e.target.value)}
           placeholder="例：「導入部分にアイキャッチ画像を入れてほしい」「各セクションの説明に図解を入れてほしい」"
           rows={3}
-          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
           disabled={loading}
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -102,7 +101,7 @@ export function Phase11A_Settings({
           disabled={loading}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
-            "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700",
+            "bg-primary-600 text-white hover:bg-primary-700",
             loading && "opacity-50 cursor-not-allowed"
           )}
         >
