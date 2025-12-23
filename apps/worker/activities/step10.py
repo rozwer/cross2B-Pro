@@ -25,7 +25,7 @@ Error Handling Strategy:
 import hashlib
 import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, TypedDict
 
 from temporalio import activity
 
@@ -56,8 +56,18 @@ from apps.worker.helpers import (
 
 from .base import ActivityError, BaseActivity, load_step_data
 
+
+class ArticleVariationInfo(TypedDict):
+    """Article variation type definition."""
+
+    number: int
+    type: ArticleVariationType
+    target_audience: str
+    description: str
+
+
 # バリエーション定義
-ARTICLE_VARIATIONS = [
+ARTICLE_VARIATIONS: list[ArticleVariationInfo] = [
     {
         "number": 1,
         "type": ArticleVariationType.MAIN,
@@ -397,8 +407,8 @@ class Step10FinalOutput(BaseActivity):
         activity.logger.info(f"Starting 4-article generation for keyword: {keyword}")
 
         for variation_info in ARTICLE_VARIATIONS:
-            article_num: int = variation_info["number"]
-            variation_type: ArticleVariationType = variation_info["type"]
+            article_num = variation_info["number"]
+            variation_type = variation_info["type"]
 
             activity.logger.info(f"Generating article {article_num}/4: {variation_type.value}")
 
