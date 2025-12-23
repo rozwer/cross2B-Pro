@@ -4049,12 +4049,16 @@ async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user
             step11_state = run.step11_state or {}
             if step11_state.get("phase") == "completed":
                 try:
-                    step11_bytes = await store.get_by_path(
-                        tenant_id=tenant_id,
-                        run_id=run_id,
-                        step="step11",
-                        filename="output.json",
+                    # Step11 uses a different path convention: tenants/{tenant_id}/runs/{run_id}/step11/output.json
+                    step11_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
+                    response = store.client.get_object(
+                        bucket_name=store.bucket,
+                        object_name=step11_path,
                     )
+                    step11_bytes = response.read()
+                    response.close()
+                    response.release_conn()
+
                     if step11_bytes:
                         import json
 
