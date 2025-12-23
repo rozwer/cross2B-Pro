@@ -11,7 +11,6 @@ import type {
   ArtifactRef,
   ArtifactContent,
   PaginatedResponse,
-  ApiError,
   Prompt,
   PromptListResponse,
   UpdatePromptInput,
@@ -19,6 +18,8 @@ import type {
   ImagePosition,
   Section,
   GeneratedImage,
+  KeywordSuggestionRequest,
+  KeywordSuggestionResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -508,8 +509,20 @@ class ApiClient {
   };
 
   // ============================================
-  // Prompts API (JSON file-based)
+  // Keywords API
   // ============================================
+
+  keywords = {
+    /**
+     * テーマに基づいてキーワード候補を生成
+     */
+    suggest: async (request: KeywordSuggestionRequest): Promise<KeywordSuggestionResponse> => {
+      return this.request<KeywordSuggestionResponse>("/api/keywords/suggest", {
+        method: "POST",
+        body: JSON.stringify(request),
+      });
+    },
+  };
 
   // ============================================
   // Config API
