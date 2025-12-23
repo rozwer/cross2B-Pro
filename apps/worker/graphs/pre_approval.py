@@ -4,7 +4,9 @@ Handles steps 0-3 (including parallel 3A/3B/3C) before human approval.
 After this graph completes, workflow pauses for approval signal.
 
 Graph flow:
-    step0 → step1 → step2 → step3_parallel → END (waiting_approval state)
+    step0 → step1 → step1_5 (optional) → step2 → step3_parallel → END (waiting_approval state)
+
+Note: step1_5 is optional and skipped if related_keywords is empty.
 """
 
 # NOTE: LangGraph Studio loads this file directly, so we need to ensure
@@ -149,14 +151,130 @@ async def step1_execute(
     }
 
 
+async def step1_5_execute(
+    prompt: str,
+    state: GraphState,
+    ctx: ExecutionContext,
+) -> dict[str, Any]:
+    """Execute step 1.5: Related Keyword Competitor Extraction (Optional).
+
+    This step fetches competitor articles for related keywords.
+    Skipped if related_keywords is empty in config.
+
+    Note: This is a simplified LangGraph node implementation.
+    For production use with checkpointing and idempotency,
+    use the Temporal Activity (step1_5_related_keyword_extraction).
+    """
+    config = ctx.config
+    related_keywords: list[str] = config.get("related_keywords", [])
+
+    # Skip if no related keywords
+    if not related_keywords:
+        logger.info("[STEP1.5] Skipped: No related keywords provided")
+        return {
+            "step": "step1_5",
+            "skipped": True,
+            "skip_reason": "no_related_keywords",
+            "related_keywords_analyzed": 0,
+            "related_competitor_data": [],
+        }
+
+    logger.debug(f"[STEP1.5] Processing {len(related_keywords)} related keywords")
+
+    registry = ToolRegistry()
+
+    try:
+        serp_tool = registry.get("serp_fetch")
+        page_tool = registry.get("page_fetch")
+    except Exception as e:
+        logger.error(f"[STEP1.5] Required tool not found: {e}")
+        raise ValueError(f"Required tool not found: {e}") from e
+
+    if not serp_tool:
+        raise ValueError("serp_fetch tool not available")
+
+    # Limits
+    max_keywords = 5
+    max_competitors_per_kw = 3
+    page_fetch_timeout = 30
+
+    related_competitor_data: list[dict[str, Any]] = []
+
+    for keyword in related_keywords[:max_keywords]:
+        try:
+            serp_result = await serp_tool.execute(query=keyword, num_results=max_competitors_per_kw + 2)
+
+            if not serp_result.success:
+                logger.warning(f"[STEP1.5] SERP fetch failed for '{keyword}': {serp_result.error_message}")
+                continue
+
+            # Handle both "urls" and "results" keys for compatibility
+            results = serp_result.data.get("results", []) if serp_result.data else []
+            urls = [r.get("url") for r in results if r.get("url")]
+            if not urls:
+                urls = serp_result.data.get("urls", []) if serp_result.data else []
+
+            competitors: list[dict[str, Any]] = []
+            if page_tool:
+                for url in urls[:max_competitors_per_kw]:
+                    try:
+                        result = await asyncio.wait_for(
+                            page_tool.execute(url=url),
+                            timeout=page_fetch_timeout,
+                        )
+                        if result.success and result.data:
+                            content = result.data.get("body_text", result.data.get("content", ""))
+                            competitors.append(
+                                {
+                                    "related_keyword": keyword,
+                                    "url": url,
+                                    "title": result.data.get("title", ""),
+                                    "content_summary": content[:2000] if content else "",
+                                    "word_count": len(content) if content else 0,
+                                }
+                            )
+                    except TimeoutError:
+                        logger.warning(f"[STEP1.5] Timeout fetching {url}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"[STEP1.5] Error fetching {url}: {e}")
+                        continue
+
+            related_competitor_data.append(
+                {
+                    "keyword": keyword,
+                    "search_results_count": len(urls),
+                    "competitors": competitors,
+                    "fetch_success_count": len(competitors),
+                }
+            )
+        except Exception as e:
+            logger.warning(f"[STEP1.5] Error processing keyword '{keyword}': {e}")
+            continue
+
+    total_articles = sum(len(d.get("competitors", [])) for d in related_competitor_data)
+
+    return {
+        "step": "step1_5",
+        "skipped": False,
+        "related_keywords_analyzed": len(related_competitor_data),
+        "related_competitor_data": related_competitor_data,
+        "metadata": {
+            "fetched_at": datetime.utcnow().isoformat(),
+            "total_articles_fetched": total_articles,
+        },
+    }
+
+
 async def step2_execute(
     prompt: str,
     state: GraphState,
     ctx: ExecutionContext,
 ) -> dict[str, Any]:
     """Execute step 2: CSV Validation."""
-    # step1_output will be used for validation once artifact loading is implemented
+    # step1_output and step1_5_output will be used for validation
     _ = state.get("step_outputs", {}).get("step1")  # Mark as future use
+    _ = state.get("step_outputs", {}).get("step1_5")  # Mark as future use
 
     # In a real implementation, we'd load the artifact content
     # For now, mark as validated
@@ -338,19 +456,22 @@ def build_pre_approval_graph() -> Any:
     # Create node functions with wrapper
     step0_node = create_node_function("step0", step0_execute)
     step1_node = create_node_function("step1", step1_execute)
+    step1_5_node = create_node_function("step1_5", step1_5_execute)
     step2_node = create_node_function("step2", step2_execute)
     step3_parallel_node = create_node_function("step3_parallel", step3_parallel_execute)
 
     # Add nodes
     graph.add_node("step0", step0_node)  # type: ignore[call-overload]
     graph.add_node("step1", step1_node)  # type: ignore[call-overload]
+    graph.add_node("step1_5", step1_5_node)  # type: ignore[call-overload]
     graph.add_node("step2", step2_node)  # type: ignore[call-overload]
     graph.add_node("step3_parallel", step3_parallel_node)  # type: ignore[call-overload]
 
-    # Add edges (linear flow)
+    # Add edges (linear flow with step1_5 between step1 and step2)
     graph.add_edge(START, "step0")
     graph.add_edge("step0", "step1")
-    graph.add_edge("step1", "step2")
+    graph.add_edge("step1", "step1_5")
+    graph.add_edge("step1_5", "step2")
     graph.add_edge("step2", "step3_parallel")
     graph.add_edge("step3_parallel", END)
 
