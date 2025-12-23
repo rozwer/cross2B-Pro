@@ -1,0 +1,117 @@
+{
+  "session_id": "A",
+  "phase": "1A",
+  "title": "工程1.5（関連KW競合抽出）新規追加",
+  "description": "関連キーワードの上位サイト競合本文を抽出するオプション工程を新規実装",
+  "dependencies": [],
+  "estimated_files": 6,
+
+  "tasks": [
+    {
+      "id": "A-1",
+      "type": "schema",
+      "description": "step1_5のスキーマ定義を作成",
+      "file": "apps/worker/activities/schemas/step1_5.py",
+      "details": {
+        "input": {
+          "step0_output": "dict (キーワード分析結果 - recommended_angles, target_audience等)",
+          "step1_output": "dict (競合記事データ - URLリスト等)",
+          "related_keywords": "list[string] (関連キーワード一覧)",
+          "tenant_id": "string",
+          "run_id": "string"
+        },
+        "output": {
+          "related_competitor_data": "list[dict] (関連KW毎の競合データ)",
+          "output_path": "string",
+          "output_digest": "string"
+        },
+        "note": "step0_outputからrecommended_anglesを参照して関連KW選定を最適化"
+      }
+    },
+    {
+      "id": "A-2",
+      "type": "activity",
+      "description": "step1_5のActivity実装",
+      "file": "apps/worker/activities/step1_5.py",
+      "details": {
+        "activity_name": "step1_5_related_keyword_extraction",
+        "ai_model": "外部スクレイピング/GAS連携",
+        "timeout": "300秒",
+        "retry_policy": "最大3回"
+      }
+    },
+    {
+      "id": "A-3",
+      "type": "prompt",
+      "description": "step1_5用プロンプトテンプレート（存在しない場合はスキップ）",
+      "file": "apps/api/prompts/packs/step1_5.json",
+      "details": {
+        "note": "外部ツール連携のため、プロンプト不要の可能性あり",
+        "action": "step1と同様のツール呼び出し形式を踏襲"
+      }
+    },
+    {
+      "id": "A-4",
+      "type": "workflow",
+      "description": "pre_approval.pyに工程1.5を追加（step1の後、step2の前）",
+      "file": "apps/worker/graphs/pre_approval.py",
+      "details": {
+        "position": "step1 → step1_5 → step2",
+        "optional": true,
+        "skip_condition": "related_keywordsが空の場合はスキップ"
+      }
+    },
+    {
+      "id": "A-5",
+      "type": "note",
+      "description": "__init__.pyへのエクスポートはSession Fで一括追加",
+      "file": "apps/worker/activities/__init__.py",
+      "details": {
+        "action": "このセッションでは編集しない",
+        "reason": "Session F で一括追加することでマージ競合を回避",
+        "verification": "step1_5.py 内で @activity.defn デコレータが正しく設定されていることを確認"
+      }
+    },
+    {
+      "id": "A-6",
+      "type": "test",
+      "description": "step1_5のユニットテスト作成",
+      "file": "tests/unit/test_step1_5.py",
+      "details": {
+        "test_cases": [
+          "正常系: 関連KWから競合データ取得",
+          "スキップ: 関連KWが空の場合",
+          "エラー: 外部API障害時のリトライ"
+        ]
+      }
+    }
+  ],
+
+  "output_spec": {
+    "file_name": "工程1.5_関連KW競合抽出.json",
+    "storage_path": "storage/{tenant_id}/{run_id}/step1_5/output.json",
+    "format": {
+      "related_keywords_analyzed": "int",
+      "competitor_articles": [
+        {
+          "related_keyword": "string",
+          "url": "string",
+          "title": "string",
+          "content_summary": "string",
+          "word_count": "int"
+        }
+      ],
+      "metadata": {
+        "fetched_at": "datetime",
+        "source": "string"
+      }
+    }
+  },
+
+  "acceptance_criteria": [
+    "step1の後に実行される",
+    "related_keywordsが空の場合は自動スキップ",
+    "出力がstep2で読み込み可能",
+    "冪等性が保証される"
+  ]
+}
