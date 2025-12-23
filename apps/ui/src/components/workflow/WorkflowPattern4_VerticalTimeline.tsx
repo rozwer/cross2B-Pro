@@ -21,7 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
@@ -110,7 +110,8 @@ export function WorkflowPattern4_VerticalTimeline({
   onImageGenerate,
   onImageGenSkip,
 }: WorkflowPattern4Props) {
-  const stepMap = new Map(steps.map((s) => [s.step_name, s]));
+  // Normalize step names (step6_5 -> step6.5) for consistent lookup
+  const stepMap = new Map(steps.map((s) => [normalizeStepName(s.step_name), s]));
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set([currentStep]));
 
   const toggleExpand = (stepName: string) => {

@@ -22,7 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -81,7 +81,8 @@ export function WorkflowPattern3_DifyStyle({
   onApprove,
   onReject,
 }: WorkflowPattern3Props) {
-  const stepMap = new Map(steps.map((s) => [s.step_name, s]));
+  // Normalize step names (step6_5 -> step6.5) for consistent lookup
+  const stepMap = new Map(steps.map((s) => [normalizeStepName(s.step_name), s]));
   const completedCount = steps.filter((s) => s.status === "completed").length;
   const totalSteps = Object.keys(STEP_LABELS).length;
   const progress = Math.round((completedCount / totalSteps) * 100);
