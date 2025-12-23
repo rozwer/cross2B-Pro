@@ -106,18 +106,7 @@ class Step11ImageGeneration(BaseActivity):
                 }
             ]
 
-        # 最初の記事をメインコンテンツとして使用（互換性維持）
-        if articles_data:
-            first_article = articles_data[0]
-            markdown_content = first_article.get("content", first_article.get("markdown_content", ""))
-            html_content = first_article.get("html_content", "")
-            article_title = first_article.get("title", keyword)
-        else:
-            markdown_content = ""
-            html_content = ""
-            article_title = keyword
-
-        if not markdown_content:
+        if not articles_data:
             # 画像生成をスキップ
             return Step11Output(
                 step=self.step_id,
@@ -133,87 +122,114 @@ class Step11ImageGeneration(BaseActivity):
         )
 
         if not step11_config.enabled:
+            # 全記事のコンテンツを結合（後方互換性）
+            first_article = articles_data[0] if articles_data else {}
             return Step11Output(
                 step=self.step_id,
                 enabled=False,
-                markdown_with_images=markdown_content,
-                html_with_images=html_content,
+                markdown_with_images=first_article.get("content", first_article.get("markdown_content", "")),
+                html_with_images=first_article.get("html_content", ""),
             ).model_dump()
 
-        activity.logger.info(f"Step11: Starting image generation for {article_title}, count={step11_config.image_count}")
-
-        # 1. 挿入位置を分析
-        position_analysis = await self._analyze_positions(
-            markdown_content=markdown_content,
-            article_title=article_title,
-            keyword=keyword,
-            image_count=step11_config.image_count,
-            position_request=step11_config.position_request,
+        activity.logger.info(
+            f"Step11: Starting image generation for {len(articles_data)} articles, count={step11_config.image_count} per article"
         )
 
-        if not position_analysis.positions:
-            warnings.append("no_positions_found")
-            return Step11Output(
-                step=self.step_id,
-                enabled=True,
-                image_count=0,
-                markdown_with_images=markdown_content,
-                html_with_images=html_content,
-                warnings=warnings,
-            ).model_dump()
-
-        # 2. 各位置に対して画像を生成
-        generated_images: list[GeneratedImage] = []
+        # 全記事に対して画像を生成
+        all_generated_images: list[GeneratedImage] = []
         total_tokens = 0
+        total_analysis_tokens = 0
+        global_image_index = 0
 
-        for i, position in enumerate(position_analysis.positions):
-            activity.logger.info(f"Generating image {i + 1}/{len(position_analysis.positions)}: {position.section_title}")
+        for article_data in articles_data:
+            article_number = article_data.get("article_number", 1)
+            article_title = article_data.get("title", keyword)
+            markdown_content = article_data.get("content", article_data.get("markdown_content", ""))
+            # html_content は現在未使用（将来のHTML画像挿入用に保持可能）
 
-            try:
-                # 画像生成プロンプトを作成
-                image_prompt = await self._create_image_prompt(
-                    position=position,
-                    article_title=article_title,
-                    keyword=keyword,
+            if not markdown_content:
+                warnings.append(f"article_{article_number}_no_content")
+                continue
+
+            activity.logger.info(f"Step11: Processing article {article_number}: {article_title[:50]}...")
+
+            # 1. 挿入位置を分析
+            position_analysis = await self._analyze_positions(
+                markdown_content=markdown_content,
+                article_title=article_title,
+                keyword=keyword,
+                image_count=step11_config.image_count,
+                position_request=step11_config.position_request,
+            )
+            total_analysis_tokens += position_analysis.usage.get("tokens", 0)
+
+            if not position_analysis.positions:
+                warnings.append(f"article_{article_number}_no_positions_found")
+                continue
+
+            # 2. 各位置に対して画像を生成
+            for i, position in enumerate(position_analysis.positions):
+                activity.logger.info(
+                    f"Generating image {global_image_index + 1} (article {article_number}, pos {i + 1}): {position.section_title}"
                 )
 
-                # 画像を生成
-                image_result = await self._generate_image(
-                    prompt=image_prompt,
-                    position=position,
-                )
-
-                if image_result:
-                    # storageに保存
-                    image_path = await self._save_image_to_storage(
-                        ctx=ctx,
-                        image_data=image_result["image_data"],
-                        image_index=i,
+                try:
+                    # 画像生成プロンプトを作成
+                    image_prompt = await self._create_image_prompt(
+                        position=position,
+                        article_title=article_title,
+                        keyword=keyword,
                     )
 
-                    generated_image = GeneratedImage(
-                        request=ImageGenerationRequest(
-                            position=position,
-                            generated_prompt=image_prompt,
-                            alt_text=image_result.get("alt_text", position.description),
-                        ),
-                        image_path=image_path,
-                        image_digest=image_result.get("digest", ""),
-                        image_base64=image_result.get("base64", ""),
-                        mime_type="image/png",
-                        file_size=len(image_result["image_data"]),
-                        accepted=True,  # 単独テストでは自動承認
+                    # 画像を生成
+                    image_result = await self._generate_image(
+                        prompt=image_prompt,
+                        position=position,
                     )
-                    generated_images.append(generated_image)
-                    total_tokens += image_result.get("tokens", 0)
 
-            except Exception as e:
-                activity.logger.error(f"Failed to generate image {i + 1}: {e}")
-                warnings.append(f"image_{i + 1}_generation_failed: {str(e)}")
+                    if image_result:
+                        # storageに保存（記事番号を含むパス）
+                        image_path = await self._save_image_to_storage_with_article(
+                            ctx=ctx,
+                            image_data=image_result["image_data"],
+                            article_number=article_number,
+                            image_index=i,
+                        )
 
-        # 3. 画像をMarkdown/HTMLに挿入
-        final_markdown = self._insert_images_to_markdown(markdown_content, generated_images)
-        final_html = self._insert_images_to_html(html_content, generated_images)
+                        generated_image = GeneratedImage(
+                            request=ImageGenerationRequest(
+                                position=position,
+                                generated_prompt=image_prompt,
+                                alt_text=image_result.get("alt_text", position.description),
+                            ),
+                            image_path=image_path,
+                            image_digest=image_result.get("digest", ""),
+                            image_base64=image_result.get("base64", ""),
+                            mime_type="image/png",
+                            file_size=len(image_result["image_data"]),
+                            accepted=True,  # 単独テストでは自動承認
+                            article_number=article_number,  # 記事番号を付与
+                        )
+                        all_generated_images.append(generated_image)
+                        total_tokens += image_result.get("tokens", 0)
+                        global_image_index += 1
+
+                except Exception as e:
+                    activity.logger.error(f"Failed to generate image for article {article_number}, pos {i + 1}: {e}")
+                    warnings.append(f"article_{article_number}_image_{i + 1}_generation_failed: {str(e)}")
+
+        # 3. 各記事に画像を挿入して結果を構築
+        # 後方互換性のため、最初の記事のコンテンツを final として返す
+        if articles_data:
+            first_article = articles_data[0]
+            article_1_images = [img for img in all_generated_images if img.article_number == 1]
+            first_markdown = first_article.get("content", first_article.get("markdown_content", ""))
+            first_html = first_article.get("html_content", "")
+            final_markdown = self._insert_images_to_markdown(first_markdown, article_1_images)
+            final_html = self._insert_images_to_html(first_html, article_1_images)
+        else:
+            final_markdown = ""
+            final_html = ""
 
         # HTMLプレビューを保存
         if final_html:
@@ -231,13 +247,13 @@ class Step11ImageGeneration(BaseActivity):
         return Step11Output(
             step=self.step_id,
             enabled=True,
-            image_count=len(generated_images),
-            images=generated_images,
+            image_count=len(all_generated_images),
+            images=all_generated_images,
             markdown_with_images=final_markdown,
             html_with_images=final_html,
             model="gemini-2.5-flash-image",
             usage={
-                "analysis_tokens": position_analysis.usage.get("tokens", 0),
+                "analysis_tokens": total_analysis_tokens,
                 "image_tokens": total_tokens,
             },
             warnings=warnings,
@@ -515,6 +531,34 @@ No text in the image."""
             保存先パス
         """
         path = f"tenants/{ctx.tenant_id}/runs/{ctx.run_id}/{self.step_id}/images/image_{image_index + 1}.png"
+
+        await self.store.put(
+            content=image_data,
+            path=path,
+            content_type="image/png",
+        )
+
+        return path
+
+    async def _save_image_to_storage_with_article(
+        self,
+        ctx: ExecutionContext,
+        image_data: bytes,
+        article_number: int,
+        image_index: int,
+    ) -> str:
+        """記事番号を含むパスで画像をstorageに保存.
+
+        Args:
+            ctx: 実行コンテキスト
+            image_data: 画像バイナリ
+            article_number: 記事番号（1-4）
+            image_index: 画像インデックス（記事内）
+
+        Returns:
+            保存先パス
+        """
+        path = f"tenants/{ctx.tenant_id}/runs/{ctx.run_id}/{self.step_id}/images/article_{article_number}/image_{image_index + 1}.png"
 
         await self.store.put(
             content=image_data,

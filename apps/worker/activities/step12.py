@@ -120,11 +120,16 @@ class Step12WordPressHtmlGeneration(BaseActivity):
 
             activity.logger.info(f"Processing article {article_number}: {title[:50]}...")
 
+            # 記事番号で画像をフィルタリング
+            filtered_images = [
+                img for img in images_data if img.get("article_number") is None or img.get("article_number") == article_number
+            ]
+
             # MarkdownからGutenbergブロック形式HTMLに変換
             gutenberg_html = await self._convert_to_gutenberg_blocks(
                 markdown_content=content,
                 html_content=html_content,
-                images=images_data,
+                images=filtered_images,
                 article_number=article_number,
             )
 
@@ -228,7 +233,13 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         return gutenberg_html
 
     def _validate_html(self, html_content: str) -> dict[str, Any]:
-        """HTML5バリデーションを実行.
+        """HTML5構文バリデーションを実行.
+
+        Note:
+            本実装はタグの整合性（開始・終了タグの対応）をチェックする基本的なバリデーションです。
+            完全なW3C準拠バリデーションが必要な場合は、外部バリデータサービス（validator.w3.org）
+            との連携が必要ですが、ローカル運用環境では外部依存を避けるため、
+            タグ構造の整合性チェックに限定しています。
 
         Args:
             html_content: 検証するHTMLコンテンツ

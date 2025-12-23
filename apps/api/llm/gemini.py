@@ -75,6 +75,8 @@ class GeminiClient(LLMInterface):
         "gemini-3-pro-preview",
         "gemini-2.5-pro",
         "gemini-2.5-flash",
+        "gemini-1.5-pro",
+        "gemini-1.5-flash",
     ]
 
     DEFAULT_MODEL = "gemini-2.5-flash"
@@ -107,20 +109,14 @@ class GeminiClient(LLMInterface):
         self._api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self._api_key:
             raise LLMConfigurationError(
-                message=(
-                    "Gemini API key is required. "
-                    "Set GEMINI_API_KEY env var or pass api_key parameter."
-                ),
+                message=("Gemini API key is required. Set GEMINI_API_KEY env var or pass api_key parameter."),
                 provider=self.PROVIDER_NAME,
                 missing_config=["GEMINI_API_KEY"],
             )
 
         self._model = model or self.DEFAULT_MODEL
         if self._model not in self.AVAILABLE_MODELS:
-            logger.warning(
-                f"Model {self._model} is not in the known models list. "
-                f"Available: {self.AVAILABLE_MODELS}"
-            )
+            logger.warning(f"Model {self._model} is not in the known models list. Available: {self.AVAILABLE_MODELS}")
 
         self._gemini_config = gemini_config or GeminiConfig()
         self._timeout = timeout
@@ -178,9 +174,7 @@ class GeminiClient(LLMInterface):
         """
         self._gemini_config.grounding.enabled = enabled
         if dynamic_retrieval_threshold is not None:
-            self._gemini_config.grounding.dynamic_retrieval_threshold = (
-                dynamic_retrieval_threshold
-            )
+            self._gemini_config.grounding.dynamic_retrieval_threshold = dynamic_retrieval_threshold
         logger.info(
             f"Grounding {'enabled' if enabled else 'disabled'}",
             extra={
@@ -436,9 +430,7 @@ class GeminiClient(LLMInterface):
             logger.warning(f"Health check failed: {e}")
             return False
 
-    def _build_contents(
-        self, messages: list[dict[str, str]]
-    ) -> list[types.Content]:
+    def _build_contents(self, messages: list[dict[str, str]]) -> list[types.Content]:
         """Gemini用のコンテンツを構築"""
         contents = []
         for msg in messages:
@@ -618,8 +610,7 @@ class GeminiClient(LLMInterface):
             # リトライ前の待機（指数バックオフ）
             if attempt < retry_config.max_attempts:
                 delay = min(
-                    retry_config.base_delay
-                    * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
                     retry_config.max_delay,
                 )
                 logger.info(
@@ -665,9 +656,7 @@ class GeminiClient(LLMInterface):
             candidate = response.candidates[0]
             if hasattr(candidate, "grounding_metadata") and candidate.grounding_metadata:
                 grounding_metadata = {
-                    "search_entry_point": getattr(
-                        candidate.grounding_metadata, "search_entry_point", None
-                    ),
+                    "search_entry_point": getattr(candidate.grounding_metadata, "search_entry_point", None),
                     "grounding_chunks": [
                         {
                             "web": {
@@ -675,10 +664,7 @@ class GeminiClient(LLMInterface):
                                 "title": getattr(chunk.web, "title", None),
                             }
                         }
-                        for chunk in (
-                            getattr(candidate.grounding_metadata, "grounding_chunks", [])
-                            or []
-                        )
+                        for chunk in (getattr(candidate.grounding_metadata, "grounding_chunks", []) or [])
                         if hasattr(chunk, "web")
                     ],
                 }

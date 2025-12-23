@@ -347,9 +347,16 @@ async def get_status(
 @router.get("/preview")
 async def get_preview(
     run_id: str,
+    article: int | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> Step12PreviewResponse:
-    """Step12のプレビューを取得."""
+    """Step12のプレビューを取得.
+
+    Args:
+        run_id: ワークフロー実行ID
+        article: 記事番号（省略時は全記事）
+        user: 認証ユーザー
+    """
     db_manager = get_tenant_db_manager()
     store = get_artifact_store()
     tenant_id = user.tenant_id
@@ -362,30 +369,47 @@ async def get_preview(
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-    # 既存のStep12出力を確認
-    step12_data = await _get_step12_data(tenant_id, run_id, store)
+        # Step12完了チェック
+        step12_data = await _get_step12_data(tenant_id, run_id, store)
 
-    if not step12_data:
-        # Step10から生成
-        try:
-            step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+        if not step12_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Step12 has not been completed. Please wait for workflow completion.",
+            )
+
+        # 監査ログを記録
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="preview",
+            resource_type="step12",
+            resource_id=run_id,
+            details={
+                "articles_count": len(step12_data.get("articles", [])),
+                "article_filter": article,
+            },
+        )
+        await session.commit()
 
     # レスポンスを構築
-    articles = []
-    for article in step12_data.get("articles", []):
-        articles.append(
+    articles_response = []
+    for article_data in step12_data.get("articles", []):
+        article_number = article_data.get("article_number", 1)
+        # article パラメータが指定されている場合はフィルタリング
+        if article is not None and article_number != article:
+            continue
+        articles_response.append(
             WordPressArticleResponse(
-                article_number=article.get("article_number", 1),
-                filename=article.get("filename", ""),
-                gutenberg_blocks=article.get("gutenberg_blocks", ""),
-                metadata=ArticleMetadata(**article.get("metadata", {})),
+                article_number=article_number,
+                filename=article_data.get("filename", ""),
+                gutenberg_blocks=article_data.get("gutenberg_blocks", ""),
+                metadata=ArticleMetadata(**article_data.get("metadata", {})),
             )
         )
 
     return Step12PreviewResponse(
-        articles=articles,
+        articles=articles_response,
         common_assets=step12_data.get("common_assets", {}),
         generation_metadata=step12_data.get("generation_metadata", {}),
     )
@@ -425,14 +449,28 @@ async def download_all(
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-    # Step12データを取得または生成
-    step12_data = await _get_step12_data(tenant_id, run_id, store)
+        # Step12完了チェック
+        step12_data = await _get_step12_data(tenant_id, run_id, store)
 
-    if not step12_data:
-        try:
-            step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+        if not step12_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Step12 has not been completed. Please wait for workflow completion.",
+            )
+
+        # 監査ログを記録
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="download",
+            resource_type="step12",
+            resource_id=run_id,
+            details={
+                "articles_count": len(step12_data.get("articles", [])),
+                "download_type": "all",
+            },
+        )
+        await session.commit()
 
     # ZIPファイルを作成
     zip_buffer = BytesIO()
@@ -473,20 +511,61 @@ async def download_article(
     user: AuthUser = Depends(get_current_user),
 ) -> StreamingResponse:
     """特定の記事をダウンロード."""
-    preview = await get_preview(run_id, user)
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+    tenant_id = user.tenant_id
 
-    for article in preview.articles:
-        if article.article_number == article_number:
-            content = article.gutenberg_blocks.encode("utf-8")
-            return StreamingResponse(
-                BytesIO(content),
-                media_type="text/html",
-                headers={
-                    "Content-Disposition": f"attachment; filename={article.filename}",
-                },
+    async with db_manager.get_session(tenant_id) as session:
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        result = await session.execute(query)
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        # Step12完了チェック
+        step12_data = await _get_step12_data(tenant_id, run_id, store)
+
+        if not step12_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Step12 has not been completed. Please wait for workflow completion.",
             )
 
-    raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
+        # 記事を検索
+        article_data = None
+        for a in step12_data.get("articles", []):
+            if a.get("article_number") == article_number:
+                article_data = a
+                break
+
+        if not article_data:
+            raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
+
+        # 監査ログを記録
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="download",
+            resource_type="step12",
+            resource_id=run_id,
+            details={
+                "article_number": article_number,
+                "download_type": "single",
+            },
+        )
+        await session.commit()
+
+    content = article_data.get("gutenberg_blocks", "").encode("utf-8")
+    filename = article_data.get("filename", f"article_{article_number}.html")
+
+    return StreamingResponse(
+        BytesIO(content),
+        media_type="text/html",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+        },
+    )
 
 
 @router.post("/generate")

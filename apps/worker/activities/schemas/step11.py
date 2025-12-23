@@ -81,6 +81,7 @@ class GeneratedImage(BaseModel):
     file_size: int = Field(default=0, description="ファイルサイズ（バイト）")
     retry_count: int = Field(default=0, description="リトライ回数")
     accepted: bool = Field(default=False, description="ユーザーが承認したか")
+    article_number: int = Field(default=1, description="所属する記事番号（1-4）")
 
 
 class Step11Config(BaseModel):
