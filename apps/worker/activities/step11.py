@@ -17,18 +17,14 @@ Human-in-the-loopで複数のサブステップを経て画像を生成・挿入
 import base64
 import hashlib
 import re
+from datetime import datetime
 from typing import Any
 
 from temporalio import activity
 
 from apps.api.core.context import ExecutionContext
-from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.llm import GeminiClient, NanoBananaClient, LLMRequestConfig
-from apps.api.services.article_image_generator import (
-    ArticleImageGenerator,
-    ImageInsertionPoint as ServiceInsertionPoint,
-)
+from apps.api.llm import GeminiClient, LLMRequestConfig, NanoBananaClient
 from apps.worker.activities.schemas.step11 import (
     GeneratedImage,
     ImageGenerationRequest,
@@ -36,11 +32,9 @@ from apps.worker.activities.schemas.step11 import (
     PositionAnalysisResult,
     Step11Config,
     Step11Output,
-    Step11State,
-    Step11SubStep,
 )
 
-from .base import ActivityError, BaseActivity, load_step_data, save_step_data
+from .base import BaseActivity, load_step_data, save_step_data
 
 
 class Step11ImageGeneration(BaseActivity):
@@ -95,9 +89,7 @@ class Step11ImageGeneration(BaseActivity):
         warnings: list[str] = []
 
         # Step10のデータを読み込み
-        step10_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step10"
-        ) or {}
+        step10_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step10") or {}
 
         markdown_content = step10_data.get("markdown_content", "")
         html_content = step10_data.get("html_content", "")
@@ -127,10 +119,7 @@ class Step11ImageGeneration(BaseActivity):
                 html_with_images=html_content,
             ).model_dump()
 
-        activity.logger.info(
-            f"Step11: Starting image generation for {article_title}, "
-            f"count={step11_config.image_count}"
-        )
+        activity.logger.info(f"Step11: Starting image generation for {article_title}, count={step11_config.image_count}")
 
         # 1. 挿入位置を分析
         position_analysis = await self._analyze_positions(
@@ -157,10 +146,7 @@ class Step11ImageGeneration(BaseActivity):
         total_tokens = 0
 
         for i, position in enumerate(position_analysis.positions):
-            activity.logger.info(
-                f"Generating image {i + 1}/{len(position_analysis.positions)}: "
-                f"{position.section_title}"
-            )
+            activity.logger.info(f"Generating image {i + 1}/{len(position_analysis.positions)}: {position.section_title}")
 
             try:
                 # 画像生成プロンプトを作成
@@ -205,9 +191,7 @@ class Step11ImageGeneration(BaseActivity):
                 warnings.append(f"image_{i + 1}_generation_failed: {str(e)}")
 
         # 3. 画像をMarkdown/HTMLに挿入
-        final_markdown = self._insert_images_to_markdown(
-            markdown_content, generated_images
-        )
+        final_markdown = self._insert_images_to_markdown(markdown_content, generated_images)
         final_html = self._insert_images_to_html(html_content, generated_images)
 
         # HTMLプレビューを保存
@@ -262,9 +246,7 @@ class Step11ImageGeneration(BaseActivity):
 
         # セクション構造を抽出
         sections = self._extract_sections(markdown_content)
-        sections_text = "\n".join(
-            [f"[{i}] {s['level']}: {s['title']}" for i, s in enumerate(sections)]
-        )
+        sections_text = "\n".join([f"[{i}] {s['level']}: {s['title']}" for i, s in enumerate(sections)])
 
         system_prompt = f"""あなたはSEO記事の画像配置を最適化する専門家です。
 
@@ -277,7 +259,7 @@ class Step11ImageGeneration(BaseActivity):
 3. **比較・対比**: 複数の要素を比較している箇所
 4. **重要なポイント**: 読者が特に注目すべき重要な内容
 
-{('## ユーザーからのリクエスト' + chr(10) + position_request) if position_request else ''}
+{("## ユーザーからのリクエスト" + chr(10) + position_request) if position_request else ""}
 """
 
         user_message = f"""# 記事情報
@@ -529,11 +511,13 @@ No text in the image."""
         for match in heading_pattern.finditer(markdown_content):
             level = len(match.group(1))
             title = match.group(2).strip()
-            sections.append({
-                "level": f"h{level}",
-                "title": title,
-                "start_pos": match.start(),
-            })
+            sections.append(
+                {
+                    "level": f"h{level}",
+                    "title": title,
+                    "start_pos": match.start(),
+                }
+            )
 
         return sections
 
@@ -637,17 +621,9 @@ No text in the image."""
 '''
 
                     if position == "before":
-                        html_content = (
-                            html_content[:match.start()] +
-                            image_html +
-                            html_content[match.start():]
-                        )
+                        html_content = html_content[: match.start()] + image_html + html_content[match.start() :]
                     else:
-                        html_content = (
-                            html_content[:match.end()] +
-                            image_html +
-                            html_content[match.end():]
-                        )
+                        html_content = html_content[: match.end()] + image_html + html_content[match.end() :]
                     break
 
         return html_content
@@ -680,9 +656,7 @@ async def step11_mark_skipped(args: dict[str, Any]) -> dict[str, Any]:
     step = Step11ImageGeneration()
 
     # Load step10 data to pass through markdown/html unchanged
-    step10_data = await load_step_data(
-        step.store, args["tenant_id"], args["run_id"], "step10"
-    ) or {}
+    step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     output = Step11Output(
         step="step11",
@@ -735,9 +709,7 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
     step = Step11ImageGeneration()
 
     # Load step10 data
-    step10_data = await load_step_data(
-        step.store, args["tenant_id"], args["run_id"], "step10"
-    ) or {}
+    step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     markdown_content = step10_data.get("markdown_content", "")
     keyword = step10_data.get("keyword", "")
@@ -754,10 +726,7 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
     image_count = config.get("step11_image_count", 3)
     position_request = config.get("step11_position_request", "")
 
-    activity.logger.info(
-        f"Step11 (11B): Analyzing positions for {article_title}, "
-        f"count={image_count}"
-    )
+    activity.logger.info(f"Step11 (11B): Analyzing positions for {article_title}, count={image_count}")
 
     # Analyze positions
     position_result = await step._analyze_positions(
@@ -812,13 +781,15 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
     ctx = ExecutionContext(
         tenant_id=args["tenant_id"],
         run_id=args["run_id"],
+        step_id="step11_generate_images",
+        attempt=1,
+        started_at=datetime.now(),
+        timeout_seconds=3600,
         config=args.get("config", {}),
     )
 
     # Load step10 data for context
-    step10_data = await load_step_data(
-        step.store, args["tenant_id"], args["run_id"], "step10"
-    ) or {}
+    step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     keyword = step10_data.get("keyword", "")
     article_title = step10_data.get("article_title", keyword)
@@ -835,9 +806,7 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
     for i, pos_data in enumerate(positions):
         position = ImageInsertionPosition(**pos_data) if isinstance(pos_data, dict) else pos_data
 
-        activity.logger.info(
-            f"Generating image {i + 1}/{len(positions)}: {position.section_title}"
-        )
+        activity.logger.info(f"Generating image {i + 1}/{len(positions)}: {position.section_title}")
 
         user_instruction = instruction_map.get(i, "")
 
@@ -925,13 +894,15 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
     ctx = ExecutionContext(
         tenant_id=args["tenant_id"],
         run_id=args["run_id"],
+        step_id="step11_retry_image",
+        attempt=1,
+        started_at=datetime.now(),
+        timeout_seconds=3600,
         config=args.get("config", {}),
     )
 
     # Load step10 data for context
-    step10_data = await load_step_data(
-        step.store, args["tenant_id"], args["run_id"], "step10"
-    ) or {}
+    step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     keyword = step10_data.get("keyword", "")
     article_title = step10_data.get("article_title", keyword)
@@ -948,9 +919,7 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
     if retry_instruction:
         combined_instruction = f"{original_instruction}\n\n追加の指示: {retry_instruction}"
 
-    activity.logger.info(
-        f"Step11: Retrying image {image_index + 1} for {position.section_title}"
-    )
+    activity.logger.info(f"Step11: Retrying image {image_index + 1} for {position.section_title}")
 
     try:
         # Create image prompt with combined instruction
@@ -1022,15 +991,13 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
     step = Step11ImageGeneration()
 
     # Load step10 data
-    step10_data = await load_step_data(
-        step.store, args["tenant_id"], args["run_id"], "step10"
-    ) or {}
+    step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
     markdown_content = step10_data.get("markdown_content", "")
     html_content = step10_data.get("html_content", "")
 
     images_data = args.get("images", [])
-    positions_data = args.get("positions", [])
+    # Note: positions_data is available in args but extracted from images_data below
 
     # Convert to model objects
     generated_images = []
@@ -1039,21 +1006,23 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
         pos_data = img_data.get("position", {})
         position = ImageInsertionPosition(**pos_data) if isinstance(pos_data, dict) else pos_data
 
-        generated_images.append(GeneratedImage(
-            request=ImageGenerationRequest(
-                position=position,
-                user_instruction=img_data.get("user_instruction", ""),
-                generated_prompt=img_data.get("generated_prompt", ""),
-                alt_text=img_data.get("alt_text", ""),
-            ),
-            image_path=img_data.get("image_path", ""),
-            image_digest=img_data.get("image_digest", ""),
-            image_base64=img_data.get("image_base64", ""),
-            mime_type=img_data.get("mime_type", "image/png"),
-            file_size=img_data.get("file_size", 0),
-            retry_count=img_data.get("retry_count", 0),
-            accepted=True,  # All images at this point are accepted
-        ))
+        generated_images.append(
+            GeneratedImage(
+                request=ImageGenerationRequest(
+                    position=position,
+                    user_instruction=img_data.get("user_instruction", ""),
+                    generated_prompt=img_data.get("generated_prompt", ""),
+                    alt_text=img_data.get("alt_text", ""),
+                ),
+                image_path=img_data.get("image_path", ""),
+                image_digest=img_data.get("image_digest", ""),
+                image_base64=img_data.get("image_base64", ""),
+                mime_type=img_data.get("mime_type", "image/png"),
+                file_size=img_data.get("file_size", 0),
+                retry_count=img_data.get("retry_count", 0),
+                accepted=True,  # All images at this point are accepted
+            )
+        )
 
     # Insert images into markdown and HTML
     final_markdown = step._insert_images_to_markdown(markdown_content, generated_images)

@@ -10,7 +10,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.core.errors import ErrorCategory
 from apps.api.db.models import DiagnosticReport
 from apps.api.llm.base import LLMInterface, get_llm_client
 from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
@@ -31,24 +30,16 @@ class RecommendedAction(BaseModel):
     priority: int = Field(..., ge=1, le=10, description="Priority (1=highest)")
     action: str = Field(..., description="Action to take")
     rationale: str = Field(..., description="Why this action is recommended")
-    step_to_resume: str | None = Field(
-        default=None, description="Workflow step to resume from"
-    )
+    step_to_resume: str | None = Field(default=None, description="Workflow step to resume from")
 
 
 class DiagnosticResult(BaseModel):
     """LLM diagnostic analysis result."""
 
     root_cause: str = Field(..., description="Root cause analysis")
-    recommended_actions: list[RecommendedAction] = Field(
-        ..., description="Ordered list of recommended recovery actions"
-    )
-    resume_step: str | None = Field(
-        default=None, description="Suggested step to resume workflow from"
-    )
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
-    )
+    recommended_actions: list[RecommendedAction] = Field(..., description="Ordered list of recommended recovery actions")
+    resume_step: str | None = Field(default=None, description="Suggested step to resume workflow from")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     summary: str = Field(..., description="Brief summary for operators")
 
 
@@ -286,12 +277,7 @@ class DiagnosticsService:
         """
         from sqlalchemy import select
 
-        stmt = (
-            select(DiagnosticReport)
-            .where(DiagnosticReport.run_id == run_id)
-            .order_by(DiagnosticReport.created_at.desc())
-            .limit(1)
-        )
+        stmt = select(DiagnosticReport).where(DiagnosticReport.run_id == run_id).order_by(DiagnosticReport.created_at.desc()).limit(1)
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
@@ -304,8 +290,7 @@ class DiagnosticsService:
         timeline_lines = []
         for entry in summary.get("timeline", []):
             timeline_lines.append(
-                f"- [{entry['timestamp']}] {entry['step'] or 'N/A'}: "
-                f"{entry['type']} (attempt {entry['attempt']}): {entry['message']}"
+                f"- [{entry['timestamp']}] {entry['step'] or 'N/A'}: {entry['type']} (attempt {entry['attempt']}): {entry['message']}"
             )
         error_timeline = "\n".join(timeline_lines) or "No error timeline available"
 
@@ -349,8 +334,7 @@ class DiagnosticsService:
         # Determine primary error category
         if by_category.get("non_retryable", 0) > 0:
             root_cause = (
-                "Non-retryable errors detected. These typically indicate "
-                "configuration issues, authentication problems, or invalid inputs."
+                "Non-retryable errors detected. These typically indicate configuration issues, authentication problems, or invalid inputs."
             )
             actions = [
                 RecommendedAction(
@@ -361,10 +345,7 @@ class DiagnosticsService:
                 )
             ]
         elif by_category.get("validation_fail", 0) > 0:
-            root_cause = (
-                "Validation failures detected. The LLM output did not meet "
-                "expected format or quality requirements."
-            )
+            root_cause = "Validation failures detected. The LLM output did not meet expected format or quality requirements."
             actions = [
                 RecommendedAction(
                     priority=1,
@@ -374,10 +355,7 @@ class DiagnosticsService:
                 )
             ]
         else:
-            root_cause = (
-                "Retryable errors exhausted retry attempts. "
-                "This may indicate persistent service issues."
-            )
+            root_cause = "Retryable errors exhausted retry attempts. This may indicate persistent service issues."
             actions = [
                 RecommendedAction(
                     priority=1,
@@ -395,9 +373,7 @@ class DiagnosticsService:
             summary="Automated fallback diagnosis - LLM analysis unavailable",
         )
 
-    async def _create_minimal_diagnosis(
-        self, run_id: str, context: dict[str, Any]
-    ) -> DiagnosticReport:
+    async def _create_minimal_diagnosis(self, run_id: str, context: dict[str, Any]) -> DiagnosticReport:
         """Create minimal diagnosis when no errors are found."""
         result = DiagnosticResult(
             root_cause="No error logs found. The run may have failed during initialization or the errors were not properly logged.",

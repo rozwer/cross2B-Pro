@@ -36,7 +36,6 @@ from apps.worker.helpers import (
     ContentMetrics,
     InputValidator,
     OutputParser,
-    QualityResult,
     StructureValidator,
 )
 
@@ -59,17 +58,19 @@ class Step7ADraftGeneration(BaseActivity):
         self.checkpoint = CheckpointManager(self.store)
 
         # ドラフト品質検証
-        self.draft_validator = CompositeValidator([
-            StructureValidator(
-                min_h2_sections=MIN_SECTION_COUNT,
-                require_h3=False,
-                min_word_count=MIN_WORD_COUNT,
-            ),
-            CompletenessValidator(
-                conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
-                check_truncation=True,
-            ),
-        ])
+        self.draft_validator = CompositeValidator(
+            [
+                StructureValidator(
+                    min_h2_sections=MIN_SECTION_COUNT,
+                    require_h3=False,
+                    min_word_count=MIN_WORD_COUNT,
+                ),
+                CompletenessValidator(
+                    conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
+                    check_truncation=True,
+                ),
+            ]
+        )
 
     @property
     def step_id(self) -> str:
@@ -112,9 +113,7 @@ class Step7ADraftGeneration(BaseActivity):
             )
 
         # Load step data from storage
-        step6_5_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step6_5"
-        ) or {}
+        step6_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step6_5") or {}
 
         # === InputValidator統合 ===
         validation = self.input_validator.validate(
@@ -134,9 +133,7 @@ class Step7ADraftGeneration(BaseActivity):
         integration_package = step6_5_data.get("integration_package", "")
 
         # === CheckpointManager統合: 部分生成のチェックポイント ===
-        draft_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress"
-        )
+        draft_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress")
 
         checkpoint_resumed = False
         continuation_used = False
@@ -144,21 +141,15 @@ class Step7ADraftGeneration(BaseActivity):
         if draft_checkpoint and draft_checkpoint.get("needs_continuation"):
             current_draft = draft_checkpoint.get("draft", "")
             checkpoint_resumed = True
-            activity.logger.info(
-                f"Resuming from checkpoint: {len(current_draft)} chars done"
-            )
+            activity.logger.info(f"Resuming from checkpoint: {len(current_draft)} chars done")
 
             # 続きを生成
-            continuation = await self._continue_generation(
-                config, current_draft, integration_package
-            )
+            continuation = await self._continue_generation(config, current_draft, integration_package)
             current_draft = current_draft + "\n\n" + continuation
             continuation_used = True
         else:
             # 最初から生成
-            current_draft = await self._generate_draft(
-                config, keyword, integration_package, prompt_pack
-            )
+            current_draft = await self._generate_draft(config, keyword, integration_package, prompt_pack)
 
         # === OutputParser統合 (ハイブリッド) ===
         parse_result = self.parser.parse_json(current_draft)
@@ -194,16 +185,17 @@ class Step7ADraftGeneration(BaseActivity):
 
             # チェックポイント保存
             await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress",
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                "draft_progress",
                 {
                     "draft": draft_content,
                     "needs_continuation": True,
-                }
+                },
             )
 
-            continuation = await self._continue_generation(
-                config, draft_content, integration_package
-            )
+            continuation = await self._continue_generation(config, draft_content, integration_package)
             draft_content = draft_content + "\n\n" + continuation
             continuation_used = True
 
@@ -212,11 +204,14 @@ class Step7ADraftGeneration(BaseActivity):
 
         # 最終チェックポイント保存
         await self.checkpoint.save(
-            ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress",
+            ctx.tenant_id,
+            ctx.run_id,
+            self.step_id,
+            "draft_progress",
             {
                 "draft": draft_content,
                 "needs_continuation": False,
-            }
+            },
         )
 
         # === ContentMetrics統合 ===
@@ -225,14 +220,8 @@ class Step7ADraftGeneration(BaseActivity):
         keyword_density = self.metrics.keyword_density(draft_content, keyword)
 
         # Check for introduction and conclusion
-        has_introduction = any(
-            ind in draft_content.lower()[:500]
-            for ind in ["はじめに", "導入", "introduction", "概要"]
-        )
-        has_conclusion = any(
-            ind in draft_content.lower()
-            for ind in ["まとめ", "結論", "おわり", "conclusion"]
-        )
+        has_introduction = any(ind in draft_content.lower()[:500] for ind in ["はじめに", "導入", "introduction", "概要"])
+        has_conclusion = any(ind in draft_content.lower() for ind in ["まとめ", "結論", "おわり", "conclusion"])
 
         # Build quality metrics
         quality_metrics = DraftQualityMetrics(

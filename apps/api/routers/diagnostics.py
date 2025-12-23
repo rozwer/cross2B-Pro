@@ -12,6 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.db.models import DiagnosticReport
 from apps.api.db.tenant import get_tenant_manager
@@ -95,7 +96,7 @@ async def get_current_user() -> AuthUser:
 
 
 async def verify_run_ownership(
-    session,
+    session: AsyncSession,
     run_id: str,
     tenant_id: str,
 ) -> None:
@@ -118,10 +119,7 @@ async def verify_run_ownership(
             "Run not found in tenant database",
             extra={"run_id": run_id, "tenant_id": tenant_id},
         )
-        raise HTTPException(
-            status_code=404,
-            detail=f"Run {run_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
 
 # =============================================================================
@@ -273,10 +271,7 @@ async def list_diagnostics(
             await verify_run_ownership(session, run_id, tenant_id)
 
             stmt = (
-                select(DiagnosticReport)
-                .where(DiagnosticReport.run_id == run_id)
-                .order_by(DiagnosticReport.created_at.desc())
-                .limit(limit)
+                select(DiagnosticReport).where(DiagnosticReport.run_id == run_id).order_by(DiagnosticReport.created_at.desc()).limit(limit)
             )
             result = await session.execute(stmt)
             reports = result.scalars().all()

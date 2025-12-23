@@ -89,9 +89,7 @@ class Step1CompetitorFetch(BaseActivity):
             ) from e
 
         # === SERP Checkpoint ===
-        serp_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "serp_completed"
-        )
+        serp_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "serp_completed")
 
         if serp_checkpoint:
             urls = serp_checkpoint.get("urls", [])
@@ -131,16 +129,11 @@ class Step1CompetitorFetch(BaseActivity):
                 )
 
             # Save SERP checkpoint
-            await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "serp_completed",
-                {"urls": urls, "serp_data": serp_data}
-            )
+            await self.checkpoint.save(ctx.tenant_id, ctx.run_id, self.step_id, "serp_completed", {"urls": urls, "serp_data": serp_data})
             logger.info(f"[STEP1] Saved SERP checkpoint: {len(urls)} URLs")
 
         # === Pages Checkpoint ===
-        pages_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "pages_partial"
-        )
+        pages_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "pages_partial")
 
         already_fetched: set[str]
         partial_results: list[dict[str, Any]]
@@ -150,10 +143,7 @@ class Step1CompetitorFetch(BaseActivity):
             already_fetched = set(pages_checkpoint.get("fetched_urls", []))
             partial_results = pages_checkpoint.get("results", [])
             failed_urls = pages_checkpoint.get("failed_urls", [])
-            logger.info(
-                f"[STEP1] Loaded pages checkpoint: "
-                f"{len(partial_results)} fetched, {len(already_fetched)} processed"
-            )
+            logger.info(f"[STEP1] Loaded pages checkpoint: {len(partial_results)} fetched, {len(already_fetched)} processed")
         else:
             already_fetched = set()
             partial_results = []
@@ -163,21 +153,22 @@ class Step1CompetitorFetch(BaseActivity):
         remaining_urls = [u for u in urls if u not in already_fetched]
 
         if remaining_urls:
-            new_results, new_failures = await self._fetch_pages_with_retry(
-                page_fetch_tool, remaining_urls
-            )
+            new_results, new_failures = await self._fetch_pages_with_retry(page_fetch_tool, remaining_urls)
 
             partial_results.extend(new_results)
             failed_urls.extend(new_failures)
 
             # Update checkpoint
             await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "pages_partial",
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                "pages_partial",
                 {
                     "fetched_urls": list(already_fetched | set(remaining_urls)),
                     "results": partial_results,
                     "failed_urls": failed_urls,
-                }
+                },
             )
             activity.heartbeat(f"Fetched {len(partial_results)}/{len(urls)} pages")
 
@@ -186,8 +177,7 @@ class Step1CompetitorFetch(BaseActivity):
 
         if success_count < self.MIN_SUCCESSFUL_FETCHES:
             raise ActivityError(
-                f"Insufficient data: only {success_count} pages fetched "
-                f"(minimum: {self.MIN_SUCCESSFUL_FETCHES})",
+                f"Insufficient data: only {success_count} pages fetched (minimum: {self.MIN_SUCCESSFUL_FETCHES})",
                 category=ErrorCategory.RETRYABLE,
             )
 
@@ -199,10 +189,7 @@ class Step1CompetitorFetch(BaseActivity):
             "success_rate": success_count / len(urls) if urls else 0,
         }
 
-        logger.info(
-            f"[STEP1] Completed: {success_count} competitors, "
-            f"{len(failed_urls)} failed URLs"
-        )
+        logger.info(f"[STEP1] Completed: {success_count} competitors, {len(failed_urls)} failed URLs")
 
         return {
             "step": self.step_id,
@@ -264,9 +251,7 @@ class Step1CompetitorFetch(BaseActivity):
                 )
 
                 if fetch_result.success and fetch_result.data:
-                    content = fetch_result.data.get(
-                        "body_text", fetch_result.data.get("content", "")
-                    )
+                    content = fetch_result.data.get("body_text", fetch_result.data.get("content", ""))
 
                     # Content quality check
                     if self._is_valid_content(content):
@@ -276,7 +261,7 @@ class Step1CompetitorFetch(BaseActivity):
                 else:
                     last_error = fetch_result.error_message or "fetch_failed"
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_error = f"timeout_{self.PAGE_FETCH_TIMEOUT}s"
             except Exception as e:
                 last_error = str(e)
@@ -301,9 +286,15 @@ class Step1CompetitorFetch(BaseActivity):
 
         # Error page detection
         error_indicators = [
-            "404", "403", "access denied", "not found",
-            "cloudflare", "captcha", "robot check",
-            "please enable javascript", "browser not supported",
+            "404",
+            "403",
+            "access denied",
+            "not found",
+            "cloudflare",
+            "captcha",
+            "robot check",
+            "please enable javascript",
+            "browser not supported",
         ]
         content_lower = content.lower()
 
@@ -331,7 +322,7 @@ class Step1CompetitorFetch(BaseActivity):
 
         # Truncate if too large
         if len(content) > self.MAX_CONTENT_CHARS:
-            content = content[:self.MAX_CONTENT_CHARS] + "... [truncated]"
+            content = content[: self.MAX_CONTENT_CHARS] + "... [truncated]"
 
         # Calculate metrics
         text_metrics = self.metrics.text_metrics(content, lang="ja")

@@ -12,7 +12,6 @@ Integrated helpers:
 - QualityRetryLoop: Retries LLM calls when quality is insufficient
 """
 
-import re
 from typing import Any
 
 from temporalio import activity
@@ -54,17 +53,19 @@ class Step4StrategicOutline(BaseActivity):
         self.checkpoint = CheckpointManager(self.store)
 
         # アウトライン品質検証
-        self.outline_validator = CompositeValidator([
-            StructureValidator(
-                min_h2_sections=3,
-                require_h3=False,
-                min_word_count=100,
-            ),
-            CompletenessValidator(
-                conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
-                check_truncation=True,
-            ),
-        ])
+        self.outline_validator = CompositeValidator(
+            [
+                StructureValidator(
+                    min_h2_sections=3,
+                    require_h3=False,
+                    min_word_count=100,
+                ),
+                CompletenessValidator(
+                    conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
+                    check_truncation=True,
+                ),
+            ]
+        )
 
     @property
     def step_id(self) -> str:
@@ -107,18 +108,10 @@ class Step4StrategicOutline(BaseActivity):
             )
 
         # Load step data from storage (not from config to avoid gRPC size limits)
-        step0_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step0"
-        ) or {}
-        step3a_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3a"
-        ) or {}
-        step3b_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3b"
-        ) or {}
-        step3c_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step3c"
-        ) or {}
+        step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
+        step3a_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3a") or {}
+        step3b_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3b") or {}
+        step3c_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3c") or {}
 
         # === InputValidator統合 ===
         validation = self.input_validator.validate(
@@ -146,23 +139,26 @@ class Step4StrategicOutline(BaseActivity):
             )
 
         if validation.missing_recommended:
-            activity.logger.warning(
-                f"Recommended inputs missing: {validation.missing_recommended}"
-            )
+            activity.logger.warning(f"Recommended inputs missing: {validation.missing_recommended}")
 
         if validation.quality_issues:
             activity.logger.warning(f"Input quality issues: {validation.quality_issues}")
 
         # === CheckpointManager統合: 統合データのチェックポイント ===
-        input_digest = self.checkpoint.compute_digest({
-            "keyword": keyword,
-            "step3a": step3a_data.get("query_analysis", ""),
-            "step3b": step3b_data.get("cooccurrence_analysis", ""),
-            "step3c": step3c_data.get("competitor_analysis", ""),
-        })
+        input_digest = self.checkpoint.compute_digest(
+            {
+                "keyword": keyword,
+                "step3a": step3a_data.get("query_analysis", ""),
+                "step3b": step3b_data.get("cooccurrence_analysis", ""),
+                "step3c": step3c_data.get("competitor_analysis", ""),
+            }
+        )
 
         integrated_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "integrated_inputs",
+            ctx.tenant_id,
+            ctx.run_id,
+            self.step_id,
+            "integrated_inputs",
             input_digest=input_digest,
         )
 
@@ -179,7 +175,10 @@ class Step4StrategicOutline(BaseActivity):
             )
 
             await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "integrated_inputs",
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                "integrated_inputs",
                 integrated_data,
                 input_digest=input_digest,
             )
@@ -240,11 +239,13 @@ class Step4StrategicOutline(BaseActivity):
             return original
 
         # Combined validator for retry loop
-        combined_validator = CompositeValidator([
-            self.outline_validator.validators[0],  # StructureValidator
-            self.outline_validator.validators[1],  # CompletenessValidator
-            keyword_validator,
-        ])
+        combined_validator = CompositeValidator(
+            [
+                self.outline_validator.validators[0],  # StructureValidator
+                self.outline_validator.validators[1],  # CompletenessValidator
+                keyword_validator,
+            ]
+        )
 
         retry_loop = QualityRetryLoop(
             max_retries=1,

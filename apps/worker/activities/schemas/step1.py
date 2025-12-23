@@ -1,7 +1,5 @@
 """Step 1 (Competitor Fetch) output schema."""
 
-from datetime import datetime
-
 from pydantic import BaseModel, Field
 
 
@@ -43,12 +41,6 @@ class Step1Output(BaseModel):
     keyword: str = Field(..., description="検索キーワード")
     serp_query: str = Field(default="", description="SERP検索クエリ")
 
-    competitors: list[CompetitorPage] = Field(
-        default_factory=list, description="取得した競合ページリスト"
-    )
-    failed_urls: list[FailedUrl] = Field(
-        default_factory=list, description="取得失敗したURLリスト"
-    )
-    fetch_stats: FetchStats = Field(
-        default_factory=FetchStats, description="取得統計"
-    )
+    competitors: list[CompetitorPage] = Field(default_factory=list, description="取得した競合ページリスト")
+    failed_urls: list[FailedUrl] = Field(default_factory=list, description="取得失敗したURLリスト")
+    fetch_stats: FetchStats = Field(default_factory=FetchStats, description="取得統計")

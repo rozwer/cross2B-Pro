@@ -6,7 +6,6 @@ SEO Article Generator API server with endpoints for:
 - WebSocket progress streaming
 """
 
-import asyncio
 import json
 import logging
 import os
@@ -16,12 +15,24 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from apps.api.auth import get_current_tenant, get_current_user
+# Temporal client for workflow management
+from temporalio.client import Client as TemporalClient
+
+from apps.api.auth import get_current_user
 from apps.api.auth.middleware import (
     AuthError,
     create_access_token,
@@ -36,25 +47,25 @@ from apps.api.auth.schemas import (
     RefreshResponse,
 )
 from apps.api.db import (
+    Artifact as ArtifactModel,
+)
+from apps.api.db import (
     AuditLogger,
     Run,
     Step,
-    Artifact as ArtifactModel,
-    AuditLog,
-    Prompt as PromptModel,
     TenantDBManager,
     TenantIdValidationError,
 )
+from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
+from apps.api.routers import diagnostics, step11
 from apps.api.storage import (
-    ArtifactStore,
-    ArtifactRef as StorageArtifactRef,
     ArtifactNotFoundError,
+    ArtifactStore,
     ArtifactStoreError,
 )
-from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
-
-# Temporal client for workflow management
-from temporalio.client import Client as TemporalClient
+from apps.api.storage import (
+    ArtifactRef as StorageArtifactRef,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -381,18 +392,14 @@ class CreatePromptInput(BaseModel):
 
     step: str = Field(..., description="Step identifier (e.g., step0, step1, step3a)")
     content: str = Field(..., description="Prompt content text")
-    variables: dict[str, PromptVariableInfo] | None = Field(
-        None, description="Variable definitions for template rendering"
-    )
+    variables: dict[str, PromptVariableInfo] | None = Field(None, description="Variable definitions for template rendering")
 
 
 class UpdatePromptInput(BaseModel):
     """Request to update an existing prompt."""
 
     content: str | None = Field(None, description="Updated prompt content")
-    variables: dict[str, PromptVariableInfo] | None = Field(
-        None, description="Updated variable definitions"
-    )
+    variables: dict[str, PromptVariableInfo] | None = Field(None, description="Updated variable definitions")
     is_active: bool | None = Field(None, description="Active status")
 
 
@@ -414,10 +421,7 @@ def validate_environment() -> list[str]:
     has_llm_key = any(os.getenv(key) for key in llm_keys)
 
     if not has_llm_key and os.getenv("USE_MOCK_LLM", "false").lower() != "true":
-        warnings.append(
-            "No LLM API key set. Set at least one of: "
-            f"{', '.join(llm_keys)} or set USE_MOCK_LLM=true"
-        )
+        warnings.append(f"No LLM API key set. Set at least one of: {', '.join(llm_keys)} or set USE_MOCK_LLM=true")
 
     return warnings
 
@@ -459,7 +463,7 @@ def get_temporal_client() -> TemporalClient:
     return temporal_client
 
 
-async def get_step11_workflow_handle(run_id: str):
+async def get_step11_workflow_handle(run_id: str) -> Any:
     """Get the workflow handle for Step11 operations.
 
     For completed runs that have ImageAdditionWorkflow running,
@@ -474,7 +478,7 @@ async def get_step11_workflow_handle(run_id: str):
         handle = client.get_workflow_handle(image_addition_workflow_id)
         # Check if this workflow is running by trying to describe it
         description = await handle.describe()
-        if description.status.name == "RUNNING":
+        if description.status is not None and description.status.name == "RUNNING":
             logger.debug(f"Using ImageAdditionWorkflow for run {run_id}")
             return handle
     except Exception:
@@ -560,7 +564,6 @@ app.add_middleware(
 )
 
 # Include routers
-from apps.api.routers import diagnostics, step11
 app.include_router(diagnostics.router)
 app.include_router(step11.router)
 
@@ -615,6 +618,7 @@ async def detailed_health_check() -> DetailedHealthResponse:
             # Try a simple operation on dev tenant
             async with tenant_db_manager.get_session("dev-tenant") as session:
                 from sqlalchemy import text
+
                 await session.execute(text("SELECT 1"))
             services["postgres"] = "healthy"
         else:
@@ -820,7 +824,9 @@ def _run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespon
     )
 
 
-async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str | None, run_status: str | None = None) -> list[StepResponse]:
+async def _get_steps_from_storage(
+    tenant_id: str, run_id: str, current_step: str | None, run_status: str | None = None
+) -> list[StepResponse]:
     """Build step responses from storage artifacts.
 
     When DB doesn't have step records, we infer step status from storage.
@@ -864,9 +870,23 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
     # step-1 is the input step (always completed when workflow starts)
     # step3 is a parent step whose status is derived from step3a/b/c
     all_steps = [
-        "step-1", "step0", "step1", "step2", "step3", "step3a", "step3b", "step3c",
-        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
-        "step8", "step9", "step10"
+        "step-1",
+        "step0",
+        "step1",
+        "step2",
+        "step3",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b",
+        "step8",
+        "step9",
+        "step10",
     ]
 
     # Steps that are always completed once workflow starts (no artifact needed)
@@ -942,9 +962,7 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
                 next_step_idx = all_steps.index(next_step) if next_step in all_steps else -1
                 if next_step_idx >= 0:
                     # Check if next step or any step after is completed/running
-                    later_completed = any(
-                        s in completed_steps for s in all_steps[next_step_idx:]
-                    )
+                    later_completed = any(s in completed_steps for s in all_steps[next_step_idx:])
                     later_running = current_step in all_steps[next_step_idx:] if current_step else False
                     if later_completed or later_running:
                         status = StepStatus.COMPLETED
@@ -954,9 +972,7 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
                     status = StepStatus.PENDING
             else:
                 # Check if any later step is completed (means this one was skipped or completed)
-                later_completed = any(
-                    s in completed_steps for s in all_steps[i+1:]
-                )
+                later_completed = any(s in completed_steps for s in all_steps[i + 1 :])
                 if later_completed:
                     status = StepStatus.COMPLETED
                 else:
@@ -968,10 +984,15 @@ async def _get_steps_from_storage(tenant_id: str, run_id: str, current_step: str
         for idx, artifact_path in enumerate(paths):
             # Extract filename for content type inference
             filename = artifact_path.split("/")[-1] if "/" in artifact_path else artifact_path
-            content_type = "application/json" if filename.endswith(".json") else \
-                          "text/html" if filename.endswith(".html") else \
-                          "text/markdown" if filename.endswith(".md") else \
-                          "application/octet-stream"
+            content_type = (
+                "application/json"
+                if filename.endswith(".json")
+                else "text/html"
+                if filename.endswith(".html")
+                else "text/markdown"
+                if filename.endswith(".md")
+                else "application/octet-stream"
+            )
 
             artifacts.append(
                 ArtifactRef(
@@ -1126,7 +1147,7 @@ async def create_run(
 
             elif start_workflow and temporal_client is None:
                 # ===== DEBUG_LOG_START =====
-                logger.debug(f"[CREATE_RUN] temporal_client is None, skipping workflow start")
+                logger.debug("[CREATE_RUN] temporal_client is None, skipping workflow start")
                 # ===== DEBUG_LOG_END =====
                 logger.warning(
                     "Temporal client not available, workflow not started",
@@ -1169,9 +1190,7 @@ async def list_runs(
                 query = query.where(Run.status == status)
 
             # Count total
-            count_query = select(func.count()).select_from(
-                query.subquery()
-            )
+            count_query = select(func.count()).select_from(query.subquery())
             total_result = await session.execute(count_query)
             total = total_result.scalar() or 0
 
@@ -1187,15 +1206,17 @@ async def list_runs(
                 config = r.config or {}
                 model_config_data = config.get("model_config", {})
 
-                runs_summary.append({
-                    "id": str(r.id),
-                    "status": r.status,
-                    "current_step": r.current_step,
-                    "keyword": input_data.get("keyword", ""),
-                    "model_config": model_config_data,
-                    "created_at": r.created_at.isoformat(),
-                    "updated_at": r.updated_at.isoformat(),
-                })
+                runs_summary.append(
+                    {
+                        "id": str(r.id),
+                        "status": r.status,
+                        "current_step": r.current_step,
+                        "keyword": input_data.get("keyword", ""),
+                        "model_config": model_config_data,
+                        "created_at": r.created_at.isoformat(),
+                        "updated_at": r.updated_at.isoformat(),
+                    }
+                )
 
             return {"runs": runs_summary, "total": total, "limit": limit, "offset": offset}
 
@@ -1220,11 +1241,7 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
     try:
         async with db_manager.get_session(tenant_id) as session:
             # Query run with steps eager loading
-            query = (
-                select(Run)
-                .where(Run.id == run_id, Run.tenant_id == tenant_id)
-                .options(selectinload(Run.steps))
-            )
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).options(selectinload(Run.steps))
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
@@ -1243,9 +1260,7 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
             # If no steps in DB, try to infer from storage
             db_steps = list(run.steps)
             if not db_steps:
-                storage_steps = await _get_steps_from_storage(
-                    tenant_id, run_id, run.current_step, run.status
-                )
+                storage_steps = await _get_steps_from_storage(tenant_id, run_id, run.current_step, run.status)
                 # Build response with storage-based steps
                 response = _run_orm_to_response(run, steps=[])
                 response.steps = storage_steps
@@ -1278,7 +1293,6 @@ async def _sync_run_with_temporal(run: Run, session: Any) -> bool:
         # Query workflow status
         workflow_status = await workflow_handle.query("get_status")
         current_step = workflow_status.get("current_step", "")
-        approved = workflow_status.get("approved", False)
         rejected = workflow_status.get("rejected", False)
         rejection_reason = workflow_status.get("rejection_reason")
 
@@ -1323,6 +1337,14 @@ async def _sync_run_with_temporal(run: Run, session: Any) -> bool:
                 logger.info(f"Run {run.id} marked as cancelled from Temporal sync")
 
         elif workflow_execution_status == WorkflowExecutionStatus.RUNNING:
+            # Step11 waiting states
+            step11_waiting_states = (
+                "waiting_image_generation",
+                "step11_position_review",
+                "step11_image_instructions",
+                "step11_image_review",
+                "step11_preview",
+            )
             # Check if waiting for approval (Step3)
             if current_step == "waiting_approval":
                 if run.status != RunStatus.WAITING_APPROVAL.value:
@@ -1331,7 +1353,7 @@ async def _sync_run_with_temporal(run: Run, session: Any) -> bool:
                     db_updated = True
                     logger.info(f"Run {run.id} marked as waiting_approval from Temporal sync")
             # Check if waiting for image input (Step11)
-            elif current_step in ("waiting_image_generation", "step11_position_review", "step11_image_instructions", "step11_image_review", "step11_preview"):
+            elif current_step in step11_waiting_states:
                 if run.status != RunStatus.WAITING_IMAGE_INPUT.value:
                     run.status = RunStatus.WAITING_IMAGE_INPUT.value
                     run.updated_at = now
@@ -1388,10 +1410,7 @@ async def approve_run(
 
             # 2. Verify run is in waiting_approval status
             if run.status != RunStatus.WAITING_APPROVAL.value:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run is not waiting for approval (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
 
             # 3. Record in audit_logs (MUST be done before Temporal signal)
             audit = AuditLogger(session)
@@ -1412,19 +1431,13 @@ async def approve_run(
                 except Exception as sig_error:
                     logger.error(f"Failed to send approval signal: {sig_error}", exc_info=True)
                     # Signal failed - do NOT update DB to maintain consistency
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send approval signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send approval signal to workflow: {sig_error}")
             else:
                 logger.warning(
                     "Temporal client not available, signal not sent",
                     extra={"run_id": run_id},
                 )
-                raise HTTPException(
-                    status_code=503,
-                    detail="Temporal service unavailable"
-                )
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
             # 5. Update run status (only after signal success)
             run.status = RunStatus.RUNNING.value
@@ -1485,10 +1498,7 @@ async def reject_run(
 
             # 2. Verify run is in waiting_approval status
             if run.status != RunStatus.WAITING_APPROVAL.value:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run is not waiting for approval (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
 
             # 3. Record in audit_logs
             audit = AuditLogger(session)
@@ -1509,19 +1519,13 @@ async def reject_run(
                 except Exception as sig_error:
                     logger.error(f"Failed to send rejection signal: {sig_error}", exc_info=True)
                     # Signal failed - do NOT update DB to maintain consistency
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send rejection signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send rejection signal to workflow: {sig_error}")
             else:
                 logger.warning(
                     "Temporal client not available, signal not sent",
                     extra={"run_id": run_id},
                 )
-                raise HTTPException(
-                    status_code=503,
-                    detail="Temporal service unavailable"
-                )
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
             # 5. Update run status (only after signal success)
             run.status = RunStatus.FAILED.value
@@ -1606,8 +1610,7 @@ async def start_image_generation(
             allowed_statuses = [RunStatus.WAITING_APPROVAL.value, RunStatus.WAITING_IMAGE_INPUT.value]
             if run.status not in allowed_statuses:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Run is not waiting for image generation decision (current status: {run.status})"
+                    status_code=400, detail=f"Run is not waiting for image generation decision (current status: {run.status})"
                 )
 
             # 3. Record in audit_logs
@@ -1638,19 +1641,13 @@ async def start_image_generation(
                     logger.info("Temporal start_image_generation signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send start_image_generation signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 logger.warning(
                     "Temporal client not available, signal not sent",
                     extra={"run_id": run_id},
                 )
-                raise HTTPException(
-                    status_code=503,
-                    detail="Temporal service unavailable"
-                )
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
             # 5. Update run status (only after signal success)
             run.status = RunStatus.RUNNING.value
@@ -1711,8 +1708,7 @@ async def skip_image_generation(
             allowed_statuses = [RunStatus.WAITING_APPROVAL.value, RunStatus.WAITING_IMAGE_INPUT.value]
             if run.status not in allowed_statuses:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Run is not waiting for image generation decision (current status: {run.status})"
+                    status_code=400, detail=f"Run is not waiting for image generation decision (current status: {run.status})"
                 )
 
             # 3. Record in audit_logs
@@ -1733,19 +1729,13 @@ async def skip_image_generation(
                     logger.info("Temporal skip_image_generation signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send skip_image_generation signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 logger.warning(
                     "Temporal client not available, signal not sent",
                     extra={"run_id": run_id},
                 )
-                raise HTTPException(
-                    status_code=503,
-                    detail="Temporal service unavailable"
-                )
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
             # 5. Update run status (only after signal success)
             run.status = RunStatus.RUNNING.value
@@ -1813,10 +1803,23 @@ async def complete_step11(
             if run.status == "completed" and len(existing_steps) == 0:
                 # All steps except step11 should be marked as completed
                 all_step_names = [
-                    "step-1", "step0", "step1", "step2", "step3",
-                    "step3a", "step3b", "step3c", "step4", "step5",
-                    "step6", "step6.5", "step7a", "step7b", "step8",
-                    "step9", "step10"
+                    "step-1",
+                    "step0",
+                    "step1",
+                    "step2",
+                    "step3",
+                    "step3a",
+                    "step3b",
+                    "step3c",
+                    "step4",
+                    "step5",
+                    "step6",
+                    "step6.5",
+                    "step7a",
+                    "step7b",
+                    "step8",
+                    "step9",
+                    "step10",
                 ]
                 now = datetime.now()
                 for step_name in all_step_names:
@@ -1986,10 +1989,7 @@ async def submit_step11_settings(
             # Step11は waiting_image_input、Step3承認後の画像追加は waiting_approval
             allowed_statuses = [RunStatus.WAITING_APPROVAL.value, RunStatus.WAITING_IMAGE_INPUT.value]
             if run.status not in allowed_statuses:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run is not waiting for settings (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run is not waiting for settings (current status: {run.status})")
 
             # Audit log
             audit = AuditLogger(session)
@@ -2019,18 +2019,17 @@ async def submit_step11_settings(
                 except Exception as sig_error:
                     # Workflowが存在しない場合は ImageAdditionWorkflow を起動
                     if "workflow not found" in str(sig_error).lower():
-                        logger.info(
-                            "Workflow not found, starting ImageAdditionWorkflow",
-                            extra={"run_id": run_id}
-                        )
+                        logger.info("Workflow not found, starting ImageAdditionWorkflow", extra={"run_id": run_id})
 
                         # Get step10 output (article markdown) for the workflow
                         store = get_artifact_store()
-                        step10_output_path = f"tenants/{tenant_id}/runs/{run_id}/step10/output.json"
                         try:
-                            step10_data = await store.get(step10_output_path)
-                            step10_output = json.loads(step10_data.content.decode("utf-8"))
-                            article_markdown = step10_output.get("markdown", "")
+                            step10_data = await store.get_by_path(tenant_id, run_id, "step10")
+                            if step10_data:
+                                step10_output = json.loads(step10_data.decode("utf-8"))
+                                article_markdown = step10_output.get("markdown", "")
+                            else:
+                                article_markdown = ""
                         except Exception as e:
                             logger.warning(f"Failed to read step10 output: {e}")
                             article_markdown = ""
@@ -2047,16 +2046,10 @@ async def submit_step11_settings(
                             id=f"image-addition-{run_id}",
                             task_queue=TEMPORAL_TASK_QUEUE,
                         )
-                        logger.info(
-                            "Started ImageAdditionWorkflow",
-                            extra={"run_id": run_id}
-                        )
+                        logger.info("Started ImageAdditionWorkflow", extra={"run_id": run_id})
                     else:
                         logger.error(f"Failed to send signal: {sig_error}", exc_info=True)
-                        raise HTTPException(
-                            status_code=503,
-                            detail=f"Failed to send signal to workflow: {sig_error}"
-                        )
+                        raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
@@ -2123,25 +2116,16 @@ async def add_images_to_completed_run(
                 raise HTTPException(status_code=404, detail="Run not found")
 
             if run.status != RunStatus.COMPLETED.value:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run must be completed to add images (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run must be completed to add images (current status: {run.status})")
 
             # Check if step11 already has generated images
-            step11_query = select(Step).where(
-                Step.run_id == run_id,
-                Step.step_name == "step11"
-            )
+            step11_query = select(Step).where(Step.run_id == run_id, Step.step_name == "step11")
             step11_result = await session.execute(step11_query)
             step11 = step11_result.scalar_one_or_none()
 
             if step11 and step11.status == "completed":
                 # Check if images were actually generated (not just skipped)
-                artifact_query = select(ArtifactModel).where(
-                    ArtifactModel.run_id == run_id,
-                    ArtifactModel.step_id == step11.id
-                )
+                artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id, ArtifactModel.step_id == step11.id)
                 artifact_result = await session.execute(artifact_query)
                 artifacts = artifact_result.scalars().all()
 
@@ -2149,7 +2133,7 @@ async def add_images_to_completed_run(
                     # Images already exist, warn user
                     logger.warning(
                         "Attempting to add images to run that already has step11 artifacts",
-                        extra={"run_id": run_id, "artifact_count": len(artifacts)}
+                        extra={"run_id": run_id, "artifact_count": len(artifacts)},
                     )
                     # Allow re-adding for now, but could be changed to error
 
@@ -2198,18 +2182,16 @@ async def add_images_to_completed_run(
                 "initiated_at": datetime.now().isoformat(),
                 "initiated_by": user.user_id,
             }
-            await store.put(
-                json.dumps(settings_data).encode("utf-8"),
-                settings_path,
-                "application/json"
-            )
+            await store.put(json.dumps(settings_data).encode("utf-8"), settings_path, "application/json")
 
             # Get step10 output (article markdown) for the workflow
-            step10_output_path = f"tenants/{tenant_id}/runs/{run_id}/step10/output.json"
             try:
-                step10_data = await store.get(step10_output_path)
-                step10_output = json.loads(step10_data.content.decode("utf-8"))
-                article_markdown = step10_output.get("markdown", "")
+                step10_data = await store.get_by_path(tenant_id, run_id, "step10")
+                if step10_data:
+                    step10_output = json.loads(step10_data.decode("utf-8"))
+                    article_markdown = step10_output.get("markdown", "")
+                else:
+                    article_markdown = ""
             except Exception as e:
                 logger.warning(f"Failed to read step10 output: {e}")
                 article_markdown = ""
@@ -2284,6 +2266,7 @@ async def get_step11_positions(
 
             # Load positions from storage
             from apps.api.storage.artifact_store import ArtifactStore
+
             store = ArtifactStore()
 
             positions_bytes = await store.get_by_path(
@@ -2366,10 +2349,7 @@ async def submit_position_review(
                     workflow_handle = await get_step11_workflow_handle(run_id)
                     payload = {
                         "approved": data.approved,
-                        "modified_positions": (
-                            [p.model_dump() for p in data.modified_positions]
-                            if data.modified_positions else None
-                        ),
+                        "modified_positions": ([p.model_dump() for p in data.modified_positions] if data.modified_positions else None),
                         "reanalyze": data.reanalyze,
                         "reanalyze_request": data.reanalyze_request,
                     }
@@ -2377,10 +2357,7 @@ async def submit_position_review(
                     logger.info("step11_confirm_positions signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
@@ -2457,10 +2434,7 @@ async def submit_image_instructions(
                     logger.info("step11_submit_instructions signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
@@ -2508,6 +2482,7 @@ async def get_step11_images(
 
             # Load images from storage
             from apps.api.storage.artifact_store import ArtifactStore
+
             store = ArtifactStore()
 
             images_bytes = await store.get_by_path(
@@ -2595,10 +2570,7 @@ async def submit_image_review(
                     logger.info("step11_review_images signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
@@ -2646,6 +2618,7 @@ async def get_step11_preview(
 
             # Load preview from storage
             from apps.api.storage.artifact_store import ArtifactStore
+
             store = ArtifactStore()
 
             preview_bytes = await store.get_by_path(
@@ -2730,10 +2703,7 @@ async def finalize_step11(
                     logger.info("step11_finalize signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
                     logger.error(f"Failed to send signal: {sig_error}", exc_info=True)
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"Failed to send signal to workflow: {sig_error}"
-                    )
+                    raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
             else:
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
@@ -2768,6 +2738,7 @@ async def retry_step(
     Sends retry signal to Temporal workflow.
     """
     import uuid
+
     from sqlalchemy import select
 
     tenant_id = user.tenant_id
@@ -2777,18 +2748,30 @@ async def retry_step(
     )
 
     # Valid step names
-    VALID_STEPS = [
-        "step0", "step1", "step2", "step3a", "step3b", "step3c",
-        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
-        "step8", "step9", "step10",
+    valid_steps = [
+        "step0",
+        "step1",
+        "step2",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b",
+        "step8",
+        "step9",
+        "step10",
     ]
 
     # Normalize step name (step6.5 -> step6_5)
     normalized_step = step.replace(".", "_")
-    if normalized_step not in VALID_STEPS:
+    if normalized_step not in valid_steps:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid step: {step}. Valid steps: {', '.join(VALID_STEPS)}",
+            detail=f"Invalid step: {step}. Valid steps: {', '.join(valid_steps)}",
         )
 
     db_manager = get_tenant_db_manager()
@@ -2805,10 +2788,7 @@ async def retry_step(
 
             # 2. Verify run is in a retryable status (failed)
             if run.status != RunStatus.FAILED.value:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run must be in failed status to retry (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run must be in failed status to retry (current status: {run.status})")
 
             # 3. Get step record (if exists) for retry count tracking
             step_query = select(Step).where(
@@ -2838,10 +2818,7 @@ async def retry_step(
             # 5. Start new Temporal workflow with resume_from
             # Note: Failed workflows cannot receive signals, so we start a new workflow
             if temporal_client is None:
-                raise HTTPException(
-                    status_code=503,
-                    detail="Temporal client not available"
-                )
+                raise HTTPException(status_code=503, detail="Temporal client not available")
 
             try:
                 # Load original config
@@ -2862,10 +2839,7 @@ async def retry_step(
                 )
             except Exception as wf_error:
                 logger.error(f"Failed to start retry workflow: {wf_error}", exc_info=True)
-                raise HTTPException(
-                    status_code=503,
-                    detail=f"Failed to start retry workflow: {wf_error}"
-                )
+                raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
 
             # 6. Update run status
             run.status = RunStatus.RUNNING.value
@@ -2920,6 +2894,7 @@ async def resume_from_step(
         { success: bool, run_id: str, resume_from: str }
     """
     import uuid
+
     from sqlalchemy import select
 
     tenant_id = user.tenant_id
@@ -2929,17 +2904,29 @@ async def resume_from_step(
     )
 
     # Step order for validation and loading
-    STEP_ORDER = [
-        "step0", "step1", "step2", "step3a", "step3b", "step3c",
-        "step4", "step5", "step6", "step6_5", "step7a", "step7b",
-        "step8", "step9", "step10",
+    step_order = [
+        "step0",
+        "step1",
+        "step2",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b",
+        "step8",
+        "step9",
+        "step10",
     ]
 
     # Validate step name
-    if step not in STEP_ORDER:
+    if step not in step_order:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid step: {step}. Valid steps: {', '.join(STEP_ORDER)}",
+            detail=f"Invalid step: {step}. Valid steps: {', '.join(step_order)}",
         )
 
     db_manager = get_tenant_db_manager()
@@ -2956,8 +2943,8 @@ async def resume_from_step(
                 raise HTTPException(status_code=404, detail="Run not found")
 
             # 2. Load artifacts from completed steps (before resume_from)
-            step_index = STEP_ORDER.index(step)
-            steps_to_load = STEP_ORDER[:step_index]
+            step_index = step_order.index(step)
+            steps_to_load = step_order[:step_index]
 
             # Build config with loaded step data
             # config is already a dict (JSON column), no json.loads needed
@@ -3059,6 +3046,7 @@ async def clone_run(
     Optionally overrides specific input fields.
     """
     import uuid
+
     from sqlalchemy import select
 
     tenant_id = user.tenant_id
@@ -3085,21 +3073,26 @@ async def clone_run(
 
             # Build new input with optional overrides
             new_input = {
-                "keyword": data.keyword if data and data.keyword else original_input.get("keyword", ""),
-                "target_audience": data.target_audience if data and data.target_audience else original_input.get("target_audience"),
-                "competitor_urls": data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls"),
-                "additional_requirements": data.additional_requirements if data and data.additional_requirements else original_input.get("additional_requirements"),
+                "keyword": (data.keyword if data and data.keyword else original_input.get("keyword", "")),
+                "target_audience": (data.target_audience if data and data.target_audience else original_input.get("target_audience")),
+                "competitor_urls": (data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls")),
+                "additional_requirements": (
+                    data.additional_requirements if data and data.additional_requirements else original_input.get("additional_requirements")
+                ),
             }
 
             # Copy model config with optional override
             if data and data.model_config_override:
                 new_model_config = data.model_config_override.model_dump()
             else:
-                new_model_config = original_config.get("model_config", {
-                    "platform": "gemini",
-                    "model": "gemini-1.5-pro",
-                    "options": {},
-                })
+                new_model_config = original_config.get(
+                    "model_config",
+                    {
+                        "platform": "gemini",
+                        "model": "gemini-1.5-pro",
+                        "options": {},
+                    },
+                )
 
             # Build new workflow config
             new_workflow_config = {
@@ -3227,10 +3220,7 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
                 RunStatus.WAITING_APPROVAL.value,
             ]
             if run.status not in cancellable_statuses:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run cannot be cancelled (current status: {run.status})"
-                )
+                raise HTTPException(status_code=400, detail=f"Run cannot be cancelled (current status: {run.status})")
 
             # 3. Record in audit_logs
             audit = AuditLogger(session)
@@ -3287,7 +3277,8 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 @app.delete("/api/runs/{run_id}/delete")
 async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
     """Delete a completed, failed, or cancelled run."""
-    from sqlalchemy import select, delete as sql_delete
+    from sqlalchemy import delete as sql_delete
+    from sqlalchemy import select
 
     tenant_id = user.tenant_id
     logger.info(
@@ -3318,8 +3309,7 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
             ]
             if run.status not in deletable_statuses:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Run cannot be deleted while in progress (current status: {run.status}). Cancel it first."
+                    status_code=400, detail=f"Run cannot be deleted while in progress (current status: {run.status}). Cancel it first."
                 )
 
             # 3. Record in audit_logs before deletion
@@ -3342,14 +3332,10 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
             # 5. Delete related records from DB
             # Delete artifacts
-            await session.execute(
-                sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id)
-            )
+            await session.execute(sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id))
 
             # Delete steps
-            await session.execute(
-                sql_delete(Step).where(Step.run_id == run_id)
-            )
+            await session.execute(sql_delete(Step).where(Step.run_id == run_id))
 
             # Delete the run itself
             await session.delete(run)
@@ -3371,11 +3357,13 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
 class BulkDeleteRequest(BaseModel):
     """Request body for bulk delete."""
+
     run_ids: list[str]
 
 
 class BulkDeleteResponse(BaseModel):
     """Response for bulk delete."""
+
     deleted: list[str]
     failed: list[dict[str, str]]  # [{"id": "...", "error": "..."}]
 
@@ -3386,7 +3374,8 @@ async def bulk_delete_runs(
     user: AuthUser = Depends(get_current_user),
 ) -> BulkDeleteResponse:
     """Delete multiple runs. Running/pending/waiting runs are cancelled first."""
-    from sqlalchemy import select, delete as sql_delete
+    from sqlalchemy import delete as sql_delete
+    from sqlalchemy import select
 
     tenant_id = user.tenant_id
     logger.info(
@@ -3463,12 +3452,8 @@ async def bulk_delete_runs(
                         logger.warning(f"Failed to delete artifacts for {run_id}: {storage_error}")
 
                     # 5. Delete related records from DB
-                    await session.execute(
-                        sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id)
-                    )
-                    await session.execute(
-                        sql_delete(Step).where(Step.run_id == run_id)
-                    )
+                    await session.execute(sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id))
+                    await session.execute(sql_delete(Step).where(Step.run_id == run_id))
                     await session.delete(run)
 
                     deleted.append(run_id)
@@ -3579,8 +3564,9 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
 
     Falls back to MinIO listing if DB artifacts table is empty.
     """
-    from sqlalchemy import select
     from datetime import datetime
+
+    from sqlalchemy import select
 
     tenant_id = user.tenant_id
     logger.debug(
@@ -3664,16 +3650,18 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
                         elif filename.endswith(".md"):
                             content_type = "text/markdown"
 
-                        artifact_refs.append(ArtifactRef(
-                            id=f"{run_id}:{step_name}:{filename}",  # Synthetic ID
-                            step_id="",
-                            step_name=step_name,
-                            ref_path=path,
-                            digest="",  # Not available without reading file
-                            content_type=content_type,
-                            size_bytes=size_bytes,
-                            created_at=created_at,
-                        ))
+                        artifact_refs.append(
+                            ArtifactRef(
+                                id=f"{run_id}:{step_name}:{filename}",  # Synthetic ID
+                                step_id="",
+                                step_name=step_name,
+                                ref_path=path,
+                                digest="",  # Not available without reading file
+                                content_type=content_type,
+                                size_bytes=size_bytes,
+                                created_at=created_at,
+                            )
+                        )
 
                 return artifact_refs
             except Exception as e:
@@ -3781,9 +3769,10 @@ async def get_artifact_content(
 
     Supports both DB artifact IDs (UUID) and synthetic MinIO IDs ({run_id}:{step}:{filename}).
     """
-    from sqlalchemy import select
-    from datetime import datetime
     import base64
+    from datetime import datetime
+
+    from sqlalchemy import select
 
     tenant_id = user.tenant_id
     logger.debug(
@@ -4013,6 +4002,7 @@ async def get_run_preview(run_id: str, user: AuthUser = Depends(get_current_user
                         )
                         if output_bytes:
                             import json
+
                             output_data = json.loads(output_bytes.decode("utf-8"))
                             html_content = output_data.get("html_content")
                             if html_content:
@@ -4102,10 +4092,7 @@ async def list_events(
                 limit=limit,
             )
             # Filter artifact logs that belong to this run
-            artifact_logs = [
-                log for log in artifact_logs
-                if log.details and log.details.get("run_id") == run_id
-            ]
+            artifact_logs = [log for log in artifact_logs if log.details and log.details.get("run_id") == run_id]
 
             # Combine and sort by created_at
             all_logs = logs + artifact_logs
@@ -4113,10 +4100,7 @@ async def list_events(
 
             # Apply step filter if provided
             if step:
-                all_logs = [
-                    log for log in all_logs
-                    if log.details and log.details.get("step") == step
-                ]
+                all_logs = [log for log in all_logs if log.details and log.details.get("step") == step]
 
             return [
                 EventResponse(
@@ -4574,10 +4558,7 @@ async def get_run_cost(
 
                         # Calculate cost
                         rates = DEFAULT_COST_RATES.get(model, {"input": 0.001, "output": 0.002})
-                        step_cost = (
-                            (input_tokens / 1000) * rates["input"]
-                            + (output_tokens / 1000) * rates["output"]
-                        )
+                        step_cost = (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"]
 
                         # Get step name from step_id if available
                         step_name = artifact.artifact_type

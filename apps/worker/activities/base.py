@@ -18,9 +18,6 @@ from typing import Any, TypeVar
 import httpx
 from temporalio import activity
 
-# API base URL for internal communication (Worker -> API)
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://api:8000")
-
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory, StepError
 from apps.api.core.state import GraphState
@@ -28,6 +25,9 @@ from apps.api.observability.events import Event, EventEmitter, EventType
 from apps.api.storage.artifact_store import ArtifactStore
 from apps.api.storage.schemas import ArtifactRef
 from apps.api.validation.schemas import ValidationReport
+
+# API base URL for internal communication (Worker -> API)
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://api:8000")
 
 T = TypeVar("T")
 
@@ -52,6 +52,7 @@ async def load_step_data(
         dict with step output data, or None if not found
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     logger.info(f"[load_step_data] Loading {step} for tenant={tenant_id}, run={run_id}")
@@ -60,7 +61,8 @@ async def load_step_data(
         data = await store.get_by_path(tenant_id, run_id, step)
         if data:
             logger.info(f"[load_step_data] Found {step} data: {len(data)} bytes")
-            return json.loads(data.decode("utf-8"))
+            result: dict[str, Any] = json.loads(data.decode("utf-8"))
+            return result
         logger.warning(f"[load_step_data] No data found for {step}")
         return None
     except Exception as e:
@@ -92,6 +94,7 @@ async def save_step_data(
         ArtifactRef with path and digest, or None if failed
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     logger.info(f"[save_step_data] Saving {step}/{filename} for tenant={tenant_id}, run={run_id}")
@@ -210,6 +213,7 @@ class BaseActivity(ABC):
             dict with artifact_ref and metadata
         """
         import logging
+
         logger = logging.getLogger(__name__)
         logger.info(f"[BaseActivity.run] START: step={self.step_id}, tenant={tenant_id}, run={run_id}")
 
@@ -241,9 +245,7 @@ class BaseActivity(ABC):
 
         existing_ref = await self._check_existing_output(output_path, input_digest)
         if existing_ref:
-            activity.logger.info(
-                f"Step {self.step_id}: Using existing output (idempotent skip)"
-            )
+            activity.logger.info(f"Step {self.step_id}: Using existing output (idempotent skip)")
             return {
                 "artifact_ref": existing_ref.model_dump(),
                 "skipped": True,
@@ -463,12 +465,14 @@ class BaseActivity(ABC):
         )
 
         # Store metadata (for idempotency verification)
-        meta_content = json.dumps({
-            "input_digest": input_digest,
-            "step_id": self.step_id,
-            "created_at": datetime.now().isoformat(),
-            "attempt": ctx.attempt,
-        })
+        meta_content = json.dumps(
+            {
+                "input_digest": input_digest,
+                "step_id": self.step_id,
+                "created_at": datetime.now().isoformat(),
+                "attempt": ctx.attempt,
+            }
+        )
         meta_path = path.replace("/output.json", "/metadata.json")
         await self.store.put(
             content=meta_content.encode("utf-8"),
@@ -508,6 +512,7 @@ class BaseActivity(ABC):
         Failures are logged but not raised to avoid blocking workflow.
         """
         import logging
+
         logger = logging.getLogger(__name__)
 
         try:
@@ -523,9 +528,7 @@ class BaseActivity(ABC):
                     },
                 )
                 if response.status_code != 200:
-                    logger.warning(
-                        f"Failed to update step status: {response.status_code} {response.text}"
-                    )
+                    logger.warning(f"Failed to update step status: {response.status_code} {response.text}")
                 else:
                     logger.info(f"Step status updated: {step_name} -> {status}")
         except Exception as e:
@@ -580,16 +583,16 @@ class BaseActivity(ABC):
 
             # Build error context
             error_context = context or {}
-            error_context.update({
-                "step_id": ctx.step_id,
-                "timeout_seconds": ctx.timeout_seconds,
-                "config_keys": list(ctx.config.keys()) if ctx.config else [],
-            })
+            error_context.update(
+                {
+                    "step_id": ctx.step_id,
+                    "timeout_seconds": ctx.timeout_seconds,
+                    "config_keys": list(ctx.config.keys()) if ctx.config else [],
+                }
+            )
 
             # Get stack trace
-            stack_trace = "".join(
-                traceback.format_exception(type(error), error, error.__traceback__)
-            )
+            stack_trace = "".join(traceback.format_exception(type(error), error, error.__traceback__))
 
             async with engine.connect() as conn:
                 await conn.execute(
@@ -616,12 +619,8 @@ class BaseActivity(ABC):
                 )
                 await conn.commit()
 
-            activity.logger.debug(
-                f"Error logged for diagnostics: {type(error).__name__} in {ctx.step_id}"
-            )
+            activity.logger.debug(f"Error logged for diagnostics: {type(error).__name__} in {ctx.step_id}")
 
         except Exception as log_error:
             # Don't fail the activity if error logging fails
-            activity.logger.warning(
-                f"Failed to log error for diagnostics: {log_error}"
-            )
+            activity.logger.warning(f"Failed to log error for diagnostics: {log_error}")

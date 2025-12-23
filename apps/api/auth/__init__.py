@@ -12,7 +12,7 @@ from .middleware import (
     get_current_user,
     verify_token,
 )
-from .schemas import TokenPayload, AuthUser
+from .schemas import AuthUser, TokenPayload
 
 __all__ = [
     "AuthError",

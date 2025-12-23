@@ -299,9 +299,7 @@ class ArticleWorkflow:
             self.current_step = "waiting_approval"
 
             # Wait for approval or rejection signal
-            await workflow.wait_condition(
-                lambda: self.approved or self.rejected
-            )
+            await workflow.wait_condition(lambda: self.approved or self.rejected)
 
             if self.rejected:
                 # Sync rejected status to API DB
@@ -417,9 +415,7 @@ class ArticleWorkflow:
 
         # ========== STEP 11: MULTI-PHASE IMAGE GENERATION ==========
         if self._should_run("step11", resume_from):
-            step11_result = await self._run_step11_multiphase(
-                tenant_id, run_id, config, activity_args, resume_from
-            )
+            step11_result = await self._run_step11_multiphase(tenant_id, run_id, config, activity_args, resume_from)
             artifact_refs["step11"] = step11_result.get("artifact_ref", {})
 
         # ========== COMPLETED ==========
@@ -569,7 +565,7 @@ class ArticleWorkflow:
             Step11 result with artifact_ref
         """
         self.current_step = "step11"
-        MAX_RETRIES_PER_IMAGE = 3
+        max_retries_per_image = 3
 
         # Skip waiting phases if resuming from step11
         skip_initial_wait = resume_from == "step11"
@@ -578,14 +574,10 @@ class ArticleWorkflow:
         if not skip_initial_wait:
             self.step11_phase = "waiting_11A"
             self.current_step = "waiting_image_generation"
-            await self._sync_run_status(
-                tenant_id, run_id, "waiting_approval", "waiting_image_generation"
-            )
+            await self._sync_run_status(tenant_id, run_id, "waiting_approval", "waiting_image_generation")
 
             # Wait for settings signal or skip signal
-            await workflow.wait_condition(
-                lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made
-            )
+            await workflow.wait_condition(lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made)
 
             # Handle legacy skip signal
             if self.image_gen_decision_made and not self.image_gen_enabled:
@@ -607,9 +599,7 @@ class ArticleWorkflow:
         # ========== Phase 11B: Analyze positions and wait for confirmation ==========
         self.step11_phase = "11B_analyzing"
         self.current_step = "step11_analyzing"
-        await self._sync_run_status(
-            tenant_id, run_id, "running", "step11_analyzing"
-        )
+        await self._sync_run_status(tenant_id, run_id, "running", "step11_analyzing")
 
         # Execute position analysis activity
         analyze_args = {
@@ -633,21 +623,15 @@ class ArticleWorkflow:
             self.step11_phase = "waiting_11B"
             self.current_step = "step11_position_review"
             self.step11_positions_confirmed = None
-            await self._sync_run_status(
-                tenant_id, run_id, "waiting_image_input", "step11_position_review"
-            )
+            await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_position_review")
 
-            await workflow.wait_condition(
-                lambda: self.step11_positions_confirmed is not None
-            )
+            await workflow.wait_condition(lambda: self.step11_positions_confirmed is not None)
 
             # Check if reanalyze requested
             if self.step11_positions_confirmed.get("reanalyze"):
                 self.step11_phase = "11B_reanalyzing"
                 self.current_step = "step11_analyzing"
-                await self._sync_run_status(
-                    tenant_id, run_id, "running", "step11_analyzing"
-                )
+                await self._sync_run_status(tenant_id, run_id, "running", "step11_analyzing")
 
                 # Reanalyze with additional request
                 reanalyze_args = {
@@ -686,20 +670,14 @@ class ArticleWorkflow:
             self.step11_phase = "waiting_11C"
             self.current_step = "step11_image_instructions"
             self.step11_instructions = None
-            await self._sync_run_status(
-                tenant_id, run_id, "waiting_image_input", "step11_image_instructions"
-            )
+            await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_instructions")
 
-            await workflow.wait_condition(
-                lambda: self.step11_instructions is not None
-            )
+            await workflow.wait_condition(lambda: self.step11_instructions is not None)
 
             # ========== Phase 11D: Generate images and wait for review ==========
             self.step11_phase = "11D_generating"
             self.current_step = "step11_generating"
-            await self._sync_run_status(
-                tenant_id, run_id, "running", "step11_generating"
-            )
+            await self._sync_run_status(tenant_id, run_id, "running", "step11_generating")
 
             # Execute image generation activity
             generate_args = {
@@ -726,18 +704,13 @@ class ArticleWorkflow:
                 self.step11_phase = "waiting_11D"
                 self.current_step = "step11_image_review"
                 self.step11_image_reviews = None
-                await self._sync_run_status(
-                    tenant_id, run_id, "waiting_image_input", "step11_image_review"
-                )
+                await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_review")
 
-                await workflow.wait_condition(
-                    lambda: self.step11_image_reviews is not None
-                )
+                await workflow.wait_condition(lambda: self.step11_image_reviews is not None)
 
                 # Process retries
                 retries_needed = [
-                    r for r in self.step11_image_reviews
-                    if r.get("retry") and retry_counts[r["index"]] < MAX_RETRIES_PER_IMAGE
+                    r for r in self.step11_image_reviews if r.get("retry") and retry_counts[r["index"]] < max_retries_per_image
                 ]
 
                 if not retries_needed:
@@ -745,9 +718,7 @@ class ArticleWorkflow:
 
                 self.step11_phase = "11D_retrying"
                 self.current_step = "step11_generating"
-                await self._sync_run_status(
-                    tenant_id, run_id, "running", "step11_generating"
-                )
+                await self._sync_run_status(tenant_id, run_id, "running", "step11_generating")
 
                 for retry_req in retries_needed:
                     idx = retry_req["index"]
@@ -760,9 +731,7 @@ class ArticleWorkflow:
                         "position": self.step11_positions[idx],
                         "instruction": retry_req.get("retry_instruction", ""),
                         "original_instruction": (
-                            self.step11_instructions[idx].get("instruction", "")
-                            if idx < len(self.step11_instructions)
-                            else ""
+                            self.step11_instructions[idx].get("instruction", "") if idx < len(self.step11_instructions) else ""
                         ),
                     }
                     retry_result = await self._execute_activity(
@@ -777,9 +746,7 @@ class ArticleWorkflow:
             # ========== Phase 11E: Insert images and show preview ==========
             self.step11_phase = "11E_inserting"
             self.current_step = "step11_inserting"
-            await self._sync_run_status(
-                tenant_id, run_id, "running", "step11_inserting"
-            )
+            await self._sync_run_status(tenant_id, run_id, "running", "step11_inserting")
 
             insert_args = {
                 **activity_args,
@@ -797,13 +764,9 @@ class ArticleWorkflow:
             self.step11_phase = "waiting_11E"
             self.current_step = "step11_preview"
             self.step11_finalized = None
-            await self._sync_run_status(
-                tenant_id, run_id, "waiting_image_input", "step11_preview"
-            )
+            await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_preview")
 
-            await workflow.wait_condition(
-                lambda: self.step11_finalized is not None
-            )
+            await workflow.wait_condition(lambda: self.step11_finalized is not None)
 
             # Check if restart requested
             if self.step11_finalized.get("restart_from") == "11C":
@@ -915,8 +878,8 @@ class ImageAdditionWorkflow:
             from apps.worker.activities import (
                 step11_analyze_positions,
                 step11_generate_images,
-                step11_retry_image,
                 step11_insert_images,
+                step11_retry_image,
                 sync_run_status,
             )
 
@@ -988,9 +951,7 @@ class ImageAdditionWorkflow:
             self.step11_positions_confirmed = None
             await update_status("waiting_image_input", "step11_position_review")
 
-            await workflow.wait_condition(
-                lambda: self.step11_positions_confirmed is not None or self.skipped
-            )
+            await workflow.wait_condition(lambda: self.step11_positions_confirmed is not None or self.skipped)
 
             if self.skipped:
                 await update_status("completed", "step11")
@@ -1039,9 +1000,7 @@ class ImageAdditionWorkflow:
                 self.step11_instructions = None
                 await update_status("waiting_image_input", "step11_image_instructions")
 
-                await workflow.wait_condition(
-                    lambda: self.step11_instructions is not None or self.skipped
-                )
+                await workflow.wait_condition(lambda: self.step11_instructions is not None or self.skipped)
 
                 if self.skipped:
                     await update_status("completed", "step11")
@@ -1074,18 +1033,13 @@ class ImageAdditionWorkflow:
                 self.step11_image_reviews = None
                 await update_status("waiting_image_input", "step11_image_review")
 
-                await workflow.wait_condition(
-                    lambda: self.step11_image_reviews is not None or self.skipped
-                )
+                await workflow.wait_condition(lambda: self.step11_image_reviews is not None or self.skipped)
 
                 if self.skipped:
                     await update_status("completed", "step11")
                     return {"artifact_ref": {}, "skipped": True}
 
-                retries_requested = [
-                    r for r in self.step11_image_reviews
-                    if r.get("retry") and retry_counts[r["index"]] < max_retries
-                ]
+                retries_requested = [r for r in self.step11_image_reviews if r.get("retry") and retry_counts[r["index"]] < max_retries]
 
                 if not retries_requested:
                     break
@@ -1105,9 +1059,7 @@ class ImageAdditionWorkflow:
                             "config": {**config, "step11_enabled": True},
                             "position": self.step11_positions[idx],
                             "instruction": (
-                                self.step11_instructions[idx].get("instruction", "")
-                                if idx < len(self.step11_instructions)
-                                else ""
+                                self.step11_instructions[idx].get("instruction", "") if idx < len(self.step11_instructions) else ""
                             ),
                             "retry_instruction": r.get("retry_instruction", ""),
                         },
@@ -1137,9 +1089,7 @@ class ImageAdditionWorkflow:
             self.step11_finalized = None
             await update_status("waiting_image_input", "step11_preview")
 
-            await workflow.wait_condition(
-                lambda: self.step11_finalized is not None or self.skipped
-            )
+            await workflow.wait_condition(lambda: self.step11_finalized is not None or self.skipped)
 
             if self.skipped:
                 await update_status("completed", "step11")

@@ -4,7 +4,6 @@ VULN-005/006: 認証データ構造
 """
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -25,7 +24,7 @@ class AuthUser(BaseModel):
 
     user_id: str = Field(..., description="User identifier")
     tenant_id: str = Field(..., description="Tenant identifier")
-    email: Optional[str] = Field(default=None, description="User email")
+    email: str | None = Field(default=None, description="User email")
     roles: list[str] = Field(default_factory=list, description="User roles")
 
 
@@ -56,7 +55,7 @@ class RefreshResponse(BaseModel):
     """トークンリフレッシュレスポンス"""
 
     access_token: str
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
     expires_in: int
 
@@ -66,6 +65,6 @@ class AuthFailureLog(BaseModel):
 
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     reason: str
-    token_fragment: Optional[str] = None  # 最初の10文字のみ（セキュリティ）
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    token_fragment: str | None = None  # 最初の10文字のみ（セキュリティ）
+    ip_address: str | None = None
+    user_agent: str | None = None

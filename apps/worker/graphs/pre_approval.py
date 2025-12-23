@@ -106,7 +106,7 @@ async def step1_execute(
 ) -> dict[str, Any]:
     """Execute step 1: Competitor Fetch."""
     # ===== DEBUG_LOG_START =====
-    logger.debug(f"[STEP1] Starting step1_execute")
+    logger.debug("[STEP1] Starting step1_execute")
     # ===== DEBUG_LOG_END =====
 
     config = ctx.config
@@ -131,11 +131,13 @@ async def step1_execute(
             try:
                 result = await page_tool.execute(url=url)
                 if result.success and result.data:
-                    competitors.append({
-                        "url": url,
-                        "title": result.data.get("title", ""),
-                        "content": result.data.get("content", "")[:1000],
-                    })
+                    competitors.append(
+                        {
+                            "url": url,
+                            "title": result.data.get("title", ""),
+                            "content": result.data.get("content", "")[:1000],
+                        }
+                    )
             except Exception:
                 continue
 

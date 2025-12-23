@@ -17,12 +17,12 @@ from .step8 import step8_fact_check
 from .step9 import step9_final_rewrite
 from .step10 import step10_final_output
 from .step11 import (
-    step11_image_generation,
-    step11_mark_skipped,
     step11_analyze_positions,
     step11_generate_images,
-    step11_retry_image,
+    step11_image_generation,
     step11_insert_images,
+    step11_mark_skipped,
+    step11_retry_image,
 )
 from .sync_status import sync_run_status
 
