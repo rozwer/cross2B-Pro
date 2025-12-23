@@ -20,6 +20,10 @@ import type {
   GeneratedImage,
   KeywordSuggestionRequest,
   KeywordSuggestionResponse,
+  HearingTemplate,
+  HearingTemplateCreate,
+  HearingTemplateUpdate,
+  HearingTemplateList,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -580,6 +584,63 @@ class ApiClient {
       return this.request<Prompt>(`/api/prompts/step/${step}?${searchParams.toString()}`, {
         method: "PUT",
         body: JSON.stringify(data),
+      });
+    },
+  };
+
+  // ============================================
+  // Hearing Templates API
+  // ============================================
+
+  hearingTemplates = {
+    /**
+     * テンプレート一覧を取得
+     */
+    list: async (params?: {
+      limit?: number;
+      offset?: number;
+    }): Promise<HearingTemplateList> => {
+      const searchParams = new URLSearchParams();
+      if (params?.limit) searchParams.set("limit", params.limit.toString());
+      if (params?.offset) searchParams.set("offset", params.offset.toString());
+
+      const query = searchParams.toString();
+      return this.request<HearingTemplateList>(`/api/hearing/templates${query ? `?${query}` : ""}`);
+    },
+
+    /**
+     * テンプレートを取得
+     */
+    get: async (id: string): Promise<HearingTemplate> => {
+      return this.request<HearingTemplate>(`/api/hearing/templates/${id}`);
+    },
+
+    /**
+     * テンプレートを作成
+     */
+    create: async (data: HearingTemplateCreate): Promise<HearingTemplate> => {
+      return this.request<HearingTemplate>("/api/hearing/templates", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /**
+     * テンプレートを更新
+     */
+    update: async (id: string, data: HearingTemplateUpdate): Promise<HearingTemplate> => {
+      return this.request<HearingTemplate>(`/api/hearing/templates/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /**
+     * テンプレートを削除
+     */
+    delete: async (id: string): Promise<{ success: boolean; message: string }> => {
+      return this.request<{ success: boolean; message: string }>(`/api/hearing/templates/${id}`, {
+        method: "DELETE",
       });
     },
   };

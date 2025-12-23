@@ -52,9 +52,7 @@ class Tenant(CommonBase):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     database_url: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
@@ -77,17 +75,11 @@ class LLMModel(CommonBase):
     __tablename__ = "llm_models"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    provider_id: Mapped[str] = mapped_column(
-        String(32), ForeignKey("llm_providers.id"), nullable=False
-    )
+    provider_id: Mapped[str] = mapped_column(String(32), ForeignKey("llm_providers.id"), nullable=False)
     model_name: Mapped[str] = mapped_column(String(128), nullable=False)
     model_class: Mapped[str] = mapped_column(String(32), nullable=False)  # pro, standard
-    cost_per_1k_input_tokens: Mapped[Decimal | None] = mapped_column(
-        Numeric(10, 6), nullable=True
-    )
-    cost_per_1k_output_tokens: Mapped[Decimal | None] = mapped_column(
-        Numeric(10, 6), nullable=True
-    )
+    cost_per_1k_input_tokens: Mapped[Decimal | None] = mapped_column(Numeric(10, 6), nullable=True)
+    cost_per_1k_output_tokens: Mapped[Decimal | None] = mapped_column(Numeric(10, 6), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     provider: Mapped["LLMProvider"] = relationship(back_populates="models")
@@ -99,9 +91,7 @@ class StepLLMDefault(CommonBase):
     __tablename__ = "step_llm_defaults"
 
     step: Mapped[str] = mapped_column(String(64), primary_key=True)
-    provider_id: Mapped[str] = mapped_column(
-        String(32), ForeignKey("llm_providers.id"), nullable=False
-    )
+    provider_id: Mapped[str] = mapped_column(String(32), ForeignKey("llm_providers.id"), nullable=False)
     model_class: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
@@ -119,41 +109,25 @@ class Run(Base):
         UUID(as_uuid=False),
         primary_key=True,
     )
-    tenant_id: Mapped[str] = mapped_column(
-        String(64), nullable=False, index=True
-    )  # マルチテナント分離必須
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # マルチテナント分離必須
     status: Mapped[str] = mapped_column(
         String(32), nullable=False
     )  # pending, running, waiting_approval, waiting_image_input, completed, failed, cancelled
     current_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    input_data: Mapped[dict[str, Any] | None] = mapped_column(
-        JSON, nullable=True
-    )  # 元入力データ保存
+    input_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # 元入力データ保存
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    step11_state: Mapped[dict[str, Any] | None] = mapped_column(
-        JSON, nullable=True
-    )  # Step11 画像生成の状態（Temporal不使用）
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, onupdate=datetime.now, nullable=False
-    )
+    step11_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # Step11 画像生成の状態（Temporal不使用）
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     steps: Mapped[list["Step"]] = relationship(back_populates="run", cascade="all, delete-orphan")
-    artifacts: Mapped[list["Artifact"]] = relationship(
-        back_populates="run", cascade="all, delete-orphan"
-    )
-    error_logs: Mapped[list["ErrorLog"]] = relationship(
-        back_populates="run", cascade="all, delete-orphan"
-    )
-    diagnostic_reports: Mapped[list["DiagnosticReport"]] = relationship(
-        back_populates="run", cascade="all, delete-orphan"
-    )
+    artifacts: Mapped[list["Artifact"]] = relationship(back_populates="run", cascade="all, delete-orphan")
+    error_logs: Mapped[list["ErrorLog"]] = relationship(back_populates="run", cascade="all, delete-orphan")
+    diagnostic_reports: Mapped[list["DiagnosticReport"]] = relationship(back_populates="run", cascade="all, delete-orphan")
 
 
 class Step(Base):
@@ -166,12 +140,8 @@ class Step(Base):
 
     __tablename__ = "steps"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
-    )
-    run_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False)
     step_name: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -195,26 +165,16 @@ class Artifact(Base):
 
     __tablename__ = "artifacts"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
-    )
-    run_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False
-    )
-    step_id: Mapped[str | None] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False)
+    step_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True)
     artifact_type: Mapped[str] = mapped_column(String(100), nullable=False)
     ref_path: Mapped[str] = mapped_column(Text, nullable=False)
     digest: Mapped[str] = mapped_column(String(64), nullable=False)
     content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    extra_metadata: Mapped[dict[str, Any] | None] = mapped_column(
-        "metadata", JSON, nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
+    extra_metadata: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
 
     run: Mapped["Run"] = relationship(back_populates="artifacts")
 
@@ -235,16 +195,10 @@ class AuditLog(Base):
     resource_type: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_id: Mapped[str] = mapped_column(String(128), nullable=False)
     details: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     # VULN-011: チェーンハッシュ
-    prev_hash: Mapped[str | None] = mapped_column(
-        String(64), nullable=True
-    )  # 最初のエントリはNone
-    entry_hash: Mapped[str] = mapped_column(
-        String(64), nullable=False
-    )  # SHA256 of entry content
+    prev_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)  # 最初のエントリはNone
+    entry_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # SHA256 of entry content
 
 
 class Prompt(Base):
@@ -276,33 +230,21 @@ class ErrorLog(Base):
 
     __tablename__ = "error_logs"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
-    )
-    run_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True)
     step_id: Mapped[int | None] = mapped_column(
         Integer, nullable=True, index=True
     )  # References steps.id (Integer, no FK due to legacy schema)
     source: Mapped[str] = mapped_column(
         String(32), nullable=False, default="activity", index=True
     )  # llm, tool, validation, storage, activity, api
-    error_category: Mapped[str] = mapped_column(
-        String(32), nullable=False
-    )  # retryable, non_retryable, validation_fail
-    error_type: Mapped[str] = mapped_column(
-        String(128), nullable=False
-    )  # Exception class name
+    error_category: Mapped[str] = mapped_column(String(32), nullable=False)  # retryable, non_retryable, validation_fail
+    error_type: Mapped[str] = mapped_column(String(128), nullable=False)  # Exception class name
     error_message: Mapped[str] = mapped_column(Text, nullable=False)
     stack_trace: Mapped[str | None] = mapped_column(Text, nullable=True)
-    context: Mapped[dict[str, Any] | None] = mapped_column(
-        JSON, nullable=True
-    )  # LLM model, tool name, input params, etc.
+    context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # LLM model, tool name, input params, etc.
     attempt: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False, index=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False, index=True)
 
     run: Mapped["Run"] = relationship(back_populates="error_logs")
 
@@ -315,25 +257,13 @@ class DiagnosticReport(Base):
 
     __tablename__ = "diagnostic_reports"
 
-    id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()"
-    )
-    run_id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True
-    )
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True)
     # LLM diagnostics results
-    root_cause_analysis: Mapped[str] = mapped_column(
-        Text, nullable=False
-    )  # LLM's analysis of failure cause
-    recommended_actions: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSON, nullable=False
-    )  # Ordered list of recommended steps
-    resume_step: Mapped[str | None] = mapped_column(
-        String(64), nullable=True
-    )  # Suggested step to resume from
-    confidence_score: Mapped[float | None] = mapped_column(
-        Numeric(3, 2), nullable=True
-    )  # LLM's confidence (0.0-1.0)
+    root_cause_analysis: Mapped[str] = mapped_column(Text, nullable=False)  # LLM's analysis of failure cause
+    recommended_actions: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)  # Ordered list of recommended steps
+    resume_step: Mapped[str | None] = mapped_column(String(64), nullable=True)  # Suggested step to resume from
+    confidence_score: Mapped[float | None] = mapped_column(Numeric(3, 2), nullable=True)  # LLM's confidence (0.0-1.0)
     # LLM metadata
     llm_provider: Mapped[str] = mapped_column(String(32), nullable=False)
     llm_model: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -341,8 +271,33 @@ class DiagnosticReport(Base):
     completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
 
     run: Mapped["Run"] = relationship(back_populates="diagnostic_reports")
+
+
+# =============================================================================
+# Hearing Template Model
+# =============================================================================
+
+
+class HearingTemplate(Base):
+    """Hearing template for reusable workflow input configurations.
+
+    Stores ArticleHearingInput data (without confirmed field) as a template
+    that can be loaded and reused for new workflow runs.
+
+    VULN-004: tenant_id必須でテナント分離を保証
+    """
+
+    __tablename__ = "hearing_templates"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # マルチテナント分離必須
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)  # HearingTemplateData as JSON
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_hearing_template_tenant_name"),)

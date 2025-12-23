@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArticleHearingInput,
@@ -13,10 +13,14 @@ import {
   StepModelConfig,
   ToolConfig,
   KeywordSuggestion,
+  HearingTemplate,
+  HearingTemplateData,
 } from "@/lib/types";
 import { api } from "@/lib/api";
 import { WizardProgress } from "./WizardProgress";
 import { WizardNavigation } from "./WizardNavigation";
+import { TemplateSelector } from "./TemplateSelector";
+import { SaveTemplateModal } from "./SaveTemplateModal";
 import { Step1Business } from "./steps/Step1Business";
 import { Step2Keyword } from "./steps/Step2Keyword";
 import { Step3Strategy } from "./steps/Step3Strategy";
@@ -109,6 +113,10 @@ export function RunCreateWizard({
 
   // Validation errors per step
   const [validationErrors, setValidationErrors] = useState<Record<number, string[]>>({});
+
+  // Template state
+  const [loadedTemplate, setLoadedTemplate] = useState<HearingTemplate | null>(null);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
 
   // Update a specific section of form data
   const updateFormData = useCallback(<K extends keyof WizardFormData>(
@@ -262,6 +270,45 @@ export function RunCreateWizard({
     });
   }, [updateFormData]);
 
+  // Handle template selection
+  const handleSelectTemplate = useCallback((template: HearingTemplate | null) => {
+    setLoadedTemplate(template);
+    if (template) {
+      // Load template data into form
+      setFormData({
+        business: template.data.business,
+        keyword: template.data.keyword,
+        strategy: template.data.strategy,
+        word_count: template.data.word_count,
+        cta: template.data.cta,
+        confirmed: false, // Always reset confirmation
+      });
+      // Clear any validation errors
+      setValidationErrors({});
+    }
+  }, []);
+
+  // Get current template data (for saving)
+  const currentTemplateData: HearingTemplateData = useMemo(() => ({
+    business: formData.business,
+    keyword: formData.keyword,
+    strategy: formData.strategy,
+    word_count: formData.word_count,
+    cta: formData.cta,
+  }), [formData]);
+
+  // Check if form has meaningful data to save
+  const hasUnsavedChanges: boolean = useMemo(() => {
+    // Check if there's any meaningful data entered
+    return Boolean(
+      formData.business.description.length > 0 ||
+      formData.business.target_audience.length > 0 ||
+      formData.keyword.main_keyword ||
+      formData.keyword.theme_topics ||
+      formData.keyword.selected_keyword
+    );
+  }, [formData]);
+
   // Submit the form
   const handleSubmit = useCallback(async () => {
     // Validate all steps
@@ -369,6 +416,37 @@ export function RunCreateWizard({
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Template Selector (only on first step) */}
+      {currentStep === 1 && (
+        <TemplateSelector
+          onSelectTemplate={handleSelectTemplate}
+          onSaveAsTemplate={() => setShowSaveTemplateModal(true)}
+          currentData={currentTemplateData}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
+      )}
+
+      {/* Loaded Template Indicator */}
+      {loadedTemplate && currentStep === 1 && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm text-green-800">
+              テンプレート「{loadedTemplate.name}」を読み込みました
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLoadedTemplate(null)}
+            className="text-xs text-green-600 hover:text-green-800"
+          >
+            クリア
+          </button>
+        </div>
+      )}
+
       {/* Progress Bar */}
       <WizardProgress steps={WIZARD_STEPS} currentStep={currentStep} />
 
@@ -400,6 +478,17 @@ export function RunCreateWizard({
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         canSubmit={formData.confirmed}
+      />
+
+      {/* Save Template Modal */}
+      <SaveTemplateModal
+        isOpen={showSaveTemplateModal}
+        onClose={() => setShowSaveTemplateModal(false)}
+        templateData={currentTemplateData}
+        onSaveSuccess={() => {
+          // Optionally show a success message or refresh template list
+          console.log("Template saved successfully");
+        }}
       />
     </div>
   );
