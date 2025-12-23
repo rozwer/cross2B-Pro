@@ -1,0 +1,158 @@
+#!/bin/bash
+# post-merge hook: 依存関係の自動更新 + キャッシュクリア
+
+# 色定義
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# 変更されたファイルをチェック
+CHANGED_FILES=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null)
+
+if [ -z "$CHANGED_FILES" ]; then
+    exit 0
+fi
+
+echo ""
+echo "🔄 post-merge: 依存関係を更新中..."
+echo ""
+
+# ===========================================
+# Python 依存関係の自動更新
+# ===========================================
+if echo "$CHANGED_FILES" | grep -q "pyproject.toml\|uv.lock"; then
+    echo -e "${CYAN}📦 Python 依存関係を更新中...${NC}"
+
+    if command -v uv &> /dev/null; then
+        if uv sync --quiet; then
+            echo -e "${GREEN}✓ uv sync 完了${NC}"
+        else
+            echo -e "${YELLOW}⚠️  uv sync 失敗 - 手動で確認してください${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  uv が見つかりません - 手動で uv sync を実行してください${NC}"
+    fi
+    echo ""
+fi
+
+# ===========================================
+# Node.js 依存関係の自動更新
+# ===========================================
+if echo "$CHANGED_FILES" | grep -q "apps/ui/package.json\|apps/ui/package-lock.json"; then
+    echo -e "${CYAN}📦 apps/ui の依存関係を更新中...${NC}"
+
+    if [ -d "apps/ui" ]; then
+        (cd apps/ui && npm install --silent 2>/dev/null)
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ npm install 完了${NC}"
+        else
+            echo -e "${YELLOW}⚠️  npm install 失敗 - 手動で確認してください${NC}"
+        fi
+    fi
+    echo ""
+fi
+
+# ===========================================
+# キャッシュクリア
+# ===========================================
+CACHE_CLEARED=0
+
+# Python キャッシュ（__pycache__, .pyc）
+if echo "$CHANGED_FILES" | grep -q "\.py$"; then
+    # 大規模な変更の場合のみキャッシュクリア（10ファイル以上）
+    PY_CHANGED_COUNT=$(echo "$CHANGED_FILES" | grep -c "\.py$" || echo 0)
+    if [ "$PY_CHANGED_COUNT" -ge 10 ]; then
+        echo -e "${CYAN}🧹 Python キャッシュをクリア中...${NC}"
+        find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+        find . -type f -name "*.pyc" -delete 2>/dev/null || true
+        echo -e "${GREEN}✓ __pycache__ と .pyc を削除${NC}"
+        CACHE_CLEARED=1
+    fi
+fi
+
+# pytest キャッシュ
+if echo "$CHANGED_FILES" | grep -q "pytest\|conftest\|tests/"; then
+    if [ -d ".pytest_cache" ]; then
+        echo -e "${CYAN}🧹 pytest キャッシュをクリア中...${NC}"
+        rm -rf .pytest_cache
+        echo -e "${GREEN}✓ .pytest_cache を削除${NC}"
+        CACHE_CLEARED=1
+    fi
+fi
+
+# mypy キャッシュ
+if echo "$CHANGED_FILES" | grep -q "\.py$\|mypy\|pyproject.toml"; then
+    if [ -d ".mypy_cache" ]; then
+        echo -e "${CYAN}🧹 mypy キャッシュをクリア中...${NC}"
+        rm -rf .mypy_cache
+        echo -e "${GREEN}✓ .mypy_cache を削除${NC}"
+        CACHE_CLEARED=1
+    fi
+fi
+
+# ruff キャッシュ
+if echo "$CHANGED_FILES" | grep -q "ruff\|pyproject.toml"; then
+    if [ -d ".ruff_cache" ]; then
+        echo -e "${CYAN}🧹 ruff キャッシュをクリア中...${NC}"
+        rm -rf .ruff_cache
+        echo -e "${GREEN}✓ .ruff_cache を削除${NC}"
+        CACHE_CLEARED=1
+    fi
+fi
+
+# Next.js キャッシュ
+if echo "$CHANGED_FILES" | grep -q "apps/ui/\|next.config"; then
+    if [ -d "apps/ui/.next" ]; then
+        echo -e "${CYAN}🧹 Next.js キャッシュをクリア中...${NC}"
+        rm -rf apps/ui/.next
+        echo -e "${GREEN}✓ apps/ui/.next を削除${NC}"
+        CACHE_CLEARED=1
+    fi
+fi
+
+if [ $CACHE_CLEARED -eq 1 ]; then
+    echo ""
+fi
+
+# ===========================================
+# .env.example の差分チェック
+# ===========================================
+if echo "$CHANGED_FILES" | grep -q ".env.example"; then
+    if [ -f ".env" ] && [ -f ".env.example" ]; then
+        MISSING_VARS=$(comm -23 <(grep -E '^[A-Z_]+=' .env.example | cut -d= -f1 | sort) <(grep -E '^[A-Z_]+=' .env | cut -d= -f1 | sort) 2>/dev/null)
+        if [ -n "$MISSING_VARS" ]; then
+            echo -e "${YELLOW}⚠️  .env に不足している変数があります:${NC}"
+            echo "$MISSING_VARS" | while read var; do
+                echo "   - $var"
+            done
+            echo ""
+            echo -e "${CYAN}   .env.example を参照して追加してください${NC}"
+            echo ""
+        fi
+    fi
+fi
+
+# ===========================================
+# データベースマイグレーション通知
+# ===========================================
+if echo "$CHANGED_FILES" | grep -q "migrations/\|alembic/"; then
+    echo -e "${YELLOW}🗃️  新しいマイグレーションがあります${NC}"
+
+    # 新しいマイグレーションファイルを表示
+    NEW_MIGRATIONS=$(echo "$CHANGED_FILES" | grep -E "migrations/.*\.py$|alembic/versions/.*\.py$" || true)
+    if [ -n "$NEW_MIGRATIONS" ]; then
+        echo -e "${CYAN}   新しいマイグレーション:${NC}"
+        echo "$NEW_MIGRATIONS" | while read migration; do
+            echo "     - $migration"
+        done
+    fi
+
+    echo ""
+    echo -e "${CYAN}   実行コマンド:${NC}"
+    echo "     alembic upgrade head"
+    echo ""
+fi
+
+echo -e "${GREEN}✅ post-merge 完了${NC}"
+exit 0
