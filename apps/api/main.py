@@ -57,7 +57,10 @@ from apps.api.db import (
     TenantIdValidationError,
 )
 from apps.api.prompts.loader import PromptPackLoader, PromptPackNotFoundError
-from apps.api.routers import diagnostics, step11
+from apps.api.routers import diagnostics, keywords, step11
+from apps.api.schemas.article_hearing import (
+    ArticleHearingInput,
+)
 from apps.api.storage import (
     ArtifactNotFoundError,
     ArtifactStore,
@@ -140,13 +143,17 @@ class ToolConfig(BaseModel):
     pdf_extract: bool = False
 
 
-class RunInput(BaseModel):
-    """Run input data."""
+class LegacyRunInput(BaseModel):
+    """Legacy run input data (backward compatibility)."""
 
     keyword: str
     target_audience: str | None = None
     competitor_urls: list[str] | None = None
     additional_requirements: str | None = None
+
+
+# Type alias for backward compatibility
+RunInput = LegacyRunInput
 
 
 class RunOptions(BaseModel):
@@ -169,9 +176,17 @@ class StepModelConfig(BaseModel):
 
 
 class CreateRunInput(BaseModel):
-    """Request to create a new run - matches UI CreateRunInput."""
+    """Request to create a new run - supports both legacy and new input formats.
 
-    input: RunInput
+    For legacy format:
+        input: { keyword: "...", target_audience: "...", ... }
+
+    For new format (ArticleHearingInput):
+        input: { business: {...}, keyword: {...}, strategy: {...}, ... }
+    """
+
+    # Accept either LegacyRunInput or ArticleHearingInput
+    input: LegacyRunInput | ArticleHearingInput
     model_config_data: ModelConfig = Field(alias="model_config")
     step_configs: list[StepModelConfig] | None = None
     tool_config: ToolConfig | None = None
@@ -179,6 +194,35 @@ class CreateRunInput(BaseModel):
 
     class Config:
         populate_by_name = True
+
+    def get_normalized_input(self) -> dict[str, Any]:
+        """Normalize input to a consistent format for storage and workflow."""
+        if isinstance(self.input, ArticleHearingInput):
+            # New format: store full structure and also extract legacy fields
+            return {
+                "format": "article_hearing_v1",
+                "data": self.input.model_dump(),
+                # Legacy fields for backward compatibility
+                "keyword": self.input.get_effective_keyword(),
+                "target_audience": self.input.business.target_audience,
+                "competitor_urls": None,
+                "additional_requirements": self.input._build_additional_requirements(),
+            }
+        else:
+            # Legacy format
+            return {
+                "format": "legacy",
+                "keyword": self.input.keyword,
+                "target_audience": self.input.target_audience,
+                "competitor_urls": self.input.competitor_urls,
+                "additional_requirements": self.input.additional_requirements,
+            }
+
+    def get_effective_keyword(self) -> str:
+        """Get the effective keyword from either input format."""
+        if isinstance(self.input, ArticleHearingInput):
+            return self.input.get_effective_keyword()
+        return self.input.keyword
 
 
 class RejectRunInput(BaseModel):
@@ -565,6 +609,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(diagnostics.router)
+app.include_router(keywords.router)
 app.include_router(step11.router)
 
 
@@ -1046,13 +1091,14 @@ async def create_run(
     run_id = str(uuid.uuid4())
     now = datetime.now()
 
-    # Prepare JSON data for storage
-    input_data = {
-        "keyword": data.input.keyword,
-        "target_audience": data.input.target_audience,
-        "competitor_urls": data.input.competitor_urls,
-        "additional_requirements": data.input.additional_requirements,
-    }
+    # Prepare JSON data for storage using normalized input
+    input_data = data.get_normalized_input()
+    effective_keyword = data.get_effective_keyword()
+
+    # Extract legacy-compatible fields for workflow
+    target_audience = input_data.get("target_audience")
+    competitor_urls = input_data.get("competitor_urls")
+    additional_requirements = input_data.get("additional_requirements")
 
     # Build workflow config
     # Note: keyword/target_audience are duplicated at top level for step0 activity compatibility
@@ -1064,10 +1110,10 @@ async def create_run(
         "pack_id": "default",  # Required by ArticleWorkflow
         "input": input_data,
         # Step activities expect these at top level
-        "keyword": data.input.keyword,
-        "target_audience": data.input.target_audience,
-        "competitor_urls": data.input.competitor_urls,
-        "additional_requirements": data.input.additional_requirements,
+        "keyword": effective_keyword,
+        "target_audience": target_audience,
+        "competitor_urls": competitor_urls,
+        "additional_requirements": additional_requirements,
     }
 
     db_manager = get_tenant_db_manager()
@@ -1094,7 +1140,7 @@ async def create_run(
                 action="create",
                 resource_type="run",
                 resource_id=run_id,
-                details={"keyword": data.input.keyword, "start_workflow": start_workflow},
+                details={"keyword": effective_keyword, "start_workflow": start_workflow},
             )
 
             await session.flush()

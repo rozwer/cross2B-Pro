@@ -40,11 +40,122 @@ export interface ToolConfig {
 // Run Types
 // ============================================
 
-export interface RunInput {
+// Legacy RunInput (for backward compatibility)
+export interface LegacyRunInput {
   keyword: string;
   target_audience?: string;
   competitor_urls?: string[];
   additional_requirements?: string;
+}
+
+// Type alias for backward compatibility
+export type RunInput = LegacyRunInput;
+
+// ============================================
+// Article Hearing Types (New Input Format)
+// ============================================
+
+export type TargetCV = "inquiry" | "document_request" | "free_consultation" | "other";
+export type KeywordStatus = "decided" | "undecided";
+export type CompetitionLevel = "high" | "medium" | "low";
+export type ArticleStyle = "standalone" | "topic_cluster";
+export type WordCountMode = "manual" | "ai_seo_optimized" | "ai_readability" | "ai_balanced";
+export type CTAType = "single" | "staged";
+export type CTAPositionMode = "fixed" | "ratio" | "ai";
+
+export interface BusinessInput {
+  description: string;
+  target_cv: TargetCV;
+  target_cv_other?: string;
+  target_audience: string;
+  company_strengths: string;
+}
+
+export interface RelatedKeyword {
+  keyword: string;
+  volume?: string;
+}
+
+export interface SelectedKeyword {
+  keyword: string;
+  estimated_volume: string;
+  estimated_competition: CompetitionLevel;
+  relevance_score: number;
+}
+
+export interface KeywordInput {
+  status: KeywordStatus;
+  main_keyword?: string;
+  monthly_search_volume?: string;
+  competition_level?: CompetitionLevel;
+  theme_topics?: string;
+  selected_keyword?: SelectedKeyword;
+  related_keywords?: RelatedKeyword[];
+}
+
+export interface StrategyInput {
+  article_style: ArticleStyle;
+  child_topics?: string[];
+}
+
+export interface WordCountInput {
+  mode: WordCountMode;
+  target?: number;
+}
+
+export interface SingleCTA {
+  url: string;
+  text: string;
+  description: string;
+}
+
+export interface StagedCTAItem {
+  url: string;
+  text: string;
+  description: string;
+  position?: number;
+}
+
+export interface StagedCTA {
+  early: StagedCTAItem;
+  mid: StagedCTAItem;
+  final: StagedCTAItem;
+}
+
+export interface CTAInput {
+  type: CTAType;
+  position_mode: CTAPositionMode;
+  single?: SingleCTA;
+  staged?: StagedCTA;
+}
+
+export interface ArticleHearingInput {
+  business: BusinessInput;
+  keyword: KeywordInput;
+  strategy: StrategyInput;
+  word_count: WordCountInput;
+  cta: CTAInput;
+  confirmed: boolean;
+}
+
+// Keyword Suggestion Types
+export interface KeywordSuggestion {
+  keyword: string;
+  estimated_volume: string;
+  estimated_competition: CompetitionLevel;
+  relevance_score: number;
+}
+
+export interface KeywordSuggestionRequest {
+  theme_topics: string;
+  business_description: string;
+  target_audience: string;
+}
+
+export interface KeywordSuggestionResponse {
+  suggestions: KeywordSuggestion[];
+  model_used: string;
+  generated_at: string;
 }
 
 export interface StepModelConfig {
@@ -57,8 +168,9 @@ export interface StepModelConfig {
   repair_enabled: boolean;
 }
 
+// Supports both legacy RunInput and new ArticleHearingInput
 export interface CreateRunInput {
-  input: RunInput;
+  input: RunInput | ArticleHearingInput;
   model_config: ModelConfig;
   step_configs?: StepModelConfig[];
   tool_config?: ToolConfig;
@@ -66,6 +178,13 @@ export interface CreateRunInput {
     retry_limit?: number;
     repair_enabled?: boolean;
   };
+}
+
+// Helper to check if input is ArticleHearingInput
+export function isArticleHearingInput(
+  input: RunInput | ArticleHearingInput
+): input is ArticleHearingInput {
+  return "business" in input && "keyword" in input && "strategy" in input;
 }
 
 export interface RunSummary {
