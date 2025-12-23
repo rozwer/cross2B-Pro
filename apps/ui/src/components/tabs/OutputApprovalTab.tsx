@@ -793,7 +793,13 @@ function ContentRenderer({
   contentType: string;
   encoding: "utf-8" | "base64";
 }) {
-  const decodedContent = encoding === "base64" ? atob(content) : content;
+  // For images, keep content as-is (already base64 encoded from API)
+  // For other content types, decode if needed
+  const decodedContent = contentType.includes("image")
+    ? content
+    : encoding === "base64"
+      ? atob(content)
+      : content;
 
   if (contentType.includes("json")) {
     return (
@@ -815,6 +821,21 @@ function ContentRenderer({
     return (
       <div className="p-2">
         <MarkdownViewer content={decodedContent} />
+      </div>
+    );
+  }
+
+  // Image rendering - display as img tag with data URL
+  if (contentType.includes("image")) {
+    const dataUrl = `data:${contentType};base64,${content}`;
+    return (
+      <div className="p-2 flex justify-center">
+        <img
+          src={dataUrl}
+          alt="Generated image"
+          className="max-w-full h-auto rounded-lg shadow-sm"
+          loading="lazy"
+        />
       </div>
     );
   }
