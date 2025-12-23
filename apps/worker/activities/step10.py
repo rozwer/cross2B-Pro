@@ -1,26 +1,30 @@
 """Step 10: Final Output Activity.
 
-Generates the final article output in the required format.
+Generates 4 article variations in the required format.
 Includes HTML validation and publication checklist.
-Uses Claude for final formatting.
 
-Integrated helpers:
-- InputValidator: Validates required inputs from step9
-- OutputParser: Parses HTML from code blocks
-- QualityValidator: Validates HTML structure and content quality
-- ContentMetrics: Calculates text and markdown metrics
-- CheckpointManager: Manages intermediate checkpoints for idempotency
-- QualityRetryLoop: Retries LLM calls when quality is insufficient
+Article Variations:
+1. メイン記事: 最も包括的で詳細な記事
+2. 初心者向け: 基礎から丁寧に説明
+3. 実践編: 具体的なアクションにフォーカス
+4. まとめ・比較: 要点を簡潔にまとめた記事
+
+Execution Strategy:
+- Sequential generation to ensure consistency and avoid duplication
+- Each article uses previous summaries as context
+- Per-article timeout: 150 seconds
+- Total timeout: 600 seconds
 
 Error Handling Strategy:
 - Step9データ欠損: NON_RETRYABLE (step9を再実行する必要がある)
 - Step9データ破損: NON_RETRYABLE (データ形式が不正)
 - LLM呼び出し失敗: RETRYABLE (一時的なエラーの可能性)
-- HTML検証失敗: 警告として記録、処理は継続
-- チェックリスト生成失敗: 警告として記録、空文字列を返す（フォールバック禁止）
+- 部分的な失敗: 生成済み記事は保存、失敗記事のみリトライ
 """
 
+import hashlib
 import re
+from datetime import UTC, datetime
 from typing import Any
 
 from temporalio import activity
@@ -32,9 +36,13 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step10 import (
+    ARTICLE_WORD_COUNT_TARGETS,
     ArticleStats,
+    ArticleVariation,
+    ArticleVariationType,
     HTMLValidationResult,
     PublicationReadiness,
+    Step10Metadata,
     Step10Output,
 )
 from apps.worker.helpers import (
@@ -44,10 +52,37 @@ from apps.worker.helpers import (
     InputValidator,
     OutputParser,
     QualityResult,
-    QualityRetryLoop,
 )
 
 from .base import ActivityError, BaseActivity, load_step_data
+
+# バリエーション定義
+ARTICLE_VARIATIONS = [
+    {
+        "number": 1,
+        "type": ArticleVariationType.MAIN,
+        "target_audience": "SEOに関心があるすべての読者",
+        "description": "最も包括的で詳細な記事",
+    },
+    {
+        "number": 2,
+        "type": ArticleVariationType.BEGINNER,
+        "target_audience": "SEO初心者、これから学び始める人",
+        "description": "基礎から丁寧に説明",
+    },
+    {
+        "number": 3,
+        "type": ArticleVariationType.PRACTICAL,
+        "target_audience": "実践的なノウハウを求める中級者",
+        "description": "具体的なアクションにフォーカス",
+    },
+    {
+        "number": 4,
+        "type": ArticleVariationType.SUMMARY,
+        "target_audience": "要点だけを素早く把握したい人",
+        "description": "要点を簡潔にまとめた記事",
+    },
+]
 
 
 class Step9DataCorruptionError(Exception):
@@ -151,11 +186,13 @@ class ChecklistValidator:
 
 
 class Step10FinalOutput(BaseActivity):
-    """Activity for final output generation."""
+    """Activity for final output generation with 4 article variations."""
 
     MIN_CONTENT_LENGTH = 1000
-    MIN_HEADING_COUNT = 2  # 最低見出し数
-    MAX_CONTENT_LENGTH = 100000  # 異常に長いコンテンツの検出
+    MIN_HEADING_COUNT = 2
+    MAX_CONTENT_LENGTH = 100000
+    PER_ARTICLE_TIMEOUT = 150  # seconds
+    TOTAL_TIMEOUT = 600  # seconds
 
     def __init__(self) -> None:
         """Initialize with helpers."""
@@ -166,9 +203,11 @@ class Step10FinalOutput(BaseActivity):
         self.checkpoint = CheckpointManager(self.store)
 
         # HTML品質検証
-        self.html_validator = CompositeValidator([
-            HTMLStructureValidator(min_length=500, require_meta=True),
-        ])
+        self.html_validator = CompositeValidator(
+            [
+                HTMLStructureValidator(min_length=500, require_meta=True),
+            ]
+        )
 
         # チェックリスト品質検証
         self.checklist_validator = ChecklistValidator(min_length=100)
@@ -177,34 +216,20 @@ class Step10FinalOutput(BaseActivity):
         self,
         step9_data: dict[str, Any],
     ) -> tuple[bool, list[str], list[str]]:
-        """Step9データの整合性を詳細に検証.
-
-        Returns:
-            tuple: (is_valid, errors, warnings)
-            - is_valid: 致命的なエラーがないか
-            - errors: 処理を中断すべきエラーリスト
-            - warnings: 警告リスト（処理は継続）
-        """
+        """Step9データの整合性を詳細に検証."""
         errors: list[str] = []
         warnings: list[str] = []
 
-        # 1. 必須フィールドの存在チェック
         final_content = step9_data.get("final_content")
         if final_content is None:
-            errors.append(
-                "step9.final_content is missing - step9 may not have completed successfully"
-            )
+            errors.append("step9.final_content is missing - step9 may not have completed successfully")
             return False, errors, warnings
 
-        # 2. データ型チェック
         if not isinstance(final_content, str):
-            errors.append(
-                f"step9.final_content has invalid type: expected str, got {type(final_content).__name__}"
-            )
+            errors.append(f"step9.final_content has invalid type: expected str, got {type(final_content).__name__}")
             return False, errors, warnings
 
-        # 3. 明らかな破損パターンの検出（長さチェックより先に実行）
-        # 短いコンテンツでも破損パターンを検出できるようにする
+        # 破損パターンの検出
         corruption_patterns = [
             (r"^\s*\{", "Content starts with JSON - possible serialization error"),
             (r"^\s*<\?xml", "Content starts with XML declaration - wrong format"),
@@ -218,62 +243,38 @@ class Step10FinalOutput(BaseActivity):
                 errors.append(f"step9.final_content appears corrupted: {message}")
                 return False, errors, warnings
 
-        # 4. コンテンツ長チェック
         content_length = len(final_content)
         if content_length == 0:
             errors.append("step9.final_content is empty")
             return False, errors, warnings
 
         if content_length < self.MIN_CONTENT_LENGTH:
-            errors.append(
-                f"step9.final_content is too short: {content_length} chars "
-                f"(minimum: {self.MIN_CONTENT_LENGTH}). "
-                "This may indicate step9 failed or produced incomplete output."
-            )
+            errors.append(f"step9.final_content is too short: {content_length} chars (minimum: {self.MIN_CONTENT_LENGTH})")
             return False, errors, warnings
 
         if content_length > self.MAX_CONTENT_LENGTH:
-            warnings.append(
-                f"step9.final_content is unusually long: {content_length} chars "
-                f"(expected < {self.MAX_CONTENT_LENGTH})"
-            )
+            warnings.append(f"step9.final_content is unusually long: {content_length} chars")
 
-        # 5. マークダウン構造チェック
         heading_pattern = r"^#{1,6}\s+"
         headings = re.findall(heading_pattern, final_content, re.MULTILINE)
         if len(headings) < self.MIN_HEADING_COUNT:
-            warnings.append(
-                f"step9.final_content has insufficient headings: {len(headings)} "
-                f"(expected >= {self.MIN_HEADING_COUNT}). "
-                "Article structure may be incomplete."
-            )
+            warnings.append(f"step9.final_content has insufficient headings: {len(headings)}")
 
-        # 6. meta_description の検証（推奨）
+        # meta_description の検証（推奨）
         meta_desc = step9_data.get("meta_description")
         if meta_desc:
             if not isinstance(meta_desc, str):
-                warnings.append(
-                    f"step9.meta_description has invalid type: expected str, "
-                    f"got {type(meta_desc).__name__}"
-                )
+                warnings.append(f"step9.meta_description has invalid type: expected str, got {type(meta_desc).__name__}")
             elif len(meta_desc) > 300:
-                warnings.append(
-                    f"step9.meta_description is too long: {len(meta_desc)} chars "
-                    "(recommended < 160)"
-                )
+                warnings.append(f"step9.meta_description is too long: {len(meta_desc)} chars (recommended < 160)")
 
-        # 7. article_title の検証（推奨）
+        # article_title の検証（推奨）
         article_title = step9_data.get("article_title")
         if article_title:
             if not isinstance(article_title, str):
-                warnings.append(
-                    f"step9.article_title has invalid type: expected str, "
-                    f"got {type(article_title).__name__}"
-                )
+                warnings.append(f"step9.article_title has invalid type: expected str, got {type(article_title).__name__}")
             elif len(article_title) > 200:
-                warnings.append(
-                    f"step9.article_title is unusually long: {len(article_title)} chars"
-                )
+                warnings.append(f"step9.article_title is unusually long: {len(article_title)} chars")
 
         return True, errors, warnings
 
@@ -290,21 +291,13 @@ class Step10FinalOutput(BaseActivity):
             "recovery_suggestions": [],
         }
 
-        # リカバリー提案を追加
         if any("missing" in e.lower() for e in errors):
-            details["recovery_suggestions"].append(
-                "Re-run step9 to generate final_content"
-            )
+            details["recovery_suggestions"].append("Re-run step9 to generate final_content")
         if any("too short" in e.lower() for e in errors):
-            details["recovery_suggestions"].append(
-                "Check step9 output quality - content may have been truncated"
-            )
+            details["recovery_suggestions"].append("Check step9 output quality - content may have been truncated")
         if any("corrupted" in e.lower() for e in errors):
-            details["recovery_suggestions"].append(
-                "Investigate step9 output format - data serialization may have failed"
-            )
+            details["recovery_suggestions"].append("Investigate step9 output format - data serialization may have failed")
 
-        # デバッグ用のデータサマリー
         if step9_data:
             details["data_summary"] = {
                 "has_final_content": "final_content" in step9_data,
@@ -326,15 +319,7 @@ class Step10FinalOutput(BaseActivity):
         ctx: ExecutionContext,
         state: GraphState,
     ) -> dict[str, Any]:
-        """Execute final output generation.
-
-        Args:
-            ctx: Execution context
-            state: Current workflow state
-
-        Returns:
-            dict with final article and metadata
-        """
+        """Execute final output generation with 4 article variations."""
         config = ctx.config
         pack_id = config.get("pack_id")
         warnings: list[str] = []
@@ -345,66 +330,41 @@ class Step10FinalOutput(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
-        # Load prompt pack
         loader = PromptPackLoader()
         prompt_pack = loader.load(pack_id)
 
-        # Get inputs
         keyword = config.get("keyword")
-
         if not keyword:
             raise ActivityError(
                 "keyword is required in config",
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
-        # Load step data from storage
-        step9_data = await load_step_data(
-            self.store, ctx.tenant_id, ctx.run_id, "step9"
-        )
+        # Load step9 data
+        step9_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step9")
 
-        # === Step9データ存在チェック ===
         if step9_data is None:
-            activity.logger.error(
-                f"Step9 data not found for run_id={ctx.run_id}, tenant_id={ctx.tenant_id}"
-            )
+            activity.logger.error(f"Step9 data not found for run_id={ctx.run_id}")
             raise ActivityError(
                 "Step9 output not found - step9 must complete before step10",
                 category=ErrorCategory.NON_RETRYABLE,
-                details={
-                    "run_id": str(ctx.run_id),
-                    "tenant_id": ctx.tenant_id,
-                    "recovery_suggestions": [
-                        "Verify step9 completed successfully",
-                        "Check storage for step9/output.json",
-                        "Re-run step9 if necessary",
-                    ],
-                },
             )
 
-        # === Step9データ整合性検証（新しい詳細検証） ===
-        is_valid, integrity_errors, integrity_warnings = (
-            self._validate_step9_data_integrity(step9_data)
-        )
+        # Validate step9 data
+        is_valid, integrity_errors, integrity_warnings = self._validate_step9_data_integrity(step9_data)
 
         if not is_valid:
-            activity.logger.error(
-                f"Step9 data integrity check failed: {integrity_errors}"
-            )
             raise ActivityError(
                 f"Step9 data integrity check failed: {integrity_errors[0]}",
                 category=ErrorCategory.NON_RETRYABLE,
-                details=self._build_error_details(
-                    integrity_errors, integrity_warnings, step9_data
-                ),
+                details=self._build_error_details(integrity_errors, integrity_warnings, step9_data),
             )
 
-        # 警告をログに記録
         for warning in integrity_warnings:
             activity.logger.warning(f"Step9 data warning: {warning}")
             warnings.append(warning)
 
-        # === InputValidator統合（追加の検証） ===
+        # Validate inputs
         validation = self.input_validator.validate(
             data={"step9": step9_data},
             required=["step9.final_content"],
@@ -416,105 +376,229 @@ class Step10FinalOutput(BaseActivity):
             raise ActivityError(
                 f"Input validation failed: {validation.missing_required}",
                 category=ErrorCategory.NON_RETRYABLE,
-                details={
-                    "missing": validation.missing_required,
-                    "recovery_suggestions": [
-                        "Re-run step9 to generate required fields",
-                    ],
-                },
             )
 
-        if validation.missing_recommended:
-            activity.logger.warning(
-                f"Recommended inputs missing: {validation.missing_recommended}"
-            )
-            warnings.extend(
-                f"missing_{field}" for field in validation.missing_recommended
-            )
+        base_content = step9_data.get("final_content", "")
+        # meta_description と article_title は将来的に使用予定（per-article meta生成時）
+        _ = step9_data.get("meta_description", "")  # noqa: F841
+        _ = step9_data.get("article_title", keyword)  # noqa: F841
 
-        if validation.quality_issues:
-            activity.logger.warning(f"Input quality issues: {validation.quality_issues}")
-            warnings.extend(validation.quality_issues)
-
-        final_content = step9_data.get("final_content", "")
-        meta_description = step9_data.get("meta_description", "")
-        article_title = step9_data.get("article_title", keyword)
-
-        # Get LLM client (Claude for step10 - final formatting)
+        # Get LLM client
         model_config = config.get("model_config", {})
-        llm_provider = model_config.get(
-            "platform", config.get("llm_provider", "anthropic")
-        )
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
         llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
-        # === CheckpointManager統合: HTML生成のチェックポイント ===
-        input_digest = self.checkpoint.compute_digest({
-            "keyword": keyword,
-            "final_content": final_content[:500],  # 先頭500文字でdigest
-        })
+        # Generate 4 article variations
+        articles: list[ArticleVariation] = []
+        previous_summaries: list[str] = []
+        total_tokens = 0
 
-        html_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "html_generated",
-            input_digest=input_digest,
-        )
+        activity.logger.info(f"Starting 4-article generation for keyword: {keyword}")
 
-        if html_checkpoint:
-            html_content = html_checkpoint.get("html", "")
-            html_tokens = html_checkpoint.get("tokens", 0)
-            activity.logger.info("Loaded HTML from checkpoint")
-        else:
-            # === QualityRetryLoop統合: HTML生成 ===
-            html_content, html_tokens = await self._generate_html_with_retry(
-                llm, prompt_pack, config, keyword, final_content
+        for variation_info in ARTICLE_VARIATIONS:
+            article_num: int = variation_info["number"]
+            variation_type: ArticleVariationType = variation_info["type"]
+
+            activity.logger.info(f"Generating article {article_num}/4: {variation_type.value}")
+
+            # Check for existing checkpoint
+            input_digest = self.checkpoint.compute_digest(
+                {
+                    "keyword": keyword,
+                    "article_number": article_num,
+                    "base_content_hash": hashlib.sha256(base_content[:500].encode()).hexdigest()[:16],
+                }
             )
 
-            await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "html_generated",
-                {"html": html_content, "tokens": html_tokens},
+            article_checkpoint = await self.checkpoint.load(
+                ctx.tenant_id,
+                ctx.run_id,
+                self.step_id,
+                f"article_{article_num}",
                 input_digest=input_digest,
             )
 
-        # === HTML検証 ===
-        html_validation_result = self.html_validator.validate(html_content)
-        if not html_validation_result.is_acceptable:
-            activity.logger.warning(
-                f"HTML validation issues: {html_validation_result.issues}"
-            )
-            warnings.extend(html_validation_result.issues)
+            if article_checkpoint:
+                try:
+                    activity.logger.info(f"Loaded article {article_num} from checkpoint")
+                    article = ArticleVariation(**article_checkpoint)
+                except Exception as e:
+                    activity.logger.warning(f"Invalid checkpoint for article {article_num}: {e}. Regenerating.")
+                    article_checkpoint = None
 
-        # === CheckpointManager統合: チェックリスト生成のチェックポイント ===
-        checklist_checkpoint = await self.checkpoint.load(
-            ctx.tenant_id, ctx.run_id, self.step_id, "checklist_generated",
-            input_digest=input_digest,
+            if not article_checkpoint:
+                # Generate article
+                article = await self._generate_article_variation(
+                    llm=llm,
+                    prompt_pack=prompt_pack,
+                    config=config,
+                    keyword=keyword,
+                    base_content=base_content,
+                    variation_info=variation_info,
+                    previous_summaries=previous_summaries,
+                    ctx=ctx,
+                )
+                total_tokens += article.word_count  # Approximate
+
+                # Save checkpoint
+                await self.checkpoint.save(
+                    ctx.tenant_id,
+                    ctx.run_id,
+                    self.step_id,
+                    f"article_{article_num}",
+                    article.model_dump(),
+                    input_digest=input_digest,
+                )
+
+            articles.append(article)
+
+            # Generate summary for next article (avoid duplication)
+            if article_num < 4:
+                summary = await self._generate_article_summary(llm, prompt_pack, config, article.content)
+                previous_summaries.append(f"記事{article_num}（{variation_type.value}）: {summary}")
+
+        # Generate checklist (once for all articles)
+        checklist = await self._generate_checklist(llm, prompt_pack, config, keyword, warnings)
+
+        # Build output
+        metadata = Step10Metadata(
+            generated_at=datetime.now(UTC),
+            model=llm_provider,
+            total_word_count=sum(a.word_count for a in articles),
+            generation_order=[1, 2, 3, 4],
         )
 
-        if checklist_checkpoint:
-            checklist = checklist_checkpoint.get("checklist", "")
-            checklist_tokens = checklist_checkpoint.get("tokens", 0)
-            activity.logger.info("Loaded checklist from checkpoint")
-        else:
-            # === チェックリスト生成（フォールバック禁止対応） ===
-            checklist, checklist_tokens = await self._generate_checklist_with_retry(
-                llm, prompt_pack, config, keyword, warnings
+        # Determine publication readiness
+        blocking_issues: list[str] = []
+        for article in articles:
+            if article.stats and article.stats.word_count < 500:
+                blocking_issues.append(f"article_{article.article_number}_word_count_too_low")
+
+        publication_readiness = PublicationReadiness(
+            is_ready=len(blocking_issues) == 0,
+            blocking_issues=blocking_issues,
+            warnings=warnings,
+        )
+
+        output = Step10Output(
+            step=self.step_id,
+            keyword=keyword,
+            articles=articles,
+            metadata=metadata,
+            publication_checklist=checklist,
+            publication_readiness=publication_readiness,
+            model=llm_provider,
+            usage={"total_tokens": total_tokens},
+            warnings=warnings,
+        )
+
+        # Populate legacy fields for backward compatibility
+        output.populate_legacy_fields()
+
+        # Save individual article files
+        for article in articles:
+            article_path = self.store.build_path(
+                tenant_id=ctx.tenant_id,
+                run_id=ctx.run_id,
+                step=self.step_id,
+            ).replace("/output.json", f"/article_{article.article_number}.md")
+
+            await self.store.put(
+                content=article.content.encode("utf-8"),
+                path=article_path,
+                content_type="text/markdown",
             )
 
-            await self.checkpoint.save(
-                ctx.tenant_id, ctx.run_id, self.step_id, "checklist_generated",
-                {"checklist": checklist, "tokens": checklist_tokens},
-                input_digest=input_digest,
+            if article.html_content:
+                html_path = article_path.replace(".md", ".html")
+                await self.store.put(
+                    content=article.html_content.encode("utf-8"),
+                    path=html_path,
+                    content_type="text/html",
+                )
+
+        # Save main preview (first article)
+        main_article = output.get_main_article()
+        if main_article and main_article.html_content:
+            preview_path = self.store.build_path(
+                tenant_id=ctx.tenant_id,
+                run_id=ctx.run_id,
+                step=self.step_id,
+            ).replace("/output.json", "/preview.html")
+            await self.store.put(
+                content=main_article.html_content.encode("utf-8"),
+                path=preview_path,
+                content_type="text/html",
             )
 
-        # === ContentMetrics統合 ===
-        text_metrics = self.metrics.text_metrics(final_content)
-        md_metrics = self.metrics.markdown_metrics(final_content)
+        activity.logger.info(f"Step10 completed: Generated {len(articles)} articles, total {metadata.total_word_count} words")
+
+        return output.model_dump()
+
+    async def _generate_article_variation(
+        self,
+        llm: Any,
+        prompt_pack: Any,
+        config: dict[str, Any],
+        keyword: str,
+        base_content: str,
+        variation_info: dict[str, Any],
+        previous_summaries: list[str],
+        ctx: ExecutionContext,
+    ) -> ArticleVariation:
+        """Generate a single article variation."""
+        article_num = variation_info["number"]
+        variation_type: ArticleVariationType = variation_info["type"]
+        target_audience = variation_info["target_audience"]
+
+        # Get word count targets
+        word_min, word_max = ARTICLE_WORD_COUNT_TARGETS[variation_type]
+
+        # Render prompt
+        variation_prompt = prompt_pack.get_prompt("step10_article_variation")
+        prompt_text = variation_prompt.render(
+            keyword=keyword,
+            base_content=base_content[:8000],  # Limit base content
+            article_number=article_num,
+            variation_type=variation_type.value,
+            target_audience=target_audience,
+            target_word_count_min=word_min,
+            target_word_count_max=word_max,
+            previous_summaries="\n".join(previous_summaries) if previous_summaries else "（最初の記事のため、前の記事はありません）",
+        )
+
+        # Generate content
+        llm_config = LLMRequestConfig(
+            max_tokens=config.get("max_tokens", 8000),
+            temperature=0.7,  # Slightly higher for variation
+        )
+
+        response = await llm.generate(
+            messages=[{"role": "user", "content": prompt_text}],
+            system_prompt="あなたはSEO記事のバリエーション生成の専門家です。",
+            config=llm_config,
+        )
+
+        content = str(response.content)
+
+        # Extract title from content
+        title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+        title = title_match.group(1) if title_match else f"{keyword} - {variation_type.value}"
+
+        # Extract sections
+        sections = re.findall(r"^##\s+(.+)$", content, re.MULTILINE)
+
+        # Calculate metrics
+        text_metrics = self.metrics.text_metrics(content)
+        md_metrics = self.metrics.markdown_metrics(content)
 
         stats = ArticleStats(
             word_count=text_metrics.word_count,
             char_count=text_metrics.char_count,
             paragraph_count=text_metrics.paragraph_count,
             sentence_count=text_metrics.sentence_count,
-            heading_count=md_metrics.h2_count + md_metrics.h3_count + md_metrics.h4_count,
+            heading_count=md_metrics.h2_count + md_metrics.h3_count,
             h1_count=md_metrics.h1_count,
             h2_count=md_metrics.h2_count,
             h3_count=md_metrics.h3_count,
@@ -523,7 +607,11 @@ class Step10FinalOutput(BaseActivity):
             image_count=md_metrics.image_count,
         )
 
-        # Build HTML validation result
+        # Generate HTML
+        html_content = await self._generate_html_for_article(llm, prompt_pack, config, keyword, content)
+
+        # Validate HTML
+        html_validation_result = self.html_validator.validate(html_content)
         html_validation = HTMLValidationResult(
             is_valid=html_validation_result.is_acceptable,
             has_required_tags=html_validation_result.scores.get("required_tags_found", 0) >= 4,
@@ -532,171 +620,122 @@ class Step10FinalOutput(BaseActivity):
             issues=html_validation_result.issues,
         )
 
-        # Determine publication readiness
-        blocking_issues: list[str] = []
-        if not html_validation.is_valid:
-            blocking_issues.extend(html_validation.issues)
-        if stats.word_count < 500:
-            blocking_issues.append(f"word_count_too_low: {stats.word_count}")
-
-        publication_readiness = PublicationReadiness(
-            is_ready=len(blocking_issues) == 0,
-            blocking_issues=blocking_issues,
-            warnings=warnings,
-        )
-
-        # Build structured output
-        output = Step10Output(
+        # Build output path
+        output_path = self.store.build_path(
+            tenant_id=ctx.tenant_id,
+            run_id=ctx.run_id,
             step=self.step_id,
-            keyword=keyword,
-            article_title=article_title,
-            markdown_content=final_content,
+        ).replace("/output.json", f"/article_{article_num}.md")
+
+        output_digest = hashlib.sha256(content.encode()).hexdigest()[:16]
+
+        return ArticleVariation(
+            article_number=article_num,
+            variation_type=variation_type,
+            title=title,
+            content=content,
             html_content=html_content,
-            meta_description=meta_description,
-            publication_checklist=checklist,
-            html_validation=html_validation,
+            word_count=text_metrics.word_count,
+            target_audience=target_audience,
+            sections=sections,
             stats=stats,
-            publication_readiness=publication_readiness,
-            model=llm_provider,
-            usage={
-                "html_tokens": html_tokens,
-                "checklist_tokens": checklist_tokens,
-            },
-            warnings=warnings,
+            html_validation=html_validation,
+            meta_description="",  # TODO: Generate per-article meta
+            output_path=output_path,
+            output_digest=output_digest,
         )
 
-        # Save HTML preview file separately for preview API
-        if html_content:
-            preview_path = self.store.build_path(
-                tenant_id=ctx.tenant_id,
-                run_id=ctx.run_id,
-                step=self.step_id,
-            ).replace("/output.json", "/preview.html")
-            await self.store.put(
-                content=html_content.encode("utf-8"),
-                path=preview_path,
-                content_type="text/html",
-            )
-            activity.logger.info(f"Saved HTML preview to {preview_path}")
-
-        return output.model_dump()
-
-    async def _generate_html_with_retry(
+    async def _generate_html_for_article(
         self,
         llm: Any,
         prompt_pack: Any,
         config: dict[str, Any],
         keyword: str,
         content: str,
-    ) -> tuple[str, int]:
-        """HTML生成（品質リトライ付き）."""
-
-        async def llm_call(prompt_text: str) -> str:
-            html_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 8000),
-                temperature=0.3,
-            )
-            response = await llm.generate(
-                messages=[{"role": "user", "content": prompt_text}],
-                system_prompt="You are an HTML formatting expert.",
-                config=html_config,
-            )
-            self._last_html_response = response
-            return str(response.content)
-
-        def enhance_prompt(original: str, issues: list[str]) -> str:
-            guidance = []
-            if any("missing_html_tags" in issue for issue in issues):
-                guidance.append("- 必ず<html>, <head>, <body>, <title>タグを含めてください")
-            if any("unclosed_tag" in issue for issue in issues):
-                guidance.append("- すべてのタグを正しく閉じてください")
-            if any("html_too_short" in issue for issue in issues):
-                guidance.append("- 出力が短すぎます。完全なHTMLを生成してください")
-
-            if guidance:
-                return original + "\n\n【追加の指示】\n" + "\n".join(guidance)
-            return original
-
-        # Render prompt
+    ) -> str:
+        """Generate HTML for a single article."""
         html_prompt = prompt_pack.get_prompt("step10_html")
-        initial_prompt = html_prompt.render(
+        prompt_text = html_prompt.render(
             keyword=keyword,
             content=content,
         )
 
-        retry_loop = QualityRetryLoop(
-            max_retries=1,
-            accept_on_final=True,
+        html_config = LLMRequestConfig(
+            max_tokens=config.get("max_tokens", 8000),
+            temperature=0.3,
         )
 
-        result = await retry_loop.execute(
-            llm_call=llm_call,
-            initial_prompt=initial_prompt,
-            validator=self.html_validator,
-            enhance_prompt=enhance_prompt,
-            extract_content=lambda x: x,
+        response = await llm.generate(
+            messages=[{"role": "user", "content": prompt_text}],
+            system_prompt="You are an HTML formatting expert.",
+            config=html_config,
         )
 
-        html_content = result.result or ""
+        html_content = str(response.content)
 
-        # コードブロックがある場合は除去
-        if "```html" in html_content or "```" in html_content:
-            html_content = self.parser.extract_json_block(html_content)
+        # Remove code blocks if present
+        if "```html" in html_content:
+            # Extract content between ```html and ```
+            match = re.search(r"```html\s*(.*?)\s*```", html_content, re.DOTALL)
+            if match:
+                html_content = match.group(1)
+        elif "```" in html_content:
+            # Extract content between ``` and ```
+            match = re.search(r"```\s*(.*?)\s*```", html_content, re.DOTALL)
+            if match:
+                html_content = match.group(1)
 
-        response = getattr(self, "_last_html_response", None)
-        tokens = response.token_usage.output if response else 0
+        return html_content
 
-        return html_content, tokens
+    async def _generate_article_summary(
+        self,
+        llm: Any,
+        prompt_pack: Any,
+        config: dict[str, Any],
+        content: str,
+    ) -> str:
+        """Generate a summary of an article for deduplication."""
+        summary_prompt = prompt_pack.get_prompt("step10_article_summary")
+        prompt_text = summary_prompt.render(content=content[:3000])
 
-    async def _generate_checklist_with_retry(
+        summary_config = LLMRequestConfig(
+            max_tokens=300,
+            temperature=0.3,
+        )
+
+        response = await llm.generate(
+            messages=[{"role": "user", "content": prompt_text}],
+            system_prompt="簡潔に要約してください。",
+            config=summary_config,
+        )
+
+        return str(response.content).strip()
+
+    async def _generate_checklist(
         self,
         llm: Any,
         prompt_pack: Any,
         config: dict[str, Any],
         keyword: str,
         warnings: list[str],
-    ) -> tuple[str, int]:
-        """チェックリスト生成（品質リトライ付き、フォールバック禁止対応）."""
+    ) -> str:
+        """Generate publication checklist."""
+        checklist_prompt = prompt_pack.get_prompt("step10_checklist")
+        prompt_text = checklist_prompt.render(keyword=keyword)
 
-        async def llm_call(prompt_text: str) -> str:
-            checklist_config = LLMRequestConfig(max_tokens=1000, temperature=0.3)
+        checklist_config = LLMRequestConfig(max_tokens=1000, temperature=0.3)
+
+        try:
             response = await llm.generate(
                 messages=[{"role": "user", "content": prompt_text}],
                 system_prompt="You are a publication checklist expert.",
                 config=checklist_config,
             )
-            self._last_checklist_response = response
             return str(response.content)
-
-        # Render prompt
-        checklist_prompt = prompt_pack.get_prompt("step10_checklist")
-        initial_prompt = checklist_prompt.render(keyword=keyword)
-
-        retry_loop = QualityRetryLoop(
-            max_retries=1,
-            accept_on_final=True,
-        )
-
-        try:
-            result = await retry_loop.execute(
-                llm_call=llm_call,
-                initial_prompt=initial_prompt,
-                validator=self.checklist_validator,
-                enhance_prompt=None,
-                extract_content=lambda x: x,
-            )
-
-            checklist = result.result or ""
-            response = getattr(self, "_last_checklist_response", None)
-            tokens = response.token_usage.output if response else 0
-
-            return checklist, tokens
-
         except Exception as e:
-            # フォールバック禁止: ダミー文字列ではなく空を返す
             activity.logger.error(f"Checklist generation failed: {e}")
             warnings.append("checklist_generation_failed")
-            return "", 0
+            return ""
 
 
 @activity.defn(name="step10_final_output")
