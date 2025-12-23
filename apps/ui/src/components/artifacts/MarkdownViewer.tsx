@@ -167,10 +167,14 @@ export function MarkdownViewer({ content }: MarkdownViewerProps) {
     ),
     // Horizontal rule
     hr: ({ ...props }) => <hr className="my-4 border-gray-300" {...props} />,
-    // Images - sanitize src (only allow HTTPS)
+    // Images - sanitize src (allow HTTPS and data: URLs for Base64 images)
     img: ({ src, alt, ...props }) => {
-      // Only allow https images
-      if (src && !src.startsWith("https://")) {
+      // Allow https images and data: URLs (for Base64 embedded images)
+      const isAllowed =
+        src?.startsWith("https://") ||
+        src?.startsWith("data:image/");
+
+      if (src && !isAllowed) {
         return (
           <span className="inline-block p-2 bg-gray-100 rounded text-gray-400 text-xs">
             [Image blocked: insecure source]
