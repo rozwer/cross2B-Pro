@@ -574,6 +574,21 @@ function ContentRenderer({
     return <MarkdownViewer content={decodedContent} />;
   }
 
+  // Image rendering - display as img tag with data URL
+  if (contentType.includes("image")) {
+    const dataUrl = `data:${contentType};base64,${content}`;
+    return (
+      <div className="p-4 flex justify-center">
+        <img
+          src={dataUrl}
+          alt="Generated image"
+          className="max-w-full h-auto rounded-lg shadow-sm"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   // デフォルト: プレーンテキスト
   return (
     <pre className="p-4 bg-gray-50 rounded-lg text-xs text-gray-900 overflow-auto max-h-[400px] whitespace-pre-wrap font-mono border border-gray-200">
