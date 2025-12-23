@@ -9,33 +9,25 @@ Claude が書いた変更や既存コードを、別AI（Codex）に独立レビ
 
 ## 実行方法
 
-1. レビュー対象の差分を取得
+### 未コミット変更をレビュー
 
 ```bash
-git diff HEAD
+codex review --uncommitted
 ```
 
-2. Codex CLI を非対話モードで実行
+### 特定ブランチとの差分をレビュー
 
 ```bash
-source .codex/env.sh && codex -q "
-対象: 現在の未コミット変更
-目的: コードレビュー
-
-レビュー観点:
-- Correctness（ロジック/境界条件）
-- Security（secrets、越境、注入、認可）
-- Maintainability（構造、命名、拡張性）
-- Operational safety（リトライ、例外、ログ、冪等性）
-
-差分:
-$(git diff HEAD)
-
-出力形式:
-- 重要度 High/Med/Low
-- 指摘 → 根拠 → 具体的な修正案
-"
+codex review --base develop
 ```
+
+### 特定コミットをレビュー
+
+```bash
+codex review --commit <SHA>
+```
+
+**注意:** `--uncommitted`/`--base`/`--commit` とカスタムプロンプトは同時に使えない。
 
 ## レビュー観点
 

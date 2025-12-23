@@ -69,25 +69,31 @@ main (master) ← 本番相当
 
 ### 呼び出し方法
 
+**推奨: subagent 経由（自動実行）**
+
+```
+@codex-reviewer  # コードレビュー
+```
+
+**手動（TUI で対話）**
+
 ```bash
-# プロジェクトローカルのCodexを使用
 source .codex/env.sh
 codex
 ```
 
 ### 使用場面
 
-| 場面           | コマンド例                          |
+| 場面           | 方法                                |
 | -------------- | ----------------------------------- |
-| コードレビュー | `/review:codex-review`              |
-| 設計レビュー   | `@architect` で設計案を出す         |
-| セキュリティ   | `@security-reviewer` で越境チェック |
+| コードレビュー | `@codex-reviewer` subagent          |
+| 設計レビュー   | `@architect` subagent               |
+| セキュリティ   | `@security-reviewer` subagent       |
 
-### Codex Skills
+### Codex Skills（手動TUI用）
 
-`.codex/skills/` に専用スキルあり：
+`.codex/skills/` に専用スキルあり（TUI で `$` キーで選択）：
 
-- `codex-reviewer` - コードレビュー
 - `langgraph-*` - LangGraph実装パターン
 
 ---
@@ -178,14 +184,15 @@ git commit -m "feat: implement entire feature with tests and docs"
 
 ## サブエージェント
 
-| エージェント            | 用途                 |
-| ----------------------- | -------------------- |
-| `@architect`            | 設計判断・分割方針   |
-| `@backend-implementer`  | BE実装               |
-| `@frontend-implementer` | FE実装               |
-| `@prompt-engineer`      | プロンプト設計       |
-| `@security-reviewer`    | セキュリティレビュー |
-| `@temporal-debugger`    | Temporalデバッグ     |
+| エージェント            | 用途                           |
+| ----------------------- | ------------------------------ |
+| `@architect`            | 設計判断・分割方針             |
+| `@backend-implementer`  | BE実装                         |
+| `@frontend-implementer` | FE実装                         |
+| `@prompt-engineer`      | プロンプト設計                 |
+| `@security-reviewer`    | セキュリティレビュー           |
+| `@temporal-debugger`    | Temporalデバッグ               |
+| `@codex-reviewer`       | Codex CLIでコードレビュー      |
 
 ---
 
