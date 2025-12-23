@@ -327,6 +327,12 @@ function RunDetailPanel({ runId }: { runId: string }) {
     setSelectedStep(stepName);
   };
 
+  // 承認ダイアログを開く前に成果物を再フェッチ
+  const openApprovalDialog = async () => {
+    await fetchArtifacts();
+    setShowApprovalDialog(true);
+  };
+
   const handleApprove = async () => {
     setApprovalLoading(true);
     try {
@@ -463,7 +469,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
                 <span className="font-medium text-yellow-800">承認が必要です</span>
               </div>
               <button
-                onClick={() => setShowApprovalDialog(true)}
+                onClick={openApprovalDialog}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
               >
                 <Eye className="h-4 w-4" />
