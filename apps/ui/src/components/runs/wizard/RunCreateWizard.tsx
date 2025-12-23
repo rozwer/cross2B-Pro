@@ -222,6 +222,12 @@ export function RunCreateWizard({
     }
 
     setIsLoadingSuggestions(true);
+    // Clear previous suggestion errors
+    setValidationErrors((prev) => ({
+      ...prev,
+      2: [],
+    }));
+
     try {
       const response = await api.keywords.suggest({
         theme_topics: formData.keyword.theme_topics,
@@ -231,9 +237,13 @@ export function RunCreateWizard({
       setKeywordSuggestions(response.suggestions);
     } catch (error) {
       console.error("Failed to generate keywords:", error);
+      const errorMessage =
+        error instanceof Error
+          ? `キーワード候補の生成に失敗しました: ${error.message}`
+          : "キーワード候補の生成に失敗しました。しばらくしてから再試行してください。";
       setValidationErrors((prev) => ({
         ...prev,
-        2: ["キーワード候補の生成に失敗しました"],
+        2: [errorMessage],
       }));
     } finally {
       setIsLoadingSuggestions(false);
@@ -348,8 +358,7 @@ export function RunCreateWizard({
         return (
           <Step6Confirm
             formData={formData}
-            onChange={(confirmed) => updateFormData("confirmed" as never, confirmed as never)}
-            onConfirm={() => setFormData((prev) => ({ ...prev, confirmed: true }))}
+            onConfirm={(confirmed: boolean) => setFormData((prev) => ({ ...prev, confirmed }))}
             errors={validationErrors[6] || []}
           />
         );
