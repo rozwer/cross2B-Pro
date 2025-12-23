@@ -4129,25 +4129,25 @@ async def get_run_preview(
                 step11_state = run.step11_state or {}
                 if step11_state.get("phase") == "completed":
                     try:
-                        # Step11 uses a different path convention: tenants/{tenant_id}/runs/{run_id}/step11/output.json
-                        step11_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
-                        response = store.client.get_object(
-                            bucket_name=store.bucket,
-                            object_name=step11_path,
+                        step11_bytes = await store.get_by_path(
+                            tenant_id=tenant_id,
+                            run_id=run_id,
+                            step="step11",
+                            filename="output.json",
                         )
-                        step11_bytes = response.read()
-                        response.close()
-                        response.release_conn()
 
                         if step11_bytes:
                             import json
 
                             step11_data = json.loads(step11_bytes.decode("utf-8"))
-                            # For step11, html_with_images is legacy single article
-                            # Multi-article support: check images array for article_number filtering
-                            html_content = step11_data.get("html_with_images")
+                            # Multi-article support: Step11 stores per-article preview HTMLs
+                            # Images are filtered by article_number in step12; here we use html_with_images
+                            step11_images = step11_data.get("images", [])
+                            # For legacy single article or when images exist, use html_with_images directly
+                            if article == 1 or not step11_images:
+                                html_content = step11_data.get("html_with_images")
                             if html_content:
-                                logger.debug("Found HTML with images at step11/output.json")
+                                logger.debug(f"Found HTML for article {article} at step11/output.json")
                     except Exception as e:
                         logger.debug(f"Could not get step11 output: {e}")
 
