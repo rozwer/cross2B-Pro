@@ -387,11 +387,20 @@ def _markdown_to_html(markdown_content: str) -> str:
     html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
     html = re.sub(r"\*(.+?)\*", r"<em>\1</em>", html)
 
-    # リンク
-    html = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2">\1</a>', html)
+    # 画像（Base64データを含む）- リンクより先に処理すること！
+    # パターン: ![alt](data:mime;base64,...) または ![alt](https://...)
+    def replace_image(match: re.Match[str]) -> str:
+        alt = match.group(1)
+        src = match.group(2)
+        return f'<img src="{src}" alt="{alt}" style="max-width: 100%; height: auto; margin: 1em 0; display: block;">'
 
-    # 画像（Base64データを含む）
-    html = re.sub(r"!\[(.+?)\]\(data:(.+?)\)", r'<img src="data:\2" alt="\1" style="max-width: 100%; height: auto; margin: 1em 0;">', html)
+    # Base64画像（data:で始まるURL）
+    html = re.sub(r"!\[([^\]]*)\]\((data:image/[^\s)]+)\)", replace_image, html)
+    # 通常の画像URL
+    html = re.sub(r"!\[([^\]]*)\]\((https?://[^\s)]+)\)", replace_image, html)
+
+    # リンク（画像処理後に実行）
+    html = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2">\1</a>', html)
 
     # リスト
     html = re.sub(r"^- (.+)$", r"<li>\1</li>", html, flags=re.MULTILINE)
@@ -1052,3 +1061,83 @@ async def skip_image_generation(
         await session.commit()
 
     return {"success": True, "phase": "skipped"}
+
+
+@router.post("/regenerate")
+async def regenerate_output(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """完了済みのStep11出力を再生成（HTML変換の修正適用）"""
+    logger.info(f"Step11 regenerate: run_id={run_id}")
+
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+    tenant_id = user.tenant_id
+
+    async with db_manager.get_session(tenant_id) as session:
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        result = await session.execute(query)
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        state_data = run.step11_state or {}
+        state = Step11State(**state_data)
+
+        if state.phase != "completed":
+            raise HTTPException(status_code=400, detail="Step11 is not completed yet")
+
+        # Step10 の記事を取得
+        try:
+            step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
+            if step10_data:
+                step10_json = json.loads(step10_data.decode("utf-8"))
+                markdown_content = step10_json.get("markdown_content", "")
+            else:
+                markdown_content = ""
+        except Exception:
+            markdown_content = ""
+
+        if not markdown_content:
+            raise HTTPException(status_code=400, detail="Step10 の記事データがありません")
+
+        # 画像を再挿入してHTMLを再生成
+        positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
+        images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
+
+        final_md, final_html = await insert_images_into_article(markdown_content, images, positions)
+
+        # 結果を保存
+        output_data = {
+            "markdown_with_images": final_md,
+            "html_with_images": final_html,
+            "images": [img.model_dump() for img in images],
+            "positions": [p.model_dump() for p in positions],
+        }
+
+        output_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
+        await store.put(
+            json.dumps(output_data, ensure_ascii=False).encode("utf-8"),
+            output_path,
+            "application/json",
+        )
+
+        # 監査ログ
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="step11_regenerated",
+            resource_type="run",
+            resource_id=run_id,
+            details={"image_count": len(images)},
+        )
+
+        await session.commit()
+
+    return {
+        "success": True,
+        "output_path": output_path,
+        "message": "HTML出力を再生成しました",
+    }
