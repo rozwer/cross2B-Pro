@@ -40,13 +40,11 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
     error_code = args.get("error_code")
     error_message = args.get("error_message")
 
-    logger.info(
-        f"Syncing run status: run_id={run_id}, status={status}, step={current_step}"
-    )
+    logger.info(f"Syncing run status: run_id={run_id}, status={status}, step={current_step}")
 
     try:
         # Import DB components
-        from apps.api.db import TenantDBManager, Run
+        from apps.api.db import Run, TenantDBManager
 
         db_manager = TenantDBManager()
 
@@ -94,9 +92,7 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
 
             await session.flush()
 
-            logger.info(
-                f"Run status synced: run_id={run_id}, updated={updated_fields}"
-            )
+            logger.info(f"Run status synced: run_id={run_id}, updated={updated_fields}")
 
             return {
                 "success": True,

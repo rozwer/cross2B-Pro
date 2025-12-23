@@ -9,10 +9,10 @@ from apps.worker.activities.schemas.step1 import (
 )
 from apps.worker.activities.schemas.step2 import (
     RejectedRecord,
+    Step2Output,
     ValidatedCompetitor,
     ValidationIssue,
     ValidationSummary,
-    Step2Output,
 )
 from apps.worker.activities.schemas.step3a import (
     SearchIntent,

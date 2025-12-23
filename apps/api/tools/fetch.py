@@ -20,7 +20,7 @@ import os
 import re
 import socket
 from datetime import UTC, datetime
-from ipaddress import ip_address, ip_network, AddressValueError
+from ipaddress import AddressValueError, ip_address, ip_network
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -46,30 +46,32 @@ MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
 # =============================================================================
 
 # ブロック対象ホスト（内部・メタデータサービス）
-BLOCKED_HOSTS = frozenset([
-    '127.0.0.1',
-    'localhost',
-    '0.0.0.0',
-    '169.254.169.254',  # AWS/GCP メタデータサービス
-    '169.254.170.2',    # ECS タスクメタデータ
-    'metadata.google.internal',
-    'metadata.goog',
-])
+BLOCKED_HOSTS = frozenset(
+    [
+        "127.0.0.1",
+        "localhost",
+        "0.0.0.0",
+        "169.254.169.254",  # AWS/GCP メタデータサービス
+        "169.254.170.2",  # ECS タスクメタデータ
+        "metadata.google.internal",
+        "metadata.goog",
+    ]
+)
 
 # ブロック対象ネットワーク（プライベートIP）
 BLOCKED_NETWORKS = [
-    ip_network('10.0.0.0/8'),       # クラスA プライベート
-    ip_network('172.16.0.0/12'),    # クラスB プライベート
-    ip_network('192.168.0.0/16'),   # クラスC プライベート
-    ip_network('127.0.0.0/8'),      # ループバック
-    ip_network('169.254.0.0/16'),   # リンクローカル
-    ip_network('::1/128'),          # IPv6 ループバック
-    ip_network('fc00::/7'),         # IPv6 ULA
-    ip_network('fe80::/10'),        # IPv6 リンクローカル
+    ip_network("10.0.0.0/8"),  # クラスA プライベート
+    ip_network("172.16.0.0/12"),  # クラスB プライベート
+    ip_network("192.168.0.0/16"),  # クラスC プライベート
+    ip_network("127.0.0.0/8"),  # ループバック
+    ip_network("169.254.0.0/16"),  # リンクローカル
+    ip_network("::1/128"),  # IPv6 ループバック
+    ip_network("fc00::/7"),  # IPv6 ULA
+    ip_network("fe80::/10"),  # IPv6 リンクローカル
 ]
 
 # 許可スキーム
-ALLOWED_SCHEMES = frozenset(['http', 'https'])
+ALLOWED_SCHEMES = frozenset(["http", "https"])
 
 # =============================================================================
 # VULN-003: パストラバーサル対策設定
@@ -77,8 +79,8 @@ ALLOWED_SCHEMES = frozenset(['http', 'https'])
 
 # PDF許可ディレクトリ（環境変数でオーバーライド可能）
 ALLOWED_PDF_DIRS = [
-    os.path.abspath(os.getenv('PDF_ALLOWED_DIR', '/data/pdfs/')),
-    os.path.abspath(os.getenv('UPLOADS_DIR', '/uploads/')),
+    os.path.abspath(os.getenv("PDF_ALLOWED_DIR", "/data/pdfs/")),
+    os.path.abspath(os.getenv("UPLOADS_DIR", "/uploads/")),
 ]
 
 
@@ -291,17 +293,13 @@ class PageFetchTool(ToolInterface):
 
         for attempt in range(MAX_RETRIES):
             try:
-                async with httpx.AsyncClient(
-                    timeout=self.timeout, follow_redirects=True
-                ) as client:
+                async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                     # REVIEW-008: ストリーミング取得でサイズ制限を強制
                     async with client.stream("GET", url, headers=headers) as response:
                         # サイズチェック（Content-Lengthヘッダーがある場合）
                         content_length = response.headers.get("content-length")
                         if content_length and int(content_length) > self.max_content_length:
-                            logger.warning(
-                                f"page_fetch: Content too large: {content_length} bytes (max: {self.max_content_length})"
-                            )
+                            logger.warning(f"page_fetch: Content too large: {content_length} bytes (max: {self.max_content_length})")
                             return ToolResult(
                                 success=False,
                                 error_category=ErrorCategory.VALIDATION_FAIL.value,
@@ -323,9 +321,7 @@ class PageFetchTool(ToolInterface):
                             async for chunk in response.aiter_bytes():
                                 total_size += len(chunk)
                                 if total_size > self.max_content_length:
-                                    logger.warning(
-                                        f"page_fetch: Content exceeds size limit during streaming"
-                                    )
+                                    logger.warning("page_fetch: Content exceeds size limit during streaming")
                                     return ToolResult(
                                         success=False,
                                         error_category=ErrorCategory.VALIDATION_FAIL.value,
@@ -356,9 +352,7 @@ class PageFetchTool(ToolInterface):
                                 content_hash=_compute_hash(html),
                             )
 
-                            logger.info(
-                                f"page_fetch: Retrieved {url} ({extracted['word_count']} words)"
-                            )
+                            logger.info(f"page_fetch: Retrieved {url} ({extracted['word_count']} words)")
 
                             return ToolResult(
                                 success=True,
@@ -383,9 +377,7 @@ class PageFetchTool(ToolInterface):
                                 error_message=f"Access forbidden: {url}",
                             )
                         elif response.status_code == 429:
-                            logger.warning(
-                                f"page_fetch: Rate limited (attempt {attempt + 1}/{MAX_RETRIES})"
-                            )
+                            logger.warning(f"page_fetch: Rate limited (attempt {attempt + 1}/{MAX_RETRIES})")
                             # continue は stream コンテキスト外で行う必要あり
                         elif response.status_code >= 500:
                             logger.warning(
@@ -406,6 +398,7 @@ class PageFetchTool(ToolInterface):
                 if response.status_code == 429 or response.status_code >= 500:
                     if attempt < MAX_RETRIES - 1:
                         import asyncio
+
                         await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
                         continue
                     error_msg = "Rate limit exceeded" if response.status_code == 429 else f"Server error: {response.status_code}"
@@ -416,9 +409,7 @@ class PageFetchTool(ToolInterface):
                     )
 
             except httpx.TimeoutException as e:
-                logger.warning(
-                    f"page_fetch: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"page_fetch: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
@@ -430,9 +421,7 @@ class PageFetchTool(ToolInterface):
                     error_message="Request timed out after retries",
                 )
             except httpx.RequestError as e:
-                logger.warning(
-                    f"page_fetch: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"page_fetch: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
@@ -606,9 +595,7 @@ class PdfExtractTool(ToolInterface):
                 content_hash=_compute_hash(pdf_data if pdf_data else b""),
             )
 
-            logger.info(
-                f"pdf_extract: Extracted {pages_to_extract}/{total_pages} pages"
-            )
+            logger.info(f"pdf_extract: Extracted {pages_to_extract}/{total_pages} pages")
 
             return ToolResult(
                 success=True,
@@ -682,7 +669,8 @@ class PrimaryCollectorTool(ToolInterface):
         # SERPツールを取得して実行
         serp_tool = ToolRegistry.get("serp_fetch")
         serp_result = await serp_tool.execute(
-            query=query, num_results=num_sources * 2  # 余分に取得
+            query=query,
+            num_results=num_sources * 2,  # 余分に取得
         )
 
         if not serp_result.success:
@@ -735,9 +723,7 @@ class PrimaryCollectorTool(ToolInterface):
             else:
                 logger.warning(f"primary_collector: Failed to fetch {url}: {result.error_message}")
 
-        logger.info(
-            f"primary_collector: Collected {len(collected_sources)} sources for '{query}'"
-        )
+        logger.info(f"primary_collector: Collected {len(collected_sources)} sources for '{query}'")
 
         return ToolResult(
             success=True,

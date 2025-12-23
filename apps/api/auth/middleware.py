@@ -8,21 +8,19 @@ VULN-005/006: 認証ミドルウェア
 
 import logging
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-# プロジェクトルートの .env を読み込む
-_project_root = Path(__file__).resolve().parents[3]
-load_dotenv(_project_root / ".env")
-from datetime import datetime, timedelta
-from typing import Optional
-
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from .schemas import AuthFailureLog, AuthUser, TokenPayload
+
+# プロジェクトルートの .env を読み込む
+_project_root = Path(__file__).resolve().parents[3]
+load_dotenv(_project_root / ".env")
 
 logger = logging.getLogger(__name__)
 

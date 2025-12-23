@@ -13,15 +13,9 @@ from pathlib import Path
 from typing import NoReturn
 
 from dotenv import load_dotenv
-
-# Load .env from project root
-_project_root = Path(__file__).resolve().parents[2]
-load_dotenv(_project_root / ".env")
-
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-# Workflow and Activity imports
 from .activities import (
     step0_keyword_selection,
     step1_competitor_fetch,
@@ -38,16 +32,20 @@ from .activities import (
     step8_fact_check,
     step9_final_rewrite,
     step10_final_output,
-    step11_image_generation,
-    # Step11 multi-phase activities
-    step11_mark_skipped,
     step11_analyze_positions,
     step11_generate_images,
-    step11_retry_image,
+    step11_image_generation,
     step11_insert_images,
+    # Step11 multi-phase activities
+    step11_mark_skipped,
+    step11_retry_image,
     sync_run_status,
 )
 from .workflows import ArticleWorkflow, ImageAdditionWorkflow
+
+# Load .env from project root
+_project_root = Path(__file__).resolve().parents[2]
+load_dotenv(_project_root / ".env")
 
 # Configure logging
 logging.basicConfig(

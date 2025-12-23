@@ -19,10 +19,10 @@ from typing import Any
 
 from apps.api.llm import (
     GeminiClient,
+    ImageGenerationResult,
     LLMCallMetadata,
     LLMRequestConfig,
     NanoBananaClient,
-    ImageGenerationResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -257,9 +257,7 @@ class ArticleImageGenerator:
         """
         # セクション構造を抽出
         sections = self._extract_sections(markdown_content)
-        sections_text = "\n".join(
-            [f"[{i}] {s['level']}: {s['title']}" for i, s in enumerate(sections)]
-        )
+        sections_text = "\n".join([f"[{i}] {s['level']}: {s['title']}" for i, s in enumerate(sections)])
 
         system_prompt = f"""あなたはSEO記事の画像配置を最適化する専門家です。
 
@@ -316,9 +314,7 @@ JSON形式で出力してください。insertion_pointsは必ず{self._target_i
             metadata=metadata,
         )
 
-        logger.info(
-            f"Article analysis completed: {len(result.get('insertion_points', []))} insertion points found"
-        )
+        logger.info(f"Article analysis completed: {len(result.get('insertion_points', []))} insertion points found")
 
         return result
 
@@ -377,9 +373,7 @@ JSON形式で出力してください。insertion_pointsは必ず{self._target_i
                     logger.warning(f"No image generated for: {point['section_title']}")
 
             except Exception as e:
-                logger.error(
-                    f"Failed to generate image for section '{point['section_title']}': {e}"
-                )
+                logger.error(f"Failed to generate image for section '{point['section_title']}': {e}")
                 # 個別の画像生成失敗は続行（フォールバックではなく、スキップ）
                 continue
 
@@ -445,11 +439,10 @@ async def generate_article_images(
     Returns:
         ArticleImageGenerationResult: 生成結果
     """
-    import os
     from pathlib import Path
 
     # JSONを読み込み
-    with open(article_json_path, "r", encoding="utf-8") as f:
+    with open(article_json_path, encoding="utf-8") as f:
         article_data = json.load(f)
 
     # 画像生成
@@ -474,7 +467,7 @@ async def generate_article_images(
 if __name__ == "__main__":
     import sys
 
-    async def main():
+    async def main() -> None:
         if len(sys.argv) < 2:
             print("Usage: python -m apps.api.services.article_image_generator <article.json> [output_dir]")
             sys.exit(1)

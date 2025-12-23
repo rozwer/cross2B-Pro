@@ -22,19 +22,17 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import LLMInterface, get_llm_client
-from apps.api.llm.schemas import LLMResponse
 from apps.api.llm.exceptions import (
     LLMAuthenticationError,
     LLMInvalidRequestError,
     LLMRateLimitError,
     LLMTimeoutError,
 )
-from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
+from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig, LLMResponse
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.helpers import (
     ContentMetrics,
     OutputParser,
-    QualityResult,
     QualityRetryLoop,
     RequiredElementsValidator,
 )
@@ -241,17 +239,11 @@ class Step0KeywordSelection(BaseActivity):
 
         for issue in issues:
             if "search_intent" in issue:
-                enhancements.append(
-                    "必ず「検索意図」または「ユーザーの目的」を明記してください。"
-                )
+                enhancements.append("必ず「検索意図」または「ユーザーの目的」を明記してください。")
             elif "difficulty" in issue:
-                enhancements.append(
-                    "必ず「難易度」または「競合度」の評価を含めてください。"
-                )
+                enhancements.append("必ず「難易度」または「競合度」の評価を含めてください。")
             elif "recommendation" in issue:
-                enhancements.append(
-                    "必ず「推奨」または「提案」のセクションを含めてください。"
-                )
+                enhancements.append("必ず「推奨」または「提案」のセクションを含めてください。")
 
         if enhancements:
             enhancement_text = "\n\n【追加指示】\n" + "\n".join(enhancements)

@@ -26,8 +26,8 @@ from sqlalchemy import select
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import AuditLogger, Run, Step, TenantDBManager
-from apps.api.llm import NanoBananaClient, ImageGenerationConfig
+from apps.api.db import AuditLogger, Run, TenantDBManager
+from apps.api.llm import ImageGenerationConfig, NanoBananaClient
 from apps.api.storage import ArtifactStore
 
 logger = logging.getLogger(__name__)
@@ -42,12 +42,14 @@ router = APIRouter(prefix="/api/runs/{run_id}/step11", tags=["step11"])
 
 class Step11SettingsInput(BaseModel):
     """11A: 設定入力"""
+
     image_count: int = Field(ge=1, le=10, default=3)
     position_request: str = Field(default="", max_length=500)
 
 
 class ImagePosition(BaseModel):
     """画像挿入位置"""
+
     section_title: str
     section_index: int
     position: str = Field(description="before or after")
@@ -57,6 +59,7 @@ class ImagePosition(BaseModel):
 
 class PositionConfirmInput(BaseModel):
     """11B: 位置確認"""
+
     approved: bool
     modified_positions: list[ImagePosition] | None = None
     reanalyze: bool = False
@@ -65,17 +68,20 @@ class PositionConfirmInput(BaseModel):
 
 class ImageInstruction(BaseModel):
     """画像ごとの指示"""
+
     index: int
     instruction: str
 
 
 class InstructionsInput(BaseModel):
     """11C: 画像指示"""
+
     instructions: list[ImageInstruction]
 
 
 class GeneratedImage(BaseModel):
     """生成された画像"""
+
     index: int
     position: ImagePosition  # 挿入位置
     user_instruction: str  # ユーザーの指示
@@ -94,12 +100,14 @@ class GeneratedImage(BaseModel):
 
 class ImageRetryInput(BaseModel):
     """11D: 画像リトライ"""
+
     index: int
     instruction: str
 
 
 class ImageReviewItem(BaseModel):
     """11D: 画像レビュー項目"""
+
     index: int
     accepted: bool
     retry: bool = False
@@ -108,18 +116,20 @@ class ImageReviewItem(BaseModel):
 
 class ImageReviewInput(BaseModel):
     """11D: 画像レビュー入力"""
+
     reviews: list[ImageReviewItem]
 
 
 class Step11State(BaseModel):
     """Step11 の状態"""
+
     phase: str = "idle"  # idle, 11A, 11B, 11C, 11D, 11E, completed, skipped
     settings: Step11SettingsInput | None = None
     positions: list[ImagePosition] = []
     instructions: list[ImageInstruction] = []
     images: list[GeneratedImage] = []
     analysis_summary: str = ""
-    sections: list[dict] = []
+    sections: list[dict[str, Any]] = []
     error: str | None = None
 
 
@@ -195,13 +205,13 @@ async def save_step11_state(
 async def analyze_positions(
     markdown_content: str,
     settings: Step11SettingsInput,
-) -> tuple[list[ImagePosition], str, list[dict]]:
+) -> tuple[list[ImagePosition], str, list[dict[str, Any]]]:
     """位置分析（モック実装）
 
     TODO: 実際の LLM 呼び出しに置き換え
     """
     # 記事からセクションを抽出
-    sections = []
+    sections: list[dict[str, Any]] = []
     lines = markdown_content.split("\n")
     current_section = None
 
@@ -219,13 +229,16 @@ async def analyze_positions(
 
     for i in range(target_count):
         if i < len(sections):
-            positions.append(ImagePosition(
-                section_title=sections[i]["title"],
-                section_index=i,
-                position="after",
-                source_text="",
-                description=f"{sections[i]['title']}に関連する画像",
-            ))
+            section_title = str(sections[i].get("title", ""))
+            positions.append(
+                ImagePosition(
+                    section_title=section_title,
+                    section_index=i,
+                    position="after",
+                    source_text="",
+                    description=f"{section_title}に関連する画像",
+                )
+            )
 
     summary = f"{len(positions)}箇所の画像挿入位置を提案しました。"
 
@@ -366,33 +379,33 @@ def _markdown_to_html(markdown_content: str) -> str:
     html = markdown_content
 
     # 見出し変換
-    html = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
-    html = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
-    html = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
+    html = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html, flags=re.MULTILINE)
+    html = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html, flags=re.MULTILINE)
+    html = re.sub(r"^# (.+)$", r"<h1>\1</h1>", html, flags=re.MULTILINE)
 
     # 太字・イタリック
-    html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
-    html = re.sub(r'\*(.+?)\*', r'<em>\1</em>', html)
+    html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
+    html = re.sub(r"\*(.+?)\*", r"<em>\1</em>", html)
 
     # リンク
-    html = re.sub(r'\[(.+?)\]\((.+?)\)', r'<a href="\2">\1</a>', html)
+    html = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2">\1</a>', html)
 
     # 画像（Base64データを含む）
-    html = re.sub(r'!\[(.+?)\]\(data:(.+?)\)', r'<img src="data:\2" alt="\1" style="max-width: 100%; height: auto; margin: 1em 0;">', html)
+    html = re.sub(r"!\[(.+?)\]\(data:(.+?)\)", r'<img src="data:\2" alt="\1" style="max-width: 100%; height: auto; margin: 1em 0;">', html)
 
     # リスト
-    html = re.sub(r'^- (.+)$', r'<li>\1</li>', html, flags=re.MULTILINE)
-    html = re.sub(r'(<li>.*</li>\n)+', r'<ul>\g<0></ul>', html)
+    html = re.sub(r"^- (.+)$", r"<li>\1</li>", html, flags=re.MULTILINE)
+    html = re.sub(r"(<li>.*</li>\n)+", r"<ul>\g<0></ul>", html)
 
     # 段落（空行で区切られたテキスト）
-    paragraphs = html.split('\n\n')
+    paragraphs = html.split("\n\n")
     processed = []
     for p in paragraphs:
         p = p.strip()
-        if p and not p.startswith('<'):
-            p = f'<p>{p}</p>'
+        if p and not p.startswith("<"):
+            p = f"<p>{p}</p>"
         processed.append(p)
-    html = '\n'.join(processed)
+    html = "\n".join(processed)
 
     return html
 
@@ -412,10 +425,9 @@ async def insert_images_into_article(
     Returns:
         tuple[str, str]: (画像挿入済みMarkdown, HTML)
     """
-    import re
 
     result_md = markdown_content
-    lines = result_md.split('\n')
+    lines = result_md.split("\n")
 
     # 画像をセクションに挿入（セクションタイトルを探して挿入）
     for img in images:
@@ -426,7 +438,7 @@ async def insert_images_into_article(
         section_title = pos.section_title
 
         # Base64画像タグを作成
-        img_tag = f'\n\n![{img.alt_text}](data:{img.mime_type};base64,{img.image_base64})\n\n'
+        img_tag = f"\n\n![{img.alt_text}](data:{img.mime_type};base64,{img.image_base64})\n\n"
 
         # セクションタイトルを探して挿入
         inserted = False
@@ -443,7 +455,7 @@ async def insert_images_into_article(
                     while insert_pos < len(lines) and not lines[insert_pos].strip():
                         insert_pos += 1
                     # 次の見出しまたは段落の後に挿入
-                    while insert_pos < len(lines) and lines[insert_pos].strip() and not lines[insert_pos].startswith('#'):
+                    while insert_pos < len(lines) and lines[insert_pos].strip() and not lines[insert_pos].startswith("#"):
                         insert_pos += 1
                     lines.insert(insert_pos, img_tag)
                 inserted = True
@@ -453,13 +465,13 @@ async def insert_images_into_article(
         if not inserted:
             lines.append(img_tag)
 
-    result_md = '\n'.join(lines)
+    result_md = "\n".join(lines)
 
     # Markdown を HTML に変換
     html_body = _markdown_to_html(result_md)
 
     # 完全なHTMLドキュメントを生成
-    result_html = f'''<!DOCTYPE html>
+    result_html = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -486,7 +498,7 @@ async def insert_images_into_article(
 <body>
 {html_body}
 </body>
-</html>'''
+</html>"""
 
     return result_md, result_html
 
@@ -531,10 +543,7 @@ async def submit_settings(
             markdown_content = ""
 
         if not markdown_content:
-            raise HTTPException(
-                status_code=400,
-                detail="Step10 の記事データがありません。先に記事生成を完了してください。"
-            )
+            raise HTTPException(status_code=400, detail="Step10 の記事データがありません。先に記事生成を完了してください。")
 
         # 位置分析を実行
         positions, summary, sections = await analyze_positions(markdown_content, data)
@@ -891,9 +900,7 @@ async def get_preview(
     positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
     images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
 
-    result_md, result_html = await insert_images_into_article(
-        markdown_content, images, positions
-    )
+    result_md, result_html = await insert_images_into_article(markdown_content, images, positions)
 
     return {
         "preview_html": result_html,
@@ -939,9 +946,7 @@ async def finalize_images(
         positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
         images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
 
-        final_md, final_html = await insert_images_into_article(
-            markdown_content, images, positions
-        )
+        final_md, final_html = await insert_images_into_article(markdown_content, images, positions)
 
         # 結果を保存
         output_data = {
@@ -967,13 +972,11 @@ async def finalize_images(
 
         # Step11のステータスを更新（step_statusテーブル）
         import uuid
+
         from apps.api.db import Step as StepModel
 
         # 既存のStep11レコードを探す
-        step_query = select(StepModel).where(
-            StepModel.run_id == run_id,
-            StepModel.step_name == "step11"
-        )
+        step_query = select(StepModel).where(StepModel.run_id == run_id, StepModel.step_name == "step11")
         step_result = await session.execute(step_query)
         step_record = step_result.scalar_one_or_none()
 
