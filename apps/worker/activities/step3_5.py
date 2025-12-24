@@ -5,6 +5,8 @@ based on previous step outputs. Runs after approval as the first post-approval s
 Uses Gemini for natural, creative expression generation.
 """
 
+import hashlib
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -334,7 +336,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         if not isinstance(emotional_hooks, list):
             emotional_hooks = []
 
-        return {
+        output_data = {
             "step": self.step_id,
             "keyword": keyword,
             # Structured fields conforming to Step3_5Output schema
@@ -361,6 +363,11 @@ class Step3_5HumanTouchGeneration(BaseActivity):
                 "output": response.token_usage.output,
             },
         }
+        output_data["output_path"] = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
+        output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
+            :16
+        ]
+        return output_data
 
 
 @activity.defn(name="step3_5_human_touch_generation")

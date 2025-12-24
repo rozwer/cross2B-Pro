@@ -23,6 +23,7 @@ Error Handling Strategy:
 """
 
 import hashlib
+import json
 import re
 from datetime import UTC, datetime
 from typing import Any, TypedDict
@@ -549,7 +550,14 @@ class Step10FinalOutput(BaseActivity):
 
         activity.logger.info(f"Step10 completed: Generated {len(articles)} articles, total {metadata.total_word_count} words")
 
-        return output.model_dump()
+        output_path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
+        output.output_path = output_path
+        output_data = output.model_dump()
+        output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
+            :16
+        ]
+
+        return output_data
 
     async def _generate_article_variation(
         self,

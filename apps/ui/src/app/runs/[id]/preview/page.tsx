@@ -13,7 +13,8 @@ export default function PreviewPage({
   const resolvedParams = params instanceof Promise ? use(params) : params;
   const { id } = resolvedParams;
   const [fullscreen, setFullscreen] = useState(false);
-  const previewUrl = api.artifacts.getPreviewUrl(id);
+  const [article, setArticle] = useState(1);
+  const previewUrl = api.artifacts.getPreviewUrl(id, article);
 
   return (
     <div className={fullscreen ? "fixed inset-0 z-50 bg-white" : ""}>
@@ -26,7 +27,22 @@ export default function PreviewPage({
           <h1 className="text-lg font-semibold text-gray-900">プレビュー</h1>
           <span className="text-sm text-gray-500">Run ID: {id.slice(0, 8)}</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4].map((num) => (
+              <button
+                key={num}
+                onClick={() => setArticle(num)}
+                className={
+                  article === num
+                    ? "px-2 py-1 text-xs rounded-md bg-primary-600 text-white"
+                    : "px-2 py-1 text-xs rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }
+              >
+                記事{num}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setFullscreen(!fullscreen)}
             className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"

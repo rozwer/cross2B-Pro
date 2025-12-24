@@ -593,6 +593,13 @@ function createInitialEdges(): Edge[] {
       animated: true,
       markerEnd: { type: MarkerType.ArrowClosed },
     },
+    {
+      id: "e-step11-step12",
+      source: "step11",
+      target: "step12",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
   ];
 }
 

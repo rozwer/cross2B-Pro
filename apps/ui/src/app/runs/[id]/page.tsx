@@ -64,6 +64,7 @@ export default function RunDetailPage({
     error: null,
     content: null,
   });
+  const [previewArticle, setPreviewArticle] = useState(1);
   const [showImageGenDialog, setShowImageGenDialog] = useState(false);
   const [imageGenLoading, setImageGenLoading] = useState(false);
 
@@ -130,10 +131,11 @@ export default function RunDetailPage({
     }
   }, [reject]);
 
-  const handleOpenPreview = useCallback(async () => {
+  const handleOpenPreview = useCallback(async (articleNumber: number = previewArticle) => {
+    setPreviewArticle(articleNumber);
     setPreviewModal({ isOpen: true, loading: true, error: null, content: null });
     try {
-      const htmlContent = await api.artifacts.getPreview(id);
+      const htmlContent = await api.artifacts.getPreview(id, articleNumber);
       setPreviewModal({ isOpen: true, loading: false, error: null, content: htmlContent });
     } catch (err) {
       setPreviewModal({
@@ -143,7 +145,7 @@ export default function RunDetailPage({
         content: null,
       });
     }
-  }, [id]);
+  }, [id, previewArticle]);
 
   const handleClosePreview = useCallback(() => {
     setPreviewModal({ isOpen: false, loading: false, error: null, content: null });
@@ -429,9 +431,29 @@ export default function RunDetailPage({
           <div className="relative w-[90vw] h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col">
             {/* ヘッダー */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                HTMLプレビュー
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  HTMLプレビュー
+                </h2>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleOpenPreview(num)}
+                      disabled={previewModal.loading}
+                      className={cn(
+                        "px-2 py-1 text-xs rounded-md transition-colors",
+                        previewArticle === num
+                          ? "bg-primary-600 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                        previewModal.loading && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      記事{num}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button
                 onClick={handleClosePreview}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
@@ -452,7 +474,7 @@ export default function RunDetailPage({
                   <div className="text-center">
                     <p className="text-red-600 dark:text-red-400 mb-2">{previewModal.error}</p>
                     <button
-                      onClick={handleOpenPreview}
+                      onClick={() => handleOpenPreview(previewArticle)}
                       className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
                     >
                       再試行

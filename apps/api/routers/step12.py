@@ -18,7 +18,7 @@ from sqlalchemy import select
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import AuditLogger, Run, TenantDBManager
+from apps.api.db import AuditLogger, Run, Step, TenantDBManager
 from apps.api.storage import ArtifactStore
 
 logger = logging.getLogger(__name__)
@@ -201,6 +201,19 @@ async def _get_step12_data(
     return None
 
 
+async def _ensure_step12_completed(session: Any, run_id: str) -> None:
+    """Ensure step12 is completed when step records exist."""
+    step_query = select(Step).where(Step.run_id == run_id, Step.step_name == "step12")
+    step_result = await session.execute(step_query)
+    step_record = step_result.scalar_one_or_none()
+
+    if step_record and step_record.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail="Step12 has not been completed. Please wait for workflow completion.",
+        )
+
+
 async def _generate_wordpress_html_from_step10(
     tenant_id: str,
     run_id: str,
@@ -370,6 +383,7 @@ async def get_preview(
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
+        await _ensure_step12_completed(session, run_id)
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:
@@ -453,6 +467,7 @@ async def download_all(
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
+        await _ensure_step12_completed(session, run_id)
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:
@@ -527,6 +542,7 @@ async def download_article(
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
+        await _ensure_step12_completed(session, run_id)
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:

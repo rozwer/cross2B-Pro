@@ -21,6 +21,7 @@ import { WizardProgress } from "./WizardProgress";
 import { WizardNavigation } from "./WizardNavigation";
 import { TemplateSelector } from "./TemplateSelector";
 import { SaveTemplateModal } from "./SaveTemplateModal";
+import { TemplateManagerModal } from "./TemplateManagerModal";
 import { Step1Business } from "./steps/Step1Business";
 import { Step2Keyword } from "./steps/Step2Keyword";
 import { Step3Strategy } from "./steps/Step3Strategy";
@@ -117,6 +118,12 @@ export function RunCreateWizard({
   // Template state
   const [loadedTemplate, setLoadedTemplate] = useState<HearingTemplate | null>(null);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [templateRefreshKey, setTemplateRefreshKey] = useState(0);
+
+  const refreshTemplates = useCallback(() => {
+    setTemplateRefreshKey((prev) => prev + 1);
+  }, []);
 
   // Update a specific section of form data
   const updateFormData = useCallback(<K extends keyof WizardFormData>(
@@ -421,8 +428,10 @@ export function RunCreateWizard({
         <TemplateSelector
           onSelectTemplate={handleSelectTemplate}
           onSaveAsTemplate={() => setShowSaveTemplateModal(true)}
+          onManageTemplates={() => setShowTemplateManager(true)}
           currentData={currentTemplateData}
           hasUnsavedChanges={hasUnsavedChanges}
+          refreshKey={templateRefreshKey}
         />
       )}
 
@@ -486,9 +495,15 @@ export function RunCreateWizard({
         onClose={() => setShowSaveTemplateModal(false)}
         templateData={currentTemplateData}
         onSaveSuccess={() => {
-          // Optionally show a success message or refresh template list
+          refreshTemplates();
           console.log("Template saved successfully");
         }}
+      />
+
+      <TemplateManagerModal
+        isOpen={showTemplateManager}
+        onClose={() => setShowTemplateManager(false)}
+        onTemplatesChanged={refreshTemplates}
       />
     </div>
   );

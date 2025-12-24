@@ -50,11 +50,13 @@ const STEP_ICONS: Record<string, LucideIcon> = {
   "step-1": Package,
   step0: Sparkles,
   step1: Search,
+  "step1.5": Search,
   step3: FileText,
   step2: Search,
   step3a: Sparkles,
   step3b: Sparkles,
   step3c: Sparkles,
+  "step3.5": Sparkles,
   step4: FileText,
   step5: Pencil,
   step6: Eye,
@@ -65,6 +67,7 @@ const STEP_ICONS: Record<string, LucideIcon> = {
   step9: Sparkles,
   step10: CheckCircle,
   step11: Image,
+  step12: FileText,
 };
 
 const STEP_COLORS: Record<string, string> = {
@@ -76,6 +79,7 @@ const STEP_COLORS: Record<string, string> = {
   step3a: "#f59e0b",
   step3b: "#f59e0b",
   step3c: "#f59e0b",
+  "step3.5": "#06b6d4",
   step4: "#06b6d4",
   step5: "#06b6d4",
   step6: "#ec4899",
@@ -86,6 +90,7 @@ const STEP_COLORS: Record<string, string> = {
   step9: "#8b5cf6",
   step10: "#10b981",
   step11: "#ec4899",
+  step12: "#10b981",
 };
 
 // Simplified step groups for visualization
@@ -93,8 +98,10 @@ const STEP_GROUPS = [
   ["step-1"],
   ["step0"],
   ["step1"],
+  ["step1.5"],
   ["step2", "step3"],
   ["step3a", "step3b", "step3c"],
+  ["step3.5"],
   ["step4"],
   ["step5"],
   ["step6"],
@@ -104,6 +111,7 @@ const STEP_GROUPS = [
   ["step9"],
   ["step10"],
   ["step11"],
+  ["step12"],
 ];
 
 function getStatusIcon(status?: string, isWaiting?: boolean) {
