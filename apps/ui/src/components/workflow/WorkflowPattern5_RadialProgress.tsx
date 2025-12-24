@@ -54,11 +54,13 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
   "step-1": { icon: Package, color: "#3b82f6" },
   step0: { icon: Sparkles, color: "#8b5cf6" },
   step1: { icon: Search, color: "#a855f7" },
+  "step1.5": { icon: Search, color: "#a855f7" },
   step2: { icon: Search, color: "#f59e0b" },
   step3: { icon: FileText, color: "#10b981" },
   step3a: { icon: Sparkles, color: "#ec4899" },
   step3b: { icon: Sparkles, color: "#ec4899" },
   step3c: { icon: Sparkles, color: "#ec4899" },
+  "step3.5": { icon: Sparkles, color: "#06b6d4" },
   step4: { icon: FileText, color: "#06b6d4" },
   step5: { icon: Pencil, color: "#8b5cf6" },
   step6: { icon: Eye, color: "#f59e0b" },
@@ -69,6 +71,7 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
   step9: { icon: Sparkles, color: "#a855f7" },
   step10: { icon: CheckCircle, color: "#10b981" },
   step11: { icon: Image, color: "#ec4899" },
+  step12: { icon: FileText, color: "#10b981" },
 };
 
 // Simplified steps for radial view
@@ -76,10 +79,12 @@ const RADIAL_STEPS = [
   "step-1",
   "step0",
   "step1",
+  "step1.5",
   "step2",
   "step3a",
   "step3b",
   "step3c",
+  "step3.5",
   "step4",
   "step5",
   "step6",
@@ -90,6 +95,7 @@ const RADIAL_STEPS = [
   "step9",
   "step10",
   "step11",
+  "step12",
 ];
 
 // Parallel step groups: parent step is completed when ALL children are completed
@@ -99,7 +105,7 @@ const PARALLEL_PARENT_CHILDREN: Record<string, string[]> = {
 };
 
 // Key steps to show labels for (evenly distributed around the circle)
-const KEY_LABEL_STEPS = ["step-1", "step4", "step7a", "step10"];
+const KEY_LABEL_STEPS = ["step-1", "step4", "step7a", "step10", "step12"];
 
 // All step names for progress calculation (from STEP_LABELS)
 const ALL_STEP_NAMES = Object.keys(STEP_LABELS);

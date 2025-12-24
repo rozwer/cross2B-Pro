@@ -11,6 +11,8 @@ step0の結果(recommended_angles等)を参照して関連KW選定を最適化�
 """
 
 import asyncio
+import hashlib
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -108,7 +110,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         # スキップ条件: related_keywordsが空の場合
         if not related_keywords:
             logger.info("[STEP1.5] Skipped: No related keywords provided")
-            return {
+            output_data = {
                 "step": self.step_id,
                 "related_keywords_analyzed": 0,
                 "related_competitor_data": [],
@@ -121,6 +123,11 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
                 "skipped": True,
                 "skip_reason": "no_related_keywords",
             }
+            output_data["output_path"] = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
+            output_data["output_digest"] = hashlib.sha256(
+                json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")
+            ).hexdigest()[:16]
+            return output_data
 
         # 処理するKWを上限に制限
         keywords_to_process = related_keywords[: self.MAX_RELATED_KEYWORDS]
@@ -185,7 +192,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
 
         logger.info(f"[STEP1.5] Completed: {len(all_competitor_data)} keywords, {total_articles} articles")
 
-        return {
+        output_data = {
             "step": self.step_id,
             "related_keywords_analyzed": len(all_competitor_data),
             "related_competitor_data": all_competitor_data,
@@ -198,6 +205,11 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
             "skipped": False,
             "skip_reason": None,
         }
+        output_data["output_path"] = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
+        output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
+            :16
+        ]
+        return output_data
 
     async def _process_related_keyword(
         self,

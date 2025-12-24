@@ -100,3 +100,5 @@ class Step3_5Output(StepOutputBase):
         default_factory=dict,
         description="Token usage (input/output tokens)",
     )
+    output_path: str | None = Field(default=None, description="Storage上の出力パス")
+    output_digest: str | None = Field(default=None, description="出力内容のSHA256ダイジェスト")

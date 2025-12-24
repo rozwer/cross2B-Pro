@@ -19,6 +19,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Maximize2,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
@@ -46,11 +47,13 @@ const STEP_TYPES: Record<string, { icon: LucideIcon; color: string; type: string
   "step-1": { icon: Inbox, color: "#3b82f6", type: "入力" },
   step0: { icon: Sparkles, color: "#8b5cf6", type: "AI" },
   step1: { icon: Search, color: "#8b5cf6", type: "AI" },
+  "step1.5": { icon: Search, color: "#8b5cf6", type: "AI" },
   step3: { icon: FileText, color: "#10b981", type: "処理" },
   step2: { icon: Wrench, color: "#f59e0b", type: "ツール" },
   step3a: { icon: Brain, color: "#ec4899", type: "AI" },
   step3b: { icon: Brain, color: "#ec4899", type: "AI" },
   step3c: { icon: Brain, color: "#ec4899", type: "AI" },
+  "step3.5": { icon: Sparkles, color: "#06b6d4", type: "AI" },
   step4: { icon: FileText, color: "#06b6d4", type: "処理" },
   step5: { icon: Pencil, color: "#8b5cf6", type: "AI" },
   step6: { icon: Eye, color: "#f59e0b", type: "レビュー" },
@@ -60,18 +63,21 @@ const STEP_TYPES: Record<string, { icon: LucideIcon; color: string; type: string
   step8: { icon: Eye, color: "#f59e0b", type: "検証" },
   step9: { icon: Sparkles, color: "#8b5cf6", type: "AI" },
   step10: { icon: ArrowRight, color: "#10b981", type: "完了" },
+  step11: { icon: Image, color: "#ec4899", type: "出力" },
+  step12: { icon: FileText, color: "#10b981", type: "出力" },
 };
 
 const FLOW_ROWS = [
   ["step-1"],
-  ["step0", "step1"],
+  ["step0", "step1", "step1.5"],
   ["step2", "step3"],
   ["step3a", "step3b", "step3c"],
+  ["step3.5"],
   ["step4", "step5"],
   ["step6", "step6.5"],
   ["step7a", "step7b"],
   ["step8", "step9"],
-  ["step10"],
+  ["step10", "step11", "step12"],
 ];
 
 export function WorkflowPattern3_DifyStyle({

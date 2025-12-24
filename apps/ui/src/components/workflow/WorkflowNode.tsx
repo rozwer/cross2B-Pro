@@ -14,6 +14,7 @@ import {
   FileCheck,
   Package,
   FileOutput,
+  Image,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LLMPlatform } from "@/lib/types";
@@ -42,20 +43,25 @@ const STEP_ICONS: Record<string, React.ElementType> = {
   "step-1": FileText,
   step0: Settings,
   step1: Search,
+  step1_5: Search,
   step2: FileCheck,
   step3a: Brain,
   step3b: Brain,
   step3c: Brain,
+  step3_5: Sparkles,
   approval: Pause,
   step4: GitBranch,
   step5: Search,
   step6: Sparkles,
   "step6.5": Package,
+  step6_5: Package,
   step7a: FileOutput,
   step7b: FileOutput,
   step8: CheckCircle,
   step9: Sparkles,
   step10: FileOutput,
+  step11: Image,
+  step12: FileOutput,
 };
 
 const MODEL_COLORS: Record<LLMPlatform, { bg: string; border: string; text: string }> = {

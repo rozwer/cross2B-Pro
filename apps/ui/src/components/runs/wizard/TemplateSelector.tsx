@@ -7,15 +7,19 @@ import { api } from "@/lib/api";
 interface TemplateSelectorProps {
   onSelectTemplate: (template: HearingTemplate | null) => void;
   onSaveAsTemplate: () => void;
+  onManageTemplates?: () => void;
   currentData: HearingTemplateData;
   hasUnsavedChanges: boolean;
+  refreshKey?: number;
 }
 
 export function TemplateSelector({
   onSelectTemplate,
   onSaveAsTemplate,
+  onManageTemplates,
   currentData: _currentData,
   hasUnsavedChanges,
+  refreshKey,
 }: TemplateSelectorProps) {
   // _currentData is reserved for future use (e.g., template comparison)
   void _currentData;
@@ -25,11 +29,7 @@ export function TemplateSelector({
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
 
   // Load templates on mount
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -41,7 +41,11 @@ export function TemplateSelector({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates, refreshKey]);
 
   const handleSelectTemplate = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -118,7 +122,16 @@ export function TemplateSelector({
         </div>
 
         {/* Save as Template Button */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {onManageTemplates && (
+            <button
+              type="button"
+              onClick={onManageTemplates}
+              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+            >
+              テンプレート管理
+            </button>
+          )}
           <button
             type="button"
             onClick={onSaveAsTemplate}

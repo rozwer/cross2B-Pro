@@ -16,7 +16,7 @@ import {
   Check,
 } from "lucide-react";
 import type { Step, StepAttempt } from "@/lib/types";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -50,6 +50,10 @@ const SUB_STEPS: Record<string, Array<{ id: string; name: string; description: s
     { id: "analysis-serp", name: "SERP分析", description: "検索結果ページの構造分析" },
     { id: "analysis-intent", name: "検索意図分類", description: "ユーザーインテントの特定" },
   ],
+  "step1.5": [
+    { id: "related-kw", name: "関連KW抽出", description: "関連キーワード候補の抽出" },
+    { id: "related-serp", name: "関連SERP収集", description: "関連KWの競合記事を取得" },
+  ],
   step2: [
     { id: "research-fetch", name: "ページ取得", description: "競合ページのコンテンツ取得" },
     { id: "research-extract", name: "コンテンツ抽出", description: "本文とメタデータの抽出" },
@@ -70,6 +74,10 @@ const SUB_STEPS: Record<string, Array<{ id: string; name: string; description: s
   step3c: [
     { id: "content-c-gen", name: "コンテンツ生成", description: "セクションCの本文生成" },
     { id: "content-c-validate", name: "品質チェック", description: "生成内容の品質検証" },
+  ],
+  "step3.5": [
+    { id: "human-touch", name: "人間味生成", description: "感情・体験要素の作成" },
+    { id: "human-touch-validate", name: "要素確認", description: "生成要素の整合性確認" },
   ],
   step4: [
     { id: "prep-merge", name: "コンテンツ統合", description: "並列生成結果の統合" },
@@ -108,6 +116,16 @@ const SUB_STEPS: Record<string, Array<{ id: string; name: string; description: s
     { id: "complete-save", name: "保存処理", description: "成果物の最終保存" },
     { id: "complete-notify", name: "完了通知", description: "完了ステータスの更新" },
   ],
+  step11: [
+    { id: "image-analyze", name: "挿入位置分析", description: "画像挿入ポイントの特定" },
+    { id: "image-generate", name: "画像生成", description: "画像の生成と確認" },
+    { id: "image-insert", name: "画像挿入", description: "記事への画像挿入" },
+  ],
+  step12: [
+    { id: "wp-convert", name: "WP変換", description: "Gutenbergブロック形式に変換" },
+    { id: "wp-validate", name: "HTML検証", description: "WordPress向けHTMLの整合性確認" },
+    { id: "wp-save", name: "成果物保存", description: "生成HTMLの保存" },
+  ],
 };
 
 export function StepDetailDrawer({
@@ -121,11 +139,12 @@ export function StepDetailDrawer({
 
   // Use stepName from prop if step is not available
   const effectiveStepName = step?.step_name || propStepName;
+  const normalizedStepName = effectiveStepName ? normalizeStepName(effectiveStepName) : "";
 
   // Don't render if drawer is not open or no step info at all
   if (!isOpen || !effectiveStepName) return null;
 
-  const subSteps = SUB_STEPS[effectiveStepName] || [];
+  const subSteps = SUB_STEPS[normalizedStepName] || [];
   const attempts = step?.attempts || [];
   const lastAttempt = attempts[attempts.length - 1];
   const status = step?.status;
@@ -212,7 +231,7 @@ export function StepDetailDrawer({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {STEP_LABELS[effectiveStepName] || effectiveStepName}
+                {STEP_LABELS[normalizedStepName] || STEP_LABELS[effectiveStepName] || effectiveStepName}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                 {effectiveStepName}

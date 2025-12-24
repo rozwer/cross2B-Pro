@@ -348,7 +348,7 @@
     "step10": {
       "step": "step10",
       "version": 1,
-      "content": "最終記事をHTML形式で出力してください。\nキーワード: {{keyword}}\n記事本文:\n{{final_content}}\nメタディスクリプション: {{meta_description}}\n\n完全なHTMLドキュメントを出力してください。",
+      "content": "最終記事を4つのバリエーションで生成してください。\nキーワード: {{keyword}}\nベース記事:\n{{final_content}}\nメタディスクリプション: {{meta_description}}\n\n以下のJSON形式で出力してください。\n```json\n{\n  \"articles\": [\n    {\n      \"article_number\": 1,\n      \"variation_type\": \"メイン記事\",\n      \"title\": \"\",\n      \"content\": \"Markdown本文\",\n      \"target_audience\": \"\"\n    },\n    {\n      \"article_number\": 2,\n      \"variation_type\": \"初心者向け\",\n      \"title\": \"\",\n      \"content\": \"Markdown本文\",\n      \"target_audience\": \"\"\n    },\n    {\n      \"article_number\": 3,\n      \"variation_type\": \"実践編\",\n      \"title\": \"\",\n      \"content\": \"Markdown本文\",\n      \"target_audience\": \"\"\n    },\n    {\n      \"article_number\": 4,\n      \"variation_type\": \"まとめ・比較\",\n      \"title\": \"\",\n      \"content\": \"Markdown本文\",\n      \"target_audience\": \"\"\n    }\n  ]\n}\n```\n\n記事間で内容の重複を避け、バリエーションごとの特徴を明確にしてください。",
       "variables": {
         "keyword": {
           "required": true,

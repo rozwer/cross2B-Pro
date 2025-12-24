@@ -920,11 +920,13 @@ async def _get_steps_from_storage(
         "step-1",
         "step0",
         "step1",
+        "step1_5",
         "step2",
         "step3",
         "step3a",
         "step3b",
         "step3c",
+        "step3_5",
         "step4",
         "step5",
         "step6",
@@ -934,6 +936,8 @@ async def _get_steps_from_storage(
         "step8",
         "step9",
         "step10",
+        "step11",
+        "step12",
     ]
 
     # Steps that are always completed once workflow starts (no artifact needed)
@@ -955,9 +959,9 @@ async def _get_steps_from_storage(
 
     # Define steps after each parallel group (used for inference)
     steps_after_parallel = {
-        "step3a": "step4",
-        "step3b": "step4",
-        "step3c": "step4",
+        "step3a": "step3_5",
+        "step3b": "step3_5",
+        "step3c": "step3_5",
         "step7a": "step8",
         "step7b": "step8",
     }
@@ -4617,6 +4621,19 @@ WORKFLOW_STEP_DEFAULTS: list[StepDefaultConfig] = [
         repair_enabled=True,
         is_configurable=True,
         recommended_model="anthropic",
+    ),
+    StepDefaultConfig(
+        step_id="step11",
+        label="画像生成",
+        description="AI画像生成と記事への挿入",
+        ai_model="gemini",
+        model_name=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash"),
+        temperature=0.7,
+        grounding=False,
+        retry_limit=3,
+        repair_enabled=True,
+        is_configurable=True,
+        recommended_model="gemini",
     ),
     StepDefaultConfig(
         step_id="step12",

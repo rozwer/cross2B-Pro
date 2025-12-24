@@ -23,6 +23,10 @@ export const SUB_STEPS: Record<string, SubStep[]> = {
     { id: "analysis-serp", name: "SERP分析", description: "検索結果ページの構造分析" },
     { id: "analysis-intent", name: "検索意図分類", description: "ユーザーインテントの特定" },
   ],
+  "step1.5": [
+    { id: "related-kw", name: "関連KW抽出", description: "関連キーワード候補の抽出" },
+    { id: "related-serp", name: "関連SERP収集", description: "関連KWの競合記事を取得" },
+  ],
   step2: [
     { id: "research-fetch", name: "ページ取得", description: "競合ページのコンテンツ取得" },
     { id: "research-extract", name: "コンテンツ抽出", description: "本文とメタデータの抽出" },
@@ -43,6 +47,10 @@ export const SUB_STEPS: Record<string, SubStep[]> = {
   step3c: [
     { id: "content-c-gen", name: "コンテンツ生成", description: "セクションCの本文生成" },
     { id: "content-c-validate", name: "品質チェック", description: "生成内容の品質検証" },
+  ],
+  "step3.5": [
+    { id: "human-touch", name: "人間味生成", description: "感情・体験要素の作成" },
+    { id: "human-touch-validate", name: "要素確認", description: "生成要素の整合性確認" },
   ],
   step4: [
     { id: "prep-merge", name: "コンテンツ統合", description: "並列生成結果の統合" },
@@ -86,6 +94,11 @@ export const SUB_STEPS: Record<string, SubStep[]> = {
     { id: "image-generate", name: "画像生成", description: "各位置に対して画像を生成" },
     { id: "image-insert", name: "画像挿入", description: "HTML/Markdownに画像を挿入" },
     { id: "image-preview", name: "プレビュー", description: "最終プレビューの生成" },
+  ],
+  step12: [
+    { id: "wp-convert", name: "WP変換", description: "Gutenbergブロック形式に変換" },
+    { id: "wp-validate", name: "HTML検証", description: "WordPress向けHTMLの整合性確認" },
+    { id: "wp-save", name: "成果物保存", description: "生成HTMLの保存" },
   ],
 };
 

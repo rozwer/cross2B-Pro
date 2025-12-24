@@ -34,11 +34,13 @@ const STEP_ORDER = [
   "step-1",
   "step0",
   "step1",
+  "step1_5",
   "step2",
   "step3",
   "step3a",
   "step3b",
   "step3c",
+  "step3_5",
   "step4",
   "step5",
   "step6",
@@ -51,6 +53,7 @@ const STEP_ORDER = [
   "step9",
   "step10",
   "step11",
+  "step12",
 ];
 
 // ステップ名から数値部分を抽出してソート用の値を返す

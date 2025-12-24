@@ -52,11 +52,13 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string; description
   "step-1": { icon: Package, color: "#3b82f6", description: "キーワードと要件を入力" },
   step0: { icon: Sparkles, color: "#8b5cf6", description: "初期設定と準備処理" },
   step1: { icon: Search, color: "#8b5cf6", description: "キーワード分析とSERP調査" },
+  "step1.5": { icon: Search, color: "#8b5cf6", description: "関連キーワードの競合調査" },
   step3: { icon: FileText, color: "#10b981", description: "記事構成の生成" },
   step2: { icon: Search, color: "#f59e0b", description: "競合サイトの調査" },
   step3a: { icon: Sparkles, color: "#ec4899", description: "並列コンテンツ生成 A" },
   step3b: { icon: Sparkles, color: "#ec4899", description: "並列コンテンツ生成 B" },
   step3c: { icon: Sparkles, color: "#ec4899", description: "並列コンテンツ生成 C" },
+  "step3.5": { icon: Sparkles, color: "#06b6d4", description: "人間味要素の生成" },
   step4: { icon: FileText, color: "#06b6d4", description: "執筆準備と構成確定" },
   step5: { icon: Pencil, color: "#8b5cf6", description: "本文の生成" },
   step6: { icon: Eye, color: "#f59e0b", description: "編集と品質チェック" },
@@ -67,17 +69,20 @@ const STEP_CONFIG: Record<string, { icon: LucideIcon; color: string; description
   step9: { icon: Sparkles, color: "#8b5cf6", description: "最終調整" },
   step10: { icon: CheckCircle, color: "#10b981", description: "ワークフロー完了" },
   step11: { icon: Image, color: "#ec4899", description: "AI画像生成と挿入" },
+  step12: { icon: FileText, color: "#10b981", description: "WordPress HTML生成" },
 };
 
 const ORDERED_STEPS = [
   "step-1",
   "step0",
   "step1",
+  "step1.5",
   "step2",
   "step3",
   "step3a",
   "step3b",
   "step3c",
+  "step3.5",
   "step4",
   "step5",
   "step6",
@@ -88,6 +93,7 @@ const ORDERED_STEPS = [
   "step9",
   "step10",
   "step11",
+  "step12",
 ];
 
 // Parallel step groups: parent step is completed when ALL children are completed
