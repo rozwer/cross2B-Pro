@@ -297,7 +297,7 @@ export default function RunDetailPage({
                   画像を追加
                 </button>
                 <button
-                  onClick={handleOpenPreview}
+                  onClick={() => handleOpenPreview()}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                 >
                   <ExternalLink className="h-4 w-4" />
