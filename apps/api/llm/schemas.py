@@ -316,6 +316,20 @@ class RetryConfig(BaseModel):
     )
 
 
+class JSONWithUsage(BaseModel):
+    """JSON生成結果とトークン使用量
+
+    generate_json_with_usage()の戻り値型。
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    data: dict[str, Any] = Field(..., description="パース済みのJSON")
+    token_usage: TokenUsage = Field(..., description="トークン使用量")
+    model: str = Field(..., description="使用したモデルID")
+    latency_ms: float | None = Field(default=None, description="レイテンシ（ミリ秒）")
+
+
 class LLMCallMetadata(BaseModel):
     """LLM呼び出しメタデータ
 

@@ -32,6 +32,7 @@ from .exceptions import (
 )
 from .schemas import (
     GeminiConfig,
+    JSONWithUsage,
     LLMCallMetadata,
     LLMMessage,
     LLMRequestConfig,
@@ -408,6 +409,103 @@ class GeminiClient(LLMInterface):
             raise
         except Exception as e:
             self._log_error("generate_json", e, metadata)
+            raise self._convert_exception(e)
+
+    async def generate_json_with_usage(
+        self,
+        messages: list[dict[str, str]] | list[LLMMessage],
+        system_prompt: str,
+        schema: dict[str, Any],
+        config: LLMRequestConfig | None = None,
+        metadata: LLMCallMetadata | None = None,
+    ) -> "JSONWithUsage":
+        """JSON出力とトークン使用量を返すテキスト生成
+
+        generate_json()と同じだが、トークン使用量も返す。
+
+        Args:
+            messages: 会話履歴
+            system_prompt: システムプロンプト
+            schema: 期待するJSONスキーマ
+            config: リクエスト設定
+            metadata: 追跡用メタデータ
+
+        Returns:
+            JSONWithUsage: パース済みのJSONとトークン使用量
+        """
+        config = config or LLMRequestConfig()
+        metadata = metadata or LLMCallMetadata()
+
+        self._log_request("generate_json_with_usage", self._model, metadata)
+        start_time = time.time()
+
+        try:
+            # メッセージを正規化
+            normalized_messages = self._normalize_messages(messages)
+
+            # Gemini用のコンテンツを構築
+            contents = self._build_contents(normalized_messages)
+
+            # システムプロンプトにJSON出力指示を追加
+            json_system_prompt = f"""{system_prompt}
+
+出力形式: JSON
+以下のスキーマに従ってJSONを出力してください:
+{json.dumps(schema, ensure_ascii=False, indent=2)}"""
+
+            # JSON出力用の生成設定
+            generation_config = self._build_generation_config(
+                config,
+                response_mime_type="application/json",
+                response_schema=schema,
+                system_instruction=json_system_prompt,
+                tools=None,
+            )
+
+            # API呼び出し
+            response = await self._call_with_retry(
+                contents=contents,
+                generation_config=generation_config,
+                metadata=metadata,
+            )
+
+            latency_ms = (time.time() - start_time) * 1000
+
+            # レスポンスをパース
+            llm_response = self._parse_response(response, latency_ms)
+            self._log_response("generate_json_with_usage", llm_response, metadata)
+
+            # JSONをパース
+            try:
+                result: dict[str, Any] = json.loads(llm_response.content)
+            except json.JSONDecodeError as e:
+                raise LLMJSONParseError(
+                    message=f"Failed to parse JSON output: {e}",
+                    provider=self.PROVIDER_NAME,
+                    model=self._model,
+                    raw_output=llm_response.content,
+                    parse_error=str(e),
+                )
+
+            if not isinstance(result, dict):
+                raise LLMValidationError(
+                    message=f"Expected JSON object, got {type(result).__name__}",
+                    provider=self.PROVIDER_NAME,
+                    model=self._model,
+                    validation_errors=[f"Expected dict, got {type(result).__name__}"],
+                )
+
+            return JSONWithUsage(
+                data=result,
+                token_usage=llm_response.token_usage,
+                model=llm_response.model,
+                latency_ms=latency_ms,
+            )
+
+        except LLMError:
+            raise
+        except Exception as e:
+            self._log_error("generate_json_with_usage", e, metadata)
             raise self._convert_exception(e)
 
     async def health_check(self) -> bool:

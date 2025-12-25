@@ -407,26 +407,95 @@ class BaseActivity(ABC):
     ) -> ArtifactRef | None:
         """Check if valid output already exists.
 
+        Verifies that:
+        1. Output artifact exists at the expected path
+        2. Metadata file exists with matching input_digest
+        3. Output digest matches the one stored in metadata
+
         Args:
             path: Expected output path
             input_digest: Input hash for verification
 
         Returns:
-            ArtifactRef if valid output exists, None otherwise
+            ArtifactRef if valid output exists with matching input, None otherwise
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Validate path format: {tenant_id}/{run_id}/{step}/output.json
+            path_parts = path.split("/")
+            if len(path_parts) < 4:
+                return None
+
+            step = path_parts[2]  # For logging
+
+            # Try to get metadata file
+            meta_path = path.replace("/output.json", "/metadata.json")
+            meta_content = await self._get_raw_content(meta_path)
+
+            if meta_content is None:
+                logger.debug(f"No metadata found for {step}, will execute")
+                return None
+
+            # Parse metadata
+            metadata = json.loads(meta_content.decode("utf-8"))
+            stored_input_digest = metadata.get("input_digest")
+
+            if stored_input_digest != input_digest:
+                logger.info(f"Input digest mismatch for {step}: stored={stored_input_digest[:8]}... vs current={input_digest[:8]}...")
+                return None
+
+            # Get output artifact to verify it exists and get its digest
+            output_content = await self._get_raw_content(path)
+            if output_content is None:
+                logger.warning(f"Metadata exists but output missing for {step}")
+                return None
+
+            # Calculate current digest
+            output_digest = hashlib.sha256(output_content).hexdigest()
+
+            logger.info(f"Cache hit for {step}: input_digest matches, returning cached output")
+
+            return ArtifactRef(
+                path=path,
+                digest=output_digest,
+                content_type="application/json",
+                size_bytes=len(output_content),
+            )
+
+        except json.JSONDecodeError as e:
+            activity.logger.warning(f"Failed to parse metadata: {e}")
+            return None
+        except Exception as e:
+            activity.logger.debug(f"Cache check failed: {e}")
+            return None
+
+    async def _get_raw_content(self, path: str) -> bytes | None:
+        """Get raw content from storage by path.
+
+        Args:
+            path: Full storage path
+
+        Returns:
+            Content bytes if exists, None otherwise
         """
         try:
-            # Check if artifact exists by trying to get metadata
-            # The metadata file stores the input_digest for verification
-            # meta_path = path.replace("/output.json", "/metadata.json")
-            # TODO: Use meta_path for proper caching with input_digest verification
+            from minio.error import S3Error
 
-            # For now, simple existence check
-            # In production, verify input_digest matches
-            # This is a simplified version - full implementation would
-            # store and verify input_digest in metadata
-            _ = path  # Mark as used, actual caching to be implemented
-            return None  # Always re-run for now; enable caching later
-
+            response = self.store.client.get_object(
+                bucket_name=self.store.bucket,
+                object_name=path,
+            )
+            content = response.read()
+            response.close()
+            response.release_conn()
+            return content
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                return None
+            raise
         except Exception:
             return None
 
