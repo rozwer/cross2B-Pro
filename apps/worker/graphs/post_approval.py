@@ -32,6 +32,7 @@ from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.tools.registry import ToolRegistry
+from apps.worker.activities.step11 import Step11ImageGeneration
 from apps.worker.graphs.wrapper import create_node_function
 
 # ============================================================
@@ -446,12 +447,17 @@ async def step11_execute(
     """Execute step 11: Image Generation.
 
     Generates and inserts images into articles.
-    Can be skipped if enable_images is false in config.
+    Skipped if enable_images is false in config.
+
+    When enabled, uses Step11ImageGeneration activity which:
+    - Analyzes article structure for optimal image positions
+    - Generates images using Gemini + NanoBanana APIs
+    - Inserts images into markdown/HTML content
     """
     config = ctx.config
     enable_images = config.get("enable_images", False)
 
-    # Get step10 articles from state
+    # Get step10 articles from state for skip case
     step10_output = state.step_outputs.get("step10", {})
     articles_data = step10_output.get("articles", [])
 
@@ -459,25 +465,20 @@ async def step11_execute(
         # Skip image generation, pass through articles unchanged
         return {
             "step": "step11",
+            "enabled": False,
             "skipped": True,
             "reason": "enable_images=false",
             "images": [],
             "articles_with_images": articles_data,
+            "markdown_with_images": "",
+            "html_with_images": "",
         }
 
-    # Image generation placeholder
-    # In production, this would call the image generation API
-    # For now, just pass through the articles
-    return {
-        "step": "step11",
-        "skipped": False,
-        "images": [],
-        "articles_with_images": articles_data,
-        "generation_metadata": {
-            "generated_at": datetime.now().isoformat(),
-            "image_count": 0,
-        },
-    }
+    # Execute actual image generation using Step11ImageGeneration
+    step11_activity = Step11ImageGeneration()
+    result = await step11_activity.execute(ctx, state)
+
+    return result
 
 
 async def step12_execute(
