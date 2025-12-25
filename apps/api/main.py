@@ -340,6 +340,7 @@ class StepUpdateRequest(BaseModel):
     status: Literal["running", "completed", "failed"]
     error_message: str | None = None
     retry_count: int = 0
+    tenant_id: str | None = None  # Optional: passed from Worker, or looked up from run
 
 
 class WSBroadcastRequest(BaseModel):
@@ -3662,10 +3663,22 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
     db_manager = get_tenant_db_manager()
 
     try:
-        # Get tenant_id from run
-        # Note: We use dev-tenant-001 for now since internal API doesn't have auth context
-        # TODO: Pass tenant_id from Worker or look up from run
-        tenant_id = "dev-tenant-001"
+        # Get tenant_id from request or look up from run
+        tenant_id = request.tenant_id
+        if not tenant_id:
+            # Look up tenant_id from runs table using default tenant for query
+            # Note: This assumes runs table is accessible from default tenant DB
+            async with db_manager.get_session("dev-tenant-001") as lookup_session:
+                result = await lookup_session.execute(
+                    text("SELECT tenant_id FROM runs WHERE id = CAST(:run_id AS UUID)"),
+                    {"run_id": request.run_id},
+                )
+                row = result.fetchone()
+                if row:
+                    tenant_id = row[0]
+                else:
+                    tenant_id = "dev-tenant-001"  # Fallback for missing run
+                    logger.warning(f"Run {request.run_id} not found, using default tenant")
 
         async with db_manager.get_session(tenant_id) as session:
             # UPSERT step record
