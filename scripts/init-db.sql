@@ -52,9 +52,10 @@ CREATE TABLE IF NOT EXISTS runs (
     completed_at TIMESTAMP WITH TIME ZONE,
     error_message TEXT,
     error_code VARCHAR(100),
+    step11_state JSONB,
 
     CONSTRAINT valid_status CHECK (status IN (
-        'pending', 'running', 'waiting_approval',
+        'pending', 'running', 'waiting_approval', 'waiting_image_input',
         'completed', 'failed', 'cancelled'
     ))
 );

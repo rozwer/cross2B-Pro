@@ -71,6 +71,116 @@
 各記事は`article_number`で識別され、WebSocket進捗イベントで記事単位の生成状況を通知。
 監査ログには記事ごとの`output_digest`が記録される。
 
+### 工程11: 画像生成（Human-in-the-loop）
+
+工程11は画像生成のオプション工程で、APIを通じたHuman-in-the-loopフローで実行される。
+
+#### フェーズ
+
+| フェーズ | API エンドポイント                   | 説明                               |
+| -------- | ------------------------------------ | ---------------------------------- |
+| 11A      | `GET /step11/{run_id}/settings`      | 画像生成設定の取得                 |
+| 11B      | `POST /step11/{run_id}/positions`    | 画像挿入位置の自動提案             |
+| 11C      | `POST /step11/{run_id}/approve`      | 挿入位置の承認                     |
+| 11D      | `POST /step11/{run_id}/instructions` | 各画像の生成指示を送信             |
+| 11E      | `POST /step11/{run_id}/finalize`     | 画像をBase64エンコードして記事統合 |
+
+#### 状態遷移（Temporal Signal）
+
+```
+[工程10完了] → waiting_image_input → [11A-11E API操作] → step11_skip signal → [工程12へ]
+```
+
+- `step11_phase`: `pending` → `waiting_image_input` → `skipped`
+- API `finalize` が `step11/output.json` を保存後、`step11_skip` signalを送信
+- Workflow側の `step11_mark_skipped` は既存データをチェックし、画像ありの場合は上書きしない（冪等性保証）
+
+#### 出力スキーマ
+
+```json
+{
+  "step": "step11",
+  "enabled": true,
+  "image_count": 2,
+  "images": [
+    {
+      "article_number": 1,
+      "position": "section_2",
+      "alt_text": "画像の説明",
+      "base64_data": "data:image/png;base64,..."
+    }
+  ],
+  "markdown_with_images": "# タイトル\n\n![画像](data:image/png;base64,...)\n\n本文...",
+  "html_with_images": "<h1>タイトル</h1><img src=\"data:image/png;base64,...\" alt=\"画像の説明\">..."
+}
+```
+
+### 工程12: WordPress形式変換
+
+工程12は工程10/11の成果物をWordPress Gutenbergブロック形式のHTMLに変換する。
+
+#### 入力依存
+
+| 依存工程 | 取得データ               |
+| -------- | ------------------------ |
+| step0    | キーワード設定           |
+| step6_5  | 統合パッケージ（メタ）   |
+| step10   | 4記事のMarkdown/HTML     |
+| step11   | 画像データ（オプション） |
+
+#### 処理フロー
+
+1. 依存工程データの読み込み（`load_step_data`）
+2. step11の画像データをarticleに統合（`images`配列）
+3. 各記事をWordPress Gutenbergブロック形式に変換
+4. `step12/output.json`として保存
+
+#### 出力スキーマ
+
+```json
+{
+  "step": "step12",
+  "articles": [
+    {
+      "article_number": 1,
+      "title": "記事タイトル",
+      "slug": "article-slug",
+      "category": "SEO",
+      "tags": ["キーワード1", "キーワード2"],
+      "meta_description": "メタディスクリプション",
+      "wordpress_html": "<!-- wp:heading --><h1>タイトル</h1><!-- /wp:heading -->...",
+      "images": [
+        {
+          "position": "section_2",
+          "alt_text": "画像の説明",
+          "base64_data": "data:image/png;base64,..."
+        }
+      ],
+      "word_count": 3500,
+      "seo_score": 85
+    }
+  ]
+}
+```
+
+#### Gutenbergブロック形式
+
+```html
+<!-- wp:heading {"level":1} -->
+<h1>タイトル</h1>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>本文テキスト</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image -->
+<figure class="wp-block-image">
+  <img src="data:image/png;base64,..." alt="画像の説明"/>
+</figure>
+<!-- /wp:image -->
+```
+
 ## AI割り当てパターン
 
 - **Gemini**: 分析、検索、自然な表現
@@ -139,6 +249,10 @@ storage/{tenant_id}/{run_id}/{step}/output.json
 | 5        | 一部 URL のみ失敗        | 成功分のみで続行（ただしログ必須）                     |
 | 8        | ファクトチェック矛盾検出 | 却下推奨フラグを立てる（自動修正は**禁止**）           |
 | 10       | HTML バリデーション失敗  | 失敗で停止（壊れた HTML 出力は禁止）                   |
+| 11       | 画像生成API失敗          | 画像なしで続行（warnings に記録）                      |
+| 11       | step11_mark_skipped競合  | 既存データをチェックし上書きしない（冪等性保証）       |
+| 12       | step11データ欠損         | images=[] として続行（画像なしHTML生成）               |
+| 12       | HTMLタグ未閉じ検出       | 警告ログ出力、生成続行（バリデーション警告）           |
 
 ---
 
