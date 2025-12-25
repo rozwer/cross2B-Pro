@@ -1,0 +1,38 @@
+{
+  "id": "step3_5",
+  "name": "Step 3.5: Human Touch Generation",
+  "description": "ペルソナと競合分析に基づいて、記事に人間味を加える要素を生成します",
+  "version": "1.0.0",
+  "prompts": {
+    "step3_5": {
+      "step": "step3_5",
+      "version": 1,
+      "content": "あなたは、読者の心に響くコンテンツを作成する専門家です。\n\n## タスク\nキーワード「{{keyword}}」に関する記事に人間味を加えるための要素を生成してください。\n\n## 入力情報\n\n### ペルソナ情報\n{{persona}}\n\n### 競合分析からの洞察\n{{competitor_insights}}\n\n### 共起キーワード\n{{cooccurrence_keywords}}\n\n## 生成してほしい内容\n\n以下のJSON形式で出力してください：\n\n```json\n{\n  \"emotional_analysis\": {\n    \"primary_emotion\": \"読者が最も強く感じている感情（例：不安、期待、焦り）\",\n    \"secondary_emotions\": [\"副次的な感情1\", \"副次的な感情2\"],\n    \"pain_points\": [\"読者が抱える具体的な悩み1\", \"悩み2\", \"悩み3\"],\n    \"desires\": [\"読者が本当に望んでいること1\", \"望み2\", \"望み3\"]\n  },\n  \"human_touch_patterns\": [\n    {\n      \"type\": \"experience\",\n      \"content\": \"実際にありそうな体験談や状況描写\",\n      \"placement_suggestion\": \"導入部分\"\n    },\n    {\n      \"type\": \"emotion\",\n      \"content\": \"読者の感情に寄り添う表現\",\n      \"placement_suggestion\": \"問題提起の後\"\n    },\n    {\n      \"type\": \"empathy\",\n      \"content\": \"共感を示すフレーズ\",\n      \"placement_suggestion\": \"解決策の前\"\n    }\n  ],\n  \"experience_episodes\": [\n    {\n      \"scenario\": \"具体的なシチュエーション\",\n      \"narrative\": \"その状況での体験談（50-100文字）\",\n      \"lesson\": \"そこから得られる教訓\"\n    }\n  ],\n  \"emotional_hooks\": [\n    \"読者の注意を引く感情的なフック1\",\n    \"感情的なフック2\",\n    \"感情的なフック3\"\n  ]\n}\n```\n\n## 重要な注意事項\n1. 読者のペルソナに合わせた自然な表現を使用してください\n2. 過度に感情的にならず、信頼性を保ってください\n3. 具体的で共感しやすい状況を描写してください\n4. 競合との差別化ポイントを意識してください",
+      "variables": {
+        "keyword": {
+          "required": true,
+          "type": "string",
+          "description": "対象キーワード"
+        },
+        "persona": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "ペルソナ情報（step2出力）"
+        },
+        "competitor_insights": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "競合分析からの洞察（step3出力）"
+        },
+        "cooccurrence_keywords": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "共起キーワード（step1出力）"
+        }
+      }
+    }
+  }
+}

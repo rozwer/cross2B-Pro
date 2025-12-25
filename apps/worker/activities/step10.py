@@ -24,10 +24,12 @@ Error Handling Strategy:
 
 import hashlib
 import json
+import os
 import re
 from datetime import UTC, datetime
 from typing import Any, TypedDict
 
+import httpx
 from temporalio import activity
 
 from apps.api.core.context import ExecutionContext
@@ -56,6 +58,9 @@ from apps.worker.helpers import (
 )
 
 from .base import ActivityError, BaseActivity, load_step_data
+
+# API base URL for internal communication (Worker -> API)
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://api:8000")
 
 
 class ArticleVariationInfo(TypedDict):
@@ -222,6 +227,85 @@ class Step10FinalOutput(BaseActivity):
 
         # チェックリスト品質検証
         self.checklist_validator = ChecklistValidator(min_length=100)
+
+    async def _broadcast_article_progress(
+        self,
+        run_id: str,
+        article_number: int,
+        total_articles: int,
+        status: str,
+        variation_type: str,
+    ) -> None:
+        """Broadcast article generation progress via WebSocket.
+
+        Args:
+            run_id: Run identifier
+            article_number: Current article number (1-4)
+            total_articles: Total number of articles
+            status: Status message (e.g., 'generating', 'completed')
+            variation_type: Article variation type
+        """
+        try:
+            progress = int((article_number / total_articles) * 100)
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(
+                    f"{API_BASE_URL}/api/internal/ws/broadcast",
+                    json={
+                        "run_id": run_id,
+                        "step": self.step_id,
+                        "event_type": "article_progress",
+                        "status": status,
+                        "progress": progress,
+                        "message": f"記事 {article_number}/{total_articles} ({variation_type})",
+                        "details": {
+                            "article_number": article_number,
+                            "total_articles": total_articles,
+                            "variation_type": variation_type,
+                        },
+                    },
+                )
+        except Exception as e:
+            activity.logger.warning(f"Failed to broadcast article progress: {e}")
+
+    async def _log_article_digests(
+        self,
+        tenant_id: str,
+        run_id: str,
+        articles: list["ArticleVariation"],
+    ) -> None:
+        """Write audit log with per-article output_digest.
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+            articles: List of generated articles
+        """
+        try:
+            article_digests = [
+                {
+                    "article_number": a.article_number,
+                    "variation_type": a.variation_type.value,
+                    "output_digest": a.output_digest,
+                    "word_count": a.word_count,
+                }
+                for a in articles
+            ]
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(
+                    f"{API_BASE_URL}/api/internal/audit/log",
+                    json={
+                        "tenant_id": tenant_id,
+                        "run_id": run_id,
+                        "step_name": self.step_id,
+                        "action": "step10.articles_generated",
+                        "details": {
+                            "article_count": len(articles),
+                            "articles": article_digests,
+                        },
+                    },
+                )
+        except Exception as e:
+            activity.logger.warning(f"Failed to log article digests: {e}")
 
     def _validate_step9_data_integrity(
         self,
@@ -415,8 +499,18 @@ class Step10FinalOutput(BaseActivity):
         for variation_info in variations:
             article_num = variation_info["number"]
             variation_type = variation_info["type"]
+            total_articles = len(variations)
 
-            activity.logger.info(f"Generating article {article_num}/4: {variation_type.value}")
+            activity.logger.info(f"Generating article {article_num}/{total_articles}: {variation_type.value}")
+
+            # Broadcast article generation start
+            await self._broadcast_article_progress(
+                run_id=ctx.run_id,
+                article_number=article_num,
+                total_articles=total_articles,
+                status="generating",
+                variation_type=variation_type.value,
+            )
 
             # Check for existing checkpoint
             input_digest = self.checkpoint.compute_digest(
@@ -469,10 +563,22 @@ class Step10FinalOutput(BaseActivity):
 
             articles.append(article)
 
+            # Broadcast article generation completed
+            await self._broadcast_article_progress(
+                run_id=ctx.run_id,
+                article_number=article_num,
+                total_articles=total_articles,
+                status="completed",
+                variation_type=variation_type.value,
+            )
+
             # Generate summary for next article (avoid duplication)
             if article_num < len(variations):
                 summary = await self._generate_article_summary(llm, prompt_pack, config, article.content)
                 previous_summaries.append(f"記事{article_num}（{variation_type.value}）: {summary}")
+
+        # Log per-article output_digests to audit log
+        await self._log_article_digests(ctx.tenant_id, ctx.run_id, articles)
 
         # Generate checklist (once for all articles)
         checklist = await self._generate_checklist(llm, prompt_pack, config, keyword, warnings)

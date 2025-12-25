@@ -4,9 +4,9 @@ Handles steps 3.5-12 after human approval.
 This graph runs automatically once approval signal is received.
 
 Graph flow:
-    step3_5 → step4 → step5 → step6 → step6_5 → step7a → step7b → step8 → step9 → step10 → step12 → END
+    step3_5 → step4 → step5 → step6 → step6_5 → step7a → step7b → step8 → step9 → step10 → step11 → step12 → END
 
-Note: step11 (Image Generation) is handled separately via API.
+Note: step11 (Image Generation) can be skipped if enable_images is false in config.
 step12 (WordPress HTML Generation) is the final step.
 """
 
@@ -438,6 +438,48 @@ async def step10_execute(
     }
 
 
+async def step11_execute(
+    prompt: str,
+    state: GraphState,
+    ctx: ExecutionContext,
+) -> dict[str, Any]:
+    """Execute step 11: Image Generation.
+
+    Generates and inserts images into articles.
+    Can be skipped if enable_images is false in config.
+    """
+    config = ctx.config
+    enable_images = config.get("enable_images", False)
+
+    # Get step10 articles from state
+    step10_output = state.step_outputs.get("step10", {})
+    articles_data = step10_output.get("articles", [])
+
+    if not enable_images:
+        # Skip image generation, pass through articles unchanged
+        return {
+            "step": "step11",
+            "skipped": True,
+            "reason": "enable_images=false",
+            "images": [],
+            "articles_with_images": articles_data,
+        }
+
+    # Image generation placeholder
+    # In production, this would call the image generation API
+    # For now, just pass through the articles
+    return {
+        "step": "step11",
+        "skipped": False,
+        "images": [],
+        "articles_with_images": articles_data,
+        "generation_metadata": {
+            "generated_at": datetime.now().isoformat(),
+            "image_count": 0,
+        },
+    }
+
+
 async def step12_execute(
     prompt: str,
     state: GraphState,
@@ -585,6 +627,7 @@ def build_post_approval_graph() -> Any:
     step8_node = create_node_function("step8", step8_execute)
     step9_node = create_node_function("step9", step9_execute)
     step10_node = create_node_function("step10", step10_execute)
+    step11_node = create_node_function("step11", step11_execute)
     step12_node = create_node_function("step12", step12_execute)
 
     # Add nodes
@@ -598,10 +641,11 @@ def build_post_approval_graph() -> Any:
     graph.add_node("step8", step8_node)  # type: ignore[call-overload]
     graph.add_node("step9", step9_node)  # type: ignore[call-overload]
     graph.add_node("step10", step10_node)  # type: ignore[call-overload]
+    graph.add_node("step11", step11_node)  # type: ignore[call-overload]
     graph.add_node("step12", step12_node)  # type: ignore[call-overload]
 
     # Add edges (linear flow)
-    # Note: step11 (Image Generation) is handled separately via API
+    # step11 (Image Generation) can be skipped if enable_images is false
     graph.add_edge(START, "step3_5")
     graph.add_edge("step3_5", "step4")
     graph.add_edge("step4", "step5")
@@ -612,7 +656,8 @@ def build_post_approval_graph() -> Any:
     graph.add_edge("step7b", "step8")
     graph.add_edge("step8", "step9")
     graph.add_edge("step9", "step10")
-    graph.add_edge("step10", "step12")
+    graph.add_edge("step10", "step11")
+    graph.add_edge("step11", "step12")
     graph.add_edge("step12", END)
 
     # Set entry and finish points

@@ -23,35 +23,53 @@
 
 ```
 【半自動フロー】人間確認あり
-工程-1 → 工程0 → 工程1 → 工程2 → 工程3A/3B/3C（並列）
-                                    ↓
-                              [承認待ち]
-                                    ↓
+工程-1 → 工程0 → 工程1 → 工程1.5 → 工程2 → 工程3A/3B/3C（並列）
+                                                ↓
+                                          [承認待ち]
+                                                ↓
 【全自動フロー】一気通貫実行
-工程4 → 工程5 → 工程6 → 工程6.5 → 工程7A → 工程7B → 工程8 → 工程9 → 工程10
+工程3.5 → 工程4 → 工程5 → 工程6 → 工程6.5 → 工程7A → 工程7B → 工程8 → 工程9 → 工程10 → 工程11 → 工程12
+                                                                                    ↑          ↑
+                                                                             4記事生成   画像生成   WP形式
 ```
 
 ## 工程一覧
 
-| 工程 | 名称                  | AI         | 出力                     | 詳細                          |
-| ---- | --------------------- | ---------- | ------------------------ | ----------------------------- |
-| -1   | 絶対条件ヒアリング    | 手動/UI    | スプレッドシート相当     |                               |
-| 0    | キーワード選定        | Gemini     | `step0_keyword.json`     |                               |
-| 1    | 競合記事本文取得      | GAS/Tool   | `step1_competitors.csv`  | @backend/api.md#tools         |
-| 2    | CSV読み込み・検証     | Gemini     | （検証のみ）             |                               |
-| 3A   | クエリ分析・ペルソナ  | Gemini     | `step3a_query.json`      | 並列                          |
-| 3B   | 共起語・関連KW抽出    | Gemini     | `step3b_keywords.json`   | 並列・**心臓部**              |
-| 3C   | 競合分析・差別化      | Gemini     | `step3c_competitor.json` | 並列                          |
-|      | **[承認待ち]**        |            |                          | @backend/temporal.md#approval |
-| 4    | 戦略的アウトライン    | Claude     | `step4_outline.json`     |                               |
-| 5    | 一次情報収集          | Gemini+Web | `step5_sources.json`     | @backend/api.md#tools         |
-| 6    | アウトライン強化版    | Claude     | `step6_enhanced.json`    |                               |
-| 6.5  | 統合パッケージ化      | Claude     | `step6_5_package.md`     | **ファイル集約**              |
-| 7A   | 本文生成 初稿         | Claude     | `step7a_draft.md`        |                               |
-| 7B   | ブラッシュアップ      | Gemini     | `step7b_polished.md`     |                               |
-| 8    | ファクトチェック・FAQ | Gemini+Web | `step8_factcheck.json`   |                               |
-| 9    | 最終リライト          | Claude     | `step9_final.md`         |                               |
-| 10   | 最終出力              | Claude     | `final_article.*`        |                               |
+| 工程  | 名称                    | AI         | 出力                     | 詳細                            |
+| ----- | ----------------------- | ---------- | ------------------------ | ------------------------------- |
+| -1    | 絶対条件ヒアリング      | 手動/UI    | スプレッドシート相当     | DB管理テンプレート対応          |
+| 0     | キーワード選定          | Gemini     | `step0_keyword.json`     |                                 |
+| 1     | 競合記事本文取得        | GAS/Tool   | `step1_competitors.csv`  | @backend/api.md#tools           |
+| 1.5   | 競合記事品質スコア付与  | Gemini     | `step1_5_scored.json`    | 競合記事の品質評価              |
+| 2     | CSV読み込み・検証       | Gemini     | （検証のみ）             |                                 |
+| 3A    | クエリ分析・ペルソナ    | Gemini     | `step3a_query.json`      | 並列                            |
+| 3B    | 共起語・関連KW抽出      | Gemini     | `step3b_keywords.json`   | 並列・**心臓部**                |
+| 3C    | 競合分析・差別化        | Gemini     | `step3c_competitor.json` | 並列                            |
+|       | **[承認待ち]**          |            |                          | @backend/temporal.md#approval   |
+| 3.5   | Human Touch要素生成     | Gemini     | `step3_5_human.json`     | 感情分析・体験談・共感要素      |
+| 4     | 戦略的アウトライン      | Claude     | `step4_outline.json`     | step3_5必須入力                 |
+| 5     | 一次情報収集            | Gemini+Web | `step5_sources.json`     | @backend/api.md#tools           |
+| 6     | アウトライン強化版      | Claude     | `step6_enhanced.json`    |                                 |
+| 6.5   | 統合パッケージ化        | Claude     | `step6_5_package.md`     | **ファイル集約**                |
+| 7A    | 本文生成 初稿           | Claude     | `step7a_draft.md`        |                                 |
+| 7B    | ブラッシュアップ        | Gemini     | `step7b_polished.md`     |                                 |
+| 8     | ファクトチェック・FAQ   | Gemini+Web | `step8_factcheck.json`   |                                 |
+| 9     | 最終リライト            | Claude     | `step9_final.md`         |                                 |
+| 10    | 最終出力（4記事）       | Claude     | `article_1-4.md/html`    | **4バリエーション生成**         |
+| 11    | 画像生成                | Gemini+API | `step11_images.json`     | オプション（enable_images）     |
+| 12    | WordPress形式変換       | Claude     | `step12_wp.html`         | Gutenbergブロック形式           |
+
+### 工程10: 4記事バリエーション
+
+| 記事番号 | タイプ     | ターゲット読者                   |
+| -------- | ---------- | -------------------------------- |
+| 1        | メイン記事 | SEOに関心があるすべての読者      |
+| 2        | 初心者向け | SEO初心者、これから学び始める人  |
+| 3        | 実践編     | 実践的なノウハウを求める中級者   |
+| 4        | まとめ     | 要点だけを素早く把握したい人     |
+
+各記事は`article_number`で識別され、WebSocket進捗イベントで記事単位の生成状況を通知。
+監査ログには記事ごとの`output_digest`が記録される。
 
 ## AI割り当てパターン
 
