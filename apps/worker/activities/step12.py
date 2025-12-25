@@ -194,7 +194,8 @@ class Step12WordPressHtmlGeneration(BaseActivity):
 
         output_path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
         output.output_path = output_path
-        output_data = output.model_dump()
+        # Use mode="json" to ensure datetime objects are serialized to ISO strings
+        output_data = output.model_dump(mode="json")
         output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
             :16
         ]

@@ -116,13 +116,13 @@ class Step4StrategicOutline(BaseActivity):
         enable_step3_5 = config.get("enable_step3_5", True)
 
         # === InputValidator統合 ===
-        # step3_5が有効な場合はhuman_touch_elementsを必須にする
+        # step3_5が有効な場合はemotional_analysisを必須にする（step3_5の実際の出力フィールド）
         required_fields = [
             "step3a.query_analysis",  # 検索意図・ペルソナは必須
             "step3b.cooccurrence_analysis",  # 共起キーワードは必須
         ]
         if enable_step3_5:
-            required_fields.append("step3_5.human_touch_elements")
+            required_fields.append("step3_5.emotional_analysis")
 
         recommended_fields = [
             "step0.analysis",  # キーワード分析
@@ -366,20 +366,63 @@ class Step4StrategicOutline(BaseActivity):
         }
 
     def _extract_human_touch_elements(self, step3_5_data: dict[str, Any]) -> str:
-        """Extract human touch elements as a prompt-ready string."""
+        """Extract human touch elements as a prompt-ready string.
+
+        step3_5 outputs: emotional_analysis, human_touch_patterns, experience_episodes, emotional_hooks
+        This method extracts and formats these into a single string for step4 prompt.
+        """
         if not step3_5_data:
             return ""
 
-        raw = step3_5_data.get("human_touch_elements")
-        if isinstance(raw, str) and raw.strip():
-            return raw
-
         parts: list[str] = []
-        for key in ["emotional_analysis", "human_touch_patterns", "experience_episodes", "emotional_hooks"]:
-            value = step3_5_data.get(key)
-            if value:
-                parts.append(f"{key}: {value}")
-        return "\n".join(parts)
+
+        # Extract emotional_analysis (dict with primary_emotion, pain_points, desires)
+        emotional = step3_5_data.get("emotional_analysis")
+        if isinstance(emotional, dict):
+            if emotional.get("primary_emotion"):
+                parts.append(f"主要感情: {emotional['primary_emotion']}")
+            if emotional.get("pain_points"):
+                pain = emotional["pain_points"]
+                pain_str = ", ".join(pain) if isinstance(pain, list) else pain
+                parts.append(f"ペインポイント: {pain_str}")
+            if emotional.get("desires"):
+                desires = emotional["desires"]
+                desires_str = ", ".join(desires) if isinstance(desires, list) else desires
+                parts.append(f"願望: {desires_str}")
+        elif emotional:
+            parts.append(f"感情分析: {emotional}")
+
+        # Extract human_touch_patterns (list of {type, content, placement_suggestion})
+        patterns = step3_5_data.get("human_touch_patterns", [])
+        if patterns and isinstance(patterns, list):
+            pattern_strs = []
+            for p in patterns[:5]:  # Limit to avoid too long prompt
+                if isinstance(p, dict) and p.get("content"):
+                    pattern_strs.append(f"- {p.get('type', 'general')}: {p['content']}")
+            if pattern_strs:
+                parts.append("人間味パターン:\n" + "\n".join(pattern_strs))
+
+        # Extract experience_episodes (list of {scenario, narrative, lesson})
+        episodes = step3_5_data.get("experience_episodes", [])
+        if episodes and isinstance(episodes, list):
+            episode_strs = []
+            for ep in episodes[:3]:  # Limit to avoid too long prompt
+                if isinstance(ep, dict) and ep.get("narrative"):
+                    episode_strs.append(f"- {ep.get('scenario', '')}: {ep['narrative']}")
+            if episode_strs:
+                parts.append("体験エピソード:\n" + "\n".join(episode_strs))
+
+        # Extract emotional_hooks (list of strings)
+        hooks = step3_5_data.get("emotional_hooks", [])
+        if hooks and isinstance(hooks, list):
+            hooks_str = ", ".join(hooks[:5]) if all(isinstance(h, str) for h in hooks[:5]) else str(hooks[:5])
+            parts.append(f"感情フック: {hooks_str}")
+
+        # Fallback to raw_output if structured fields are empty
+        if not parts and step3_5_data.get("raw_output"):
+            return str(step3_5_data["raw_output"])[:2000]
+
+        return "\n\n".join(parts)
 
     def _build_analysis_summary(
         self,

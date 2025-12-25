@@ -120,7 +120,7 @@ class Step65IntegrationPackage(BaseActivity):
                 "step3a.query_analysis",
                 "step3b.cooccurrence_analysis",
                 "step3c.competitor_analysis",
-                "step3_5.human_touch_elements",
+                "step3_5.emotional_analysis",
                 "step5.sources",
             ],
         )
@@ -281,7 +281,7 @@ class Step65IntegrationPackage(BaseActivity):
                 "cooccurrence_analysis", all_data.get("step3b", {}).get("analysis", "")
             ),
             "competitor_analysis": all_data.get("step3c", {}).get("competitor_analysis", all_data.get("step3c", {}).get("analysis", "")),
-            "human_touch_elements": all_data.get("step3_5", {}).get("human_touch_elements", ""),
+            "human_touch_elements": self._extract_human_touch_elements(all_data.get("step3_5", {})),
             "strategic_outline": all_data.get("step4", {}).get("outline", ""),
             "sources": all_data.get("step5", {}).get("sources", []),
             "enhanced_outline": all_data.get("step6", {}).get("enhanced_outline", ""),
@@ -296,7 +296,7 @@ class Step65IntegrationPackage(BaseActivity):
             ("step3a", "query_analysis", ["query_analysis", "analysis"]),
             ("step3b", "cooccurrence_analysis", ["cooccurrence_analysis", "analysis"]),
             ("step3c", "competitor_analysis", ["competitor_analysis", "analysis"]),
-            ("step3_5", "human_touch_elements", ["human_touch_elements"]),
+            ("step3_5", "human_touch_elements", ["emotional_analysis", "human_touch_patterns"]),
             ("step4", "strategic_outline", ["outline"]),
             ("step5", "sources", ["sources"]),
             ("step6", "enhanced_outline", ["enhanced_outline"]),
@@ -322,6 +322,63 @@ class Step65IntegrationPackage(BaseActivity):
             )
 
         return summaries
+
+    def _extract_human_touch_elements(self, step3_5_data: dict[str, Any]) -> str:
+        """Extract human touch elements as a prompt-ready string.
+
+        step3_5 outputs: emotional_analysis, human_touch_patterns, experience_episodes, emotional_hooks
+        This method extracts and formats these into a single string for prompt rendering.
+        """
+        if not step3_5_data:
+            return ""
+
+        parts: list[str] = []
+
+        # Extract emotional_analysis (dict with primary_emotion, pain_points, desires)
+        emotional = step3_5_data.get("emotional_analysis")
+        if isinstance(emotional, dict):
+            if emotional.get("primary_emotion"):
+                parts.append(f"主要感情: {emotional['primary_emotion']}")
+            if emotional.get("pain_points"):
+                pain = emotional["pain_points"]
+                parts.append(f"ペインポイント: {', '.join(pain) if isinstance(pain, list) else pain}")
+            if emotional.get("desires"):
+                desires = emotional["desires"]
+                parts.append(f"願望: {', '.join(desires) if isinstance(desires, list) else desires}")
+        elif emotional:
+            parts.append(f"感情分析: {emotional}")
+
+        # Extract human_touch_patterns (list of {type, content, placement_suggestion})
+        patterns = step3_5_data.get("human_touch_patterns", [])
+        if patterns and isinstance(patterns, list):
+            pattern_strs = []
+            for p in patterns[:5]:
+                if isinstance(p, dict) and p.get("content"):
+                    pattern_strs.append(f"- {p.get('type', 'general')}: {p['content']}")
+            if pattern_strs:
+                parts.append("人間味パターン:\n" + "\n".join(pattern_strs))
+
+        # Extract experience_episodes (list of {scenario, narrative, lesson})
+        episodes = step3_5_data.get("experience_episodes", [])
+        if episodes and isinstance(episodes, list):
+            episode_strs = []
+            for ep in episodes[:3]:
+                if isinstance(ep, dict) and ep.get("narrative"):
+                    episode_strs.append(f"- {ep.get('scenario', '')}: {ep['narrative']}")
+            if episode_strs:
+                parts.append("体験エピソード:\n" + "\n".join(episode_strs))
+
+        # Extract emotional_hooks (list of strings)
+        hooks = step3_5_data.get("emotional_hooks", [])
+        if hooks and isinstance(hooks, list):
+            hooks_str = ", ".join(hooks[:5]) if all(isinstance(h, str) for h in hooks[:5]) else str(hooks[:5])
+            parts.append(f"感情フック: {hooks_str}")
+
+        # Fallback to raw_output if structured fields are empty
+        if not parts and step3_5_data.get("raw_output"):
+            return str(step3_5_data["raw_output"])[:2000]
+
+        return "\n\n".join(parts)
 
     def _validate_package_quality(self, package: dict[str, Any], all_data: dict[str, Any]) -> QualityResult:
         """Validate integration package quality."""
