@@ -46,10 +46,10 @@ router = APIRouter(prefix="/api/runs/{run_id}/step11", tags=["step11"])
 TEMPORAL_TASK_QUEUE = os.getenv("TEMPORAL_TASK_QUEUE", "seo-article-queue")
 
 # Temporalクライアント（lazy initialization）
-_temporal_client = None
+_temporal_client: Any = None
 
 
-async def get_temporal_client():
+async def get_temporal_client() -> Any:
     """Temporalクライアントを取得（lazy initialization）"""
     global _temporal_client
     if _temporal_client is None:
@@ -62,10 +62,10 @@ async def get_temporal_client():
 
 
 # WebSocket manager（lazy initialization）
-_ws_manager = None
+_ws_manager: Any = None
 
 
-def get_ws_manager():
+def get_ws_manager() -> Any:
     """WebSocket managerを取得"""
     global _ws_manager
     if _ws_manager is None:
