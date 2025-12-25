@@ -342,6 +342,28 @@ class StepUpdateRequest(BaseModel):
     retry_count: int = 0
 
 
+class WSBroadcastRequest(BaseModel):
+    """Request to broadcast WebSocket event (internal API)."""
+
+    run_id: str
+    step: str
+    event_type: str = "step_progress"
+    status: str = "in_progress"
+    progress: int = 0
+    message: str = ""
+    details: dict[str, Any] | None = None
+
+
+class AuditLogRequest(BaseModel):
+    """Request to write audit log (internal API)."""
+
+    tenant_id: str
+    run_id: str
+    step_name: str
+    action: str
+    details: dict[str, Any] | None = None
+
+
 class RunError(BaseModel):
     """Run error information."""
 
@@ -3689,6 +3711,64 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
     except Exception as e:
         logger.error(f"Failed to update step status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to update step status") from e
+
+
+@app.post("/api/internal/ws/broadcast")
+async def broadcast_ws_event(request: WSBroadcastRequest) -> dict[str, bool]:
+    """Broadcast WebSocket event (internal API for Worker).
+
+    Enables Temporal Worker to send real-time progress updates to connected clients.
+    """
+    try:
+        await ws_manager.broadcast_step_event(
+            run_id=request.run_id,
+            step=request.step,
+            event_type=request.event_type,
+            status=request.status,
+            progress=request.progress,
+            message=request.message,
+            details=request.details,
+        )
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"Failed to broadcast WS event: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to broadcast event") from e
+
+
+@app.post("/api/internal/audit/log")
+async def write_audit_log(request: AuditLogRequest) -> dict[str, bool]:
+    """Write audit log entry (internal API for Worker).
+
+    Records audit events with per-article output_digest for step10.
+    """
+    from sqlalchemy import text
+
+    db_manager = get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(request.tenant_id) as session:
+            await session.execute(
+                text("""
+                    INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details)
+                    VALUES ('system', :action, 'step', :step_name, :details::jsonb)
+                """),
+                {
+                    "action": request.action,
+                    "step_name": request.step_name,
+                    "details": json.dumps(
+                        {
+                            "run_id": request.run_id,
+                            "tenant_id": request.tenant_id,
+                            **(request.details or {}),
+                        }
+                    ),
+                },
+            )
+            await session.commit()
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"Failed to write audit log: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to write audit log") from e
 
 
 # =============================================================================

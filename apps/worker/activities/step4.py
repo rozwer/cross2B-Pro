@@ -116,12 +116,18 @@ class Step4StrategicOutline(BaseActivity):
         enable_step3_5 = config.get("enable_step3_5", True)
 
         # === InputValidator統合 ===
+        # step3_5が有効な場合はhuman_touch_elementsを必須にする
+        required_fields = [
+            "step3a.query_analysis",  # 検索意図・ペルソナは必須
+            "step3b.cooccurrence_analysis",  # 共起キーワードは必須
+        ]
+        if enable_step3_5:
+            required_fields.append("step3_5.human_touch_elements")
+
         recommended_fields = [
             "step0.analysis",  # キーワード分析
             "step3c.competitor_analysis",  # 競合分析は推奨
         ]
-        if enable_step3_5:
-            recommended_fields.append("step3_5.human_touch_elements")
 
         validation = self.input_validator.validate(
             data={
@@ -131,10 +137,7 @@ class Step4StrategicOutline(BaseActivity):
                 "step3c": step3c_data,
                 "step3_5": step3_5_data,
             },
-            required=[
-                "step3a.query_analysis",  # 検索意図・ペルソナは必須
-                "step3b.cooccurrence_analysis",  # 共起キーワードは必須
-            ],
+            required=required_fields,
             recommended=recommended_fields,
         )
 

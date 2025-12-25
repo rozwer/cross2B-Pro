@@ -1,0 +1,48 @@
+{
+  "id": "step12",
+  "name": "Step 12: WordPress Gutenberg Conversion",
+  "description": "記事コンテンツをWordPress Gutenbergエディタ形式に変換します",
+  "version": "1.0.0",
+  "prompts": {
+    "step12": {
+      "step": "step12",
+      "version": 1,
+      "content": "あなたはWordPress用HTMLの構造化エキスパートです。\n\n## タスク\n以下の記事コンテンツをWordPress Gutenbergエディタで使用可能な形式に変換してください。\n\n## 入力情報\n\n### キーワード\n{{keyword}}\n\n### 記事タイトル\n{{article_title}}\n\n### 記事コンテンツ（Markdown/HTML）\n{{article_content}}\n\n### 画像情報\n{{image_placements}}\n\n### SEOメタデータ\n- メタディスクリプション: {{meta_description}}\n- フォーカスキーワード: {{focus_keyword}}\n\n## 出力要件\n\n1. **Gutenbergブロック形式**\n   - 各要素をWordPressのブロックコメントでラップ\n   - 例: `<!-- wp:paragraph --><p>...</p><!-- /wp:paragraph -->`\n\n2. **対応ブロックタイプ**\n   - `wp:heading` - 見出し（level属性でh1-h6を指定）\n   - `wp:paragraph` - 段落\n   - `wp:list` - リスト（ordered属性で番号付き）\n   - `wp:image` - 画像（sizeSlug, alt属性）\n   - `wp:quote` - 引用\n   - `wp:table` - テーブル\n\n3. **SEO最適化**\n   - 適切な見出し階層（h1→h2→h3）\n   - 画像のalt属性を必ず設定\n   - 内部リンク用のアンカーポイント\n\n4. **レスポンシブ対応**\n   - 画像に`size-large`クラスを適用\n   - テーブルに`is-style-stripes`を適用\n\n## 出力形式\nGutenbergブロック形式のHTMLのみを出力してください。\n説明文やコードブロックで囲まないでください。",
+      "variables": {
+        "keyword": {
+          "required": true,
+          "type": "string",
+          "description": "対象キーワード"
+        },
+        "article_title": {
+          "required": true,
+          "type": "string",
+          "description": "記事タイトル"
+        },
+        "article_content": {
+          "required": true,
+          "type": "string",
+          "description": "記事コンテンツ（Markdown/HTML）"
+        },
+        "image_placements": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "画像配置情報（JSON文字列）"
+        },
+        "meta_description": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "メタディスクリプション"
+        },
+        "focus_keyword": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "フォーカスキーワード"
+        }
+      }
+    }
+  }
+}
