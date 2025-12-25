@@ -531,9 +531,9 @@ export interface ImagePosition {
 }
 
 export interface Section {
-  level: string;
+  level: number | string;  // Backend returns number (2, 3), but may be string in some contexts
   title: string;
-  start_pos: number;
+  start_pos?: number;  // Optional: not always returned by analyze_positions
   section_index?: number;
   section_key?: string;
   article_number?: number;
@@ -584,6 +584,46 @@ export function getStep11Phase(currentStep: string | null): Step11Phase | null {
   };
 
   return phaseMap[currentStep] || null;
+}
+
+// ============================================
+// Step12 WordPress HTML Generation Types
+// ============================================
+
+export interface ArticleMetadata {
+  title: string;
+  meta_description: string;
+  focus_keyword: string;
+  word_count: number;
+  slug: string;
+}
+
+export interface WordPressArticleResponse {
+  article_number: number;
+  filename: string;
+  gutenberg_blocks: string;
+  metadata?: ArticleMetadata;
+}
+
+export interface Step12PreviewResponse {
+  articles: WordPressArticleResponse[];
+  common_assets: Record<string, unknown>;
+  generation_metadata: Record<string, unknown>;
+  preview_available: boolean;
+}
+
+export interface Step12StatusResponse {
+  status: "pending" | "completed" | "not_ready";
+  phase: "ready_to_generate" | "completed" | "waiting_for_step10";
+  articles_count: number;
+  generated_at: string | null;
+}
+
+export interface Step12GenerateResponse {
+  success: boolean;
+  output_path: string;
+  articles_count: number;
+  message: string;
 }
 
 // ============================================

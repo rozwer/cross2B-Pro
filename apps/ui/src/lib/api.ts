@@ -24,6 +24,11 @@ import type {
   HearingTemplateCreate,
   HearingTemplateUpdate,
   HearingTemplateList,
+  Step12StatusResponse,
+  Step12PreviewResponse,
+  WordPressArticleResponse,
+  Step12GenerateResponse,
+  CostResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -278,6 +283,7 @@ class ApiClient {
 
     /**
      * Step11 設定を送信 (Phase 11A)
+     * 設定保存後、位置分析を実行して11Bフェーズへ遷移
      */
     submitStep11Settings: async (
       id: string,
@@ -285,8 +291,20 @@ class ApiClient {
         image_count: number;
         position_request: string;
       },
-    ): Promise<{ success: boolean; message?: string }> => {
-      return this.request<{ success: boolean; message?: string }>(
+    ): Promise<{
+      success: boolean;
+      phase: string;
+      positions: ImagePosition[];
+      sections: Section[];
+      analysis_summary: string;
+    }> => {
+      return this.request<{
+        success: boolean;
+        phase: string;
+        positions: ImagePosition[];
+        sections: Section[];
+        analysis_summary: string;
+      }>(
         `/api/runs/${id}/step11/settings`,
         {
           method: "POST",
@@ -314,6 +332,7 @@ class ApiClient {
 
     /**
      * Step11 位置確認を送信 (Phase 11B)
+     * 承認時は11Cへ遷移、再分析時は11Bのまま
      */
     submitPositionReview: async (
       id: string,
@@ -323,8 +342,16 @@ class ApiClient {
         reanalyze?: boolean;
         reanalyze_request?: string;
       },
-    ): Promise<{ success: boolean }> => {
-      return this.request<{ success: boolean }>(
+    ): Promise<{
+      success: boolean;
+      phase: string;
+      positions: ImagePosition[];
+    }> => {
+      return this.request<{
+        success: boolean;
+        phase: string;
+        positions: ImagePosition[];
+      }>(
         `/api/runs/${id}/step11/positions`,
         {
           method: "POST",
@@ -335,14 +362,23 @@ class ApiClient {
 
     /**
      * Step11 画像指示を送信 (Phase 11C)
+     * 指示送信後、画像生成を実行して11Dへ遷移
      */
     submitImageInstructions: async (
       id: string,
       data: {
         instructions: Array<{ index: number; instruction: string }>;
       },
-    ): Promise<{ success: boolean }> => {
-      return this.request<{ success: boolean }>(
+    ): Promise<{
+      success: boolean;
+      phase: string;
+      images: GeneratedImage[];
+    }> => {
+      return this.request<{
+        success: boolean;
+        phase: string;
+        images: GeneratedImage[];
+      }>(
         `/api/runs/${id}/step11/instructions`,
         {
           method: "POST",
@@ -368,6 +404,7 @@ class ApiClient {
 
     /**
      * Step11 画像レビューを送信 (Phase 11D)
+     * リトライがあれば11Dのまま、なければ11Eへ遷移
      */
     submitImageReview: async (
       id: string,
@@ -379,8 +416,16 @@ class ApiClient {
           retry_instruction?: string;
         }>;
       },
-    ): Promise<{ success: boolean }> => {
-      return this.request<{ success: boolean }>(
+    ): Promise<{
+      success: boolean;
+      has_retries: boolean;
+      phase: string;
+    }> => {
+      return this.request<{
+        success: boolean;
+        has_retries: boolean;
+        phase: string;
+      }>(
         `/api/runs/${id}/step11/images/review`,
         {
           method: "POST",
@@ -406,6 +451,7 @@ class ApiClient {
 
     /**
      * Step11 完了確認を送信 (Phase 11E)
+     * confirmed=true で完了、restart_from で特定フェーズから再開
      */
     finalizeStep11: async (
       id: string,
@@ -413,8 +459,18 @@ class ApiClient {
         confirmed: boolean;
         restart_from?: string;
       },
-    ): Promise<{ success: boolean }> => {
-      return this.request<{ success: boolean }>(
+    ): Promise<{
+      success: boolean;
+      phase: string;
+      output_path?: string;
+      restarted_from?: string;
+    }> => {
+      return this.request<{
+        success: boolean;
+        phase: string;
+        output_path?: string;
+        restarted_from?: string;
+      }>(
         `/api/runs/${id}/step11/finalize`,
         {
           method: "POST",
@@ -441,6 +497,75 @@ class ApiClient {
           body: JSON.stringify(data),
         },
       );
+    },
+  };
+
+  // ============================================
+  // Step12 WordPress HTML API
+  // ============================================
+
+  step12 = {
+    /**
+     * Step12のステータスを取得
+     */
+    getStatus: async (runId: string): Promise<Step12StatusResponse> => {
+      return this.request<Step12StatusResponse>(`/api/runs/${runId}/step12/status`);
+    },
+
+    /**
+     * Step12のプレビューを取得（全記事または指定記事）
+     */
+    getPreview: async (runId: string, article?: number): Promise<Step12PreviewResponse> => {
+      const query = article ? `?article=${article}` : "";
+      return this.request<Step12PreviewResponse>(`/api/runs/${runId}/step12/preview${query}`);
+    },
+
+    /**
+     * 特定の記事のプレビューを取得
+     */
+    getArticlePreview: async (
+      runId: string,
+      articleNumber: number,
+    ): Promise<WordPressArticleResponse> => {
+      return this.request<WordPressArticleResponse>(
+        `/api/runs/${runId}/step12/preview/${articleNumber}`,
+      );
+    },
+
+    /**
+     * WordPress用HTMLを生成
+     */
+    generate: async (runId: string): Promise<Step12GenerateResponse> => {
+      return this.request<Step12GenerateResponse>(`/api/runs/${runId}/step12/generate`, {
+        method: "POST",
+      });
+    },
+
+    /**
+     * 全記事のZIPダウンロードURL
+     */
+    getDownloadAllUrl: (runId: string): string => {
+      return `${this.baseUrl}/api/runs/${runId}/step12/download`;
+    },
+
+    /**
+     * 特定記事のダウンロードURL
+     */
+    getDownloadArticleUrl: (runId: string, articleNumber: number): string => {
+      return `${this.baseUrl}/api/runs/${runId}/step12/download/${articleNumber}`;
+    },
+  };
+
+  // ============================================
+  // Cost API
+  // ============================================
+
+  cost = {
+    /**
+     * Run のコスト情報を取得
+     */
+    get: async (runId: string): Promise<CostResponse> => {
+      return this.request<CostResponse>(`/api/runs/${runId}/cost`);
     },
   };
 
