@@ -1,7 +1,7 @@
 "use client";
 
 import type { Step } from "@/lib/types";
-import { STEP_LABELS, normalizeStepName } from "@/lib/types";
+import { STEP_LABELS, STEP_NAMES, normalizeStepName } from "@/lib/types";
 import { StepNode } from "./StepNode";
 
 interface StepTimelineProps {
@@ -21,12 +21,12 @@ export function StepTimeline({
 }: StepTimelineProps) {
   const stepMap = new Map(steps.map((s) => [normalizeStepName(s.step_name), s]));
 
-  // STEP_NAMESの順序でstepsを表示
-  const orderedSteps = Object.keys(STEP_LABELS).map((stepName) => {
+  // STEP_NAMESの順序でstepsを表示（重複を避けるためSTEP_NAMESを使用）
+  const orderedSteps = STEP_NAMES.map((stepName) => {
     const step = stepMap.get(stepName);
     return {
       name: stepName,
-      label: STEP_LABELS[stepName],
+      label: STEP_LABELS[stepName] || stepName,
       step,
     };
   });

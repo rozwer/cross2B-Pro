@@ -22,7 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Step } from "@/lib/types";
-import { STEP_LABELS, normalizeStepName } from "@/lib/types";
+import { STEP_LABELS, STEP_NAMES, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SUB_STEPS, getSubStepStatus } from "./subStepsData";
 
@@ -107,8 +107,8 @@ const PARALLEL_PARENT_CHILDREN: Record<string, string[]> = {
 // Key steps to show labels for (evenly distributed around the circle)
 const KEY_LABEL_STEPS = ["step-1", "step4", "step7a", "step10", "step12"];
 
-// All step names for progress calculation (from STEP_LABELS)
-const ALL_STEP_NAMES = Object.keys(STEP_LABELS);
+// All step names for progress calculation (use STEP_NAMES to avoid duplicates)
+const ALL_STEP_NAMES = [...STEP_NAMES];
 
 export function WorkflowPattern5_RadialProgress({
   steps,
