@@ -47,7 +47,7 @@ class WordPressArticleResponse(BaseModel):
     article_number: int
     filename: str
     gutenberg_blocks: str
-    metadata: ArticleMetadata
+    metadata: ArticleMetadata = Field(default_factory=ArticleMetadata)
 
 
 class Step12PreviewResponse(BaseModel):
@@ -325,6 +325,7 @@ async def get_status(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for status: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
     # Step12の出力を確認
@@ -380,6 +381,7 @@ async def get_preview(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for preview: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
@@ -387,6 +389,7 @@ async def get_preview(
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:
+            logger.warning(f"Step12 not completed yet: run_id={run_id}")
             raise HTTPException(
                 status_code=400,
                 detail="Step12 has not been completed. Please wait for workflow completion.",
@@ -423,6 +426,7 @@ async def get_preview(
         )
 
     if article is not None and not articles_response:
+        logger.error(f"Article not found: run_id={run_id}, article_number={article}")
         raise HTTPException(status_code=404, detail=f"Article {article} not found")
 
     return Step12PreviewResponse(
@@ -443,6 +447,7 @@ async def get_article_preview(
     preview = await get_preview(run_id, article=article_number, user=user)
 
     if not preview.articles:
+        logger.error(f"Article preview not found: run_id={run_id}, article_number={article_number}")
         raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
 
     return preview.articles[0]
@@ -464,6 +469,7 @@ async def download_all(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for download: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
@@ -471,6 +477,7 @@ async def download_all(
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:
+            logger.warning(f"Step12 not completed for download: run_id={run_id}")
             raise HTTPException(
                 status_code=400,
                 detail="Step12 has not been completed. Please wait for workflow completion.",
@@ -539,6 +546,7 @@ async def download_article(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for article download: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step12完了チェック
@@ -546,6 +554,7 @@ async def download_article(
         step12_data = await _get_step12_data(tenant_id, run_id, store)
 
         if not step12_data:
+            logger.warning(f"Step12 not completed for article download: run_id={run_id}")
             raise HTTPException(
                 status_code=400,
                 detail="Step12 has not been completed. Please wait for workflow completion.",
@@ -559,6 +568,7 @@ async def download_article(
                 break
 
         if not article_data:
+            logger.error(f"Article not found for download: run_id={run_id}, article_number={article_number}")
             raise HTTPException(status_code=404, detail=f"Article {article_number} not found")
 
         # 監査ログを記録
@@ -603,12 +613,14 @@ async def generate_wordpress_html(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for generate: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step10から生成
         try:
             step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
         except ValueError as e:
+            logger.error(f"Failed to generate WordPress HTML: run_id={run_id}, error={e}")
             raise HTTPException(status_code=400, detail=str(e)) from e
 
         # Use build_path for consistent path generation

@@ -1,22 +1,29 @@
 """Step11 Image Generation API Router.
 
-Temporal を使わないシンプルな API 方式で画像生成フローを実装。
-各フェーズを API エンドポイントで直接処理し、DB に状態を保存。
+画像生成フローをTemporal連携で実装。
+各フェーズをAPIエンドポイントで処理し、DBに状態を保存、Temporal signalで連携。
 
 フロー:
-[11A] POST /settings   → 設定保存、位置分析実行、結果返却
-[11B] GET  /positions  → 位置一覧取得
-      POST /positions  → 位置確認/再分析
-[11C] POST /instructions → 指示保存、画像生成実行
-[11D] GET  /images     → 画像一覧取得
-      POST /images/retry → 個別リトライ
-[11E] POST /finalize   → 挿入実行、完了
+[Start] POST /start      → Temporal signal送信で画像生成開始
+[11A]   POST /settings   → 設定保存、位置分析実行、結果返却
+[11B]   GET  /positions  → 位置一覧取得
+        POST /positions  → 位置確認/再分析
+[11C]   POST /instructions → 指示保存、画像生成実行
+[11D]   GET  /images     → 画像一覧取得
+        POST /images/retry → 個別リトライ
+        POST /images/review → 画像レビュー
+[11E]   GET  /preview    → プレビュー取得
+        POST /finalize   → 挿入実行、完了（Temporal signal送信）
+[Skip]  POST /skip       → スキップ（Temporal signal送信）
+[Complete] POST /complete → レガシーrun対応
+[AddImages] POST /add-images → 完了済みrunへの画像追加
 """
 
 import base64
 import hashlib
 import json
 import logging
+import os
 from datetime import datetime
 from typing import Any
 
@@ -26,7 +33,8 @@ from sqlalchemy import select
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import AuditLogger, Run, TenantDBManager
+from apps.api.db import Artifact as ArtifactModel
+from apps.api.db import AuditLogger, Run, Step, TenantDBManager
 from apps.api.llm import ImageGenerationConfig, NanoBananaClient
 from apps.api.storage import ArtifactStore
 
@@ -34,10 +42,67 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/runs/{run_id}/step11", tags=["step11"])
 
+# Temporal設定
+TEMPORAL_TASK_QUEUE = os.getenv("TEMPORAL_TASK_QUEUE", "seo-article-queue")
+
+# Temporalクライアント（lazy initialization）
+_temporal_client = None
+
+
+async def get_temporal_client():
+    """Temporalクライアントを取得（lazy initialization）"""
+    global _temporal_client
+    if _temporal_client is None:
+        from temporalio.client import Client as TemporalClient
+
+        temporal_host = os.getenv("TEMPORAL_HOST", "localhost")
+        temporal_port = os.getenv("TEMPORAL_PORT", "7233")
+        _temporal_client = await TemporalClient.connect(f"{temporal_host}:{temporal_port}")
+    return _temporal_client
+
+
+# WebSocket manager（lazy initialization）
+_ws_manager = None
+
+
+def get_ws_manager():
+    """WebSocket managerを取得"""
+    global _ws_manager
+    if _ws_manager is None:
+        from apps.api.main import ws_manager
+
+        _ws_manager = ws_manager
+    return _ws_manager
+
+
+# =============================================================================
+# Enums
+# =============================================================================
+
+
+class RunStatus:
+    """Run status values"""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    WAITING_APPROVAL = "waiting_approval"
+    WAITING_IMAGE_INPUT = "waiting_image_input"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
 
 # =============================================================================
 # Pydantic Models
 # =============================================================================
+
+
+class Step11StartInput(BaseModel):
+    """画像生成開始入力"""
+
+    enabled: bool = True
+    image_count: int = Field(default=3, ge=1, le=5)
+    position_request: str | None = None
 
 
 class Step11SettingsInput(BaseModel):
@@ -122,6 +187,13 @@ class ImageReviewInput(BaseModel):
     reviews: list[ImageReviewItem]
 
 
+class FinalizeInput(BaseModel):
+    """11E: 完了確認入力"""
+
+    confirmed: bool = True
+    restart_from: str | None = None
+
+
 class Step11State(BaseModel):
     """Step11 の状態"""
 
@@ -171,6 +243,7 @@ async def get_run_and_state(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # step11_state を取得（なければデフォルト）
@@ -544,6 +617,7 @@ async def submit_settings(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for settings: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step10 の出力を取得
@@ -559,6 +633,7 @@ async def submit_settings(
             markdown_content = ""
 
         if not markdown_content:
+            logger.error(f"Step10 article data missing: run_id={run_id}")
             raise HTTPException(status_code=400, detail="Step10 の記事データがありません。先に記事生成を完了してください。")
 
         # 位置分析を実行
@@ -631,6 +706,7 @@ async def confirm_positions(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for position confirm: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         state_data = run.step11_state or {}
@@ -693,6 +769,7 @@ async def submit_instructions(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for instructions: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         state_data = run.step11_state or {}
@@ -764,6 +841,7 @@ async def retry_image(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for image retry: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         state_data = run.step11_state or {}
@@ -772,6 +850,7 @@ async def retry_image(
         positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
 
         if data.index >= len(positions):
+            logger.error(f"Invalid image index for retry: run_id={run_id}, index={data.index}, positions_count={len(positions)}")
             raise HTTPException(status_code=400, detail="Invalid image index")
 
         # リトライ上限チェック
@@ -779,6 +858,7 @@ async def retry_image(
         current_image = next((img for img in existing_images if img.index == data.index), None)
 
         if current_image and current_image.retry_count >= 3:
+            logger.warning(f"Retry limit reached: run_id={run_id}, index={data.index}, retry_count={current_image.retry_count}")
             raise HTTPException(status_code=400, detail="リトライ上限（3回）に達しました")
 
         # 画像を再生成
@@ -826,6 +906,7 @@ async def review_images(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for image review: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         state_data = run.step11_state or {}
@@ -927,10 +1008,11 @@ async def get_preview(
 @router.post("/finalize")
 async def finalize_images(
     run_id: str,
+    data: FinalizeInput,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """11E: 画像挿入を確定して完了"""
-    logger.info(f"Step11 finalize: run_id={run_id}")
+    logger.info(f"Step11 finalize: run_id={run_id}, confirmed={data.confirmed}, restart_from={data.restart_from}")
 
     db_manager = get_tenant_db_manager()
     store = get_artifact_store()
@@ -942,7 +1024,47 @@ async def finalize_images(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for finalize: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
+
+        # restart_from が指定された場合は状態をリセット
+        if data.restart_from:
+            restart_phase = data.restart_from
+            logger.info(f"Step11 restart from phase: {restart_phase}")
+
+            # フェーズに応じた状態リセット
+            state_data = run.step11_state or {}
+            state = Step11State(**state_data)
+
+            if restart_phase == "11A":
+                # 最初からやり直し
+                state.phase = "idle"
+                state.positions = []
+                state.instructions = []
+                state.images = []
+                state.analysis_summary = ""
+            elif restart_phase == "11B":
+                # 位置確認からやり直し
+                state.phase = "11A"
+                state.instructions = []
+                state.images = []
+            elif restart_phase == "11C":
+                # 指示入力からやり直し
+                state.phase = "11B"
+                state.images = []
+            elif restart_phase == "11D":
+                # 画像レビューからやり直し
+                state.phase = "11C"
+
+            run.step11_state = state.model_dump()
+            await session.commit()
+
+            return {"success": True, "restarted_from": restart_phase, "phase": state.phase}
+
+        # 確認されていない場合はエラー
+        if not data.confirmed:
+            logger.warning(f"Finalize without confirmation: run_id={run_id}")
+            raise HTTPException(status_code=400, detail="Confirmation required")
 
         state_data = run.step11_state or {}
         state = Step11State(**state_data)
@@ -1047,6 +1169,7 @@ async def skip_image_generation(
         run = result.scalar_one_or_none()
 
         if not run:
+            logger.error(f"Run not found for skip: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
         state = Step11State(phase="skipped")
@@ -1148,3 +1271,392 @@ async def regenerate_output(
         "output_path": output_path,
         "message": "HTML出力を再生成しました",
     }
+
+
+# =============================================================================
+# Temporal連携エンドポイント（main.pyから移植）
+# =============================================================================
+
+
+@router.post("/start")
+async def start_image_generation(
+    run_id: str,
+    data: Step11StartInput,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool | str]:
+    """画像生成を開始（Temporal signal送信）"""
+    db_manager = get_tenant_db_manager()
+    tenant_id = user.tenant_id
+
+    logger.info(
+        "Starting image generation",
+        extra={
+            "run_id": run_id,
+            "tenant_id": tenant_id,
+            "enabled": data.enabled,
+            "image_count": data.image_count,
+            "user_id": user.user_id,
+        },
+    )
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            allowed_statuses = [RunStatus.WAITING_APPROVAL, RunStatus.WAITING_IMAGE_INPUT]
+            if run.status not in allowed_statuses:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for image generation decision (current status: {run.status})",
+                )
+
+            # 監査ログ
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="start_image_generation",
+                resource_type="run",
+                resource_id=run_id,
+                details={
+                    "enabled": data.enabled,
+                    "image_count": data.image_count,
+                    "position_request": data.position_request,
+                },
+            )
+
+            # Temporal signalを送信
+            try:
+                temporal_client = await get_temporal_client()
+                workflow_handle = temporal_client.get_workflow_handle(run_id)
+                config = {
+                    "enabled": data.enabled,
+                    "step11_image_count": data.image_count,
+                    "step11_position_request": data.position_request or "",
+                }
+                await workflow_handle.signal("start_image_generation", config)
+                logger.info("Temporal start_image_generation signal sent", extra={"run_id": run_id})
+            except Exception as sig_error:
+                logger.error(f"Failed to send start_image_generation signal: {sig_error}", exc_info=True)
+                raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+            # Run状態を更新
+            run.status = RunStatus.RUNNING
+            run.updated_at = datetime.now()
+
+            await session.flush()
+
+            # WebSocket broadcast
+            try:
+                ws_manager = get_ws_manager()
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="run.image_generation_started",
+                    status=RunStatus.RUNNING,
+                )
+            except Exception as ws_error:
+                logger.warning(f"WebSocket broadcast failed: {ws_error}")
+
+            return {"success": True, "message": "Image generation started"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start image generation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to start image generation") from e
+
+
+@router.post("/complete")
+async def complete_step11(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool]:
+    """Step11を完了としてマーク（レガシーrun対応）
+
+    既にStep11実装前に完了したrunや、画像生成をスキップしたrunに対して
+    Step11を完了状態にマークする。
+    """
+    db_manager = get_tenant_db_manager()
+    tenant_id = user.tenant_id
+
+    logger.info(
+        "Marking step11 as completed",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # 既存ステップを取得
+            all_steps_query = select(Step).where(Step.run_id == run_id)
+            all_steps_result = await session.execute(all_steps_query)
+            existing_steps = {s.step_name: s for s in all_steps_result.scalars().all()}
+
+            # レガシーrun対応: completedだがステップがない場合はバックフィル
+            if run.status == "completed" and len(existing_steps) == 0:
+                import uuid
+
+                all_step_names = [
+                    "step-1",
+                    "step0",
+                    "step1",
+                    "step2",
+                    "step3",
+                    "step3a",
+                    "step3b",
+                    "step3c",
+                    "step4",
+                    "step5",
+                    "step6",
+                    "step6.5",
+                    "step7a",
+                    "step7b",
+                    "step8",
+                    "step9",
+                    "step10",
+                ]
+                now = datetime.now()
+                for step_name in all_step_names:
+                    step = Step(
+                        id=str(uuid.uuid4()),
+                        run_id=run_id,
+                        step_name=step_name,
+                        status="completed",
+                        started_at=now,
+                        completed_at=now,
+                        retry_count=0,
+                    )
+                    session.add(step)
+                    existing_steps[step_name] = step
+                logger.info("Backfilled missing steps for legacy run", extra={"run_id": run_id})
+
+            # Step11レコードを更新/作成
+            step11 = existing_steps.get("step11")
+            if step11:
+                step11.status = "completed"
+                step11.completed_at = datetime.now()
+            else:
+                import uuid
+
+                step11 = Step(
+                    id=str(uuid.uuid4()),
+                    run_id=run_id,
+                    step_name="step11",
+                    status="completed",
+                    started_at=datetime.now(),
+                    completed_at=datetime.now(),
+                    retry_count=0,
+                )
+                session.add(step11)
+
+            # 監査ログ
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="complete_step11",
+                resource_type="run",
+                resource_id=run_id,
+                details={"skipped": True},
+            )
+
+            await session.flush()
+
+            # WebSocket broadcast
+            try:
+                ws_manager = get_ws_manager()
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="step_completed",
+                    status=run.status,
+                    current_step="step11",
+                )
+            except Exception as ws_error:
+                logger.warning(f"WebSocket broadcast failed: {ws_error}")
+
+            await session.commit()
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to complete step11: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to complete step11") from e
+
+
+@router.post("/add-images")
+async def add_images_to_completed_run(
+    run_id: str,
+    data: Step11SettingsInput,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool | str]:
+    """完了済みrunに画像を追加
+
+    既に完了したrunに対して画像生成を実行する。
+    ImageAdditionWorkflowを起動して画像生成フローを開始する。
+    """
+    db_manager = get_tenant_db_manager()
+    store = get_artifact_store()
+    tenant_id = user.tenant_id
+
+    logger.info(
+        "Adding images to completed run",
+        extra={
+            "run_id": run_id,
+            "tenant_id": tenant_id,
+            "image_count": data.image_count,
+            "user_id": user.user_id,
+        },
+    )
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            if run.status != RunStatus.COMPLETED:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run must be completed to add images (current status: {run.status})",
+                )
+
+            # 既存のstep11アーティファクトを確認
+            step11_query = select(Step).where(Step.run_id == run_id, Step.step_name == "step11")
+            step11_result = await session.execute(step11_query)
+            step11 = step11_result.scalar_one_or_none()
+
+            if step11 and step11.status == "completed":
+                artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id, ArtifactModel.step_id == step11.id)
+                artifact_result = await session.execute(artifact_query)
+                artifacts = artifact_result.scalars().all()
+
+                if artifacts and len(artifacts) > 0:
+                    logger.warning(
+                        "Attempting to add images to run that already has step11 artifacts",
+                        extra={"run_id": run_id, "artifact_count": len(artifacts)},
+                    )
+
+            # Run状態を更新
+            run.status = RunStatus.WAITING_APPROVAL
+            run.current_step = "waiting_image_generation"
+            run.updated_at = datetime.now()
+
+            # Step11をリセット/作成
+            if step11:
+                step11.status = "pending"
+                step11.started_at = None
+                step11.completed_at = None
+            else:
+                import uuid
+
+                step11 = Step(
+                    id=str(uuid.uuid4()),
+                    run_id=run_id,
+                    step_name="step11",
+                    status="pending",
+                    retry_count=0,
+                )
+                session.add(step11)
+
+            # 監査ログ
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="step11_add_images_initiated",
+                resource_type="run",
+                resource_id=run_id,
+                details={
+                    "image_count": data.image_count,
+                    "position_request": data.position_request,
+                    "previous_status": "completed",
+                },
+            )
+
+            await session.flush()
+
+            # 設定をMinIOに保存
+            settings_path = f"tenants/{tenant_id}/runs/{run_id}/step11/settings.json"
+            settings_data = {
+                "image_count": data.image_count,
+                "position_request": data.position_request,
+                "initiated_at": datetime.now().isoformat(),
+                "initiated_by": user.user_id,
+            }
+            await store.put(json.dumps(settings_data).encode("utf-8"), settings_path, "application/json")
+
+            # Step10出力を取得
+            try:
+                step10_data = await store.get_by_path(tenant_id, run_id, "step10")
+                if step10_data:
+                    step10_output = json.loads(step10_data.decode("utf-8"))
+                    article_markdown = step10_output.get("markdown", "")
+                else:
+                    article_markdown = ""
+            except Exception as e:
+                logger.warning(f"Failed to read step10 output: {e}")
+                article_markdown = ""
+
+            # ImageAdditionWorkflowを起動
+            try:
+                temporal_client = await get_temporal_client()
+                workflow_config = {
+                    "image_count": data.image_count,
+                    "position_request": data.position_request,
+                    "article_markdown": article_markdown,
+                }
+
+                await temporal_client.start_workflow(
+                    "ImageAdditionWorkflow",
+                    args=[tenant_id, run_id, workflow_config],
+                    id=f"image-addition-{run_id}",
+                    task_queue=TEMPORAL_TASK_QUEUE,
+                )
+
+                logger.info(
+                    "Started ImageAdditionWorkflow",
+                    extra={
+                        "run_id": run_id,
+                        "workflow_id": f"image-addition-{run_id}",
+                    },
+                )
+            except Exception as wf_error:
+                logger.error(f"Failed to start ImageAdditionWorkflow: {wf_error}", exc_info=True)
+                raise HTTPException(status_code=503, detail=f"Failed to start workflow: {wf_error}")
+
+            # WebSocket broadcast
+            try:
+                ws_manager = get_ws_manager()
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="run.add_images_initiated",
+                    status=RunStatus.RUNNING,
+                    current_step="step11_analyzing",
+                )
+            except Exception as ws_error:
+                logger.warning(f"WebSocket broadcast failed: {ws_error}")
+
+            await session.commit()
+
+            return {
+                "success": True,
+                "message": "Image generation workflow started.",
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to add images to completed run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to initiate image generation") from e
