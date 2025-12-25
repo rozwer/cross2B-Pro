@@ -658,7 +658,8 @@ class Step10FinalOutput(BaseActivity):
 
         output_path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)
         output.output_path = output_path
-        output_data = output.model_dump()
+        # Use mode="json" to ensure datetime objects are serialized to ISO strings
+        output_data = output.model_dump(mode="json")
         output_data["output_digest"] = hashlib.sha256(json.dumps(output_data, ensure_ascii=False, indent=2).encode("utf-8")).hexdigest()[
             :16
         ]
@@ -758,6 +759,15 @@ class Step10FinalOutput(BaseActivity):
 
         output_digest = hashlib.sha256(content.encode()).hexdigest()[:16]
 
+        # Generate meta description
+        meta_description = await self._generate_meta_description(
+            llm=llm,
+            title=title,
+            content=content,
+            keyword=keyword,
+            target_audience=target_audience,
+        )
+
         return ArticleVariation(
             article_number=article_num,
             variation_type=variation_type,
@@ -769,7 +779,7 @@ class Step10FinalOutput(BaseActivity):
             sections=sections,
             stats=stats,
             html_validation=html_validation,
-            meta_description="",  # TODO: Generate per-article meta
+            meta_description=meta_description,
             output_path=output_path,
             output_digest=output_digest,
         )
@@ -815,6 +825,80 @@ class Step10FinalOutput(BaseActivity):
                 html_content = match.group(1)
 
         return html_content
+
+    async def _generate_meta_description(
+        self,
+        llm: Any,
+        title: str,
+        content: str,
+        keyword: str,
+        target_audience: str,
+    ) -> str:
+        """Generate SEO meta description for an article.
+
+        Args:
+            llm: LLM client
+            title: Article title
+            content: Article content (markdown)
+            keyword: Target keyword
+            target_audience: Target audience description
+
+        Returns:
+            Meta description (120-160 characters)
+        """
+        # Use first 2000 chars of content for context
+        content_preview = content[:2000]
+
+        prompt = f"""以下の記事に対して、SEOに最適化されたメタディスクリプションを生成してください。
+
+【要件】
+- 文字数: 120〜160文字（これは厳守）
+- ターゲットキーワード「{keyword}」を自然に含める
+- 読者の検索意図に応える内容
+- クリックしたくなる魅力的な文章
+- ターゲット読者: {target_audience}
+
+【記事タイトル】
+{title}
+
+【記事の冒頭】
+{content_preview}
+
+【出力形式】
+メタディスクリプションのみを出力してください。説明や補足は不要です。"""
+
+        meta_config = LLMRequestConfig(
+            max_tokens=200,
+            temperature=0.5,
+        )
+
+        try:
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt}],
+                system_prompt="あなたはSEOメタディスクリプション生成の専門家です。",
+                config=meta_config,
+            )
+
+            meta_description = str(response.content).strip()
+
+            # Remove quotes if present
+            if meta_description.startswith('"') and meta_description.endswith('"'):
+                meta_description = meta_description[1:-1]
+            if meta_description.startswith("「") and meta_description.endswith("」"):
+                meta_description = meta_description[1:-1]
+
+            # Truncate if too long (Google displays ~155-160 chars)
+            if len(meta_description) > 160:
+                meta_description = meta_description[:157] + "..."
+
+            return meta_description
+
+        except Exception as e:
+            activity.logger.warning(f"Meta description generation failed: {e}")
+            # Fallback: use first 155 chars of content
+            fallback = re.sub(r"^#.*\n", "", content)  # Remove title
+            fallback = re.sub(r"\s+", " ", fallback).strip()  # Normalize whitespace
+            return fallback[:155] + "..." if len(fallback) > 155 else fallback
 
     async def _generate_article_summary(
         self,

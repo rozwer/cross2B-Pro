@@ -342,12 +342,16 @@ class Step11ImageGeneration(BaseActivity):
         config = LLMRequestConfig(temperature=0.3, max_tokens=4096)
 
         try:
-            result = await gemini.generate_json(
+            # generate_json_with_usage でトークン使用量も取得
+            response = await gemini.generate_json_with_usage(
                 messages=[{"role": "user", "content": user_message}],
                 system_prompt=system_prompt,
                 schema=schema,
                 config=config,
             )
+
+            result = response.data
+            token_usage = response.token_usage
 
             positions = [
                 ImageInsertionPosition(
@@ -363,8 +367,12 @@ class Step11ImageGeneration(BaseActivity):
             return PositionAnalysisResult(
                 analysis_summary=result.get("analysis_summary", ""),
                 positions=positions,
-                model="gemini",
-                usage={"tokens": 0},  # TODO: トークン数を取得
+                model=response.model,
+                usage={
+                    "input_tokens": token_usage.input,
+                    "output_tokens": token_usage.output,
+                    "total_tokens": token_usage.total,
+                },
             )
 
         except Exception as e:
@@ -712,6 +720,10 @@ async def step11_image_generation(args: dict[str, Any]) -> dict[str, Any]:
 async def step11_mark_skipped(args: dict[str, Any]) -> dict[str, Any]:
     """Mark step11 as skipped.
 
+    If step11 data already exists (e.g., saved by API finalize_images),
+    return it without overwriting. This prevents overwriting images
+    processed through the API flow.
+
     Args:
         args: Activity arguments with tenant_id, run_id, config
 
@@ -719,6 +731,25 @@ async def step11_mark_skipped(args: dict[str, Any]) -> dict[str, Any]:
         dict with artifact_ref and status
     """
     step = Step11ImageGeneration()
+
+    output_path = step.store.build_path(
+        tenant_id=args["tenant_id"],
+        run_id=args["run_id"],
+        step="step11",
+    )
+
+    # Check if step11 data already exists (e.g., saved by API finalize_images)
+    existing_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step11")
+    if existing_data and existing_data.get("images"):
+        # Step11 was already processed via API with images - don't overwrite
+        activity.logger.info(f"Step11 data already exists with {len(existing_data.get('images', []))} images, skipping overwrite")
+        return {
+            "status": "completed_via_api",
+            "artifact_ref": {
+                "path": output_path,
+                "digest": hashlib.sha256(str(existing_data).encode()).hexdigest()[:16],
+            },
+        }
 
     # Load step10 data to pass through markdown/html unchanged
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
@@ -732,12 +763,6 @@ async def step11_mark_skipped(args: dict[str, Any]) -> dict[str, Any]:
         warnings=["skipped_by_user"],
     )
 
-    # Save output
-    output_path = step.store.build_path(
-        tenant_id=args["tenant_id"],
-        run_id=args["run_id"],
-        step="step11",
-    )
     output_data = output.model_dump()
     await save_step_data(
         step.store,
