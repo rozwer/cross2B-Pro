@@ -1,0 +1,106 @@
+---
+description: 開発スタイル・パッケージ管理・コミット規約
+---
+
+## パッケージ管理
+
+### {{BACKEND_LANG}}
+
+{{PKG_MANAGER_BE_SECTION}}
+
+<!-- 使用例（Python + uv）:
+```bash
+uv sync              # 依存インストール
+uv add <package>     # パッケージ追加
+uv run pytest        # コマンド実行
+```
+-->
+
+<!-- 使用例（Node.js + npm）:
+```bash
+npm install          # 依存インストール
+npm run dev          # 開発サーバー起動
+```
+-->
+
+---
+
+## コミット方針
+
+### 基本ルール
+
+- 細かく頻繁にコミットする
+- カテゴリ別に分割：{{CATEGORIES}}
+- 1コミット = 1つの論理的な変更単位
+- Conventional Commits 形式
+
+### Conventional Commits 形式
+
+```
+<type>(<scope>): <description>
+
+例:
+feat(api): add user authentication
+fix(ui): resolve button alignment
+docs: update README
+refactor(db): extract query helpers
+test(api): add unit tests
+chore: update dependencies
+```
+
+### type 一覧
+
+| type | 用途 |
+|------|------|
+| `feat` | 新機能 |
+| `fix` | バグ修正 |
+| `docs` | ドキュメント |
+| `refactor` | リファクタリング |
+| `test` | テスト追加・修正 |
+| `chore` | ビルド・設定変更 |
+| `perf` | パフォーマンス改善 |
+| `style` | コードスタイル変更 |
+
+---
+
+## ブランチ戦略
+
+{{GIT_STRATEGY_SECTION}}
+
+<!-- 使用例（Git Flow）:
+```
+main ← 本番相当
+  └── develop ← 開発統合ブランチ
+        ├── feat/xxx ← 機能ブランチ
+        ├── fix/xxx  ← バグ修正
+        └── hotfix/xxx ← 緊急修正
+```
+
+ルール:
+- main への直接 push 禁止
+- PR 必須
+- マージ前に smoke テスト通過
+-->
+
+<!-- 使用例（GitHub Flow）:
+```
+main ← 本番相当
+  └── feature/xxx ← 機能ブランチ
+```
+
+ルール:
+- main への直接 push 禁止
+- PR 必須
+- CI 通過後にマージ
+-->
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 |
+|--------|------|
+| `{{BACKEND_LANG}}` | バックエンド言語 |
+| `{{PKG_MANAGER_BE_SECTION}}` | パッケージ管理コマンド例 |
+| `{{CATEGORIES}}` | コミットカテゴリ例 |
+| `{{GIT_STRATEGY_SECTION}}` | ブランチ戦略の詳細 |

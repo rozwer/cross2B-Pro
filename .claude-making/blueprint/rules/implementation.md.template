@@ -1,0 +1,314 @@
+---
+description: 実装ルール（API/DB/セキュリティ/テスト）
+---
+
+# 実装ルール
+
+> **CLAUDE.md** を最優先とし、詳細はこのファイルを参照。
+
+---
+
+## 1. API 契約
+
+### エンドポイント
+
+{{API_ENDPOINTS}}
+
+<!-- 使用例:
+#### リソース管理
+
+| メソッド | パス                    | 用途           |
+| -------- | ----------------------- | -------------- |
+| POST     | `/api/resources`        | リソース作成   |
+| GET      | `/api/resources`        | 一覧取得       |
+| GET      | `/api/resources/{id}`   | 詳細取得       |
+| PUT      | `/api/resources/{id}`   | 更新           |
+| DELETE   | `/api/resources/{id}`   | 削除           |
+
+#### 認証
+
+| メソッド | パス                    | 用途           |
+| -------- | ----------------------- | -------------- |
+| POST     | `/api/auth/login`       | ログイン       |
+| POST     | `/api/auth/logout`      | ログアウト     |
+| POST     | `/api/auth/refresh`     | トークン更新   |
+| GET      | `/api/auth/me`          | 現在のユーザー |
+
+#### ヘルスチェック
+
+| メソッド | パス                    | 用途           |
+| -------- | ----------------------- | -------------- |
+| GET      | `/health`               | ヘルスチェック |
+| GET      | `/health/detailed`      | 詳細ヘルス     |
+-->
+
+### レスポンス形式
+
+```json
+// 成功時
+{
+  "data": { ... },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "per_page": 20
+  }
+}
+
+// エラー時
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "入力値が不正です",
+    "details": [ ... ]
+  }
+}
+```
+
+### 実装ルール
+
+- 認証が必要なエンドポイントは Bearer トークンを使用
+- ページネーションは `page` / `per_page` パラメータ
+- エラーコードは統一フォーマットを使用
+- 監査ログ必須：create/update/delete 操作
+
+---
+
+## 2. データベース
+
+### スキーマ設計
+
+{{DB_SCHEMA}}
+
+<!-- 使用例:
+#### 共通カラム
+
+すべてのテーブルに以下のカラムを含める:
+
+| カラム名      | 型          | 説明             |
+| ------------- | ----------- | ---------------- |
+| `id`          | UUID        | 主キー           |
+| `created_at`  | TIMESTAMP   | 作成日時         |
+| `updated_at`  | TIMESTAMP   | 更新日時         |
+| `tenant_id`   | UUID        | テナントID       |
+
+#### 主要テーブル
+
+| テーブル名    | 説明             |
+| ------------- | ---------------- |
+| `users`       | ユーザー情報     |
+| `tenants`     | テナント情報     |
+| `resources`   | リソース情報     |
+| `audit_logs`  | 監査ログ         |
+-->
+
+### マイグレーション
+
+```bash
+# マイグレーション作成
+alembic revision --autogenerate -m "説明"
+
+# マイグレーション実行
+alembic upgrade head
+
+# ロールバック
+alembic downgrade -1
+```
+
+### クエリルール
+
+```python
+# 必須: テナント分離
+query = db.query(Resource).filter(
+    Resource.tenant_id == current_user.tenant_id
+)
+
+# 推奨: 論理削除
+query = query.filter(Resource.deleted_at.is_(None))
+
+# 必須: N+1 防止
+query = query.options(joinedload(Resource.related))
+```
+
+---
+
+## 3. セキュリティ
+
+{{SECURITY_RULES}}
+
+<!-- 使用例:
+### 認証・認可
+
+- JWT トークン（有効期限: アクセス15分 / リフレッシュ7日）
+- RBAC（Role-Based Access Control）
+- エンドポイントごとの権限チェック
+
+### データ保護
+
+- 機密データは暗号化して保存
+- API キーはハッシュ化
+- 平文ログへの機密情報出力禁止
+
+### 入力検証
+
+- すべての入力をバリデーション
+- SQL インジェクション対策（パラメータ化クエリ）
+- XSS 対策（エスケープ処理）
+
+### テナント分離
+
+- 全クエリで `tenant_id` スコープ必須
+- URL パラメータの `tenant_id` を信用しない
+- 認証情報から `tenant_id` を取得
+-->
+
+### 監査ログ
+
+必須フィールド:
+
+```python
+audit_log = {
+    "actor": current_user.id,
+    "tenant_id": current_user.tenant_id,
+    "action": "resource.create",
+    "resource_id": resource.id,
+    "timestamp": datetime.utcnow(),
+    "ip_address": request.client.host,
+    "user_agent": request.headers.get("User-Agent"),
+}
+```
+
+---
+
+## 4. テスト戦略
+
+### テストレベル
+
+| レベル      | 対象            | 実行タイミング | コマンド                    |
+| ----------- | --------------- | -------------- | --------------------------- |
+| smoke       | 依存/構文/起動  | commit前       | `pytest tests/smoke/ -v`    |
+| unit        | 関数単位        | push前         | `pytest tests/unit/ -v`     |
+| integration | API/DB          | PR前           | `pytest tests/integration/` |
+| e2e         | 全体フロー      | merge前        | `pytest tests/e2e/ -v`      |
+
+### テストルール
+
+- 新機能には必ずテストを書く
+- カバレッジ目標: 80%以上
+- モックは最小限（外部API/DB接続のみ）
+- フォールバックテスト禁止
+
+### テストパターン
+
+```python
+# ユニットテスト
+@pytest.mark.unit
+def test_function_returns_expected_value():
+    # Arrange
+    input_data = create_input()
+
+    # Act
+    result = function_under_test(input_data)
+
+    # Assert
+    assert result == expected_value
+
+# 統合テスト
+@pytest.mark.integration
+async def test_api_endpoint_creates_resource():
+    # Arrange
+    client = TestClient(app)
+    payload = {"name": "test"}
+
+    # Act
+    response = client.post("/api/resources", json=payload)
+
+    # Assert
+    assert response.status_code == 201
+    assert response.json()["data"]["name"] == "test"
+```
+
+---
+
+## 5. エラーハンドリング
+
+### 原則
+
+```
+- フォールバック禁止: 別サービスへの自動切替は禁止
+- リトライ許可: 同一条件で最大3回、ログ必須
+- 明示的な失敗: エラーは隠さず適切に伝播
+```
+
+### エラーコード
+
+| コード | 説明 | HTTP |
+|--------|------|------|
+| `VALIDATION_ERROR` | 入力値エラー | 400 |
+| `UNAUTHORIZED` | 認証エラー | 401 |
+| `FORBIDDEN` | 権限エラー | 403 |
+| `NOT_FOUND` | リソース未発見 | 404 |
+| `CONFLICT` | 競合エラー | 409 |
+| `INTERNAL_ERROR` | サーバーエラー | 500 |
+
+### 実装例
+
+```python
+from fastapi import HTTPException
+
+def get_resource(resource_id: UUID, tenant_id: UUID):
+    resource = db.query(Resource).filter(
+        Resource.id == resource_id,
+        Resource.tenant_id == tenant_id,
+    ).first()
+
+    if resource is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "NOT_FOUND", "message": "リソースが見つかりません"}
+        )
+
+    return resource
+```
+
+---
+
+## 6. コーディング規約
+
+### ファイル配置
+
+```
+src/
+├── api/
+│   ├── routers/        # エンドポイント
+│   ├── schemas/        # リクエスト/レスポンス
+│   ├── services/       # ビジネスロジック
+│   └── deps.py         # 依存性注入
+├── core/
+│   ├── config.py       # 設定
+│   ├── security.py     # 認証・認可
+│   └── exceptions.py   # カスタム例外
+└── db/
+    ├── models.py       # DBモデル
+    └── repositories/   # データアクセス
+```
+
+### 命名規則
+
+| 対象 | 規則 | 例 |
+|------|------|-----|
+| ファイル | snake_case | `user_service.py` |
+| クラス | PascalCase | `UserService` |
+| 関数 | snake_case | `get_user_by_id` |
+| 定数 | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| API パス | kebab-case | `/api/user-profiles` |
+
+---
+
+## 変数一覧
+
+| 変数名             | 説明                         | 必須 |
+| ------------------ | ---------------------------- | ---- |
+| `{{API_ENDPOINTS}}`| APIエンドポイント一覧        | YES  |
+| `{{DB_SCHEMA}}`    | DBスキーマ設計               | YES  |
+| `{{SECURITY_RULES}}`| セキュリティルール           | YES  |

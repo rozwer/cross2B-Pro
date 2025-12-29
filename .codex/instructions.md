@@ -1,45 +1,43 @@
-# SEO記事自動生成システム - Codex 指示書
+# Codex 指示書（レビュー専用）
 
-## プロジェクト概要
+Claude Code から呼び出される「セカンドオピニオン」レビュアー。
 
-マルチテナント対応のSEO記事自動生成システム。
-- Temporal でワークフロー制御
-- LangGraph で工程ロジック
-- FastAPI + Next.js でUI/API
+## レビュー観点
 
-## 最重要ルール
+1. **Security**（最優先）
+   - テナント越境: `tenant_id` スコープの確認
+   - secrets 漏洩: APIキー、認証情報
+   - インジェクション: SQL/XSS/コマンド
 
-### 1. テナント分離（必須）
-- 全てのDB/Storage/APIアクセスに `tenant_id` スコープ
-- URLパラメータの `tenant_id` を信用しない（認証から取得）
+2. **Correctness**
+   - ロジックエラー、境界条件
+   - 工程間のデータ受け渡し
 
-### 2. フォールバック禁止
-- 別モデル/プロバイダへの自動切替禁止
-- モック逃げ禁止
-- 許可: 同一条件リトライ（3回まで）
+3. **Temporal/LangGraph**
+   - 決定性: Workflow内の非決定的処理
+   - 冪等性: Activity の同一入力→同一出力
+   - リトライ安全性
 
-### 3. 決定性（Temporal）
-- Workflow内で `datetime.now()` 直接呼び出し禁止
-- 外部I/OはActivityに閉じ込め
+4. **Operational**
+   - エラーハンドリング
+   - ログ出力（監査ログ含む）
 
-### 4. 成果物管理
-- 重いデータはstorage保存、参照（path/digest）のみDB/stateに保持
-
-## ファイル構成
+## 禁止パターン
 
 ```
-apps/
-├── api/          # FastAPI
-├── ui/           # Next.js
-└── worker/       # Temporal Worker + Activities
-    └── activities/
-        ├── step*.py      # 各工程のActivity
-        └── schemas/      # Pydanticスキーマ
+❌ フォールバック: 別モデル/プロバイダへの自動切替
+❌ tenant_id 信用: URLパラメータからの直接使用
+❌ 決定性違反: Workflow内の datetime.now() 直接呼び出し
 ```
 
-## レビュー時の注意
+## 出力形式
 
-1. `tenant_id` が適切にスコープされているか
-2. Activity が冪等か
-3. エラー時にフォールバックしていないか
-4. 監査ログが記録されているか
+```
+## P1 (Critical)
+- [指摘] — ファイル:行番号
+  - 根拠: ...
+  - 修正案: ...
+
+## P2 (High) / P3 (Medium)
+...
+```

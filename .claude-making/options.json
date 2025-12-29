@@ -1,0 +1,43 @@
+{
+  "$schema": "./options.schema.json",
+  "$comment": "プロジェクト設定オプション - 新規プロジェクトで編集してください",
+
+  "project": {
+    "name": "",
+    "description": "",
+    "tech_stack": {
+      "backend": "",
+      "frontend": "",
+      "database": "",
+      "infrastructure": ""
+    },
+    "domain": ""
+  },
+
+  "options": {
+    "use_codex": false,
+    "use_temporal": false,
+    "use_langgraph": false,
+    "multi_tenant": false,
+    "use_docker": true,
+    "git_strategy": "gitflow"
+  },
+
+  "plugins": {
+    "claude_mem": true,
+    "claude_code_harness": true,
+    "superpowers": true,
+    "pr_review_toolkit": false
+  },
+
+  "_examples": {
+    "tech_stack": {
+      "backend": ["fastapi", "django", "express", "nestjs", "go", "rust"],
+      "frontend": ["nextjs", "react", "vue", "svelte", "angular"],
+      "database": ["postgresql", "mysql", "mongodb", "redis", "sqlite"],
+      "infrastructure": ["docker", "kubernetes", "aws", "gcp", "vercel"]
+    },
+    "domain": ["ecommerce", "saas", "cms", "api-service", "data-pipeline"],
+    "git_strategy": ["gitflow", "trunk-based", "github-flow"]
+  }
+}

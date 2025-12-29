@@ -1,0 +1,133 @@
+# {{PROJECT_NAME}} / Claude Code 指示書
+
+> **このファイルは最高優先度**。他のドキュメントと矛盾がある場合、このファイルを正とする。
+
+## Source of Truth
+
+{{SOURCE_OF_TRUTH}}
+
+<!-- 使用例:
+| 用途             | ファイル                       |
+| ---------------- | ------------------------------ |
+| **実装計画**     | `docs/ROADMAP.md`              |
+| **API仕様**      | `docs/api-spec.md`             |
+| **DB設計**       | `docs/database.md`             |
+| **Backend**      | `docs/backend/`                |
+| **Frontend**     | `docs/frontend/`               |
+-->
+
+---
+
+## プロジェクト概要
+
+### ドメイン
+
+{{DOMAIN}}
+
+<!-- 使用例:
+- ECサイトの在庫管理システム
+- 医療機関の予約管理
+- SaaS型プロジェクト管理ツール
+-->
+
+### 技術スタック
+
+{{TECH_STACK}}
+
+<!-- 使用例:
+| 領域 | 技術 |
+|------|------|
+| Backend | Python 3.11 / FastAPI / SQLAlchemy |
+| Frontend | Next.js 14 / React / TypeScript |
+| Database | PostgreSQL 15 |
+| Cache | Redis |
+| Queue | Celery / RabbitMQ |
+| Infrastructure | Docker / Kubernetes |
+-->
+
+---
+
+## 重要ルール
+
+{{IMPORTANT_RULES}}
+
+<!-- 使用例:
+### フォールバック禁止
+
+```
+- 禁止：別モデル/別プロバイダへの自動切替、モック逃げ
+- 許容：同一条件でのリトライ（上限3回、ログ必須）
+```
+
+### アーキテクチャ原則
+
+- **レイヤー分離**：Controller / Service / Repository
+- **依存性注入**：テスタビリティ確保
+- **マルチテナント**：全データにテナントスコープ
+-->
+
+---
+
+## クイックリファレンス
+
+### よく使うコマンド
+
+| 操作         | コマンド                        |
+| ------------ | ------------------------------- |
+| 起動         | `/dev:up`                       |
+| 停止         | `/dev:down`                     |
+| テスト       | `/dev:test`                     |
+| smoke        | `/dev:smoke`                    |
+| ログ確認     | `/dev:logs`                     |
+| 状態確認     | `/dev:status`                   |
+
+<!-- プロジェクト固有のコマンドを追加 -->
+
+### 主要サブエージェント
+
+{{SUBAGENTS}}
+
+<!-- 使用例:
+| エージェント          | 用途                     |
+| --------------------- | ------------------------ |
+| `@architect`          | 設計判断・分割方針       |
+| `@be-implementer`     | BE実装                   |
+| `@fe-implementer`     | FE実装                   |
+| `@codex-reviewer`     | コードレビュー           |
+| `@security-reviewer`  | セキュリティレビュー     |
+-->
+
+> 詳細は @.claude/rules/subagent-usage.md を参照
+
+---
+
+## 詳細ルール
+
+必要に応じて以下を参照：
+
+- @.claude/rules/dev-style.md - パッケージ管理・コミット方針
+- @.claude/rules/git-worktree.md - 並列開発・worktree運用
+- @.claude/rules/implementation.md - API/DB/テスト詳細
+
+<!-- プロジェクト固有のルールファイルを追加 -->
+
+---
+
+## 仕様書
+
+<!-- プロジェクト固有の仕様書へのリンクを追加 -->
+
+---
+
+## 変数一覧
+
+このテンプレートで使用する変数：
+
+| 変数名              | 説明                           | 必須 |
+| ------------------- | ------------------------------ | ---- |
+| `{{PROJECT_NAME}}`  | プロジェクト名                 | YES  |
+| `{{TECH_STACK}}`    | 技術スタック（テーブル形式）   | YES  |
+| `{{DOMAIN}}`        | ドメイン説明                   | YES  |
+| `{{SOURCE_OF_TRUTH}}`| 仕様書パス（テーブル形式）    | YES  |
+| `{{IMPORTANT_RULES}}`| 重要ルール                    | YES  |
+| `{{SUBAGENTS}}`     | サブエージェント一覧           | YES  |

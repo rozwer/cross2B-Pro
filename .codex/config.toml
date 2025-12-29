@@ -4,18 +4,10 @@ skills = true
 [projects."/home/rozwer/案件"]
 trust_level = "trusted"
 
-# MCPサーバー設定（グローバル設定をオーバーライド）
-# chrome-devtoolsはレビュー時に不要なのでプロジェクトレベルで無効化
-[mcp_servers]
-# 空のテーブルでグローバル設定を上書きしない
-# 必要なMCPのみここに追加
-
-# レビュー向け設定
 [review]
-# コードレビュー時のデフォルト観点
 checklist = [
-    "Correctness（ロジック/境界条件）",
-    "Security（secrets、越境、注入、認可、テナント分離）",
-    "Maintainability（構造、命名、テスト可能性）",
-    "Operational safety（リトライ、例外、ログ、冪等性）",
+    "Security（テナント分離、secrets、injection）",
+    "Correctness（ロジック、境界条件）",
+    "Temporal/LangGraph（決定性、冪等性）",
+    "Operational（エラー処理、ログ）",
 ]
