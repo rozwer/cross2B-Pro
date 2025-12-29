@@ -33,5 +33,6 @@
 # Local git backups
 .git-backups/
 
-# Claude Code (local overrides)
-.claude/settings.local.json
+# Claude Code (local configuration)
+.claude/
+.claude-code-harness/
