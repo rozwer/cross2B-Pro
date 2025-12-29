@@ -131,12 +131,13 @@ Phase 5: 検証
 | `git-worktree` | 並列開発ルール |
 | `subagent-usage` | サブエージェント使用ルール |
 
-### Hooks（2）
+### Hooks（3）
 
 | フック | 説明 |
 |--------|------|
 | `log-commands.sh` | Bash コマンドログ |
 | `protect-files.py` | 重要ファイル保護 |
+| `validate-commit.py` | Conventional Commits 形式検証 |
 
 ---
 
