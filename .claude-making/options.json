@@ -18,6 +18,9 @@
     "use_codex": false,
     "use_temporal": false,
     "use_langgraph": false,
+    "workflow_framework": "",
+    "orchestrator": "",
+    "llm_provider": "",
     "multi_tenant": false,
     "use_docker": true,
     "git_strategy": "gitflow"

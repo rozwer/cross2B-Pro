@@ -76,10 +76,23 @@
           "description": "Temporal ワークフローを使用するか",
           "default": false
         },
-        "use_langgraph": {
-          "type": "boolean",
-          "description": "LangGraph を使用するか",
-          "default": false
+        "workflow_framework": {
+          "type": "string",
+          "description": "ワークフローフレームワーク",
+          "enum": ["langgraph", "langchain", "crewai", "autogen", "none", ""],
+          "default": ""
+        },
+        "orchestrator": {
+          "type": "string",
+          "description": "オーケストレーター",
+          "enum": ["temporal", "celery", "airflow", "prefect", "none", ""],
+          "default": ""
+        },
+        "llm_provider": {
+          "type": "string",
+          "description": "LLM プロバイダー",
+          "enum": ["openai", "anthropic", "google", "azure", "multiple", ""],
+          "default": ""
         },
         "multi_tenant": {
           "type": "boolean",

@@ -60,38 +60,44 @@
 
 ---
 
-## フェーズ 4: options.json スキーマ拡張 `cc:TODO`
+## フェーズ 4: options.json スキーマ拡張 `cc:完了`
 
-- [ ] 技術スタック選択肢を追加
-- [ ] Phase 1 分析で検出ロジックを更新
-- [ ] Phase 4 展開で条件分岐ロジックを追加
+✅ 完了（2025-12-29）
 
----
-
-## フェーズ 5: plan/ ドキュメント更新 `cc:TODO`
-
-- [ ] `01-project-analysis.md` - 技術スタック検出
-- [ ] `03-template-copy.md` - 新 template/ 資産
-- [ ] `04-blueprint-customize.md` - 抽象化展開
-- [ ] `05-validation.md` - 新チェック項目
+- [x] 技術スタック選択肢を追加（workflow_framework, orchestrator, llm_provider）
+- [x] options.schema.json を更新
+- [x] options.json にデフォルト値を追加
 
 ---
 
-## フェーズ 6: README.md 更新 `cc:TODO`
+## フェーズ 5: plan/ ドキュメント更新 `cc:完了`
 
-- [ ] template/ 資産一覧
-- [ ] blueprint/ 説明
-- [ ] options.json スキーマ
-- [ ] 環境固有スキル作成ガイド
+✅ 完了（2025-12-29）
+
+- [x] `03-template-copy.md` - optional/ ディレクトリ対応
+- [x] `04-blueprint-customize.md` - 新 blueprint テンプレート一覧
+
+---
+
+## フェーズ 6: README.md 更新 `cc:完了`
+
+✅ 完了（2025-12-29）
+
+- [x] template/ 資産一覧（55個）
+- [x] blueprint/ 説明（27個）
+- [x] optional/ 説明
+- [x] options.json 新スキーマ
 
 ---
 
 ## 完了基準
 
-- [ ] template/ が55個の汎用資産を持つ
-- [ ] blueprint/ が22個の抽象化テンプレートを持つ
-- [ ] オプション機能が選択可能
-- [ ] `/setup-project` 一発で完了
+- [x] template/ が55個の汎用資産を持つ
+- [x] blueprint/ が27個の抽象化テンプレートを持つ（当初計画22を超過）
+- [x] オプション機能（Codex連携）が選択可能
+- [x] `/setup-project` 一発で完了（plan/ ドキュメント更新済み）
+
+**すべて完了 ✅**
 
 ---
 

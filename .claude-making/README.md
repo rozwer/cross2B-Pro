@@ -37,6 +37,7 @@ Claude Code が対話形式でプロジェクトを分析し、自動でセッ�
 ├── README.md                        # このファイル
 ├── setup-project.md                 # セットアップ実行スキル
 ├── DESIGN_PHILOSOPHY.md             # 設計思想
+├── ASSET_CLASSIFICATION.md          # 資産分類詳細
 ├── options.json                     # プロジェクト設定（Phase 1 で生成）
 ├── options.schema.json              # options.json のスキーマ定義
 ├── claude-configuration-overview.md # 設定・プラグイン概要
@@ -49,22 +50,28 @@ Claude Code が対話形式でプロジェクトを分析し、自動でセッ�
 │   ├── 04-blueprint-customize.md    # Phase 4: 展開
 │   └── 05-validation.md             # Phase 5: 検証
 │
-├── template/                        # そのまま転用可能な汎用資産
-│   ├── .claude/
-│   │   ├── settings.json
-│   │   ├── skills/                  # 8 スキル
-│   │   ├── agents/                  # 6 エージェント
-│   │   ├── commands/dev/            # 4 コマンド
-│   │   ├── rules/                   # 2 ルール
-│   │   └── hooks/                   # 2 フック
-│   └── .codex/                      # Codex 設定（オプション）
+├── template/                        # そのまま転用可能な汎用資産（55個）
+│   └── .claude/
+│       ├── settings.json
+│       ├── skills/                  # 13 スキル
+│       ├── agents/                  # 22 エージェント
+│       ├── commands/dev/            # 10 コマンド
+│       ├── rules/                   # 7 ルール
+│       ├── memory/                  # 3 テンプレート
+│       └── hooks/                   # 3 フック
 │
-└── blueprint/                       # 変数付きテンプレート
-    ├── CLAUDE.md.template           # メイン指示書
-    ├── agents/                      # 専門エージェント
-    ├── commands/                    # 専門コマンド
-    ├── rules/                       # 専門ルール
-    └── skills/                      # 専門スキル
+├── blueprint/                       # 変数付きテンプレート（27個）
+│   ├── CLAUDE.md.template           # メイン指示書
+│   ├── agents/                      # 5 テンプレート
+│   ├── commands/                    # 7 テンプレート
+│   ├── rules/                       # 3 テンプレート
+│   └── skills/                      # 11 テンプレート
+│
+└── optional/                        # オプション機能
+    └── codex/                       # Codex 連携（use_codex: true 時）
+        ├── agents/codex-reviewer.md
+        ├── commands/review/
+        └── rules/codex-integration.md
 ```
 
 ---
@@ -75,9 +82,9 @@ Claude Code が対話形式でプロジェクトを分析し、自動でセッ�
 Phase 1: プロジェクト分析
     ↓ 技術スタック検出、options.json 生成
 Phase 2: ディレクトリ作成
-    ↓ .claude/{agents,commands,hooks,rules,skills}
+    ↓ .claude/{agents,commands,hooks,rules,skills,memory}
 Phase 3: テンプレートコピー
-    ↓ template/ → .claude/
+    ↓ template/ → .claude/, optional/ → .claude/（条件付き）
 Phase 4: ブループリント展開
     ↓ blueprint/*.template + options.json → .claude/
 Phase 5: 検証
@@ -87,11 +94,11 @@ Phase 5: 検証
 
 ---
 
-## 汎用資産（template/）
+## 汎用資産（template/）- 55個
 
 プロジェクトに依存せず、そのままコピーして使える：
 
-### Skills（8）
+### Skills（13）
 
 | スキル | 説明 |
 |--------|------|
@@ -102,9 +109,14 @@ Phase 5: 検証
 | `new-feature` | 新機能実装フロー |
 | `refactor` | リファクタリング |
 | `review` | コードレビュー |
-| `debug` | デバッグ支援 |
+| `codebase-explore` | コードベース探索 |
+| `security-review` | セキュリティレビュー |
+| `deploy` | デプロイ支援 |
+| `docker` | Docker 操作 |
+| `docs` | ドキュメント生成 |
+| `git-commit-flow` | Git フロー |
 
-### Agents（6）
+### Agents（22）
 
 | エージェント | 説明 |
 |-------------|------|
@@ -112,10 +124,26 @@ Phase 5: 検証
 | `diff-analyzer` | 差分分析 |
 | `commit-creator` | コミット作成 |
 | `pr-creator` | PR 作成 |
+| `pr-reviewer` | PR レビュー |
+| `branch-manager` | ブランチ管理 |
+| `rebase-handler` | リベース処理 |
+| `push-handler` | プッシュ処理 |
+| `conflict-resolver` | コンフリクト解決 |
 | `error-analyzer` | エラー分析 |
+| `stack-trace-analyzer` | スタックトレース分析 |
 | `refactorer` | リファクタリング |
+| `security-reviewer` | セキュリティレビュー |
+| `deployer` | デプロイ実行 |
+| `log-investigator` | ログ調査 |
+| `api-doc-generator` | API ドキュメント生成 |
+| `readme-generator` | README 生成 |
+| `codebase-explorer` | コードベース探索 |
+| `migration-runner` | マイグレーション実行 |
+| `test-runner` | テスト実行 |
+| `docker-manager` | Docker 管理 |
+| `backup-manager` | バックアップ管理 |
 
-### Commands（4）
+### Commands（10）
 
 | コマンド | 説明 |
 |----------|------|
@@ -123,33 +151,92 @@ Phase 5: 検証
 | `/dev:down` | Docker 停止 |
 | `/dev:status` | 状態確認 |
 | `/dev:logs` | ログ表示 |
+| `/dev:health` | ヘルスチェック |
+| `/dev:smoke` | smoke テスト |
+| `/dev:test` | テスト実行 |
+| `/dev:worktree-new` | worktree 作成 |
+| `/dev:worktree-list` | worktree 一覧 |
+| `/dev:worktree-remove` | worktree 削除 |
 
-### Rules（2）
+### Rules（7）
 
 | ルール | 説明 |
 |--------|------|
 | `git-worktree` | 並列開発ルール |
-| `subagent-usage` | サブエージェント使用ルール |
+| `subagent-usage` | サブエージェント使用 |
+| `asset-authoring` | 資産作成ガイド |
+| `githooks` | Git hooks ルール |
+| `dev-style` | 開発スタイル |
+| `test-quality` | テスト品質保護 |
+| `implementation-quality` | 実装品質保護 |
 
-### Hooks（3）
+### Memory（3）
 
-| フック | 説明 |
-|--------|------|
-| `log-commands.sh` | Bash コマンドログ |
-| `protect-files.py` | 重要ファイル保護 |
-| `validate-commit.py` | Conventional Commits 形式検証 |
+| ファイル | 説明 |
+|----------|------|
+| `decisions.md` | 設計判断記録 |
+| `patterns.md` | コードパターン集 |
+| `session-log.md` | セッションログ |
 
 ---
 
-## ブループリント（blueprint/）
+## ブループリント（blueprint/）- 27個
 
 変数 `{{VAR}}` を含み、options.json の値で展開が必要：
 
+### 必須テンプレート
+
 | テンプレート | 説明 | 主要変数 |
 |-------------|------|---------|
-| `CLAUDE.md.template` | メイン指示書 | PROJECT_NAME, TECH_STACK, DOMAIN |
-| `agents/implementer.md.template` | 実装エージェント | ROLE, TECH |
+| `CLAUDE.md.template` | メイン指示書 | PROJECT_NAME, TECH_STACK |
 | `rules/dev-style.md.template` | 開発スタイル | PKG_MANAGER, GIT_STRATEGY |
+| `rules/implementation.md.template` | 実装ルール | BACKEND_FRAMEWORK |
+
+### ワークフロー系（9）
+
+| テンプレート | 展開条件 |
+|-------------|---------|
+| `skills/workflow-framework-fundamentals.md.template` | workflow_framework あり |
+| `skills/workflow-framework-patterns.md.template` | workflow_framework あり |
+| `skills/workflow-framework-multi-agent.md.template` | workflow_framework あり |
+| `skills/workflow-framework-persistence.md.template` | workflow_framework あり |
+| `skills/workflow-step-impl.md.template` | workflow_framework あり |
+| `agents/orchestrator-debugger.md.template` | orchestrator あり |
+| `commands/debug/replay.md.template` | orchestrator あり |
+| `commands/debug/trace.md.template` | orchestrator あり |
+| `commands/workflow/*.md.template` | orchestrator あり |
+
+### LLM 統合系（3）
+
+| テンプレート | 展開条件 |
+|-------------|---------|
+| `skills/llm-prompt-authoring.md.template` | llm_provider あり |
+| `agents/llm-prompt-engineer.md.template` | llm_provider あり |
+| `agents/llm-prompt-tester.md.template` | llm_provider あり |
+
+### テスト系（3）
+
+| テンプレート | 展開条件 |
+|-------------|---------|
+| `skills/api-test.md.template` | backend あり |
+| `skills/integration-test.md.template` | 常に |
+| `skills/e2e-test.md.template` | frontend あり |
+
+---
+
+## オプション機能（optional/）
+
+`options.json` の設定に応じてコピーされる：
+
+### Codex 連携
+
+`use_codex: true` の場合にコピー：
+
+| ファイル | 説明 |
+|----------|------|
+| `rules/codex-integration.md` | Codex 使用ガイド |
+| `agents/codex-reviewer.md` | セルフレビュー |
+| `commands/review/codex-review.md` | レビューコマンド |
 
 ---
 
@@ -162,33 +249,27 @@ Phase 1 で生成される設定ファイル：
   "project": {
     "name": "my-project",
     "description": "プロジェクトの説明",
-    "type": "webapp"
-  },
-  "tech_stack": {
-    "backend": {
-      "language": "python",
-      "framework": "fastapi",
-      "package_manager": "uv"
+    "tech_stack": {
+      "backend": "fastapi",
+      "frontend": "nextjs",
+      "database": "postgresql",
+      "infrastructure": "docker"
     },
-    "frontend": {
-      "framework": "nextjs",
-      "language": "typescript"
-    },
-    "database": {
-      "primary": "postgresql"
-    },
-    "infrastructure": {
-      "container": "docker"
-    }
+    "domain": "ecommerce"
   },
   "options": {
     "use_codex": false,
+    "workflow_framework": "langgraph",
+    "orchestrator": "temporal",
+    "llm_provider": "openai",
+    "multi_tenant": false,
+    "use_docker": true,
     "git_strategy": "gitflow"
   },
-  "recommended_assets": {
-    "skills": ["commit", "push", "pr"],
-    "agents": ["architect", "be-implementer"],
-    "rules": ["dev-style", "git-worktree"]
+  "plugins": {
+    "claude_mem": true,
+    "claude_code_harness": true,
+    "superpowers": true
   }
 }
 ```
@@ -199,4 +280,5 @@ Phase 1 で生成される設定ファイル：
 
 - [plan/00-overview.md](./plan/00-overview.md) - 実行フローの詳細
 - [DESIGN_PHILOSOPHY.md](./DESIGN_PHILOSOPHY.md) - 設計思想
+- [ASSET_CLASSIFICATION.md](./ASSET_CLASSIFICATION.md) - 資産分類詳細
 - [claude-configuration-overview.md](./claude-configuration-overview.md) - 設定・プラグインの詳細

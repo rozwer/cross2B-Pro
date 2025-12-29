@@ -99,14 +99,50 @@ sed -e "s/{{PKG_MANAGER_BE}}/$PKG_MANAGER/g" \
 
 ## blueprint/ のファイル一覧
 
+### 必須テンプレート
+
 | ファイル | 展開条件 | 出力先 |
 |---------|---------|--------|
 | `CLAUDE.md.template` | 常に | `.claude/CLAUDE.md` |
-| `agents/be-implementer.md.template` | backend != none | `.claude/agents/be-implementer.md` |
-| `agents/fe-implementer.md.template` | frontend != none | `.claude/agents/fe-implementer.md` |
-| `agents/docker-manager.md.template` | container == docker | `.claude/agents/docker-manager.md` |
 | `rules/dev-style.md.template` | 常に | `.claude/rules/dev-style.md` |
-| `skills/domain-skill.md.template` | 参考用 | 手動で作成 |
+| `rules/implementation.md.template` | 常に | `.claude/rules/implementation.md` |
+
+### 技術スタック依存テンプレート
+
+| ファイル | 展開条件 | 出力先 |
+|---------|---------|--------|
+| `agents/implementer.md.template` | backend/frontend あり | `.claude/agents/implementer.md` |
+| `agents/domain-expert.md.template` | domain 指定あり | `.claude/agents/domain-expert.md` |
+| `rules/domain-contract.md.template` | domain 指定あり | `.claude/rules/domain-contract.md` |
+| `skills/domain-specific.md.template` | domain 指定あり | `.claude/skills/domain-specific.md` |
+| `skills/tech-stack.md.template` | 技術スタックあり | `.claude/skills/tech-stack.md` |
+| `commands/domain-command.md.template` | domain 指定あり | `.claude/commands/domain/` |
+
+### ワークフロー系テンプレート
+
+| ファイル | 展開条件 | 出力先 |
+|---------|---------|--------|
+| `skills/workflow-framework-*.md.template` | workflow_framework 指定あり | `.claude/skills/` |
+| `skills/workflow-step-impl.md.template` | workflow_framework 指定あり | `.claude/skills/workflow-step-impl.md` |
+| `agents/orchestrator-debugger.md.template` | orchestrator 指定あり | `.claude/agents/orchestrator-debugger.md` |
+| `commands/debug/*.md.template` | orchestrator 指定あり | `.claude/commands/debug/` |
+| `commands/workflow/*.md.template` | orchestrator 指定あり | `.claude/commands/workflow/` |
+
+### LLM 統合テンプレート
+
+| ファイル | 展開条件 | 出力先 |
+|---------|---------|--------|
+| `skills/llm-prompt-authoring.md.template` | llm_provider 指定あり | `.claude/skills/llm-prompt-authoring.md` |
+| `agents/llm-prompt-engineer.md.template` | llm_provider 指定あり | `.claude/agents/llm-prompt-engineer.md` |
+| `agents/llm-prompt-tester.md.template` | llm_provider 指定あり | `.claude/agents/llm-prompt-tester.md` |
+
+### テスト系テンプレート
+
+| ファイル | 展開条件 | 出力先 |
+|---------|---------|--------|
+| `skills/api-test.md.template` | backend あり | `.claude/skills/api-test.md` |
+| `skills/integration-test.md.template` | 常に | `.claude/skills/integration-test.md` |
+| `skills/e2e-test.md.template` | frontend あり | `.claude/skills/e2e-test.md` |
 
 ---
 

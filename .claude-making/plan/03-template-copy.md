@@ -23,14 +23,15 @@
 
 ### 条件付きコピー
 
-`options.json` の `recommended_assets` に基づいて判断：
+`options.json` の設定に基づいて判断：
 
 | 条件 | ソース | コピー先 |
 |------|--------|---------|
-| skills に項目あり | `template/.claude/skills/` | `.claude/skills/` |
-| agents に項目あり | `template/.claude/agents/` | `.claude/agents/` |
+| 常に | `template/.claude/skills/` | `.claude/skills/` |
+| 常に | `template/.claude/agents/` | `.claude/agents/` |
+| 常に | `template/.claude/memory/` | `.claude/memory/` |
 | hooks 使用 | `template/.claude/hooks/` | `.claude/hooks/` |
-| use_codex: true | `template/.codex/` | `.codex/` |
+| use_codex: true | `optional/codex/` | `.claude/` (マージ) |
 
 ---
 
@@ -53,17 +54,26 @@ cp -r "$TEMPLATE_DIR/.claude/commands/dev/"* .claude/commands/dev/ 2>/dev/null |
 ### 条件付きコピー（options.json に基づく）
 
 ```bash
-# skills/ をコピー（recommended_assets.skills に項目がある場合）
+# skills/ をコピー
 cp -r "$TEMPLATE_DIR/.claude/skills/"* .claude/skills/ 2>/dev/null || true
 
-# agents/ をコピー（recommended_assets.agents に項目がある場合）
+# agents/ をコピー
 cp -r "$TEMPLATE_DIR/.claude/agents/"* .claude/agents/ 2>/dev/null || true
+
+# memory/ をコピー
+cp -r "$TEMPLATE_DIR/.claude/memory/"* .claude/memory/ 2>/dev/null || true
 
 # hooks/ をコピー（hooks 使用時）
 cp -r "$TEMPLATE_DIR/.claude/hooks/"* .claude/hooks/ 2>/dev/null || true
 
-# .codex/ をコピー（use_codex: true の場合）
-cp -r "$TEMPLATE_DIR/.codex/"* .codex/ 2>/dev/null || true
+# Codex 連携（use_codex: true の場合）
+USE_CODEX=$(jq -r '.options.use_codex' .claude-making/options.json)
+if [ "$USE_CODEX" = "true" ]; then
+  cp -r ".claude-making/optional/codex/rules/"* .claude/rules/ 2>/dev/null || true
+  cp -r ".claude-making/optional/codex/agents/"* .claude/agents/ 2>/dev/null || true
+  mkdir -p .claude/commands/review
+  cp -r ".claude-making/optional/codex/commands/review/"* .claude/commands/review/ 2>/dev/null || true
+fi
 ```
 
 ---
