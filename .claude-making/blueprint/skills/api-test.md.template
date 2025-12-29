@@ -1,0 +1,350 @@
+---
+name: api-test
+description: API エンドポイントのテスト作成・実行ガイド
+---
+
+# /api-test - API テストスキル
+
+> {{BACKEND_FRAMEWORK}} の API エンドポイントをテストするためのガイドライン
+
+---
+
+## 概要
+
+API テストは、エンドポイントの正常系・異常系・認証・権限を検証します。
+{{TEST_FRAMEWORK}} を使用して、モック・フィクスチャを活用した効率的なテストを作成します。
+
+---
+
+## 使用方法
+
+```bash
+/api-test <action> [options]
+```
+
+### アクション一覧
+
+| アクション | 説明 |
+|-----------|------|
+| `new <endpoint>` | 新規テスト作成 |
+| `run` | 全 API テスト実行 |
+| `run <path>` | 指定パスのテスト実行 |
+| `coverage` | カバレッジレポート生成 |
+
+---
+
+## テスト構造
+
+```
+tests/
+├── api/                    # API テスト
+│   ├── conftest.py         # 共通フィクスチャ
+│   ├── test_auth.py        # 認証関連
+│   ├── test_items.py       # Items エンドポイント
+│   └── test_users.py       # Users エンドポイント
+├── fixtures/               # テストデータ
+│   ├── users.json
+│   └── items.json
+└── mocks/                  # モック定義
+    └── external_api.py
+```
+
+---
+
+## テストパターン
+
+### 基本パターン（{{TEST_FRAMEWORK}}）
+
+{{API_TEST_PATTERNS}}
+
+<!-- 使用例:
+```python
+import pytest
+from httpx import AsyncClient
+from app.main import app
+
+@pytest.fixture
+async def client():
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+
+@pytest.fixture
+def auth_headers(test_user):
+    token = create_access_token(test_user.id)
+    return {"Authorization": f"Bearer {token}"}
+
+class TestItemsAPI:
+    """Items API のテスト"""
+
+    @pytest.mark.asyncio
+    async def test_create_item_success(self, client, auth_headers):
+        """正常系: アイテム作成"""
+        # Arrange
+        payload = {"name": "Test Item", "price": 100}
+
+        # Act
+        response = await client.post(
+            "/api/items",
+            json=payload,
+            headers=auth_headers
+        )
+
+        # Assert
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Test Item"
+        assert data["price"] == 100
+        assert "id" in data
+
+    @pytest.mark.asyncio
+    async def test_create_item_unauthorized(self, client):
+        """異常系: 未認証"""
+        response = await client.post("/api/items", json={"name": "Test"})
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_create_item_validation_error(self, client, auth_headers):
+        """異常系: バリデーションエラー"""
+        payload = {"name": ""}  # 空の名前は無効
+        response = await client.post(
+            "/api/items",
+            json=payload,
+            headers=auth_headers
+        )
+        assert response.status_code == 422
+```
+-->
+
+---
+
+## フィクスチャ
+
+### データベースフィクスチャ
+
+{{DB_FIXTURE_PATTERNS}}
+
+<!-- 使用例:
+```python
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import async_session_maker
+
+@pytest.fixture
+async def db_session():
+    """テスト用DBセッション（トランザクションでロールバック）"""
+    async with async_session_maker() as session:
+        async with session.begin():
+            yield session
+            await session.rollback()
+
+@pytest.fixture
+async def test_user(db_session):
+    """テスト用ユーザー"""
+    from app.models import User
+    user = User(
+        email="test@example.com",
+        hashed_password="hashed",
+        tenant_id="test-tenant"
+    )
+    db_session.add(user)
+    await db_session.flush()
+    return user
+
+@pytest.fixture
+async def test_items(db_session, test_user):
+    """テスト用アイテム一覧"""
+    from app.models import Item
+    items = [
+        Item(name=f"Item {i}", owner_id=test_user.id)
+        for i in range(5)
+    ]
+    db_session.add_all(items)
+    await db_session.flush()
+    return items
+```
+-->
+
+---
+
+## モック
+
+### 外部 API モック
+
+{{MOCK_PATTERNS}}
+
+<!-- 使用例:
+```python
+import pytest
+from unittest.mock import AsyncMock, patch
+
+@pytest.fixture
+def mock_external_api():
+    """外部 API のモック"""
+    with patch("app.services.external.ExternalClient") as mock:
+        mock.return_value.fetch_data = AsyncMock(
+            return_value={"status": "ok", "data": [1, 2, 3]}
+        )
+        yield mock
+
+@pytest.mark.asyncio
+async def test_with_external_api(client, auth_headers, mock_external_api):
+    """外部 API 連携のテスト"""
+    response = await client.get("/api/external-data", headers=auth_headers)
+    assert response.status_code == 200
+    mock_external_api.return_value.fetch_data.assert_called_once()
+```
+-->
+
+---
+
+## 認証テスト
+
+### 認証パターン
+
+```python
+class TestAuthentication:
+    """認証のテスト"""
+
+    @pytest.mark.asyncio
+    async def test_valid_token(self, client, auth_headers):
+        """有効なトークン"""
+        response = await client.get("/api/me", headers=auth_headers)
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_expired_token(self, client):
+        """期限切れトークン"""
+        expired_headers = {"Authorization": "Bearer expired_token"}
+        response = await client.get("/api/me", headers=expired_headers)
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_invalid_token(self, client):
+        """不正なトークン"""
+        invalid_headers = {"Authorization": "Bearer invalid"}
+        response = await client.get("/api/me", headers=invalid_headers)
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_missing_token(self, client):
+        """トークンなし"""
+        response = await client.get("/api/me")
+        assert response.status_code == 401
+```
+
+---
+
+## マルチテナントテスト
+
+### テナント分離の検証
+
+```python
+class TestTenantIsolation:
+    """テナント分離のテスト"""
+
+    @pytest.mark.asyncio
+    async def test_cannot_access_other_tenant_data(
+        self, client, tenant_a_headers, tenant_b_item
+    ):
+        """他テナントのデータにアクセス不可"""
+        response = await client.get(
+            f"/api/items/{tenant_b_item.id}",
+            headers=tenant_a_headers
+        )
+        assert response.status_code == 404  # 見つからない扱い
+
+    @pytest.mark.asyncio
+    async def test_list_only_own_tenant_data(
+        self, client, tenant_a_headers, tenant_a_items, tenant_b_items
+    ):
+        """自テナントのデータのみ一覧表示"""
+        response = await client.get("/api/items", headers=tenant_a_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == len(tenant_a_items)
+```
+
+---
+
+## 実行コマンド
+
+```bash
+# 全 API テスト実行
+{{RUN_API_TESTS}}
+
+# 特定ファイルのみ
+{{RUN_SPECIFIC_TEST}}
+
+# カバレッジ付き
+{{RUN_WITH_COVERAGE}}
+
+# 並列実行（高速化）
+{{RUN_PARALLEL}}
+```
+
+<!-- 使用例（pytest）:
+{{RUN_API_TESTS}} = uv run pytest tests/api/ -v
+{{RUN_SPECIFIC_TEST}} = uv run pytest tests/api/test_items.py -v
+{{RUN_WITH_COVERAGE}} = uv run pytest tests/api/ --cov=app/api --cov-report=html
+{{RUN_PARALLEL}} = uv run pytest tests/api/ -n auto
+-->
+
+---
+
+## ベストプラクティス
+
+### DO（推奨）
+
+```
+- Arrange-Act-Assert パターンに従う
+- 各テストは独立して実行可能にする
+- 意味のあるテスト名をつける（test_create_item_success）
+- 正常系・異常系・境界値を網羅する
+- フィクスチャで共通セットアップを抽出
+```
+
+### DON'T（非推奨）
+
+```
+- 本番 DB を直接使用
+- テスト間で状態を共有
+- 外部 API を直接呼び出し
+- sleep() を使用したタイミング制御
+- ハードコードされた ID の使用
+```
+
+---
+
+## トラブルシューティング
+
+| 症状 | 原因 | 解決策 |
+|------|------|--------|
+| テストが不安定 | 非同期処理の競合 | `asyncio.wait_for` でタイムアウト設定 |
+| DB 接続エラー | セッション管理 | フィクスチャでスコープ設定 |
+| モックが効かない | パッチ対象の誤り | インポートパスを確認 |
+| 認証エラー | トークン期限切れ | フィクスチャで毎回生成 |
+
+---
+
+## 関連スキル
+
+| スキル | 説明 |
+|--------|------|
+| `/integration-test` | 統合テスト |
+| `/e2e-test` | E2E テスト |
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 | 必須 |
+| ------ | ---- | ---- |
+| `{{BACKEND_FRAMEWORK}}` | バックエンドフレームワーク（例: FastAPI） | YES |
+| `{{TEST_FRAMEWORK}}` | テストフレームワーク（例: pytest） | YES |
+| `{{API_TEST_PATTERNS}}` | API テストのコードパターン | YES |
+| `{{DB_FIXTURE_PATTERNS}}` | DB フィクスチャのパターン | YES |
+| `{{MOCK_PATTERNS}}` | モックのパターン | YES |
+| `{{RUN_API_TESTS}}` | API テスト実行コマンド | YES |
+| `{{RUN_SPECIFIC_TEST}}` | 特定テスト実行コマンド | YES |
+| `{{RUN_WITH_COVERAGE}}` | カバレッジ付き実行コマンド | YES |
+| `{{RUN_PARALLEL}}` | 並列実行コマンド | YES |

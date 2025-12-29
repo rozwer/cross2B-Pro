@@ -13,12 +13,13 @@
 
 | カテゴリ | template | blueprint | オプション | 除外 |
 |----------|----------|-----------|-----------|------|
-| skills | 13 | 10 | 0 | 1 |
-| agents | 22 | 3 | 1 | 0 |
-| rules | 7 | 2 | 1 | 0 |
+| skills | 13 | 11 | 0 | 1 |
+| agents | 22 | 5 | 1 | 0 |
+| rules | 7 | 3 | 1 | 0 |
 | commands | 10 | 7 | 1 | 4 |
 | memory | 3 | 0 | 0 | 0 |
-| **合計** | **55** | **22** | **3** | **5** |
+| CLAUDE.md | 0 | 1 | 0 | 0 |
+| **合計** | **55** | **27** | **3** | **5** |
 
 ---
 
@@ -34,16 +35,19 @@
 
 ---
 
-## フェーズ 2: blueprint/ の拡充 `cc:TODO`
+## フェーズ 2: blueprint/ の拡充 `cc:完了`
 
-環境固有スキルの抽象化（22個）
+✅ 完了（2025-12-29）
 
-- [ ] ワークフローフレームワーク系（5個）
-- [ ] オーケストレーター系（3個）
-- [ ] LLM 統合系（3個）
-- [ ] テスト系（3個）
-- [ ] ワークフローコマンド系（4個）
-- [ ] ルール系（2個）
+環境固有スキルの抽象化（27個）
+
+- [x] ワークフローフレームワーク系（5個）: fundamentals, patterns, multi-agent, persistence, step-impl
+- [x] オーケストレーター系（3個）: debugger, debug/replay, debug/trace
+- [x] LLM 統合系（3個）: prompt-authoring, prompt-engineer, prompt-tester
+- [x] テスト系（3個）: api-test, integration-test, e2e-test
+- [x] ワークフローコマンド系（4個）: new, run, approve, artifacts
+- [x] ルール系（3個）: implementation, domain-contract, dev-style
+- [x] 既存テンプレート（6個）: domain-specific, tech-stack, implementer, domain-expert, domain-command, CLAUDE.md
 
 ---
 

@@ -1,0 +1,456 @@
+---
+name: {{WORKFLOW_FRAMEWORK_LOWER}}-persistence
+description: {{WORKFLOW_FRAMEWORK}} の状態永続化とチェックポイント
+---
+
+# /{{WORKFLOW_FRAMEWORK_LOWER}}-persistence - 状態の永続化
+
+> {{WORKFLOW_FRAMEWORK}} での状態永続化、チェックポイント、再開メカニズム
+
+---
+
+## 概要
+
+このスキルは `options.json` の `workflow_framework` 設定に基づいて展開されます。
+ワークフローの状態を永続化し、中断・再開を可能にする方法を提供します。
+
+---
+
+## 状態の永続化
+
+### 永続化の目的
+
+```
+- 長時間実行ワークフローの中断・再開
+- 障害発生時のリカバリ
+- 進捗の追跡と監査
+- Human-in-the-loop での承認待ち
+```
+
+### 永続化ストレージの選択
+
+| ストレージ | 用途 | 特徴 |
+|-----------|------|------|
+| PostgreSQL | 本番環境 | 耐久性、トランザクション |
+| SQLite | 開発/テスト | シンプル、ファイルベース |
+| Redis | キャッシュ兼用 | 高速、TTL 対応 |
+| MinIO/S3 | 大容量データ | 成果物の保存 |
+
+---
+
+## チェックポイント
+
+### チェックポイントの設定
+
+```
+{{PERSISTENCE_CHECKPOINT_CONFIG}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+from langgraph.checkpoint.postgres import PostgresSaver
+
+# チェックポインター設定
+checkpointer = PostgresSaver.from_conn_string(
+    "postgresql://user:pass@localhost/db"
+)
+
+# グラフにチェックポインターを適用
+graph = graph_builder.compile(checkpointer=checkpointer)
+
+# Temporal の場合は自動永続化
+# Workflow 履歴が自動的に保存される
+-->
+
+### チェックポイントの保存
+
+```
+{{PERSISTENCE_CHECKPOINT_SAVE}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+# 各ノード完了時に自動保存される
+# thread_id でセッションを識別
+config = {"configurable": {"thread_id": "session_123"}}
+
+result = await graph.ainvoke(input_data, config)
+
+# 手動でのチェックポイント取得
+state = await graph.aget_state(config)
+-->
+
+### チェックポイントからの復元
+
+```
+{{PERSISTENCE_CHECKPOINT_RESTORE}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+config = {"configurable": {"thread_id": "session_123"}}
+
+# 最新の状態を取得
+state = await graph.aget_state(config)
+
+# 特定のチェックポイントから再開
+checkpoint_id = "checkpoint_abc"
+config_with_checkpoint = {
+    "configurable": {
+        "thread_id": "session_123",
+        "checkpoint_id": checkpoint_id
+    }
+}
+result = await graph.ainvoke(None, config_with_checkpoint)
+-->
+
+---
+
+## 再開メカニズム
+
+### 中断ポイントの設定
+
+```
+{{PERSISTENCE_INTERRUPT}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+# interrupt_before または interrupt_after を使用
+graph = graph_builder.compile(
+    checkpointer=checkpointer,
+    interrupt_before=["approval_node"],  # このノード前で中断
+)
+
+# NodeInterrupt を使用した明示的な中断
+from langgraph.errors import NodeInterrupt
+
+def approval_node(state: MyState) -> MyState:
+    if not state.get("approved"):
+        raise NodeInterrupt("Waiting for human approval")
+    return state
+-->
+
+### 中断からの再開
+
+```
+{{PERSISTENCE_RESUME}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+config = {"configurable": {"thread_id": "session_123"}}
+
+# 現在の状態を確認
+state = await graph.aget_state(config)
+print(f"Waiting at: {state.next}")  # 次に実行されるノード
+
+# 状態を更新して再開
+await graph.aupdate_state(
+    config,
+    {"approved": True},  # 承認フラグを設定
+    as_node="human"  # 人間による更新としてマーク
+)
+
+# 再開
+result = await graph.ainvoke(None, config)
+
+# Temporal の場合
+await workflow.signal(approve_signal, True)
+-->
+
+### 失敗からのリトライ
+
+```
+{{PERSISTENCE_RETRY_FROM_FAILURE}}
+```
+
+<!-- 使用例:
+# 失敗したノードから再実行
+state = await graph.aget_state(config)
+
+if state.values.get("error"):
+    # エラーをクリアして再試行
+    await graph.aupdate_state(
+        config,
+        {"error": None, "retry_count": state.values.get("retry_count", 0) + 1}
+    )
+    result = await graph.ainvoke(None, config)
+-->
+
+---
+
+## 状態の管理
+
+### 状態の取得
+
+```
+{{PERSISTENCE_GET_STATE}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+config = {"configurable": {"thread_id": "session_123"}}
+
+# 現在の状態
+current_state = await graph.aget_state(config)
+print(f"Values: {current_state.values}")
+print(f"Next: {current_state.next}")
+print(f"Config: {current_state.config}")
+
+# 状態履歴（全チェックポイント）
+async for state in graph.aget_state_history(config):
+    print(f"Checkpoint: {state.config['configurable']['checkpoint_id']}")
+    print(f"Created: {state.created_at}")
+-->
+
+### 状態の更新
+
+```
+{{PERSISTENCE_UPDATE_STATE}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+config = {"configurable": {"thread_id": "session_123"}}
+
+# 状態を直接更新
+await graph.aupdate_state(
+    config,
+    {
+        "user_feedback": "Please revise the introduction",
+        "revision_requested": True
+    },
+    as_node="human_feedback"  # 更新元のノード名
+)
+-->
+
+### 状態の削除
+
+```
+{{PERSISTENCE_DELETE_STATE}}
+```
+
+<!-- 使用例:
+# セッションの削除
+await checkpointer.adelete(
+    {"configurable": {"thread_id": "session_123"}}
+)
+
+# 古いチェックポイントのクリーンアップ
+cutoff = datetime.now() - timedelta(days=30)
+await checkpointer.cleanup(before=cutoff)
+-->
+
+---
+
+## 大容量データの扱い
+
+### 外部ストレージとの連携
+
+```
+{{PERSISTENCE_EXTERNAL_STORAGE}}
+```
+
+<!-- 使用例:
+# 状態には参照のみ保存、実データは外部ストレージ
+class OutputReference(TypedDict):
+    path: str          # storage://tenant/run/step/output.json
+    digest: str        # sha256 ハッシュ
+    size: int          # バイト数
+    created_at: str    # ISO8601 タイムスタンプ
+
+async def save_large_output(output: dict, run_id: str, step: str) -> OutputReference:
+    """大容量出力を外部ストレージに保存"""
+    path = f"storage/{tenant_id}/{run_id}/{step}/output.json"
+    content = json.dumps(output)
+    digest = hashlib.sha256(content.encode()).hexdigest()
+
+    await storage.put(path, content)
+
+    return OutputReference(
+        path=path,
+        digest=digest,
+        size=len(content),
+        created_at=datetime.now().isoformat()
+    )
+
+async def load_large_output(ref: OutputReference) -> dict:
+    """外部ストレージから出力を読み込み"""
+    content = await storage.get(ref["path"])
+
+    # 整合性チェック
+    actual_digest = hashlib.sha256(content.encode()).hexdigest()
+    if actual_digest != ref["digest"]:
+        raise IntegrityError(f"Digest mismatch for {ref['path']}")
+
+    return json.loads(content)
+-->
+
+### 状態の圧縮
+
+```
+{{PERSISTENCE_COMPRESSION}}
+```
+
+<!-- 使用例:
+import gzip
+import base64
+
+def compress_state(state: dict) -> str:
+    """状態を圧縮してエンコード"""
+    json_bytes = json.dumps(state).encode('utf-8')
+    compressed = gzip.compress(json_bytes)
+    return base64.b64encode(compressed).decode('ascii')
+
+def decompress_state(encoded: str) -> dict:
+    """状態を解凍してデコード"""
+    compressed = base64.b64decode(encoded.encode('ascii'))
+    json_bytes = gzip.decompress(compressed)
+    return json.loads(json_bytes.decode('utf-8'))
+-->
+
+---
+
+## 監査とトレーサビリティ
+
+### 監査ログの記録
+
+```
+{{PERSISTENCE_AUDIT_LOG}}
+```
+
+<!-- 使用例:
+class AuditLog(TypedDict):
+    timestamp: str
+    thread_id: str
+    checkpoint_id: str
+    action: str        # "created", "updated", "resumed", "completed"
+    actor: str         # "system", "human", "agent"
+    node: str
+    details: dict
+
+async def log_checkpoint_event(
+    action: str,
+    state: StateSnapshot,
+    actor: str = "system",
+    details: dict = None
+):
+    log = AuditLog(
+        timestamp=datetime.now().isoformat(),
+        thread_id=state.config["configurable"]["thread_id"],
+        checkpoint_id=state.config["configurable"].get("checkpoint_id"),
+        action=action,
+        actor=actor,
+        node=state.next[0] if state.next else "END",
+        details=details or {}
+    )
+    await audit_storage.append(log)
+-->
+
+### 状態の差分追跡
+
+```
+{{PERSISTENCE_STATE_DIFF}}
+```
+
+<!-- 使用例:
+from deepdiff import DeepDiff
+
+async def track_state_changes(
+    config: dict,
+    before_node: str,
+    after_state: dict
+):
+    """状態変更を追跡"""
+    # 前の状態を取得
+    history = [s async for s in graph.aget_state_history(config)]
+    if len(history) < 2:
+        return
+
+    previous_state = history[1].values
+    current_state = after_state
+
+    diff = DeepDiff(previous_state, current_state, ignore_order=True)
+
+    if diff:
+        await log_checkpoint_event(
+            action="state_changed",
+            state=history[0],
+            details={"changes": diff.to_dict()}
+        )
+-->
+
+---
+
+## 使用方法
+
+```bash
+# チェックポイント一覧を表示
+/{{WORKFLOW_FRAMEWORK_LOWER}}-persistence list <thread_id>
+
+# 特定のチェックポイントに復元
+/{{WORKFLOW_FRAMEWORK_LOWER}}-persistence restore <thread_id> <checkpoint_id>
+
+# 状態を更新して再開
+/{{WORKFLOW_FRAMEWORK_LOWER}}-persistence resume <thread_id> --data '{"approved": true}'
+
+# 古いチェックポイントを削除
+/{{WORKFLOW_FRAMEWORK_LOWER}}-persistence cleanup --before 30d
+```
+
+---
+
+## ベストプラクティス
+
+### DO（推奨）
+
+```
+- thread_id は一意かつ追跡可能な ID を使用
+- 大容量データは外部ストレージに保存し、参照のみ状態に持つ
+- チェックポイントの定期的なクリーンアップ
+- 監査ログを記録する
+- 再開前に状態の整合性を確認
+```
+
+### DON'T（非推奨）
+
+```
+- 状態に機密情報を平文で保存しない
+- 大きなバイナリデータを状態に直接保存しない
+- チェックポイントを無期限に保持しない
+- 状態の直接書き換えを監査なしで行わない
+```
+
+---
+
+## 関連スキル
+
+| スキル | 用途 |
+|--------|------|
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-fundamentals` | 基本概念 |
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-patterns` | よく使うパターン |
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent` | マルチエージェント構成 |
+| `/workflow-step-impl` | 工程実装ガイド |
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 | 必須 |
+|--------|------|------|
+| `{{WORKFLOW_FRAMEWORK}}` | フレームワーク名 | YES |
+| `{{WORKFLOW_FRAMEWORK_LOWER}}` | 小文字 | YES |
+| `{{PERSISTENCE_CHECKPOINT_CONFIG}}` | チェックポイント設定の例 | YES |
+| `{{PERSISTENCE_CHECKPOINT_SAVE}}` | 保存の例 | YES |
+| `{{PERSISTENCE_CHECKPOINT_RESTORE}}` | 復元の例 | YES |
+| `{{PERSISTENCE_INTERRUPT}}` | 中断ポイントの例 | YES |
+| `{{PERSISTENCE_RESUME}}` | 再開の例 | YES |
+| `{{PERSISTENCE_RETRY_FROM_FAILURE}}` | リトライの例 | NO |
+| `{{PERSISTENCE_GET_STATE}}` | 状態取得の例 | YES |
+| `{{PERSISTENCE_UPDATE_STATE}}` | 状態更新の例 | YES |
+| `{{PERSISTENCE_DELETE_STATE}}` | 状態削除の例 | NO |
+| `{{PERSISTENCE_EXTERNAL_STORAGE}}` | 外部ストレージ連携の例 | NO |
+| `{{PERSISTENCE_COMPRESSION}}` | 圧縮の例 | NO |
+| `{{PERSISTENCE_AUDIT_LOG}}` | 監査ログの例 | NO |
+| `{{PERSISTENCE_STATE_DIFF}}` | 差分追跡の例 | NO |

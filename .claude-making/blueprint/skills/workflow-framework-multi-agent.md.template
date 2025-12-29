@@ -1,0 +1,413 @@
+---
+name: {{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent
+description: {{WORKFLOW_FRAMEWORK}} のマルチエージェント構成パターン
+---
+
+# /{{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent - マルチエージェント構成
+
+> {{WORKFLOW_FRAMEWORK}} でのマルチエージェントシステムの設計と実装
+
+---
+
+## 概要
+
+このスキルは `options.json` の `workflow_framework` 設定に基づいて展開されます。
+複数のエージェント（または処理ユニット）が協調して動作するワークフローの構築方法を提供します。
+
+---
+
+## マルチエージェント構成の基本
+
+### エージェントの定義
+
+```
+{{MULTI_AGENT_DEFINITION}}
+```
+
+<!-- 使用例:
+# LangGraph の場合
+class ResearchAgent:
+    """調査を担当するエージェント"""
+
+    def __init__(self, llm):
+        self.llm = llm
+
+    async def run(self, state: AgentState) -> AgentState:
+        prompt = f"Research the following topic: {state['topic']}"
+        result = await self.llm.invoke(prompt)
+        return {"research_result": result}
+
+class WriterAgent:
+    """執筆を担当するエージェント"""
+
+    def __init__(self, llm):
+        self.llm = llm
+
+    async def run(self, state: AgentState) -> AgentState:
+        prompt = f"Write about: {state['research_result']}"
+        result = await self.llm.invoke(prompt)
+        return {"draft": result}
+-->
+
+### エージェント間の状態共有
+
+```
+{{MULTI_AGENT_STATE}}
+```
+
+<!-- 使用例:
+# 共有状態の定義
+class MultiAgentState(TypedDict):
+    # 入力
+    topic: str
+
+    # エージェント間で共有
+    research_result: str
+    draft: str
+    review_feedback: str
+
+    # メタデータ
+    messages: Annotated[list, add_messages]
+    current_agent: str
+    iteration: int
+-->
+
+---
+
+## エージェント間通信パターン
+
+### パイプライン型（順次実行）
+
+```
+{{MULTI_AGENT_PIPELINE}}
+```
+
+<!-- 使用例:
+# Agent A → Agent B → Agent C
+graph = StateGraph(MultiAgentState)
+
+graph.add_node("researcher", research_agent.run)
+graph.add_node("writer", writer_agent.run)
+graph.add_node("reviewer", reviewer_agent.run)
+
+graph.add_edge(START, "researcher")
+graph.add_edge("researcher", "writer")
+graph.add_edge("writer", "reviewer")
+graph.add_edge("reviewer", END)
+-->
+
+### スーパーバイザー型（中央制御）
+
+```
+{{MULTI_AGENT_SUPERVISOR}}
+```
+
+<!-- 使用例:
+class SupervisorAgent:
+    """他のエージェントを制御するスーパーバイザー"""
+
+    def route(self, state: MultiAgentState) -> str:
+        """次に実行するエージェントを決定"""
+        if not state.get("research_result"):
+            return "researcher"
+        if not state.get("draft"):
+            return "writer"
+        if state.get("needs_revision"):
+            return "writer"
+        if not state.get("review_complete"):
+            return "reviewer"
+        return END
+
+# スーパーバイザーからの条件分岐
+graph.add_conditional_edges(
+    "supervisor",
+    supervisor.route,
+    {
+        "researcher": "researcher",
+        "writer": "writer",
+        "reviewer": "reviewer",
+        END: END
+    }
+)
+
+# 各エージェントはスーパーバイザーに戻る
+graph.add_edge("researcher", "supervisor")
+graph.add_edge("writer", "supervisor")
+graph.add_edge("reviewer", "supervisor")
+-->
+
+### 階層型（ネストしたエージェント）
+
+```
+{{MULTI_AGENT_HIERARCHICAL}}
+```
+
+<!-- 使用例:
+# サブグラフとして定義
+research_subgraph = create_research_graph()  # 内部に複数エージェント
+writing_subgraph = create_writing_graph()
+
+# メイングラフに組み込み
+main_graph = StateGraph(MainState)
+main_graph.add_node("research_team", research_subgraph)
+main_graph.add_node("writing_team", writing_subgraph)
+
+main_graph.add_edge(START, "research_team")
+main_graph.add_edge("research_team", "writing_team")
+main_graph.add_edge("writing_team", END)
+-->
+
+### メッセージパッシング型（非同期協調）
+
+```
+{{MULTI_AGENT_MESSAGE_PASSING}}
+```
+
+<!-- 使用例:
+# メッセージキュー経由の通信
+class AgentMessage(TypedDict):
+    sender: str
+    receiver: str
+    content: str
+    timestamp: datetime
+
+class MessageState(TypedDict):
+    inbox: Annotated[list[AgentMessage], add_messages]
+    outbox: list[AgentMessage]
+
+def agent_with_messaging(state: MessageState) -> MessageState:
+    # 受信メッセージを処理
+    for msg in state["inbox"]:
+        if msg["receiver"] == "me":
+            process_message(msg)
+
+    # 返信を送信
+    return {
+        "outbox": [
+            AgentMessage(
+                sender="me",
+                receiver="other_agent",
+                content="response"
+            )
+        ]
+    }
+-->
+
+---
+
+## 協調パターン
+
+### ディベート/議論パターン
+
+```
+{{MULTI_AGENT_DEBATE}}
+```
+
+<!-- 使用例:
+def debate_round(state: DebateState) -> DebateState:
+    """エージェント間で議論を行う"""
+    positions = state["positions"]
+    round_num = state.get("round", 0)
+
+    # 各エージェントが他のエージェントの意見に反論
+    new_positions = []
+    for i, agent in enumerate(agents):
+        other_positions = [p for j, p in enumerate(positions) if j != i]
+        response = agent.respond_to(other_positions)
+        new_positions.append(response)
+
+    # 合意形成の確認
+    if check_consensus(new_positions):
+        return {"consensus": True, "final_position": synthesize(new_positions)}
+
+    return {"positions": new_positions, "round": round_num + 1}
+
+def should_continue_debate(state: DebateState) -> str:
+    if state.get("consensus"):
+        return "end"
+    if state["round"] >= MAX_ROUNDS:
+        return "force_consensus"
+    return "continue"
+-->
+
+### 分業/専門化パターン
+
+```
+{{MULTI_AGENT_SPECIALIZATION}}
+```
+
+<!-- 使用例:
+# 専門エージェントの定義
+specialists = {
+    "code": CodeAgent(),
+    "review": ReviewAgent(),
+    "test": TestAgent(),
+    "docs": DocsAgent(),
+}
+
+def route_to_specialist(state: TaskState) -> str:
+    task_type = state["current_task"]["type"]
+    return task_type  # "code", "review", "test", "docs"
+
+# 各専門エージェントへのルーティング
+for name, agent in specialists.items():
+    graph.add_node(name, agent.run)
+
+graph.add_conditional_edges(
+    "dispatcher",
+    route_to_specialist,
+    {name: name for name in specialists.keys()}
+)
+-->
+
+### 投票/合意形成パターン
+
+```
+{{MULTI_AGENT_VOTING}}
+```
+
+<!-- 使用例:
+def voting_node(state: VotingState) -> VotingState:
+    """複数エージェントの投票結果を集計"""
+    votes = []
+
+    # 各エージェントが投票
+    for agent in agents:
+        vote = agent.vote(state["proposal"])
+        votes.append(vote)
+
+    # 多数決で決定
+    result = majority_vote(votes)
+    confidence = sum(1 for v in votes if v == result) / len(votes)
+
+    return {
+        "decision": result,
+        "confidence": confidence,
+        "vote_details": votes
+    }
+-->
+
+---
+
+## エージェントのライフサイクル管理
+
+### 初期化と終了
+
+```
+{{MULTI_AGENT_LIFECYCLE}}
+```
+
+<!-- 使用例:
+class ManagedAgent:
+    async def initialize(self, config: dict):
+        """エージェントの初期化"""
+        self.llm = await create_llm(config["model"])
+        self.tools = load_tools(config["tools"])
+
+    async def run(self, state: AgentState) -> AgentState:
+        """メイン処理"""
+        return await self.execute(state)
+
+    async def cleanup(self):
+        """リソースの解放"""
+        await self.llm.close()
+
+# ワークフロー内での使用
+async def agent_node(state: AgentState) -> AgentState:
+    agent = ManagedAgent()
+    try:
+        await agent.initialize(state["config"])
+        result = await agent.run(state)
+        return result
+    finally:
+        await agent.cleanup()
+-->
+
+### 状態のリセット
+
+```
+{{MULTI_AGENT_STATE_RESET}}
+```
+
+<!-- 使用例:
+def reset_agent_state(state: AgentState) -> AgentState:
+    """エージェント固有の状態をリセット"""
+    return {
+        # 共有状態は保持
+        "shared_context": state["shared_context"],
+
+        # エージェント固有の状態はリセット
+        "agent_memory": [],
+        "iteration": 0,
+        "errors": [],
+    }
+-->
+
+---
+
+## 使用方法
+
+```bash
+# マルチエージェント構成の作成
+/{{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent create <config_name>
+
+# パターンの適用
+/{{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent apply <pattern> --target <workflow>
+
+# 構成の可視化
+/{{WORKFLOW_FRAMEWORK_LOWER}}-multi-agent visualize <workflow>
+```
+
+---
+
+## ベストプラクティス
+
+### DO（推奨）
+
+```
+- エージェントの責務を明確に分離する
+- 状態の変更は明示的に行う
+- エージェント間の依存関係を最小化する
+- タイムアウトを設定する
+- ログを詳細に記録する
+```
+
+### DON'T（非推奨）
+
+```
+- 全エージェントで同一の LLM インスタンスを共有しない
+- 無限ループになりうる循環依存を避ける
+- 大きな状態を直接渡さない（参照を使う）
+- エラーハンドリングを省略しない
+```
+
+---
+
+## 関連スキル
+
+| スキル | 用途 |
+|--------|------|
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-fundamentals` | 基本概念 |
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-patterns` | よく使うパターン |
+| `/{{WORKFLOW_FRAMEWORK_LOWER}}-persistence` | 状態の永続化 |
+| `/workflow-step-impl` | 工程実装ガイド |
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 | 必須 |
+|--------|------|------|
+| `{{WORKFLOW_FRAMEWORK}}` | フレームワーク名 | YES |
+| `{{WORKFLOW_FRAMEWORK_LOWER}}` | 小文字 | YES |
+| `{{MULTI_AGENT_DEFINITION}}` | エージェント定義の例 | YES |
+| `{{MULTI_AGENT_STATE}}` | 共有状態の例 | YES |
+| `{{MULTI_AGENT_PIPELINE}}` | パイプライン型の例 | YES |
+| `{{MULTI_AGENT_SUPERVISOR}}` | スーパーバイザー型の例 | YES |
+| `{{MULTI_AGENT_HIERARCHICAL}}` | 階層型の例 | NO |
+| `{{MULTI_AGENT_MESSAGE_PASSING}}` | メッセージパッシング型の例 | NO |
+| `{{MULTI_AGENT_DEBATE}}` | 議論パターンの例 | NO |
+| `{{MULTI_AGENT_SPECIALIZATION}}` | 専門化パターンの例 | NO |
+| `{{MULTI_AGENT_VOTING}}` | 投票パターンの例 | NO |
+| `{{MULTI_AGENT_LIFECYCLE}}` | ライフサイクル管理の例 | NO |
+| `{{MULTI_AGENT_STATE_RESET}}` | 状態リセットの例 | NO |

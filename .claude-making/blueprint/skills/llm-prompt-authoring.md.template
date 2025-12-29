@@ -1,0 +1,319 @@
+---
+name: {{LLM_PROVIDER_LOWER}}-prompt-authoring
+description: {{LLM_PROVIDER}} を使用したプロンプト設計ガイドライン
+---
+
+# /{{LLM_PROVIDER_LOWER}}-prompt-authoring - プロンプト設計スキル
+
+> このテンプレートは `options.json` の `llm_provider` 設定に基づいて展開されます。
+
+---
+
+## 概要
+
+{{LLM_PROVIDER}} 向けのプロンプト設計・最適化ガイドライン。
+
+主な用途:
+- 新規プロンプトの設計
+- 既存プロンプトの改善
+- プロバイダー固有の最適化
+- プロンプトテンプレートの管理
+
+---
+
+## 使用方法
+
+```bash
+/{{LLM_PROVIDER_LOWER}}-prompt-authoring <action> [options]
+```
+
+### アクション一覧
+
+| アクション | 説明 |
+|-----------|------|
+| `new` | 新規プロンプト作成 |
+| `review` | 既存プロンプトのレビュー |
+| `optimize` | プロンプト最適化 |
+| `template` | テンプレート管理 |
+
+---
+
+## プロンプト設計原則
+
+### 基本構造
+
+```
+[システムプロンプト]
+├── 役割定義
+├── コンテキスト
+├── 制約条件
+└── 出力形式
+
+[ユーザープロンプト]
+├── 入力データ
+├── タスク指示
+└── 期待出力の例
+```
+
+### {{LLM_PROVIDER}} 固有の最適化
+
+{{PROVIDER_SPECIFIC_OPTIMIZATION}}
+
+<!-- 使用例:
+#### OpenAI (GPT-4) の場合
+
+```markdown
+- システムプロンプトは簡潔に（500トークン以下推奨）
+- JSON mode を活用（`response_format: { type: "json_object" }`）
+- Function calling で構造化出力を強制
+- Temperature: 0.0-0.3 で一貫性を確保
+```
+
+#### Anthropic (Claude) の場合
+
+```markdown
+- XML タグで構造化（<thinking>, <output> など）
+- 長いコンテキストに強い（100K+ トークン）
+- System prompt で人格・制約を明確に
+- 「まず考えてから回答」パターンが効果的
+```
+
+#### Google (Gemini) の場合
+
+```markdown
+- マルチモーダル入力を活用（画像+テキスト）
+- Grounding で検索結果を組み込み可能
+- Safety settings の調整が必要な場合あり
+- 長いコンテキスト（1M トークン）を活用
+```
+-->
+
+---
+
+## プロンプトテンプレート構造
+
+### ファイル配置
+
+```
+prompts/
+├── {{LLM_PROVIDER_LOWER}}/
+│   ├── templates/           # プロンプトテンプレート
+│   │   ├── base.md          # 基本テンプレート
+│   │   └── step-{n}.md      # 工程別テンプレート
+│   ├── examples/            # 入出力例
+│   │   └── step-{n}/
+│   │       ├── input.json
+│   │       └── output.json
+│   └── config.json          # プロバイダー設定
+└── shared/                  # 共通部分
+    ├── system-base.md
+    └── output-formats.md
+```
+
+### テンプレート形式
+
+```markdown
+---
+name: {{PROMPT_NAME}}
+version: {{VERSION}}
+provider: {{LLM_PROVIDER_LOWER}}
+model: {{MODEL_ID}}
+parameters:
+  temperature: 0.2
+  max_tokens: 4096
+variables:
+  - name: input_data
+    type: string
+    required: true
+  - name: context
+    type: object
+    required: false
+---
+
+## System
+
+あなたは {{ROLE}} です。
+
+## User
+
+以下の入力に基づいて {{TASK}} を実行してください。
+
+### 入力
+{{input_data}}
+
+### 出力形式
+{{OUTPUT_FORMAT}}
+```
+
+---
+
+## 変数管理
+
+### 変数の種類
+
+| 種類 | 記法 | 用途 |
+|------|------|------|
+| 必須変数 | `{{var}}` | 常に必要な入力 |
+| オプション | `{{var?}}` | 省略可能な入力 |
+| デフォルト付き | `{{var:default}}` | 未指定時のフォールバック |
+| 条件付き | `{{#if var}}...{{/if}}` | 条件分岐 |
+
+### 変数の検証
+
+```python
+# レンダリング前に必須変数をチェック
+def render_prompt(template: str, variables: dict) -> str:
+    required = extract_required_variables(template)
+    missing = required - set(variables.keys())
+    if missing:
+        raise ValueError(f"Missing required variables: {missing}")
+    return render(template, variables)
+```
+
+---
+
+## プロンプト品質チェックリスト
+
+### 必須チェック
+
+```
+- [ ] 役割が明確に定義されている
+- [ ] タスクの目的が具体的
+- [ ] 出力形式が指定されている
+- [ ] 必要な変数が定義されている
+- [ ] バージョン管理されている
+```
+
+### 品質チェック
+
+```
+- [ ] 曖昧な表現がない
+- [ ] 例が含まれている（Few-shot）
+- [ ] エッジケースの指示がある
+- [ ] トークン効率が良い
+- [ ] テスト済み
+```
+
+### {{LLM_PROVIDER}} 固有チェック
+
+{{PROVIDER_SPECIFIC_CHECKLIST}}
+
+<!-- 使用例:
+#### OpenAI の場合
+
+```
+- [ ] システムプロンプトが適切な長さ
+- [ ] JSON mode の設定が正しい
+- [ ] Function の定義が正確
+```
+
+#### Anthropic の場合
+
+```
+- [ ] XML タグが正しくネストされている
+- [ ] 思考プロセスの指示がある
+- [ ] 長いコンテキストの分割が適切
+```
+
+#### Google の場合
+
+```
+- [ ] Safety settings が適切
+- [ ] マルチモーダル入力の形式が正しい
+- [ ] Grounding の設定が正確
+```
+-->
+
+---
+
+## プロンプト改善サイクル
+
+```
+1. 設計
+   ├─ 要件分析
+   ├─ テンプレート作成
+   └─ 変数定義
+
+2. テスト
+   ├─ 単体テスト（例入力で期待出力）
+   ├─ エッジケーステスト
+   └─ 回帰テスト
+
+3. 評価
+   ├─ 精度測定
+   ├─ コスト分析（トークン使用量）
+   └─ レイテンシ測定
+
+4. 改善
+   ├─ 問題点の特定
+   ├─ A/B テスト
+   └─ バージョンアップ
+
+5. デプロイ
+   ├─ DB への登録
+   ├─ バージョン管理
+   └─ 監視設定
+```
+
+---
+
+## ベストプラクティス
+
+### DO（推奨）
+
+```
+- 具体的で明確な指示を書く
+- 出力形式を JSON/XML で構造化
+- Few-shot 例を含める
+- バージョン管理を徹底する
+- テストケースを用意する
+```
+
+### DON'T（非推奨）
+
+```
+- 曖昧な表現（「適切に」「良い感じに」）
+- 過度に長いプロンプト
+- 未テストのプロンプトをデプロイ
+- バージョンなしの変更
+- ハードコードされた値
+```
+
+---
+
+## トラブルシューティング
+
+| 症状 | 原因 | 解決策 |
+|------|------|--------|
+| 出力が不安定 | Temperature 高すぎ | 0.0-0.3 に下げる |
+| 出力形式が崩れる | 指示が曖昧 | JSON mode / Function calling 使用 |
+| トークン超過 | プロンプト長すぎ | 圧縮・分割 |
+| 精度が低い | 例が不足 | Few-shot 例を追加 |
+
+---
+
+## 関連エージェント
+
+| エージェント | 連携内容 |
+|-------------|----------|
+| @{{LLM_PROVIDER_LOWER}}-prompt-engineer | プロンプト最適化 |
+| @{{LLM_PROVIDER_LOWER}}-prompt-tester | プロンプトテスト |
+
+---
+
+## 参考リソース
+
+- {{LLM_PROVIDER}} 公式ドキュメント
+- プロンプトエンジニアリングガイド
+- 内部ガイド: `docs/prompts/{{LLM_PROVIDER_LOWER}}.md`
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 | 必須 |
+|--------|------|------|
+| `{{LLM_PROVIDER}}` | プロバイダー名（例: OpenAI） | YES |
+| `{{LLM_PROVIDER_LOWER}}` | 小文字プロバイダー名（例: openai） | YES |
+| `{{PROVIDER_SPECIFIC_OPTIMIZATION}}` | プロバイダー固有の最適化ガイド | YES |
+| `{{PROVIDER_SPECIFIC_CHECKLIST}}` | プロバイダー固有のチェックリスト | YES |

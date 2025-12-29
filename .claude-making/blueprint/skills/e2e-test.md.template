@@ -1,0 +1,511 @@
+---
+name: e2e-test
+description: E2E（エンドツーエンド）テストの作成・実行ガイド
+---
+
+# /e2e-test - E2E テストスキル
+
+> {{FRONTEND_FRAMEWORK}} アプリケーションの E2E テストを {{E2E_FRAMEWORK}} で作成・実行するためのガイドライン
+
+---
+
+## 概要
+
+E2E テストは、ユーザー視点でアプリケーション全体の動作を検証します。
+ブラウザを自動操作し、実際のユーザーフローをシミュレートします。
+
+---
+
+## 使用方法
+
+```bash
+/e2e-test <action> [options]
+```
+
+### アクション一覧
+
+| アクション | 説明 |
+|-----------|------|
+| `new <flow>` | 新規 E2E テスト作成 |
+| `run` | 全 E2E テスト実行 |
+| `run <spec>` | 指定テスト実行 |
+| `ui` | UI モードで実行（Playwright） |
+| `record` | レコーディングモード |
+
+---
+
+## テスト構造
+
+```
+e2e/
+├── fixtures/               # テストデータ・認証情報
+│   ├── auth.ts             # 認証ヘルパー
+│   └── data.ts             # テストデータ
+├── pages/                  # Page Object Model
+│   ├── base.page.ts        # ベースページ
+│   ├── login.page.ts       # ログインページ
+│   ├── dashboard.page.ts   # ダッシュボード
+│   └── settings.page.ts    # 設定ページ
+├── specs/                  # テストスペック
+│   ├── auth.spec.ts        # 認証フロー
+│   ├── dashboard.spec.ts   # ダッシュボード
+│   └── settings.spec.ts    # 設定
+├── playwright.config.ts    # Playwright 設定
+└── global-setup.ts         # グローバルセットアップ
+```
+
+---
+
+## Page Object Model
+
+### ベースページ
+
+{{PAGE_OBJECT_BASE}}
+
+<!-- 使用例（Playwright）:
+```typescript
+// e2e/pages/base.page.ts
+import { Page, Locator } from '@playwright/test';
+
+export abstract class BasePage {
+  readonly page: Page;
+  readonly header: Locator;
+  readonly footer: Locator;
+  readonly loadingSpinner: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.header = page.locator('header');
+    this.footer = page.locator('footer');
+    this.loadingSpinner = page.locator('[data-testid="loading"]');
+  }
+
+  async waitForLoad(): Promise<void> {
+    await this.loadingSpinner.waitFor({ state: 'hidden', timeout: 10000 });
+  }
+
+  async getToast(): Promise<string | null> {
+    const toast = this.page.locator('[role="alert"]');
+    if (await toast.isVisible()) {
+      return toast.textContent();
+    }
+    return null;
+  }
+}
+```
+-->
+
+### ページ実装
+
+{{PAGE_OBJECT_IMPL}}
+
+<!-- 使用例（Playwright）:
+```typescript
+// e2e/pages/login.page.ts
+import { Page, Locator, expect } from '@playwright/test';
+import { BasePage } from './base.page';
+
+export class LoginPage extends BasePage {
+  readonly emailInput: Locator;
+  readonly passwordInput: Locator;
+  readonly submitButton: Locator;
+  readonly errorMessage: Locator;
+
+  constructor(page: Page) {
+    super(page);
+    this.emailInput = page.locator('[data-testid="email-input"]');
+    this.passwordInput = page.locator('[data-testid="password-input"]');
+    this.submitButton = page.locator('[data-testid="login-button"]');
+    this.errorMessage = page.locator('[data-testid="error-message"]');
+  }
+
+  async goto(): Promise<void> {
+    await this.page.goto('/login');
+    await this.waitForLoad();
+  }
+
+  async login(email: string, password: string): Promise<void> {
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await this.submitButton.click();
+  }
+
+  async expectError(message: string): Promise<void> {
+    await expect(this.errorMessage).toContainText(message);
+  }
+}
+```
+-->
+
+---
+
+## テストパターン
+
+### 認証フロー
+
+{{AUTH_FLOW_PATTERN}}
+
+<!-- 使用例（Playwright）:
+```typescript
+// e2e/specs/auth.spec.ts
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/login.page';
+import { DashboardPage } from '../pages/dashboard.page';
+
+test.describe('Authentication Flow', () => {
+  test('successful login redirects to dashboard', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
+
+    await loginPage.goto();
+    await loginPage.login('user@example.com', 'password123');
+
+    // ダッシュボードにリダイレクト
+    await expect(page).toHaveURL('/dashboard');
+    await expect(dashboardPage.welcomeMessage).toContainText('Welcome');
+  });
+
+  test('invalid credentials shows error', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await loginPage.goto();
+    await loginPage.login('invalid@example.com', 'wrong');
+
+    await loginPage.expectError('Invalid credentials');
+    await expect(page).toHaveURL('/login');
+  });
+
+  test('logout clears session', async ({ page }) => {
+    // 認証済み状態からスタート
+    await page.goto('/dashboard');
+    await page.click('[data-testid="logout-button"]');
+
+    await expect(page).toHaveURL('/login');
+    // セッションがクリアされていることを確認
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL('/login');
+  });
+});
+```
+-->
+
+### フォーム入力フロー
+
+{{FORM_FLOW_PATTERN}}
+
+<!-- 使用例（Playwright）:
+```typescript
+// e2e/specs/create-item.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Item Creation Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    // 認証済み状態
+    await page.goto('/items');
+  });
+
+  test('create new item with all fields', async ({ page }) => {
+    await page.click('[data-testid="new-item-button"]');
+
+    // フォーム入力
+    await page.fill('[name="name"]', 'Test Item');
+    await page.fill('[name="description"]', 'This is a test item');
+    await page.fill('[name="price"]', '1000');
+    await page.selectOption('[name="category"]', 'electronics');
+
+    // 画像アップロード
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles('e2e/fixtures/test-image.png');
+
+    // 送信
+    await page.click('[data-testid="submit-button"]');
+
+    // 成功確認
+    await expect(page.locator('[role="alert"]')).toContainText('Item created');
+    await expect(page).toHaveURL(/\/items\/\d+/);
+  });
+
+  test('validation errors are displayed', async ({ page }) => {
+    await page.click('[data-testid="new-item-button"]');
+    await page.click('[data-testid="submit-button"]');
+
+    // バリデーションエラー
+    await expect(page.locator('[data-testid="name-error"]')).toContainText('Required');
+    await expect(page.locator('[data-testid="price-error"]')).toContainText('Required');
+  });
+});
+```
+-->
+
+---
+
+## 認証状態の管理
+
+### グローバルセットアップ
+
+{{GLOBAL_SETUP}}
+
+<!-- 使用例（Playwright）:
+```typescript
+// e2e/global-setup.ts
+import { chromium, FullConfig } from '@playwright/test';
+
+async function globalSetup(config: FullConfig) {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  // ログインして認証状態を保存
+  await page.goto('/login');
+  await page.fill('[data-testid="email-input"]', 'test@example.com');
+  await page.fill('[data-testid="password-input"]', 'password123');
+  await page.click('[data-testid="login-button"]');
+  await page.waitForURL('/dashboard');
+
+  // ストレージ状態を保存
+  await page.context().storageState({ path: 'e2e/.auth/user.json' });
+
+  await browser.close();
+}
+
+export default globalSetup;
+```
+
+```typescript
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  globalSetup: require.resolve('./global-setup'),
+  use: {
+    // 認証済み状態を使用
+    storageState: 'e2e/.auth/user.json',
+  },
+  projects: [
+    {
+      name: 'authenticated',
+      use: { storageState: 'e2e/.auth/user.json' },
+    },
+    {
+      name: 'unauthenticated',
+      use: { storageState: undefined },
+    },
+  ],
+});
+```
+-->
+
+---
+
+## 設定ファイル
+
+### Playwright 設定
+
+{{PLAYWRIGHT_CONFIG}}
+
+<!-- 使用例:
+```typescript
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e/specs',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [
+    ['html', { outputFolder: 'e2e/reports' }],
+    ['junit', { outputFile: 'e2e/results.xml' }],
+  ],
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'mobile',
+      use: { ...devices['iPhone 13'] },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+-->
+
+---
+
+## 実行コマンド
+
+```bash
+# 全 E2E テスト実行
+{{RUN_E2E_TESTS}}
+
+# UI モード（対話的）
+{{RUN_E2E_UI}}
+
+# 特定ブラウザ
+{{RUN_E2E_BROWSER}}
+
+# ヘッドフルモード（ブラウザ表示）
+{{RUN_E2E_HEADED}}
+
+# デバッグモード
+{{RUN_E2E_DEBUG}}
+
+# レコーディング
+{{RUN_E2E_RECORD}}
+```
+
+<!-- 使用例（Playwright）:
+{{RUN_E2E_TESTS}} = npx playwright test
+{{RUN_E2E_UI}} = npx playwright test --ui
+{{RUN_E2E_BROWSER}} = npx playwright test --project=chromium
+{{RUN_E2E_HEADED}} = npx playwright test --headed
+{{RUN_E2E_DEBUG}} = npx playwright test --debug
+{{RUN_E2E_RECORD}} = npx playwright codegen http://localhost:3000
+-->
+
+---
+
+## CI 統合
+
+### GitHub Actions
+
+```yaml
+name: E2E Tests
+
+on: [push, pull_request]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: npx playwright test
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/reports/
+```
+
+---
+
+## ベストプラクティス
+
+### DO（推奨）
+
+```
+- Page Object Model を使用
+- data-testid 属性でセレクタを安定化
+- 認証状態をグローバルセットアップで管理
+- スクリーンショット・動画を失敗時に保存
+- 並列実行で高速化
+- モバイルビューポートもテスト
+```
+
+### DON'T（非推奨）
+
+```
+- CSS セレクタに依存（脆弱）
+- 固定の sleep() を使用
+- テスト間で状態を共有
+- UI テキストに依存（国際化で壊れる）
+- 全テストをシリアル実行
+```
+
+---
+
+## テスト安定化のコツ
+
+### 待機戦略
+
+```typescript
+// ❌ 悪い例
+await page.waitForTimeout(3000);
+
+// ✅ 良い例
+await page.waitForSelector('[data-testid="content"]');
+await expect(page.locator('[data-testid="content"]')).toBeVisible();
+await page.waitForLoadState('networkidle');
+```
+
+### リトライ戦略
+
+```typescript
+// 不安定な操作をリトライ
+await expect(async () => {
+  await page.click('[data-testid="button"]');
+  await expect(page.locator('[data-testid="result"]')).toBeVisible();
+}).toPass({ timeout: 10000 });
+```
+
+---
+
+## トラブルシューティング
+
+| 症状 | 原因 | 解決策 |
+|------|------|--------|
+| 要素が見つからない | セレクタが不安定 | data-testid を使用 |
+| タイムアウト | 読み込みが遅い | タイムアウト値を調整 |
+| CI で失敗 | 環境差異 | Docker でブラウザを固定 |
+| フレーキーテスト | 非同期処理 | 適切な待機を追加 |
+
+---
+
+## 関連スキル
+
+| スキル | 説明 |
+|--------|------|
+| `/api-test` | API ユニットテスト |
+| `/integration-test` | 統合テスト |
+
+---
+
+## 変数一覧
+
+| 変数名 | 説明 | 必須 |
+| ------ | ---- | ---- |
+| `{{FRONTEND_FRAMEWORK}}` | フロントエンドフレームワーク | YES |
+| `{{E2E_FRAMEWORK}}` | E2E フレームワーク（Playwright/Cypress） | YES |
+| `{{PAGE_OBJECT_BASE}}` | ベースページ実装 | YES |
+| `{{PAGE_OBJECT_IMPL}}` | ページ実装例 | YES |
+| `{{AUTH_FLOW_PATTERN}}` | 認証フローパターン | YES |
+| `{{FORM_FLOW_PATTERN}}` | フォームフローパターン | YES |
+| `{{GLOBAL_SETUP}}` | グローバルセットアップ | YES |
+| `{{PLAYWRIGHT_CONFIG}}` | Playwright 設定 | YES |
+| `{{RUN_E2E_TESTS}}` | E2E 実行コマンド | YES |
+| `{{RUN_E2E_UI}}` | UI モード実行コマンド | YES |
+| `{{RUN_E2E_BROWSER}}` | ブラウザ指定実行コマンド | YES |
+| `{{RUN_E2E_HEADED}}` | ヘッドフル実行コマンド | YES |
+| `{{RUN_E2E_DEBUG}}` | デバッグ実行コマンド | YES |
+| `{{RUN_E2E_RECORD}}` | レコーディングコマンド | YES |
