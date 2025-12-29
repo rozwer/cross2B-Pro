@@ -51,10 +51,12 @@
 
 ---
 
-## フェーズ 3: オプション機能 `cc:TODO`
+## フェーズ 3: オプション機能 `cc:完了`
 
-- [ ] Codex 連携（agents/rules/commands）
-- [ ] options.json で `use_codex: true/false` 選択
+✅ 完了（2025-12-29）
+
+- [x] Codex 連携（agents/rules/commands） → `optional/codex/` に配置
+- [x] options.json で `use_codex: true/false` 選択（スキーマ対応済み）
 
 ---
 
