@@ -1,6 +1,7 @@
 # Claude Code 設定・プラグイン概要ドキュメント
 
 > 作成日: 2025-12-28
+> 最終更新: 2025-12-29
 > 対象: 外部LLMとの設定レビュー用
 
 ---
@@ -25,34 +26,35 @@
 .claude/
 ├── CLAUDE.md                 # メイン指示書（最高優先度）
 ├── settings.json             # 基本パーミッション設定
-├── settings.local.json       # ローカル拡張パーミッション（大量のBash許可）
-├── agents/                   # サブエージェント定義
-│   ├── architect.md
-│   ├── backend-implementer.md
-│   ├── frontend-implementer.md
-│   ├── prompt-engineer.md
-│   ├── security-reviewer.md
-│   ├── temporal-debugger.md
-│   └── codex-reviewer.md
-├── skills/                   # プロジェクト固有スキル
-│   ├── langgraph-fundamentals/
-│   ├── langgraph-multi-agent/
-│   ├── langgraph-patterns/
-│   ├── langgraph-persistence/
-│   ├── prompt-authoring/
-│   ├── security-review/
-│   ├── tenant-db-ops/
-│   └── workflow-step-impl/
-├── commands/                 # スラッシュコマンド
-│   ├── dev/
-│   ├── debug/
-│   ├── prompts/
-│   ├── review/
-│   └── workflow/
-├── rules/                    # 実装ルール
-│   ├── implementation.md
-│   ├── workflow-contract.md
-│   └── git-worktree.md
+├── settings.local.json       # ローカル拡張パーミッション
+├── agents/                   # サブエージェント定義（26個）
+│   ├── architect.md          # 設計判断・分割方針
+│   ├── be-implementer.md     # BE実装（FastAPI/Temporal/DB）
+│   ├── fe-implementer.md     # FE実装（Next.js/React）
+│   ├── codex-reviewer.md     # Codex CLIレビュー
+│   ├── security-reviewer.md  # セキュリティレビュー
+│   ├── temporal-debugger.md  # Temporalデバッグ
+│   ├── ... (他20個)
+├── skills/                   # プロジェクト固有スキル（24個）
+│   ├── commit.md, pr.md, push.md          # Git操作系
+│   ├── new-feature.md, fix-bug.md         # 実装系
+│   ├── langgraph-*.md (4個)               # LangGraph系
+│   ├── ... (他スキル)
+├── commands/                 # スラッシュコマンド（22個）
+│   ├── dev/                  # 開発系（12個）
+│   ├── debug/                # デバッグ系（2個）
+│   ├── prompts/              # プロンプト管理（2個）
+│   ├── review/               # レビュー系（1個）
+│   └── workflow/             # ワークフロー系（5個）
+├── rules/                    # 実装ルール（8個）
+│   ├── dev-style.md          # パッケージ管理・コミット
+│   ├── git-worktree.md       # 並列開発
+│   ├── implementation.md     # API/Temporal/テスト
+│   ├── workflow-contract.md  # 工程・承認
+│   ├── subagent-usage.md     # サブエージェント選択
+│   ├── asset-authoring.md    # 資産作成
+│   ├── codex-integration.md  # Codex連携
+│   └── githooks.md           # Git hooks
 ├── state/                    # セッション状態
 │   ├── session.json
 │   ├── generated-files.json
@@ -107,153 +109,209 @@
 
 ---
 
-## 3. エージェント (agents/)
+## 3. エージェント (agents/) - 26個
 
-| ファイル | 名前 | 用途 |
-|----------|------|------|
-| architect.md | @architect | 設計判断・分割方針、ROADMAPに沿った分割推奨 |
-| backend-implementer.md | @backend-implementer | FastAPI/Temporal/DB/Storage実装（監査ログ必須） |
-| frontend-implementer.md | @frontend-implementer | レビューUI実装（承認/却下/生成物閲覧） |
-| prompt-engineer.md | @prompt-engineer | DB管理プロンプトの設計・バージョニング |
-| security-reviewer.md | @security-reviewer | マルチテナント越境・監査・秘密情報レビュー |
-| temporal-debugger.md | @temporal-debugger | Temporal履歴/リプレイ/決定性違反デバッグ |
-| codex-reviewer.md | @codex-reviewer | Codex CLIでセカンドオピニオンレビュー |
+### カテゴリ別一覧
 
-### 各エージェントの詳細
+#### 実装系
+| 名前 | 用途 |
+|------|------|
+| @architect | 設計判断・分割方針 |
+| @be-implementer | BE実装（FastAPI/Temporal/DB） |
+| @fe-implementer | FE実装（Next.js/React） |
+| @integration-implementer | 統合実装 |
+| @prompt-engineer | プロンプト設計・バージョニング |
+| @prompt-tester | プロンプトテスト |
 
-#### architect.md
-```markdown
-- 仕様の矛盾/未決定を洗い出し、決定案を提示
-- 実装をレビュー可能な粒度に分割（worktree境界）
-- 参照: @仕様書/ROADMAP.md, temporal.md, database.md
-```
+#### レビュー系
+| 名前 | 用途 |
+|------|------|
+| @codex-reviewer | Codex CLIセカンドオピニオン |
+| @security-reviewer | セキュリティ・越境チェック |
+| @pr-reviewer | PRレビュー |
 
-#### backend-implementer.md
-```markdown
-- API契約とDBスキーマに沿って実装（監査ログ必須）
-- Activity冪等性（input/output digest, output_path）を守る
-- チェックリスト: tenant_id スコープ、監査ログ、冪等性、storage保存、フォールバック禁止
-```
+#### デバッグ・調査系
+| 名前 | 用途 |
+|------|------|
+| @temporal-debugger | Temporal履歴・決定性違反 |
+| @error-analyzer | エラー分析 |
+| @stack-tracer | スタックトレース解析 |
+| @log-investigator | ログ横断調査 |
+| @bugfix-handler | バグ修正対応 |
 
-#### codex-reviewer.md
-```markdown
-- 実行方法:
-  - `codex review --uncommitted` (未コミット変更)
-  - `codex review --base develop` (ブランチ差分)
-  - `codex review --commit <SHA>` (特定コミット)
-```
+#### Git系
+| 名前 | 用途 |
+|------|------|
+| @diff-analyzer | 差分分析 |
+| @commit-creator | コミット作成 |
+| @pr-creator | PR作成 |
+| @branch-manager | ブランチ管理 |
+| @push-handler | プッシュ処理 |
+| @rebase-handler | リベース処理 |
+| @conflict-resolver | コンフリクト解消 |
 
----
-
-## 4. スキル (skills/)
-
-| ディレクトリ | 名前 | 用途 |
-|--------------|------|------|
-| langgraph-fundamentals/ | langgraph-fundamentals | StateGraph/State Schema/ノード/エッジの基礎 |
-| langgraph-multi-agent/ | langgraph-multi-agent | Supervisor/Swarm/Agent-as-Tool パターン |
-| langgraph-patterns/ | langgraph-patterns | Streaming/並列実行/Subgraph/エラー処理 |
-| langgraph-persistence/ | langgraph-persistence | Checkpointing/Human-in-the-loop/Time-travel |
-| prompt-authoring/ | prompt-authoring | DB管理プロンプトのversioning/variables/レンダリング |
-| security-review/ | security-review | RBAC/監査ログ/秘密情報/越境/LLM注入レビュー |
-| tenant-db-ops/ | tenant-db-ops | マルチテナントDB運用・マイグレーション |
-| workflow-step-impl/ | workflow-step-impl | Temporal+LangGraph工程追加の実装テンプレ |
-
-### workflow-step-impl の詳細
-
-**templates/ サブディレクトリあり**:
-- `activity_skeleton.py` - Activity実装のスケルトン
-- `step_node_skeleton.py` - LangGraphノードのスケルトン
-
-**チェックリスト**:
-1. 仕様書で工程ID/入出力/承認ポイントを確定
-2. 入力の正規化と `input_digest`（sha256）を定義
-3. Activity 実装（冪等：既存出力があれば再計算しない）
-4. 成果物は storage に保存、返すのは参照のみ
-5. Temporal Workflow に組み込み（工程3後は signal 待機）
-6. DB記録を追加
-7. UI/APIを同時更新
+#### 運用・ドキュメント系
+| 名前 | 用途 |
+|------|------|
+| @docker-manager | Docker管理 |
+| @deployer | デプロイ |
+| @refactorer | リファクタリング |
+| @readme-generator | README生成 |
+| @api-doc-generator | APIドキュメント生成 |
 
 ---
 
-## 5. コマンド (commands/)
+## 4. スキル (skills/) - 24個
 
-### dev/（開発系）
+### カテゴリ別一覧
 
-| コマンド | ファイル | 用途 |
-|----------|----------|------|
-| /dev:up | up.md | Docker Compose で全サービス起動 |
-| /dev:down | down.md | ローカル停止 |
-| /dev:smoke | smoke.md | 環境/依存/構文/起動の最低限チェック |
-| /dev:seed | seed.md | 初期データ投入（未整備） |
-| /dev:worktree-new | worktree-new.md | git worktree 作成 |
-| /dev:worktree-list | worktree-list.md | worktree 一覧 |
-| /dev:worktree-remove | worktree-remove.md | worktree 削除 |
+#### Git・ワークフロー系
+| スキル | 用途 |
+|--------|------|
+| commit | コミット作成 |
+| pr | PR作成 |
+| push | プッシュ |
+| git-commit-flow | Gitコミットフロー |
 
-### debug/（デバッグ系）
+#### 実装系
+| スキル | 用途 |
+|--------|------|
+| new-feature | 新機能実装 |
+| fix-bug | バグ修正 |
+| refactor | リファクタリング |
+| workflow-step-impl | Temporal+LangGraph工程追加 |
 
-| コマンド | ファイル | 用途 |
-|----------|----------|------|
-| /debug:trace-run | trace-run.md | run障害解析（API→DB→Temporal→storage） |
-| /debug:replay | replay.md | Temporalリプレイ（決定性違反検出） |
+#### テスト系
+| スキル | 用途 |
+|--------|------|
+| flow_test | フローテスト |
+| endpoint_test | エンドポイントテスト |
+| fe_be_test | FE/BE統合テスト |
 
-### prompts/（プロンプト管理）
+#### レビュー・セキュリティ系
+| スキル | 用途 |
+|--------|------|
+| review | コードレビュー |
+| security-review | セキュリティレビュー |
 
-| コマンド | ファイル | 用途 |
-|----------|----------|------|
-| /prompts:preview-render | preview-render.md | プロンプトレンダリング結果プレビュー |
-| /prompts:bump-version | bump-version.md | プロンプトバージョン更新 |
+#### 運用・調査系
+| スキル | 用途 |
+|--------|------|
+| docker | Docker操作 |
+| deploy | デプロイ |
+| debug | デバッグ |
+| docs | ドキュメント生成 |
+| codebase-explore | コードベース探索 |
 
-### workflow/（ワークフロー操作）
+#### LangGraph系
+| スキル | 用途 |
+|--------|------|
+| langgraph-fundamentals | 基礎（StateGraph/ノード/エッジ） |
+| langgraph-patterns | パターン（Streaming/並列） |
+| langgraph-multi-agent | マルチエージェント |
+| langgraph-persistence | 永続化・Human-in-the-loop |
 
-| コマンド | ファイル | 用途 |
-|----------|----------|------|
-| /workflow:new-run | new-run.md | 新規run/workflow開始 |
-| /workflow:start-run | start-run.md | 既存run開始 |
-| /workflow:approve-run | approve-run.md | 工程3承認（Temporal signal再開） |
-| /workflow:fetch-artifacts | fetch-artifacts.md | 生成物取得 |
-
-### review/（レビュー系）
-
-| コマンド | ファイル | 用途 |
-|----------|----------|------|
-| /review:codex-review | codex-review.md | Codexセカンドオピニオンレビュー |
+#### プロジェクト固有
+| スキル | 用途 |
+|--------|------|
+| prompt-authoring | プロンプトバージョニング |
+| tenant-db-ops | マルチテナントDB運用 |
 
 ---
 
-## 6. ルール (rules/)
+## 5. コマンド (commands/) - 22個
 
-### implementation.md（実装ルール）
+### dev/（開発系 - 12個）
 
-**主要セクション**:
-1. **API契約**: 38エンドポイントの定義（Runs/Artifacts/Step11/Step12/Other）
-2. **Temporal + LangGraph**: 決定性、signal待機、冪等性
-3. **成果物（Storage）**: output_path/output_digest/summary/metrics
-4. **セキュリティ/マルチテナント**: 越境防止、監査ログ、秘密情報
-5. **プロンプト管理**: DB管理、versioning、変数レンダリング
-6. **フロントエンド**: ワークフロービュー、承認フロー
-7. **環境構築・Docker**: 必要条件、サービス一覧
-8. **テスト戦略**: テストレベル、禁止パターン
-9. **CI/CD パイプライン**
-10. **トラブルシューティング**
+| コマンド | 用途 |
+|----------|------|
+| /dev:up | Docker Compose で全サービス起動 |
+| /dev:down | ローカル停止 |
+| /dev:status | 開発状態一覧表示 |
+| /dev:logs | サービスログ確認 |
+| /dev:health | 全サービスヘルスチェック |
+| /dev:smoke | 環境/依存/構文/起動の最低限チェック |
+| /dev:test | テスト実行 |
+| /dev:seed | 初期データ投入 |
+| /dev:worktree-new | git worktree 作成 |
+| /dev:worktree-list | worktree 一覧 |
+| /dev:worktree-remove | worktree 削除 |
 
-### workflow-contract.md（ワークフロー契約）
+### debug/（デバッグ系 - 2個）
 
-**主要ルール**:
-- 工程3（3A/3B/3C）完了後は承認待ち
-- 承認/却下/再実行は `audit_logs` に記録
-- 成果物は storage に保存、参照のみ返す
-- **冪等性必須**: 同一入力 → 同一出力
-- **フォールバック禁止**: 別モデル/別プロバイダへの自動切替禁止
-- **リトライ許可**: 同一条件で最大3回
+| コマンド | 用途 |
+|----------|------|
+| /debug:trace-run | run障害解析（API→DB→Temporal→storage） |
+| /debug:replay | Temporalリプレイ（決定性違反検出） |
 
-### git-worktree.md（Git Worktree運用）
+### prompts/（プロンプト管理 - 2個）
 
-**主要ルール**:
-- worktree は `.worktrees/<topic>/` に作成
+| コマンド | 用途 |
+|----------|------|
+| /prompts:preview-render | プロンプトレンダリング結果プレビュー |
+| /prompts:bump-version | プロンプトバージョン更新 |
+
+### workflow/（ワークフロー操作 - 5個）
+
+| コマンド | 用途 |
+|----------|------|
+| /workflow:new-run | 新規run/workflow開始 |
+| /workflow:run | ワークフロー状態確認・操作 |
+| /workflow:start-run | 既存run開始 |
+| /workflow:approve-run | 工程3承認（Temporal signal再開） |
+| /workflow:fetch-artifacts | 生成物取得 |
+
+### review/（レビュー系 - 1個）
+
+| コマンド | 用途 |
+|----------|------|
+| /review:codex-review | Codexセカンドオピニオンレビュー |
+
+### その他（1個）
+
+| コマンド | 用途 |
+|----------|------|
+| /run_flow | フロー実行 |
+
+---
+
+## 6. ルール (rules/) - 8個
+
+| ルール | 用途 |
+|--------|------|
+| dev-style.md | パッケージ管理（uv/npm）・コミット方針（Conventional Commits） |
+| git-worktree.md | 並列開発・worktree運用 |
+| implementation.md | API契約/Temporal/テスト戦略/Docker/トラブルシューティング |
+| workflow-contract.md | 工程・承認・成果物契約 |
+| subagent-usage.md | サブエージェント選択基準・呼び出し形式 |
+| asset-authoring.md | Skills/Agents/Commands/Rulesの作成規約 |
+| codex-integration.md | Codex CLI連携・TUIモード |
+| githooks.md | pre-commit/pre-push hook設定 |
+
+### 主要ルールの詳細
+
+#### implementation.md（実装ルール）
+10セクション構成:
+1. API契約（38エンドポイント）
+2. Temporal + LangGraph
+3. 成果物（Storage）
+4. セキュリティ/マルチテナント
+5. プロンプト管理
+6. フロントエンド
+7. 環境構築・Docker
+8. テスト戦略
+9. CI/CD パイプライン
+10. トラブルシューティング
+
+#### workflow-contract.md（ワークフロー契約）
+- 工程3完了後は承認待ち
+- 監査ログ必須
+- **冪等性必須**・**フォールバック禁止**
+
+#### git-worktree.md
+- `.worktrees/<topic>/` に作成
 - 1 worktree = 1 作業テーマ
-- 同じファイルを複数 worktree で同時に触らない
-- Python venv は worktree ごとに作成
-- リモート操作は行わない
+- 同ファイル同時編集禁止
 
 ---
 

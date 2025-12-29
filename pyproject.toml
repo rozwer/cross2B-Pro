@@ -53,6 +53,12 @@ warn_unused_configs = true
 ignore_missing_imports = true
 # Suppress some strict checks that are overly noisy for this codebase
 disable_error_code = ["union-attr", "index", "arg-type", "call-arg", "attr-defined", "unused-ignore", "untyped-decorator"]
+# Exclude template directories to avoid duplicate module errors
+exclude = [
+    "^\\.claude-making/",
+    "^\\.claude/hooks/",
+    "^\\.worktrees/",
+]
 
 [tool.ruff]
 target-version = "py311"

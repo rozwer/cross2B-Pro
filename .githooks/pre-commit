@@ -38,6 +38,49 @@ SECRET_PATTERNS=(
     'api_key\s*=\s*["\x27][a-zA-Z0-9_-]{20,}["\x27]'
 )
 
+# 秘密情報検出を除外するファイルパターン
+EXCLUDE_SECRET_CHECK=(
+    "*.md"                    # Markdown ドキュメント（サンプルコード含む）
+    ".claude/*"               # Claude Code 設定（サンプルパターン含む）
+    ".claude-making/*"        # テンプレートディレクトリ
+    "*.example"               # サンプル設定ファイル
+    "tests/*"                 # テストファイル
+)
+
+# ダミー値パターン（除外）
+DUMMY_PATTERNS=(
+    "sk-xxxx"
+    "sk-xxx"
+    "YOUR_"
+    "your-"
+    "example"
+    "dummy"
+    "test"
+    "placeholder"
+)
+
+should_check_secrets() {
+    local file="$1"
+    for pattern in "${EXCLUDE_SECRET_CHECK[@]}"; do
+        if [[ "$file" == $pattern ]]; then
+            return 1  # 除外
+        fi
+    done
+    return 0  # チェック対象
+}
+
+is_dummy_value() {
+    local file="$1"
+    local content
+    content=$(cat "$file" 2>/dev/null || echo "")
+    for dummy in "${DUMMY_PATTERNS[@]}"; do
+        if echo "$content" | grep -qi "$dummy"; then
+            return 0  # ダミー値を含む
+        fi
+    done
+    return 1
+}
+
 for file in $STAGED_FILES; do
     if [[ ! -f "$file" ]]; then
         continue
@@ -50,11 +93,27 @@ for file in $STAGED_FILES; do
         continue
     fi
 
+    # 除外パターンに該当する場合はスキップ
+    if ! should_check_secrets "$file"; then
+        continue
+    fi
+
     for pattern in "${SECRET_PATTERNS[@]}"; do
         if grep -Eq "$pattern" "$file" 2>/dev/null; then
-            echo -e "${RED}⚠️  秘密情報の可能性: $file${NC}"
-            echo "   パターン: $pattern"
-            HAS_ERROR=1
+            # ダミー値を含む場合はスキップ
+            matched_line=$(grep -E "$pattern" "$file" 2>/dev/null | head -1)
+            is_dummy=0
+            for dummy in "${DUMMY_PATTERNS[@]}"; do
+                if echo "$matched_line" | grep -qi "$dummy"; then
+                    is_dummy=1
+                    break
+                fi
+            done
+            if [ $is_dummy -eq 0 ]; then
+                echo -e "${RED}⚠️  秘密情報の可能性: $file${NC}"
+                echo "   パターン: $pattern"
+                HAS_ERROR=1
+            fi
         fi
     done
 done
