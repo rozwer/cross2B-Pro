@@ -23,9 +23,20 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step4 import (
+    BehavioralEconomicsConfig,
+    CTAPlacements,
+    CTAPosition,
+    KGIConfig,
+    LLMOConfig,
+    NeuroscienceConfig,
     OutlineMetrics,
     OutlineQuality,
+    PhaseSection,
+    SectionFourPillars,
     Step4Output,
+    ThreePhaseStructure,
+    TitleMetadata,
+    WordCountTracking,
 )
 from apps.worker.helpers import (
     CheckpointManager,
@@ -335,6 +346,40 @@ class Step4StrategicOutline(BaseActivity):
             "output_tokens": response.token_usage.output if response else 0,
         }
 
+        # V2モード検出: pack_idがv2_blog_systemの場合
+        is_v2_mode = pack_id == "v2_blog_system" or config.get("v2_mode", False)
+
+        # V2フィールドの構築
+        title_metadata = None
+        three_phase_structure = None
+        four_pillars_per_section: list[SectionFourPillars] = []
+        cta_placements = None
+        word_count_tracking = None
+
+        if is_v2_mode:
+            # タイトルメタデータの構築
+            article_title = ""
+            if parse_result.success and parse_result.data:
+                data = parse_result.data
+                if isinstance(data, dict):
+                    article_title = data.get("article_title", "")
+
+            if article_title:
+                title_metadata = self._build_title_metadata(article_title, keyword)
+
+            # 3フェーズ構成の構築
+            target_word_count = config.get("target_word_count", 5000)
+            three_phase_structure = self._build_three_phase_structure(outline, target_word_count, md_metrics)
+
+            # セクション別4本柱の構築
+            four_pillars_per_section = self._build_four_pillars_per_section(outline)
+
+            # CTA配置の構築
+            cta_placements = self._build_cta_placements(target_word_count, outline)
+
+            # 文字数管理の構築
+            word_count_tracking = self._build_word_count_tracking(target_word_count, text_metrics.char_count)
+
         output = Step4Output(
             step=self.step_id,
             keyword=keyword,
@@ -343,6 +388,12 @@ class Step4StrategicOutline(BaseActivity):
             quality=quality,
             model=model_name,
             usage=usage,
+            # V2フィールド
+            title_metadata=title_metadata,
+            three_phase_structure=three_phase_structure,
+            four_pillars_per_section=four_pillars_per_section,
+            cta_placements=cta_placements,
+            word_count_tracking=word_count_tracking,
         )
 
         return output.model_dump()
@@ -442,6 +493,185 @@ class Step4StrategicOutline(BaseActivity):
         if step3c_data.get("competitor_analysis"):
             parts.append(f"競合分析: {str(step3c_data.get('competitor_analysis'))[:800]}")
         return "\n\n".join(parts)
+
+    # ==========================================================================
+    # blog.System Ver8.3 対応メソッド
+    # ==========================================================================
+
+    def _build_title_metadata(self, title: str, keyword: str) -> TitleMetadata:
+        """タイトルメタデータを構築."""
+        import re
+
+        char_count = len(title)
+        contains_number = bool(re.search(r"\d", title))
+        contains_keyword = keyword.lower() in title.lower()
+        # 括弧チェック: (), [], 【】, 「」, 『』
+        bracket_pattern = r"[\(\)\[\]【】「」『』\(\)]"
+        no_brackets = not bool(re.search(bracket_pattern, title))
+
+        issues: list[str] = []
+        if char_count < 28 or char_count > 36:
+            issues.append(f"文字数が理想範囲外（{char_count}文字、理想: 28-36文字）")
+        if not contains_number:
+            issues.append("数字を含んでいません")
+        if not contains_keyword:
+            issues.append(f"キーワード「{keyword}」を含んでいません")
+        if not no_brackets:
+            issues.append("括弧を含んでいます（禁止）")
+
+        validation_passed = len(issues) == 0
+
+        return TitleMetadata(
+            char_count=char_count,
+            contains_number=contains_number,
+            contains_keyword=contains_keyword,
+            no_brackets=no_brackets,
+            validation_passed=validation_passed,
+            issues=issues,
+        )
+
+    def _build_three_phase_structure(self, outline: str, target_word_count: int, md_metrics: Any) -> ThreePhaseStructure:
+        """3フェーズ構成を構築."""
+        import re
+
+        # H2セクションを抽出
+        h2_pattern = r"^##\s+(.+)$"
+        h2_sections = re.findall(h2_pattern, outline, re.MULTILINE)
+
+        # フェーズ割り当て（簡易版: 最初の1/3をPhase1、中央をPhase2、最後をPhase3）
+        total_sections = len(h2_sections)
+        if total_sections == 0:
+            return ThreePhaseStructure()
+
+        phase1_end = max(1, total_sections // 6)  # 約15%
+        phase3_start = total_sections - max(1, total_sections // 6)  # 約15%
+
+        phase1_sections = h2_sections[:phase1_end]
+        phase2_sections = h2_sections[phase1_end:phase3_start]
+        phase3_sections = h2_sections[phase3_start:]
+
+        # 文字数比率の計算
+        phase1_ratio = 0.12 if phase1_sections else 0.0
+        phase2_ratio = 0.70 if phase2_sections else 0.0
+        phase3_ratio = 0.18 if phase3_sections else 0.0
+
+        # バランスチェック
+        balance_issues: list[str] = []
+        if phase1_ratio < 0.10 or phase1_ratio > 0.20:
+            balance_issues.append(f"Phase1比率が範囲外（{phase1_ratio:.0%}、理想: 10-20%）")
+        if phase2_ratio < 0.60 or phase2_ratio > 0.80:
+            balance_issues.append(f"Phase2比率が範囲外（{phase2_ratio:.0%}、理想: 60-80%）")
+        if phase3_ratio < 0.10 or phase3_ratio > 0.20:
+            balance_issues.append(f"Phase3比率が範囲外（{phase3_ratio:.0%}、理想: 10-20%）")
+
+        return ThreePhaseStructure(
+            phase1=PhaseSection(
+                word_count_ratio=phase1_ratio,
+                target_word_count=int(target_word_count * phase1_ratio),
+                sections=phase1_sections,
+            ),
+            phase2=PhaseSection(
+                word_count_ratio=phase2_ratio,
+                target_word_count=int(target_word_count * phase2_ratio),
+                sections=phase2_sections,
+            ),
+            phase3=PhaseSection(
+                word_count_ratio=phase3_ratio,
+                target_word_count=int(target_word_count * phase3_ratio),
+                sections=phase3_sections,
+            ),
+            is_balanced=len(balance_issues) == 0,
+            balance_issues=balance_issues,
+        )
+
+    def _build_four_pillars_per_section(self, outline: str) -> list[SectionFourPillars]:
+        """セクション別4本柱を構築."""
+        import re
+
+        h2_pattern = r"^##\s+(.+)$"
+        h2_sections = re.findall(h2_pattern, outline, re.MULTILINE)
+
+        result: list[SectionFourPillars] = []
+        for i, section_title in enumerate(h2_sections):
+            # フェーズ決定（位置ベース）
+            position_ratio = i / max(1, len(h2_sections) - 1) if len(h2_sections) > 1 else 0.5
+            if position_ratio < 0.2:
+                phase = "1"
+                cognitive_load = "low"
+            elif position_ratio > 0.8:
+                phase = "3"
+                cognitive_load = "medium"
+            else:
+                phase = "2"
+                cognitive_load = "medium"
+
+            # CTA配置決定
+            if position_ratio < 0.15:
+                cta_placement = "early"
+            elif 0.5 < position_ratio < 0.7:
+                cta_placement = "mid"
+            elif position_ratio > 0.85:
+                cta_placement = "final"
+            else:
+                cta_placement = "none"
+
+            result.append(
+                SectionFourPillars(
+                    section_title=section_title,
+                    neuroscience=NeuroscienceConfig(
+                        cognitive_load=cognitive_load,
+                        phase=phase,
+                    ),
+                    behavioral_economics=BehavioralEconomicsConfig(
+                        principles_applied=["損失回避", "社会的証明"] if phase == "1" else ["権威性"],
+                    ),
+                    llmo=LLMOConfig(
+                        token_target=500,
+                        question_heading="?" in section_title or "とは" in section_title,
+                    ),
+                    kgi=KGIConfig(
+                        cta_placement=cta_placement,
+                    ),
+                )
+            )
+
+        return result
+
+    def _build_cta_placements(self, target_word_count: int, outline: str) -> CTAPlacements:
+        """CTA配置を構築."""
+        import re
+
+        h2_pattern = r"^##\s+(.+)$"
+        h2_sections = re.findall(h2_pattern, outline, re.MULTILINE)
+
+        early_section = h2_sections[0] if len(h2_sections) > 0 else ""
+        mid_index = len(h2_sections) // 2
+        mid_section = h2_sections[mid_index] if len(h2_sections) > mid_index else ""
+        final_section = h2_sections[-1] if len(h2_sections) > 0 else ""
+
+        return CTAPlacements(
+            early=CTAPosition(position=650, section=early_section, cta_type="資料請求"),
+            mid=CTAPosition(position=2800, section=mid_section, cta_type="無料相談"),
+            final=CTAPosition(
+                position=max(0, target_word_count - 500),
+                section=final_section,
+                cta_type="問い合わせ",
+            ),
+        )
+
+    def _build_word_count_tracking(self, target: int, sections_total: int) -> WordCountTracking:
+        """文字数管理を構築."""
+        variance = sections_total - target
+        variance_percentage = (variance / target * 100) if target > 0 else 0.0
+        is_within_tolerance = abs(variance_percentage) <= 10.0
+
+        return WordCountTracking(
+            target=target,
+            sections_total=sections_total,
+            variance=variance,
+            variance_percentage=variance_percentage,
+            is_within_tolerance=is_within_tolerance,
+        )
 
 
 @activity.defn(name="step4_strategic_outline")
