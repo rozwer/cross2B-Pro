@@ -24,10 +24,20 @@ from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step7a import (
+    BehavioralEconomicsImplementation,
+    CTAImplementation,
+    CTAPosition,
     DraftQuality,
     DraftQualityMetrics,
+    FourPillarsImplementation,
     GenerationStats,
+    KGIImplementation,
+    LLMOImplementation,
+    NeuroscienceImplementation,
+    SectionWordCount,
+    SplitGeneration,
     Step7aOutput,
+    WordCountTracking,
 )
 from apps.worker.helpers import (
     CheckpointManager,
@@ -278,6 +288,26 @@ class Step7ADraftGeneration(BaseActivity):
             "output_tokens": response.token_usage.output if response else 0,
         }
 
+        # === blog.System Ver8.3 Extensions ===
+        # Get target word count from config (default 5000)
+        target_word_count = config.get("target_word_count", 5000)
+
+        # Get parsed data for extraction
+        parsed_data = parse_result.data if parse_result.success else {}
+        if not isinstance(parsed_data, dict):
+            parsed_data = {}
+
+        # Extract section titles for split generation tracking
+        section_titles = re.findall(r"^##\s+(.+)$", draft_content, re.MULTILINE)
+        section_titles = [t.strip() for t in section_titles]
+
+        # Extract blog.System Ver8.3 fields
+        section_word_counts = self._extract_section_word_counts(parsed_data, draft_content, target_word_count)
+        four_pillars_impl = self._extract_four_pillars_implementation(parsed_data)
+        cta_impl = self._extract_cta_implementation(parsed_data, cta_positions, md_metrics.h2_count or section_count)
+        word_count_tracking = self._extract_word_count_tracking(parsed_data, target_word_count, text_metrics.word_count)
+        split_gen = self._extract_split_generation(parsed_data, continuation_used, section_titles)
+
         output = Step7aOutput(
             step=self.step_id,
             keyword=keyword,
@@ -295,6 +325,25 @@ class Step7ADraftGeneration(BaseActivity):
             continued=continuation_used,
             model=model_name,
             usage=usage,
+            # blog.System Ver8.3 extensions
+            section_word_counts=[SectionWordCount(**swc) for swc in section_word_counts],
+            four_pillars_implementation=[
+                FourPillarsImplementation(
+                    section_title=fp["section_title"],
+                    neuroscience=NeuroscienceImplementation(**fp["neuroscience"]),
+                    behavioral_economics=BehavioralEconomicsImplementation(**fp["behavioral_economics"]),
+                    llmo=LLMOImplementation(**fp["llmo"]),
+                    kgi=KGIImplementation(**fp["kgi"]),
+                )
+                for fp in four_pillars_impl
+            ],
+            cta_implementation=CTAImplementation(
+                early=CTAPosition(**cta_impl["early"]),
+                mid=CTAPosition(**cta_impl["mid"]),
+                final=CTAPosition(**cta_impl["final"]),
+            ),
+            word_count_tracking=WordCountTracking(**word_count_tracking),
+            split_generation=SplitGeneration(**split_gen),
         )
 
         return output.model_dump()
@@ -355,6 +404,247 @@ class Step7ADraftGeneration(BaseActivity):
             return str(step3_5_data["raw_output"])[:2000]
 
         return "\n\n".join(parts)
+
+    def _extract_section_word_counts(
+        self,
+        parsed_data: dict[str, Any],
+        draft_content: str,
+        target_word_count: int,
+    ) -> list[dict[str, Any]]:
+        """Extract section-level word count tracking from parsed data or draft.
+
+        Calculates target, actual, variance, and tolerance for each section.
+        Default target per section is total target / section count.
+        """
+        section_word_counts: list[dict[str, Any]] = []
+
+        # Try to extract from parsed data first
+        if parsed_data and parsed_data.get("section_word_counts"):
+            for item in parsed_data["section_word_counts"]:
+                if isinstance(item, dict):
+                    section_word_counts.append(
+                        {
+                            "section_title": item.get("section_title", ""),
+                            "target": item.get("target", 0),
+                            "actual": item.get("actual", 0),
+                            "variance": item.get("variance", 0),
+                            "is_within_tolerance": item.get("is_within_tolerance", True),
+                        }
+                    )
+            return section_word_counts
+
+        # Extract from draft content using regex
+        sections = re.findall(r"^##\s+(.+)$", draft_content, re.MULTILINE)
+        if not sections:
+            return section_word_counts
+
+        # Split content by H2 headers
+        section_texts = re.split(r"^##\s+.+$", draft_content, flags=re.MULTILINE)
+        section_texts = [t.strip() for t in section_texts[1:] if t.strip()]  # Skip before first H2
+
+        # Calculate target per section (equal distribution)
+        per_section_target = target_word_count // max(1, len(sections))
+
+        for i, title in enumerate(sections):
+            content = section_texts[i] if i < len(section_texts) else ""
+            actual = len(content.split())
+            variance = actual - per_section_target
+            # Within tolerance if within ±20%
+            tolerance = per_section_target * 0.2
+            is_within = abs(variance) <= tolerance
+
+            section_word_counts.append(
+                {
+                    "section_title": title.strip(),
+                    "target": per_section_target,
+                    "actual": actual,
+                    "variance": variance,
+                    "is_within_tolerance": is_within,
+                }
+            )
+
+        return section_word_counts
+
+    def _extract_four_pillars_implementation(
+        self,
+        parsed_data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Extract four pillars implementation tracking from parsed data.
+
+        Each section tracks: 神経科学, 行動経済学, LLMO, KGI implementation.
+        """
+        implementations: list[dict[str, Any]] = []
+
+        if not parsed_data:
+            return implementations
+
+        raw_impl = parsed_data.get("four_pillars_implementation", [])
+        if not isinstance(raw_impl, list):
+            return implementations
+
+        for item in raw_impl:
+            if not isinstance(item, dict):
+                continue
+
+            # Extract neuroscience
+            neuro_data = item.get("neuroscience", {})
+            if not isinstance(neuro_data, dict):
+                neuro_data = {}
+
+            # Extract behavioral economics
+            be_data = item.get("behavioral_economics", {})
+            if not isinstance(be_data, dict):
+                be_data = {}
+            principles = be_data.get("principles_used", [])
+            if not isinstance(principles, list):
+                principles = []
+
+            # Extract LLMO
+            llmo_data = item.get("llmo", {})
+            if not isinstance(llmo_data, dict):
+                llmo_data = {}
+
+            # Extract KGI
+            kgi_data = item.get("kgi", {})
+            if not isinstance(kgi_data, dict):
+                kgi_data = {}
+
+            implementations.append(
+                {
+                    "section_title": item.get("section_title", ""),
+                    "neuroscience": {
+                        "applied": bool(neuro_data.get("applied", False)),
+                        "details": str(neuro_data.get("details", "")),
+                    },
+                    "behavioral_economics": {
+                        "principles_used": [str(p) for p in principles[:4]],
+                    },
+                    "llmo": {
+                        "token_count": int(llmo_data.get("token_count", 0)),
+                        "is_independent": bool(llmo_data.get("is_independent", False)),
+                    },
+                    "kgi": {
+                        "cta_present": bool(kgi_data.get("cta_present", False)),
+                        "cta_type": kgi_data.get("cta_type"),
+                    },
+                }
+            )
+
+        return implementations
+
+    def _extract_cta_implementation(
+        self,
+        parsed_data: dict[str, Any],
+        cta_positions: list[str],
+        section_count: int,
+    ) -> dict[str, Any]:
+        """Extract CTA implementation tracking.
+
+        Maps CTA positions to early/mid/final based on section count.
+        """
+        # Try to extract from parsed data
+        if parsed_data and parsed_data.get("cta_implementation"):
+            raw = parsed_data["cta_implementation"]
+            if isinstance(raw, dict):
+                early = raw.get("early", {})
+                mid = raw.get("mid", {})
+                final = raw.get("final", {})
+                return {
+                    "early": {
+                        "position": int(early.get("position", 0)) if isinstance(early, dict) else 0,
+                        "implemented": bool(early.get("implemented", False)) if isinstance(early, dict) else False,
+                    },
+                    "mid": {
+                        "position": int(mid.get("position", 0)) if isinstance(mid, dict) else 0,
+                        "implemented": bool(mid.get("implemented", False)) if isinstance(mid, dict) else False,
+                    },
+                    "final": {
+                        "position": int(final.get("position", 0)) if isinstance(final, dict) else 0,
+                        "implemented": bool(final.get("implemented", False)) if isinstance(final, dict) else False,
+                    },
+                }
+
+        # Infer from cta_positions and section_count
+        early_pos = 1 if section_count > 0 else 0
+        mid_pos = section_count // 2 if section_count > 2 else 1
+        final_pos = max(0, section_count - 1)
+
+        # Check which positions have CTAs
+        early_impl = any("early" in p.lower() or "導入" in p for p in cta_positions)
+        mid_impl = any("mid" in p.lower() or "中盤" in p for p in cta_positions)
+        final_impl = any("final" in p.lower() or "まとめ" in p or "結論" in p for p in cta_positions)
+
+        return {
+            "early": {"position": early_pos, "implemented": early_impl},
+            "mid": {"position": mid_pos, "implemented": mid_impl},
+            "final": {"position": final_pos, "implemented": final_impl},
+        }
+
+    def _extract_word_count_tracking(
+        self,
+        parsed_data: dict[str, Any],
+        target_word_count: int,
+        actual_word_count: int,
+    ) -> dict[str, Any]:
+        """Extract overall word count progress tracking."""
+        # Try to extract from parsed data
+        if parsed_data and parsed_data.get("word_count_tracking"):
+            raw = parsed_data["word_count_tracking"]
+            if isinstance(raw, dict):
+                return {
+                    "target": int(raw.get("target", target_word_count)),
+                    "current": int(raw.get("current", actual_word_count)),
+                    "remaining": int(raw.get("remaining", max(0, target_word_count - actual_word_count))),
+                    "progress_percent": float(raw.get("progress_percent", 0.0)),
+                }
+
+        # Calculate from actual values
+        remaining = max(0, target_word_count - actual_word_count)
+        progress = (actual_word_count / target_word_count * 100) if target_word_count > 0 else 0.0
+        progress = min(100.0, progress)  # Cap at 100%
+
+        return {
+            "target": target_word_count,
+            "current": actual_word_count,
+            "remaining": remaining,
+            "progress_percent": round(progress, 1),
+        }
+
+    def _extract_split_generation(
+        self,
+        parsed_data: dict[str, Any],
+        continuation_used: bool,
+        section_titles: list[str],
+    ) -> dict[str, Any]:
+        """Extract split generation tracking."""
+        # Try to extract from parsed data
+        if parsed_data and parsed_data.get("split_generation"):
+            raw = parsed_data["split_generation"]
+            if isinstance(raw, dict):
+                total = int(raw.get("total_parts", 1))
+                current = int(raw.get("current_part", 1))
+                completed = raw.get("completed_sections", [])
+                if not isinstance(completed, list):
+                    completed = []
+                return {
+                    "total_parts": max(1, min(5, total)),
+                    "current_part": max(1, min(5, current)),
+                    "completed_sections": [str(s) for s in completed],
+                }
+
+        # Default: single part unless continuation was used
+        if continuation_used:
+            return {
+                "total_parts": 2,
+                "current_part": 2,
+                "completed_sections": section_titles,
+            }
+
+        return {
+            "total_parts": 1,
+            "current_part": 1,
+            "completed_sections": section_titles,
+        }
 
     async def _generate_draft(
         self,

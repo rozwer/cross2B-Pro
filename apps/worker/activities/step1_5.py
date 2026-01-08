@@ -76,6 +76,16 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         config = ctx.config
         related_keywords: list[str] = config.get("related_keywords", [])
 
+        # Load step1 data to exclude duplicate URLs
+        step1_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1") or {}
+        step1_urls: set[str] = set()
+        for comp in step1_data.get("competitors", []):
+            url = comp.get("url", "")
+            if url:
+                step1_urls.add(url)
+        if step1_urls:
+            logger.info(f"[STEP1.5] Loaded {len(step1_urls)} URLs from step1 for deduplication")
+
         # Load step0 data to leverage recommended_angles for keyword selection
         step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
         recommended_angles = step0_data.get("recommended_angles", [])
@@ -169,6 +179,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
                 serp_tool=serp_tool,
                 page_fetch_tool=page_fetch_tool,
                 keyword=keyword,
+                exclude_urls=step1_urls,
             )
 
             all_competitor_data.append(kw_data)
@@ -216,6 +227,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         serp_tool: Any,
         page_fetch_tool: Any,
         keyword: str,
+        exclude_urls: set[str] | None = None,
     ) -> dict[str, Any]:
         """Process a single related keyword.
 
@@ -223,15 +235,18 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
             serp_tool: SERP fetch tool instance
             page_fetch_tool: Page fetch tool instance
             keyword: Related keyword to process
+            exclude_urls: URLs to exclude (e.g., from step1)
 
         Returns:
             dict with keyword competitor data
         """
+        exclude_urls = exclude_urls or set()
+
         # Fetch SERP results for this keyword
         try:
             serp_result = await serp_tool.execute(
                 query=keyword,
-                num_results=self.MAX_COMPETITORS_PER_KEYWORD + 2,  # 少し多めに取得
+                num_results=self.MAX_COMPETITORS_PER_KEYWORD + 5,  # 除外分を考慮して多めに取得
             )
 
             if not serp_result.success:
@@ -242,6 +257,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
                     "competitors": [],
                     "fetch_success_count": 0,
                     "fetch_failed_count": 0,
+                    "skipped_duplicate_count": 0,
                 }
 
             # Handle both "results" and "urls" keys for compatibility
@@ -258,13 +274,22 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
                 "competitors": [],
                 "fetch_success_count": 0,
                 "fetch_failed_count": 0,
+                "skipped_duplicate_count": 0,
             }
+
+        # Filter out URLs already in step1
+        original_url_count = len(urls)
+        filtered_urls = [u for u in urls if u not in exclude_urls]
+        skipped_count = original_url_count - len(filtered_urls)
+
+        if skipped_count > 0:
+            logger.info(f"[STEP1.5] Excluded {skipped_count} duplicate URLs from step1 for keyword '{keyword}'")
 
         # Fetch pages
         competitors: list[dict[str, Any]] = []
         failed_count = 0
 
-        for url in urls[: self.MAX_COMPETITORS_PER_KEYWORD]:
+        for url in filtered_urls[: self.MAX_COMPETITORS_PER_KEYWORD]:
             page_data, error = await self._fetch_page_with_retry(page_fetch_tool, url)
 
             if page_data:
@@ -280,6 +305,7 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
             "competitors": competitors,
             "fetch_success_count": len(competitors),
             "fetch_failed_count": failed_count,
+            "skipped_duplicate_count": skipped_count,
         }
 
     async def _fetch_page_with_retry(

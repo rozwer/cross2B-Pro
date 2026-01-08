@@ -162,11 +162,7 @@ class CompletenessValidator:
                 デフォルト: ["まとめ", "結論", "おわり", "conclusion"]
             check_truncation: 切れの兆候をチェックするか
         """
-        self.conclusion_patterns = (
-            conclusion_patterns
-            if conclusion_patterns is not None
-            else self.DEFAULT_CONCLUSION_PATTERNS
-        )
+        self.conclusion_patterns = conclusion_patterns if conclusion_patterns is not None else self.DEFAULT_CONCLUSION_PATTERNS
         self.check_truncation = check_truncation
 
     def validate(self, content: str, **kwargs: str) -> QualityResult:
@@ -317,3 +313,218 @@ class CompositeValidator:
             warnings=all_warnings,
             scores=all_scores,
         )
+
+
+# =============================================================================
+# blog.System Ver8.3 対応バリデータ
+# =============================================================================
+
+
+class FourPillarsValidator:
+    """4本柱評価のバリデーション.
+
+    blog.System Ver8.3 で導入された4本柱評価の検証を行う。
+    - 神経科学（Neuroscience）: phase 1-3, score 0-100
+    - 行動経済学（Behavioral Economics）: score 0-100
+    - LLMO: citation_potential high/medium/low, score 0-100
+    - KGI: expected_cvr 0-100%, score 0-100
+    """
+
+    VALID_PHASES = {1, 2, 3}
+    VALID_CITATION_POTENTIALS = {"high", "medium", "low"}
+
+    def __init__(self, strict: bool = False):
+        """
+        Args:
+            strict: True の場合、全フィールドが必須。
+                    False の場合、存在するフィールドのみ検証。
+        """
+        self.strict = strict
+
+    def validate_dict(self, data: dict[str, object] | None) -> QualityResult:
+        """
+        4本柱評価データを検証.
+
+        Args:
+            data: FourPillarsEvaluation の dict 表現
+
+        Returns:
+            QualityResult: 検証結果
+        """
+        issues: list[str] = []
+        warnings: list[str] = []
+        scores: dict[str, float] = {}
+
+        if data is None:
+            if self.strict:
+                issues.append("four_pillars_missing")
+            return QualityResult(
+                is_acceptable=len(issues) == 0,
+                issues=issues,
+                warnings=warnings,
+                scores=scores,
+            )
+
+        # 神経科学
+        neuroscience = data.get("neuroscience", {})
+        if neuroscience:
+            phase = neuroscience.get("phase")
+            if phase is not None and phase not in self.VALID_PHASES:
+                issues.append(f"neuroscience_phase_invalid: {phase} not in 1-3")
+
+            ns_score = neuroscience.get("score")
+            if ns_score is not None:
+                if not (0 <= ns_score <= 100):
+                    issues.append(f"neuroscience_score_invalid: {ns_score} not in 0-100")
+                else:
+                    scores["neuroscience_score"] = float(ns_score)
+
+        # 行動経済学
+        behavioral = data.get("behavioral_economics", {})
+        if behavioral:
+            be_score = behavioral.get("score")
+            if be_score is not None:
+                if not (0 <= be_score <= 100):
+                    issues.append(f"behavioral_economics_score_invalid: {be_score} not in 0-100")
+                else:
+                    scores["behavioral_economics_score"] = float(be_score)
+
+        # LLMO
+        llmo = data.get("llmo", {})
+        if llmo:
+            citation = llmo.get("citation_potential")
+            if citation is not None and citation not in self.VALID_CITATION_POTENTIALS:
+                issues.append(f"llmo_citation_potential_invalid: {citation}")
+
+            llmo_score = llmo.get("score")
+            if llmo_score is not None:
+                if not (0 <= llmo_score <= 100):
+                    issues.append(f"llmo_score_invalid: {llmo_score} not in 0-100")
+                else:
+                    scores["llmo_score"] = float(llmo_score)
+
+        # KGI
+        kgi = data.get("kgi", {})
+        if kgi:
+            cvr = kgi.get("expected_cvr")
+            if cvr is not None:
+                if not (0.0 <= cvr <= 100.0):
+                    issues.append(f"kgi_expected_cvr_invalid: {cvr} not in 0-100%")
+                else:
+                    scores["kgi_expected_cvr"] = float(cvr)
+
+            kgi_score = kgi.get("score")
+            if kgi_score is not None:
+                if not (0 <= kgi_score <= 100):
+                    issues.append(f"kgi_score_invalid: {kgi_score} not in 0-100")
+                else:
+                    scores["kgi_score"] = float(kgi_score)
+
+        return QualityResult(
+            is_acceptable=len(issues) == 0,
+            issues=issues,
+            warnings=warnings,
+            scores=scores,
+        )
+
+    def validate(self, content: str, **kwargs: str) -> QualityResult:
+        """
+        コンテンツから4本柱評価を検証（Protocol 互換）.
+
+        Note:
+            このメソッドは QualityValidator Protocol に準拠するためのもの。
+            実際の検証には validate_dict() を使用することを推奨。
+        """
+        # content から JSON を抽出して検証する場合に使用
+        # 通常は validate_dict() を直接使用
+        return QualityResult(is_acceptable=True, issues=[])
+
+
+class ArticleStrategyValidator:
+    """記事戦略のバリデーション.
+
+    blog.System Ver8.3 で導入された記事戦略の検証を行う。
+    - type: 6種類（comprehensive_guide, deep_dive, case_study, comparison, news_analysis, how_to）
+    - strategy: standard / topic_cluster
+    - urgency: high / medium / low
+    """
+
+    VALID_ARTICLE_TYPES = {
+        "comprehensive_guide",
+        "deep_dive",
+        "case_study",
+        "comparison",
+        "news_analysis",
+        "how_to",
+    }
+    VALID_STRATEGIES = {"standard", "topic_cluster"}
+    VALID_URGENCIES = {"high", "medium", "low"}
+
+    def __init__(self, strict: bool = False):
+        """
+        Args:
+            strict: True の場合、全フィールドが必須。
+        """
+        self.strict = strict
+
+    def validate_dict(self, data: dict[str, object] | None) -> QualityResult:
+        """
+        記事戦略データを検証.
+
+        Args:
+            data: ArticleStrategy の dict 表現
+
+        Returns:
+            QualityResult: 検証結果
+        """
+        issues: list[str] = []
+        warnings: list[str] = []
+        scores: dict[str, float] = {}
+
+        if data is None:
+            if self.strict:
+                issues.append("article_strategy_missing")
+            return QualityResult(
+                is_acceptable=len(issues) == 0,
+                issues=issues,
+                warnings=warnings,
+                scores=scores,
+            )
+
+        # 記事タイプ
+        article_type = data.get("type")
+        if article_type is not None and article_type not in self.VALID_ARTICLE_TYPES:
+            issues.append(f"article_type_invalid: {article_type}")
+
+        # 戦略
+        strategy = data.get("strategy")
+        if strategy is not None and strategy not in self.VALID_STRATEGIES:
+            issues.append(f"strategy_invalid: {strategy}")
+
+        # 背景情報
+        background_raw = data.get("background", {})
+        background: dict[str, object] = background_raw if isinstance(background_raw, dict) else {}
+        if background:
+            urgency = background.get("urgency")
+            if urgency is not None and urgency not in self.VALID_URGENCIES:
+                issues.append(f"urgency_invalid: {urgency}")
+
+            # 背景情報の充実度をスコア化
+            filled_fields = sum(1 for field in ["why_now", "target_pain", "key_message"] if background.get(field))
+            scores["background_completeness"] = (filled_fields / 3) * 100
+
+        return QualityResult(
+            is_acceptable=len(issues) == 0,
+            issues=issues,
+            warnings=warnings,
+            scores=scores,
+        )
+
+    def validate(self, content: str, **kwargs: str) -> QualityResult:
+        """
+        コンテンツから記事戦略を検証（Protocol 互換）.
+
+        Note:
+            実際の検証には validate_dict() を使用することを推奨。
+        """
+        return QualityResult(is_acceptable=True, issues=[])

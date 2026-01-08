@@ -8,6 +8,12 @@ Integrated helpers:
 - QualityValidator: Validates polishing quality
 - ContentMetrics: Calculates change metrics
 - OutputParser: Parses Markdown response
+
+blog.System Ver8.3 対応:
+- 語尾統一、一文長さ、接続詞の調整詳細
+- 文字数維持確認（±5%以内）
+- 4本柱維持確認
+- 可読性改善メトリクス
 """
 
 import logging
@@ -22,7 +28,13 @@ from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
-from apps.worker.activities.schemas.step7b import PolishMetrics, Step7bOutput
+from apps.worker.activities.schemas.step7b import (
+    AdjustmentDetails,
+    FourPillarsPreservation,
+    PolishMetrics,
+    ReadabilityImprovements,
+    WordCountComparison,
+)
 from apps.worker.helpers.content_metrics import ContentMetrics
 from apps.worker.helpers.input_validator import InputValidator
 from apps.worker.helpers.output_parser import OutputParser
@@ -77,15 +89,13 @@ def _validate_polishing_quality(
         # Check not reduced by more than 30%
         if polished_words < orig_words * 0.7:
             issues.append(
-                f"not_reduced: polished content significantly reduced "
-                f"({polished_words}/{orig_words} = {polished_words/orig_words:.1%})"
+                f"not_reduced: polished content significantly reduced ({polished_words}/{orig_words} = {polished_words / orig_words:.1%})"
             )
 
         # Check not inflated by more than 50%
         if polished_words > orig_words * 1.5:
             issues.append(
-                f"not_inflated: polished content significantly inflated "
-                f"({polished_words}/{orig_words} = {polished_words/orig_words:.1%})"
+                f"not_inflated: polished content significantly inflated ({polished_words}/{orig_words} = {polished_words / orig_words:.1%})"
             )
 
     # Section preservation check
@@ -93,9 +103,7 @@ def _validate_polishing_quality(
     polished_sections = len(re.findall(r"^##\s", polished, re.MULTILINE))
 
     if orig_sections > 0 and polished_sections < orig_sections * 0.8:
-        issues.append(
-            f"sections_preserved: sections reduced from {orig_sections} to {polished_sections}"
-        )
+        issues.append(f"sections_preserved: sections reduced from {orig_sections} to {polished_sections}")
 
     # Conclusion preservation check
     conclusion_patterns = ["まとめ", "結論", "おわり"]
@@ -115,7 +123,31 @@ def _validate_polishing_quality(
 
 
 class Step7BBrushUp(BaseActivity):
-    """Activity for draft polishing and brush up."""
+    """Activity for draft polishing and brush up.
+
+    blog.System Ver8.3 対応:
+    - V2モード判定と厳格なバリデーション
+    - 調整詳細の追跡
+    - 文字数維持確認（±5%以内）
+    - 4本柱維持確認
+    - 可読性改善メトリクス
+    """
+
+    # 4本柱のキーワードパターン
+    FOUR_PILLARS_PATTERNS = {
+        "neuroscience": ["神経科学", "脳科学", "扁桃体", "前頭前野", "線条体", "ドーパミン"],
+        "behavioral_economics": [
+            "行動経済学",
+            "損失回避",
+            "社会的証明",
+            "権威性",
+            "一貫性",
+            "好意",
+            "希少性",
+        ],
+        "llmo": ["LLMO", "LLM", "AI最適化", "音声検索", "質問形式"],
+        "kgi": ["KGI", "コンバージョン", "目標達成", "成果指標"],
+    }
 
     def __init__(self) -> None:
         """Initialize with helpers."""
@@ -128,6 +160,79 @@ class Step7BBrushUp(BaseActivity):
     @property
     def step_id(self) -> str:
         return "step7b"
+
+    def _is_v2_mode(self, pack_id: str) -> bool:
+        """V2モード（blog.System対応）かどうかを判定."""
+        return pack_id.startswith("v2_") or "blog_system" in pack_id.lower()
+
+    def _calculate_avg_sentence_length(self, text: str) -> float:
+        """テキストの平均文長を計算."""
+        # 日本語の文末パターンで分割
+        sentences = re.split(r"[。！？\n]", text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+        if not sentences:
+            return 0.0
+        total_chars = sum(len(s) for s in sentences)
+        return total_chars / len(sentences)
+
+    def _check_four_pillars_preservation(self, original: str, polished: str) -> FourPillarsPreservation:
+        """4本柱の維持状況を確認."""
+        pillar_status: dict[str, str] = {}
+        changes_affecting_pillars: list[str] = []
+
+        for pillar, patterns in self.FOUR_PILLARS_PATTERNS.items():
+            orig_has = any(p in original for p in patterns)
+            polished_has = any(p in polished for p in patterns)
+
+            if orig_has and polished_has:
+                pillar_status[pillar] = "preserved"
+            elif orig_has and not polished_has:
+                pillar_status[pillar] = "removed"
+                changes_affecting_pillars.append(f"{pillar} keywords removed")
+            elif not orig_has and polished_has:
+                pillar_status[pillar] = "modified"
+                changes_affecting_pillars.append(f"{pillar} keywords added")
+            else:
+                pillar_status[pillar] = "preserved"  # 両方になければ維持
+
+        maintained = all(status in ("preserved", "modified") for status in pillar_status.values())
+
+        return FourPillarsPreservation(
+            maintained=maintained,
+            changes_affecting_pillars=changes_affecting_pillars,
+            pillar_status=pillar_status,  # type: ignore[arg-type]
+        )
+
+    def _calculate_word_count_comparison(self, original: str, polished: str) -> WordCountComparison:
+        """文字数比較を計算."""
+        before = len(original)
+        after = len(polished)
+        change_percent = ((after - before) / before * 100) if before > 0 else 0.0
+        is_within_5_percent = abs(change_percent) <= 5.0
+
+        return WordCountComparison(
+            before=before,
+            after=after,
+            change_percent=round(change_percent, 2),
+            is_within_5_percent=is_within_5_percent,
+        )
+
+    def _calculate_readability_improvements(self, original: str, polished: str) -> ReadabilityImprovements:
+        """可読性改善メトリクスを計算."""
+        avg_before = self._calculate_avg_sentence_length(original)
+        avg_after = self._calculate_avg_sentence_length(polished)
+
+        target_min = 20
+        target_max = 35
+        is_within_target = target_min <= avg_after <= target_max
+
+        return ReadabilityImprovements(
+            avg_sentence_length_before=round(avg_before, 1),
+            avg_sentence_length_after=round(avg_after, 1),
+            target_range_min=target_min,
+            target_range_max=target_max,
+            is_within_target=is_within_target,
+        )
 
     async def execute(
         self,
@@ -152,6 +257,11 @@ class Step7BBrushUp(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
+        # V2モード判定
+        is_v2 = self._is_v2_mode(pack_id)
+        if is_v2:
+            logger.info("Step7B running in V2 mode (blog.System)")
+
         # Load prompt pack
         loader = PromptPackLoader()
         prompt_pack = loader.load(pack_id)
@@ -160,9 +270,7 @@ class Step7BBrushUp(BaseActivity):
         keyword = config.get("keyword")
 
         # Load step data from storage
-        step7a_data = (
-            await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step7a") or {}
-        )
+        step7a_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step7a") or {}
         draft = step7a_data.get("draft", "")
 
         # Input validation using InputValidator
@@ -180,9 +288,7 @@ class Step7BBrushUp(BaseActivity):
             )
 
         if validation_result.quality_issues:
-            logger.warning(
-                f"[STEP7B] Input quality issues: {validation_result.quality_issues}"
-            )
+            logger.warning(f"[STEP7B] Input quality issues: {validation_result.quality_issues}")
 
         # Render prompt
         try:
@@ -199,15 +305,11 @@ class Step7BBrushUp(BaseActivity):
 
         # Get LLM client
         model_config = config.get("model_config", {})
-        llm_provider = model_config.get(
-            "platform", config.get("llm_provider", "gemini")
-        )
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
         llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
-        logger.info(
-            f"[STEP7B] Starting LLM call - provider: {llm_provider}, model: {llm_model}"
-        )
+        logger.info(f"[STEP7B] Starting LLM call - provider: {llm_provider}, model: {llm_model}")
         logger.info(f"[STEP7B] Draft length: {len(draft)} chars")
 
         # Execute LLM call
@@ -279,9 +381,7 @@ class Step7BBrushUp(BaseActivity):
             polished_word_count=text_metrics.word_count,
             word_diff=int(comparison["word_diff"]),
             word_diff_percent=(
-                comparison["word_diff"]
-                / self.content_metrics.text_metrics(draft).word_count
-                * 100
+                comparison["word_diff"] / self.content_metrics.text_metrics(draft).word_count * 100
                 if self.content_metrics.text_metrics(draft).word_count > 0
                 else 0.0
             ),
@@ -290,22 +390,57 @@ class Step7BBrushUp(BaseActivity):
         )
 
         # Build output
-        output = Step7bOutput(
-            step=self.step_id,
-            keyword=keyword or "",
-            polished=polished_content,
-            changes_summary="",
-            change_count=0,
-            polish_metrics=polish_metrics,
-            quality_warnings=quality_warnings,
-            model=response.model,
-            token_usage={
+        result: dict[str, Any] = {
+            "step": self.step_id,
+            "keyword": keyword or "",
+            "polished": polished_content,
+            "changes_summary": "",
+            "change_count": 0,
+            "polish_metrics": polish_metrics.model_dump(),
+            "quality_warnings": quality_warnings,
+            "model": response.model,
+            "token_usage": {
                 "input_tokens": response.token_usage.input,
                 "output_tokens": response.token_usage.output,
             },
-        )
+            "is_v2": is_v2,
+        }
 
-        return output.model_dump()
+        # V2モードの場合、追加メトリクスを計算
+        if is_v2:
+            # 文字数比較
+            word_count_comparison = self._calculate_word_count_comparison(draft, polished_content)
+            result["word_count_comparison"] = word_count_comparison.model_dump()
+
+            # 文字数が±5%を超えている場合は警告
+            if not word_count_comparison.is_within_5_percent:
+                quality_warnings.append(f"word_count_exceeded_5_percent: {word_count_comparison.change_percent:.1f}%")
+                result["quality_warnings"] = quality_warnings
+
+            # 4本柱維持確認
+            four_pillars = self._check_four_pillars_preservation(draft, polished_content)
+            result["four_pillars_preservation"] = four_pillars.model_dump()
+
+            # 4本柱が削除されている場合は警告
+            if not four_pillars.maintained:
+                quality_warnings.append(f"four_pillars_not_maintained: {four_pillars.changes_affecting_pillars}")
+                result["quality_warnings"] = quality_warnings
+
+            # 可読性改善メトリクス
+            readability = self._calculate_readability_improvements(draft, polished_content)
+            result["readability_improvements"] = readability.model_dump()
+
+            # 調整詳細（デフォルト値で初期化、LLMから詳細が返ってくれば上書き可能）
+            result["adjustment_details"] = AdjustmentDetails().model_dump()
+
+            logger.info(
+                f"[STEP7B] V2 metrics - "
+                f"word_change: {word_count_comparison.change_percent:.1f}%, "
+                f"pillars_maintained: {four_pillars.maintained}, "
+                f"avg_sentence: {readability.avg_sentence_length_after:.1f}"
+            )
+
+        return result
 
 
 @activity.defn(name="step7b_brush_up")

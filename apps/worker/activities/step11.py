@@ -26,9 +26,13 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm import GeminiClient, LLMRequestConfig, NanoBananaClient
 from apps.worker.activities.schemas.step11 import (
+    EnhancedImageInsertionPosition,
     GeneratedImage,
     ImageGenerationRequest,
     ImageInsertionPosition,
+    ImagePurpose,
+    ImagePurposeClassification,
+    PositionAnalysisEnhanced,
     PositionAnalysisResult,
     Step11Config,
     Step11Output,
@@ -44,7 +48,41 @@ class Step11ImageGeneration(BaseActivity):
     Temporal signalで制御する。
 
     単独テスト時はsignal待ちをスキップし、設定済みのconfigで実行する。
+
+    blog.System Ver8.3 対応:
+    - V2モード判定と拡張位置分析
+    - 3カテゴリ分類（コンテンツギャップ、視覚的ブレーク、データ可視化）
+    - 画像目的分類（hero, illustration, data_viz, break, cta_support, process, comparison）
+    - 4本柱との関連性分析
     """
+
+    # 4本柱のキーワードパターン（画像目的分類用）
+    FOUR_PILLARS_PATTERNS = {
+        "neuroscience": ["神経科学", "脳科学", "扁桃体", "前頭前野", "線条体", "ドーパミン", "脳", "神経"],
+        "behavioral_economics": [
+            "行動経済学",
+            "損失回避",
+            "社会的証明",
+            "権威性",
+            "一貫性",
+            "好意",
+            "希少性",
+            "アンカリング",
+        ],
+        "llmo": ["LLMO", "LLM", "AI最適化", "音声検索", "質問形式", "検索エンジン"],
+        "kgi": ["KGI", "コンバージョン", "目標達成", "成果指標", "CTA", "行動喚起"],
+    }
+
+    # 画像目的の判定キーワード
+    IMAGE_PURPOSE_PATTERNS = {
+        ImagePurpose.HERO: ["冒頭", "導入", "アイキャッチ", "メイン", "タイトル"],
+        ImagePurpose.DATA_VIZ: ["データ", "グラフ", "チャート", "統計", "数値", "比較表"],
+        ImagePurpose.PROCESS: ["手順", "ステップ", "フロー", "流れ", "プロセス", "方法"],
+        ImagePurpose.COMPARISON: ["比較", "対比", "vs", "違い", "差異"],
+        ImagePurpose.CTA_SUPPORT: ["CTA", "行動", "申込", "登録", "購入", "次のステップ"],
+        ImagePurpose.BREAK: ["休憩", "区切り", "ブレーク"],
+        ImagePurpose.ILLUSTRATION: [],  # デフォルト
+    }
 
     def __init__(self) -> None:
         """Initialize with helpers."""
@@ -55,6 +93,204 @@ class Step11ImageGeneration(BaseActivity):
     @property
     def step_id(self) -> str:
         return "step11"
+
+    def _is_v2_mode(self, pack_id: str) -> bool:
+        """V2モード（blog.System対応）かどうかを判定."""
+        return pack_id.startswith("v2_") or "blog_system" in pack_id.lower()
+
+    def _classify_image_purpose(
+        self,
+        position: ImageInsertionPosition | EnhancedImageInsertionPosition,
+        section_index: int,
+        total_sections: int,
+    ) -> ImagePurpose:
+        """画像の目的を分類.
+
+        Args:
+            position: 挿入位置情報
+            section_index: セクションインデックス
+            total_sections: 総セクション数
+
+        Returns:
+            ImagePurpose enum値
+        """
+        description = (position.description + " " + position.section_title).lower()
+
+        # 優先度順にパターンマッチ
+        for purpose, patterns in self.IMAGE_PURPOSE_PATTERNS.items():
+            if purpose == ImagePurpose.ILLUSTRATION:
+                continue  # デフォルトはスキップ
+            for pattern in patterns:
+                if pattern.lower() in description:
+                    return purpose
+
+        # 位置ベースの判定
+        if section_index == 0:
+            return ImagePurpose.HERO
+        if section_index >= total_sections - 1:
+            return ImagePurpose.CTA_SUPPORT
+
+        # デフォルトはイラスト
+        return ImagePurpose.ILLUSTRATION
+
+    def _detect_four_pillar_relevance(self, text: str) -> list[str]:
+        """テキストから関連する4本柱を検出.
+
+        Args:
+            text: 分析対象テキスト
+
+        Returns:
+            関連する柱のリスト
+        """
+        relevant_pillars = []
+        for pillar, patterns in self.FOUR_PILLARS_PATTERNS.items():
+            for pattern in patterns:
+                if pattern.lower() in text.lower():
+                    relevant_pillars.append(pillar)
+                    break
+        return relevant_pillars
+
+    def _categorize_position(
+        self,
+        position: ImageInsertionPosition,
+        markdown_content: str,
+    ) -> str:
+        """挿入位置のカテゴリを判定.
+
+        Args:
+            position: 挿入位置
+            markdown_content: Markdownコンテンツ
+
+        Returns:
+            カテゴリ文字列（content_gap, visual_break, data_visualization）
+        """
+        description = (position.description + " " + position.source_text).lower()
+
+        # データ可視化の検出
+        data_keywords = ["データ", "グラフ", "チャート", "統計", "数値", "表", "比較"]
+        if any(kw in description for kw in data_keywords):
+            return "data_visualization"
+
+        # 視覚的ブレークの検出（長い文章の後）
+        sections = self._extract_sections(markdown_content)
+        if position.section_index < len(sections):
+            # セクション間の文字数を確認
+            section_start = sections[position.section_index]["start_pos"]
+            section_end = (
+                sections[position.section_index + 1]["start_pos"] if position.section_index + 1 < len(sections) else len(markdown_content)
+            )
+            section_length = section_end - section_start
+            if section_length > 1500:  # 長いセクションの後は視覚的ブレーク
+                return "visual_break"
+
+        # デフォルトはコンテンツギャップ
+        return "content_gap"
+
+    def _build_position_analysis_enhanced(
+        self,
+        positions: list[ImageInsertionPosition],
+        markdown_content: str,
+    ) -> PositionAnalysisEnhanced:
+        """拡張位置分析結果を構築.
+
+        Args:
+            positions: 分析で特定された位置リスト
+            markdown_content: Markdownコンテンツ
+
+        Returns:
+            PositionAnalysisEnhanced
+        """
+        content_gap: list[EnhancedImageInsertionPosition] = []
+        visual_break: list[EnhancedImageInsertionPosition] = []
+        data_viz: list[EnhancedImageInsertionPosition] = []
+
+        sections = self._extract_sections(markdown_content)
+        total_sections = len(sections)
+
+        for idx, pos in enumerate(positions):
+            category = self._categorize_position(pos, markdown_content)
+            purpose = self._classify_image_purpose(pos, pos.section_index, total_sections)
+
+            enhanced_pos = EnhancedImageInsertionPosition(
+                article_number=pos.article_number,
+                section_title=pos.section_title,
+                section_index=pos.section_index,
+                position=pos.position,
+                source_text=pos.source_text,
+                description=pos.description,
+                category=category,  # type: ignore[arg-type]
+                priority=idx + 1,  # 分析順序を優先度に
+                recommendation_reason=f"{purpose.value}画像として{pos.description[:50]}",
+            )
+
+            if category == "content_gap":
+                content_gap.append(enhanced_pos)
+            elif category == "visual_break":
+                visual_break.append(enhanced_pos)
+            else:  # data_visualization
+                data_viz.append(enhanced_pos)
+
+        return PositionAnalysisEnhanced(
+            content_gap_positions=content_gap,
+            visual_break_positions=visual_break,
+            data_visualization_positions=data_viz,
+            total_recommended=len(positions),
+            analysis_summary=(
+                f"コンテンツギャップ: {len(content_gap)}件, 視覚的ブレーク: {len(visual_break)}件, データ可視化: {len(data_viz)}件"
+            ),
+        )
+
+    def _build_image_purpose_classifications(
+        self,
+        images: list[GeneratedImage],
+        markdown_content: str,
+    ) -> list[ImagePurposeClassification]:
+        """画像目的分類リストを構築.
+
+        Args:
+            images: 生成された画像リスト
+            markdown_content: Markdownコンテンツ
+
+        Returns:
+            ImagePurposeClassification のリスト
+        """
+        sections = self._extract_sections(markdown_content)
+        total_sections = len(sections)
+        classifications: list[ImagePurposeClassification] = []
+
+        for idx, img in enumerate(images):
+            position = img.request.position
+            purpose = self._classify_image_purpose(position, position.section_index, total_sections)
+
+            # セクションコンテキストを取得
+            section_context = position.source_text[:200] if position.source_text else position.description[:200]
+
+            # 4本柱との関連性を検出
+            relevance_text = f"{position.description} {position.source_text}"
+            four_pillar_relevance = self._detect_four_pillar_relevance(relevance_text)
+
+            # 目的に基づくターゲット感情を推定
+            target_emotion_map = {
+                ImagePurpose.HERO: "興味・関心",
+                ImagePurpose.ILLUSTRATION: "理解・納得",
+                ImagePurpose.DATA_VIZ: "信頼・確信",
+                ImagePurpose.BREAK: "休息・リフレッシュ",
+                ImagePurpose.CTA_SUPPORT: "行動意欲",
+                ImagePurpose.PROCESS: "理解・安心",
+                ImagePurpose.COMPARISON: "判断・決定",
+            }
+
+            classifications.append(
+                ImagePurposeClassification(
+                    image_index=idx,
+                    purpose=purpose,
+                    section_context=section_context,
+                    target_emotion=target_emotion_map.get(purpose, "理解"),
+                    four_pillar_relevance=four_pillar_relevance,
+                )
+            )
+
+        return classifications
 
     def _get_gemini_client(self) -> GeminiClient:
         """GeminiClientを取得（遅延初期化）."""
@@ -87,6 +323,15 @@ class Step11ImageGeneration(BaseActivity):
         """
         config = ctx.config
         warnings: list[str] = []
+        pack_id = config.get("pack_id", "")
+
+        # V2モード判定
+        is_v2 = self._is_v2_mode(pack_id)
+        if is_v2:
+            activity.logger.info("Step11 running in V2 mode (blog.System)")
+
+        # 位置分析結果を蓄積（V2用）
+        all_position_analyses: list[tuple[list[ImageInsertionPosition], str]] = []
 
         # Step10のデータを読み込み
         step10_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step10") or {}
@@ -167,6 +412,10 @@ class Step11ImageGeneration(BaseActivity):
                 warnings.append(f"article_{article_number}_no_positions_found")
                 continue
 
+            # V2モード: 位置分析結果を蓄積
+            if is_v2:
+                all_position_analyses.append((position_analysis.positions, markdown_content))
+
             # 2. 各位置に対して画像を生成
             for i, position in enumerate(position_analysis.positions):
                 activity.logger.info(
@@ -244,20 +493,49 @@ class Step11ImageGeneration(BaseActivity):
                 content_type="text/html",
             )
 
-        return Step11Output(
-            step=self.step_id,
-            enabled=True,
-            image_count=len(all_generated_images),
-            images=all_generated_images,
-            markdown_with_images=final_markdown,
-            html_with_images=final_html,
-            model="gemini-2.5-flash-image",
-            usage={
+        # 基本出力を構築
+        result: dict[str, Any] = {
+            "step": self.step_id,
+            "enabled": True,
+            "image_count": len(all_generated_images),
+            "images": [img.model_dump() for img in all_generated_images],
+            "markdown_with_images": final_markdown,
+            "html_with_images": final_html,
+            "model": "gemini-2.5-flash-image",
+            "usage": {
                 "analysis_tokens": total_analysis_tokens,
                 "image_tokens": total_tokens,
             },
-            warnings=warnings,
-        ).model_dump()
+            "warnings": warnings,
+            "is_v2": is_v2,
+        }
+
+        # V2モードの場合、追加メトリクスを計算
+        if is_v2 and all_position_analyses:
+            # 全位置分析結果を統合して拡張分析を構築
+            all_positions: list[ImageInsertionPosition] = []
+            combined_markdown = ""
+            for positions, md_content in all_position_analyses:
+                all_positions.extend(positions)
+                combined_markdown += md_content + "\n\n"
+
+            # 拡張位置分析
+            position_analysis_enhanced = self._build_position_analysis_enhanced(all_positions, combined_markdown)
+            result["position_analysis_enhanced"] = position_analysis_enhanced.model_dump()
+
+            # 画像目的分類
+            image_purpose_classification = self._build_image_purpose_classifications(all_generated_images, combined_markdown)
+            result["image_purpose_classification"] = [c.model_dump() for c in image_purpose_classification]
+
+            activity.logger.info(
+                f"[STEP11] V2 metrics - "
+                f"content_gap: {len(position_analysis_enhanced.content_gap_positions)}, "
+                f"visual_break: {len(position_analysis_enhanced.visual_break_positions)}, "
+                f"data_viz: {len(position_analysis_enhanced.data_visualization_positions)}, "
+                f"classifications: {len(image_purpose_classification)}"
+            )
+
+        return result
 
     async def _analyze_positions(
         self,

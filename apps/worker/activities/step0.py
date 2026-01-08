@@ -12,6 +12,12 @@ REVIEW-001: LLMInterface契約に準拠
 - QualityRetryLoop: 品質検証付きリトライ
 - ContentMetrics: テキストメトリクス計算
 - RequiredElementsValidator: 必須要素チェック
+
+blog.System Ver8.3 対応:
+- 4本柱評価（神経科学/行動経済学/LLMO/KGI）
+- 記事戦略（6タイプ）
+- 文字数設定/CTA設計の引き継ぎ
+- FourPillarsValidator/ArticleStrategyValidator の統合
 """
 
 from typing import Any
@@ -30,8 +36,17 @@ from apps.api.llm.exceptions import (
 )
 from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig, LLMResponse
 from apps.api.prompts.loader import PromptPackLoader
+from apps.worker.activities.schemas.step0 import (
+    ArticleStrategy,
+    CTASpecification,
+    FourPillarsEvaluation,
+    Step0Input,
+    WordCountConfig,
+)
 from apps.worker.helpers import (
+    ArticleStrategyValidator,
     ContentMetrics,
+    FourPillarsValidator,
     OutputParser,
     QualityRetryLoop,
     RequiredElementsValidator,
@@ -48,6 +63,12 @@ class Step0KeywordSelection(BaseActivity):
     - QualityRetryLoop: 品質検証付きリトライ（max_retries=1）
     - ContentMetrics: テキストメトリクス計算
     - RequiredElementsValidator: 必須要素（検索意図、難易度、推奨）チェック
+
+    blog.System Ver8.3 対応:
+    - FourPillarsValidator: 4本柱評価の検証
+    - ArticleStrategyValidator: 記事戦略の検証
+    - Step0Input: 拡張入力スキーマ
+    - Step0Output: 拡張出力スキーマ
     """
 
     # 必須要素のパターン定義
@@ -55,6 +76,21 @@ class Step0KeywordSelection(BaseActivity):
         "search_intent": ["検索意図", "intent", "目的", "ユーザーの意図"],
         "difficulty": ["難易度", "difficulty", "競合度", "競争"],
         "recommendation": ["推奨", "recommend", "提案", "おすすめ"],
+    }
+
+    # blog.System Ver8.3: 4本柱・記事タイプの必須要素
+    REQUIRED_ELEMENTS_V2 = {
+        "four_pillars": ["4本柱", "神経科学", "行動経済学", "LLMO", "KGI", "four_pillars"],
+        "article_type": [
+            "記事タイプ",
+            "article_type",
+            "comprehensive_guide",
+            "deep_dive",
+            "case_study",
+            "comparison",
+            "news_analysis",
+            "how_to",
+        ],
     }
 
     def __init__(self, **kwargs: Any):
@@ -66,6 +102,9 @@ class Step0KeywordSelection(BaseActivity):
             required_patterns=self.REQUIRED_ELEMENTS,
             max_missing=1,
         )
+        # blog.System Ver8.3: 追加バリデータ
+        self.four_pillars_validator = FourPillarsValidator()
+        self.article_strategy_validator = ArticleStrategyValidator()
 
     @property
     def step_id(self) -> str:
@@ -94,9 +133,9 @@ class Step0KeywordSelection(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
-        # Load prompt pack
+        # Load prompt pack with unified knowledge
         loader = PromptPackLoader()
-        prompt_pack = loader.load(pack_id)
+        prompt_pack = loader.get_pack_with_knowledge(pack_id)
 
         # Get input keyword from config
         keyword = config.get("keyword")
@@ -106,10 +145,15 @@ class Step0KeywordSelection(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
+        # blog.System Ver8.3: 拡張入力の取得
+        step0_input = self._build_step0_input(config, keyword)
+
         # Get prompt for this step
         try:
             prompt_template = prompt_pack.get_prompt("step0")
-            initial_prompt = prompt_template.render(keyword=keyword)
+            # blog.System Ver8.3: 新変数を含むレンダリング
+            render_vars = self._build_render_variables(step0_input)
+            initial_prompt = prompt_template.render(**render_vars)
         except Exception as e:
             raise ActivityError(
                 f"Failed to render prompt: {e}",
@@ -195,16 +239,33 @@ class Step0KeywordSelection(BaseActivity):
         # Calculate text metrics
         text_metrics = self.metrics.text_metrics(content, lang="ja")
 
+        # blog.System Ver8.3: 拡張フィールドの抽出
+        four_pillars_data = self._extract_four_pillars(parsed_data)
+        article_strategy_data = self._extract_article_strategy(parsed_data)
+
+        # blog.System Ver8.3: 入力からの引き継ぎ（word_count_config, cta_specification）
+        word_count_config_data = step0_input.word_count_config.model_dump() if step0_input.word_count_config else None
+        cta_specification_data = step0_input.cta_specification.model_dump() if step0_input.cta_specification else None
+
         # Build structured output
         return {
             "step": self.step_id,
             "keyword": keyword,
             "analysis": content,
+            # 既存フィールド（後方互換性）
             "search_intent": parsed_data.get("search_intent", ""),
             "difficulty_score": parsed_data.get("difficulty_score", 5),
             "recommended_angles": parsed_data.get("recommended_angles", []),
             "target_audience": parsed_data.get("target_audience", ""),
             "content_type_suggestion": parsed_data.get("content_type_suggestion", ""),
+            # blog.System Ver8.3: 拡張フィールド
+            "four_pillars_evaluation": four_pillars_data,
+            "article_strategy": article_strategy_data,
+            "word_count_config": word_count_config_data,
+            "cta_specification": cta_specification_data,
+            "search_volume": step0_input.search_volume,
+            "competition": step0_input.competition,
+            # モデル・使用量・メトリクス
             "model": response.model,
             "usage": {
                 "input_tokens": response.token_usage.input,
@@ -250,6 +311,133 @@ class Step0KeywordSelection(BaseActivity):
             return prompt + enhancement_text
 
         return prompt
+
+    # =========================================================================
+    # blog.System Ver8.3: ヘルパーメソッド
+    # =========================================================================
+
+    def _build_step0_input(self, config: dict[str, Any], keyword: str) -> Step0Input:
+        """Build Step0Input from config with blog.System Ver8.3 extensions.
+
+        Args:
+            config: Workflow configuration
+            keyword: Main keyword
+
+        Returns:
+            Step0Input with all fields populated
+        """
+        # 事業コンテキスト
+        business_context_data = config.get("business_context", {})
+
+        # 文字数設定
+        word_count_config_data = config.get("word_count_config", {})
+        word_count_config = WordCountConfig(**word_count_config_data) if word_count_config_data else None
+
+        # CTA設定
+        cta_specification_data = config.get("cta_specification", {})
+        cta_specification = CTASpecification(**cta_specification_data) if cta_specification_data else None
+
+        return Step0Input(
+            keyword=keyword,
+            pack_id=config.get("pack_id", "default"),
+            business_context=business_context_data,
+            search_volume=config.get("search_volume"),
+            competition=config.get("competition"),
+            related_keywords=config.get("related_keywords", []),
+            strategy=config.get("strategy", "standard"),
+            cluster_topics=config.get("cluster_topics", []),
+            word_count_config=word_count_config or WordCountConfig(),
+            cta_specification=cta_specification or CTASpecification(),
+        )
+
+    def _build_render_variables(self, step0_input: Step0Input) -> dict[str, Any]:
+        """Build variables for prompt rendering.
+
+        Args:
+            step0_input: Step0Input instance
+
+        Returns:
+            dict of variables for prompt template rendering
+        """
+        bc = step0_input.business_context
+        wc = step0_input.word_count_config
+        cta = step0_input.cta_specification
+
+        return {
+            "keyword": step0_input.keyword,
+            # 事業コンテキスト
+            "business_description": bc.business_description if bc else "",
+            "conversion_goal": bc.conversion_goal if bc else "",
+            "target_persona": bc.target_persona if bc else "",
+            "company_strengths": bc.company_strengths if bc else "",
+            # キーワード情報
+            "search_volume": step0_input.search_volume or "",
+            "competition": step0_input.competition or "",
+            "related_keywords": ", ".join(step0_input.related_keywords) if step0_input.related_keywords else "",
+            # 記事戦略
+            "strategy": step0_input.strategy,
+            "cluster_topics": ", ".join(step0_input.cluster_topics) if step0_input.cluster_topics else "",
+            # 文字数設定
+            "word_count_mode": wc.mode if wc else "ai_balanced",
+            "manual_word_count": wc.manual_word_count if wc else "",
+            # CTA設定
+            "cta_design_type": cta.design_type if cta else "staged",
+            "cta_url": cta.placements.get("final", {}).url if cta and cta.placements else "",
+            "cta_text": cta.placements.get("final", {}).text if cta and cta.placements else "",
+        }
+
+    def _extract_four_pillars(self, parsed_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract and validate 4-pillar evaluation from parsed data.
+
+        Args:
+            parsed_data: Parsed JSON data from LLM output
+
+        Returns:
+            dict with 4-pillar evaluation or None if not present
+        """
+        four_pillars_raw = parsed_data.get("four_pillars_evaluation")
+        if not four_pillars_raw:
+            return None
+
+        # バリデーション（警告のみ、失敗しても続行）
+        validation_result = self.four_pillars_validator.validate_dict(four_pillars_raw)
+        if not validation_result.is_valid:
+            # 警告をログに記録（activity.logger を使用）
+            activity.logger.warning(f"Four pillars validation warnings: {validation_result.issues}")
+
+        # Pydanticモデルで構造化（デフォルト値で補完）
+        try:
+            four_pillars = FourPillarsEvaluation(**four_pillars_raw)
+            return four_pillars.model_dump()
+        except Exception:
+            # パースエラー時はデフォルト値を返す
+            return FourPillarsEvaluation().model_dump()
+
+    def _extract_article_strategy(self, parsed_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract and validate article strategy from parsed data.
+
+        Args:
+            parsed_data: Parsed JSON data from LLM output
+
+        Returns:
+            dict with article strategy or None if not present
+        """
+        article_strategy_raw = parsed_data.get("article_strategy")
+        if not article_strategy_raw:
+            return None
+
+        # バリデーション（警告のみ、失敗しても続行）
+        validation_result = self.article_strategy_validator.validate_dict(article_strategy_raw)
+        if not validation_result.is_valid:
+            activity.logger.warning(f"Article strategy validation warnings: {validation_result.issues}")
+
+        # Pydanticモデルで構造化（デフォルト値で補完）
+        try:
+            article_strategy = ArticleStrategy(**article_strategy_raw)
+            return article_strategy.model_dump()
+        except Exception:
+            # パースエラー時はデフォルト値を返す
+            return ArticleStrategy().model_dump()
 
 
 # Activity function for Temporal registration

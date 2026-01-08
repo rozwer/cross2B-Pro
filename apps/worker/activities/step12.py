@@ -23,7 +23,9 @@ from apps.worker.activities.schemas.step12 import (
     CommonAssets,
     GenerationMetadata,
     Step12Output,
+    StructuredDataBlocks,
     WordPressArticle,
+    YoastSeoMetadata,
 )
 
 from .base import ActivityError, BaseActivity, load_step_data
@@ -142,6 +144,30 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             word_count = len(content) if content else len(html_content)
             slug = self._generate_slug(title, keyword)
 
+            # blog.System 統合: Yoast SEO メタデータ生成
+            yoast_metadata = self._generate_yoast_metadata(
+                title=title,
+                meta_description=meta_description,
+                keyword=keyword,
+                content=content or html_content,
+            )
+
+            # blog.System 統合: Gutenbergブロックタイプ収集
+            block_types = self._collect_gutenberg_block_types(gutenberg_html)
+
+            # blog.System 統合: 構造化データ生成
+            # step8のFAQデータがあれば使用
+            step8_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step8") or {}
+            faq_data = step8_data.get("faqs", [])
+            structured_data = self._generate_structured_data(
+                title=title,
+                meta_description=meta_description,
+                keyword=keyword,
+                content=content or html_content,
+                article_number=article_number,
+                faq_data=faq_data,
+            )
+
             wordpress_article = WordPressArticle(
                 article_number=article_number,
                 filename=f"article_{article_number}.html",
@@ -157,6 +183,9 @@ class Step12WordPressHtmlGeneration(BaseActivity):
                     tags=[],
                 ),
                 images=article_images,
+                yoast_seo_metadata=yoast_metadata,
+                gutenberg_block_types_used=block_types,
+                structured_data_blocks=structured_data,
             )
             wordpress_articles.append(wordpress_article)
 
@@ -534,6 +563,241 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         slug = slug.strip("-")
 
         return slug[:50]  # 最大50文字
+
+    def _generate_yoast_metadata(
+        self,
+        title: str,
+        meta_description: str,
+        keyword: str,
+        content: str,
+    ) -> YoastSeoMetadata:
+        """Yoast SEO メタデータを生成.
+
+        Args:
+            title: 記事タイトル
+            meta_description: メタディスクリプション
+            keyword: フォーカスキーワード
+            content: 記事本文
+
+        Returns:
+            YoastSeoMetadata
+        """
+        # SEOタイトル生成（60文字以内推奨）
+        seo_title = title[:60] if len(title) > 60 else title
+
+        # メタディスクリプション調整（155文字以内推奨）
+        adjusted_description = meta_description
+        if len(meta_description) > 155:
+            adjusted_description = meta_description[:152] + "..."
+
+        # 可読性スコア算出（簡易実装）
+        readability_score = self._calculate_readability_score(content)
+
+        # SEOスコア算出（簡易実装）
+        seo_score = self._calculate_seo_score(title, meta_description, keyword, content)
+
+        return YoastSeoMetadata(
+            focus_keyword=keyword,
+            seo_title=seo_title,
+            meta_description=adjusted_description,
+            readability_score=readability_score,
+            seo_score=seo_score,
+        )
+
+    def _calculate_readability_score(self, content: str) -> str:
+        """可読性スコアを算出.
+
+        簡易的な日本語可読性評価:
+        - 段落の長さ
+        - 文の長さ
+        - 見出しの頻度
+
+        Args:
+            content: 記事本文
+
+        Returns:
+            スコア（good/ok/needs_improvement）
+        """
+        if not content:
+            return "needs_improvement"
+
+        # 文の数をカウント（句点で分割）
+        sentences = re.split(r"[。！？]", content)
+        sentences = [s for s in sentences if s.strip()]
+        sentence_count = len(sentences)
+
+        if sentence_count == 0:
+            return "needs_improvement"
+
+        # 平均文長を計算
+        avg_sentence_length = len(content) / sentence_count
+
+        # 見出しの数をカウント
+        heading_count = len(re.findall(r"<h[1-6]>|^#{1,6}\s", content, re.MULTILINE))
+
+        # スコア判定
+        # - 平均文長が40-80文字程度が読みやすい
+        # - 見出しが適度にある（1000文字に1個以上）
+        content_length = len(content)
+        expected_headings = max(1, content_length // 1000)
+
+        if 30 <= avg_sentence_length <= 100 and heading_count >= expected_headings:
+            return "good"
+        elif 20 <= avg_sentence_length <= 150 and heading_count >= expected_headings // 2:
+            return "ok"
+        else:
+            return "needs_improvement"
+
+    def _calculate_seo_score(
+        self,
+        title: str,
+        meta_description: str,
+        keyword: str,
+        content: str,
+    ) -> str:
+        """SEOスコアを算出.
+
+        Yoast SEO風のチェック項目:
+        - キーワードがタイトルに含まれるか
+        - キーワードがメタディスクリプションに含まれるか
+        - キーワードが本文に含まれるか（キーワード密度）
+        - タイトルの長さ
+        - メタディスクリプションの長さ
+
+        Args:
+            title: 記事タイトル
+            meta_description: メタディスクリプション
+            keyword: フォーカスキーワード
+            content: 記事本文
+
+        Returns:
+            スコア（good/ok/needs_improvement）
+        """
+        if not keyword:
+            return "needs_improvement"
+
+        score_points = 0
+        max_points = 5
+
+        # 1. キーワードがタイトルに含まれるか
+        if keyword.lower() in title.lower():
+            score_points += 1
+
+        # 2. キーワードがメタディスクリプションに含まれるか
+        if keyword.lower() in meta_description.lower():
+            score_points += 1
+
+        # 3. キーワード密度（0.5-2.5%が理想）
+        content_lower = content.lower()
+        keyword_lower = keyword.lower()
+        if content_lower:
+            keyword_count = content_lower.count(keyword_lower)
+            content_length = len(content_lower)
+            keyword_density = (keyword_count * len(keyword_lower) / content_length) * 100 if content_length > 0 else 0
+            if 0.5 <= keyword_density <= 2.5:
+                score_points += 1
+
+        # 4. タイトルの長さ（50-60文字が理想）
+        if 30 <= len(title) <= 70:
+            score_points += 1
+
+        # 5. メタディスクリプションの長さ（120-155文字が理想）
+        if 80 <= len(meta_description) <= 160:
+            score_points += 1
+
+        # スコア判定
+        score_ratio = score_points / max_points
+        if score_ratio >= 0.8:
+            return "good"
+        elif score_ratio >= 0.5:
+            return "ok"
+        else:
+            return "needs_improvement"
+
+    def _generate_structured_data(
+        self,
+        title: str,
+        meta_description: str,
+        keyword: str,
+        content: str,
+        article_number: int,
+        faq_data: list[dict[str, Any]] | None = None,
+    ) -> StructuredDataBlocks:
+        """構造化データブロックを生成.
+
+        Args:
+            title: 記事タイトル
+            meta_description: 記事説明
+            keyword: キーワード
+            content: 記事本文
+            article_number: 記事番号
+            faq_data: FAQ データ（あれば）
+
+        Returns:
+            StructuredDataBlocks
+        """
+        # Article JSON-LD
+        article_schema = {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": title,
+            "description": meta_description,
+            "keywords": keyword,
+            "articleBody": content[:500] + "..." if len(content) > 500 else content,
+            "author": {
+                "@type": "Organization",
+                "name": "Author",
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Publisher",
+            },
+        }
+        article_json = json.dumps(article_schema, ensure_ascii=False, indent=2)
+
+        # FAQ JSON-LD（データがあれば）
+        faq_json = None
+        if faq_data:
+            faq_schema = {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": faq.get("question", ""),
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": faq.get("answer", ""),
+                        },
+                    }
+                    for faq in faq_data
+                    if faq.get("question") and faq.get("answer")
+                ],
+            }
+            if faq_schema["mainEntity"]:
+                faq_json = json.dumps(faq_schema, ensure_ascii=False, indent=2)
+
+        return StructuredDataBlocks(
+            article_schema=article_json,
+            faq_schema=faq_json,
+        )
+
+    def _collect_gutenberg_block_types(self, gutenberg_html: str) -> list[str]:
+        """使用されているGutenbergブロックタイプを収集.
+
+        Args:
+            gutenberg_html: Gutenbergブロック形式HTML
+
+        Returns:
+            ブロックタイプ名のリスト（重複なし）
+        """
+        # <!-- wp:blocktype --> 形式のブロックを抽出
+        pattern = r"<!-- wp:(\w+)"
+        matches = re.findall(pattern, gutenberg_html)
+
+        # 重複を除去して並び替え
+        unique_types = sorted(set(matches))
+        return unique_types
 
 
 @activity.defn(name="step12_wordpress_html_generation")

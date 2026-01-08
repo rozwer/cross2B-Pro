@@ -339,6 +339,10 @@ class Step1CompetitorFetch(BaseActivity):
             "word_count": text_metrics.word_count,
             "headings": headings,
             "fetched_at": datetime.utcnow().isoformat(),
+            # blog.System 対応フィールド（取得可能な場合のみ、なければ None）
+            "meta_description": fetch_data.get("meta_description"),
+            "structured_data": fetch_data.get("structured_data"),
+            "publish_date": fetch_data.get("publish_date"),
         }
 
 

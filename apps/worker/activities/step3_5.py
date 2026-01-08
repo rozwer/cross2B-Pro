@@ -67,6 +67,116 @@ class Step3_5HumanTouchGeneration(BaseActivity):
     def step_id(self) -> str:
         return "step3_5"
 
+    def _extract_phase_emotional_data(self, phase_data: dict[str, Any] | None) -> dict[str, Any]:
+        """Extract phase emotional data from parsed output.
+
+        Args:
+            phase_data: Raw phase data from LLM output
+
+        Returns:
+            Structured PhaseEmotionalData dict
+        """
+        if not isinstance(phase_data, dict):
+            return {
+                "dominant_emotion": "",
+                "empathy_statements": [],
+                "experience_episodes": [],
+            }
+
+        # Extract experience episodes for this phase
+        episodes = []
+        raw_episodes = phase_data.get("experience_episodes", phase_data.get("episodes", []))
+        for ep in raw_episodes if isinstance(raw_episodes, list) else []:
+            if isinstance(ep, dict):
+                episodes.append(
+                    {
+                        "scenario": ep.get("scenario", ""),
+                        "narrative": ep.get("narrative", ""),
+                        "lesson": ep.get("lesson", ""),
+                    }
+                )
+
+        return {
+            "dominant_emotion": phase_data.get("dominant_emotion", ""),
+            "empathy_statements": phase_data.get("empathy_statements", [])
+            if isinstance(phase_data.get("empathy_statements"), list)
+            else [],
+            "experience_episodes": episodes,
+        }
+
+    def _extract_phase_emotional_map(self, parsed_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract three-phase emotional map from parsed output.
+
+        Args:
+            parsed_data: Full parsed LLM output
+
+        Returns:
+            Structured PhaseEmotionalMap dict
+        """
+        raw_map = parsed_data.get("phase_emotional_map", {})
+        if not isinstance(raw_map, dict):
+            raw_map = {}
+
+        return {
+            "phase1": self._extract_phase_emotional_data(raw_map.get("phase1")),
+            "phase2": self._extract_phase_emotional_data(raw_map.get("phase2")),
+            "phase3": self._extract_phase_emotional_data(raw_map.get("phase3")),
+        }
+
+    def _extract_behavioral_economics_hooks(self, parsed_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract behavioral economics hooks from parsed output.
+
+        Args:
+            parsed_data: Full parsed LLM output
+
+        Returns:
+            Structured BehavioralEconomicsHooks dict
+        """
+        raw_hooks = parsed_data.get("behavioral_economics_hooks", {})
+        if not isinstance(raw_hooks, dict):
+            raw_hooks = {}
+
+        return {
+            "loss_aversion_hook": raw_hooks.get("loss_aversion_hook", ""),
+            "social_proof_hook": raw_hooks.get("social_proof_hook", ""),
+            "authority_hook": raw_hooks.get("authority_hook", ""),
+            "scarcity_hook": raw_hooks.get("scarcity_hook", ""),
+        }
+
+    def _extract_placement_instructions(self, parsed_data: dict[str, Any]) -> list[dict[str, Any]]:
+        """Extract placement instructions from parsed output.
+
+        Args:
+            parsed_data: Full parsed LLM output
+
+        Returns:
+            List of PlacementInstruction dicts
+        """
+        raw_instructions = parsed_data.get("placement_instructions", [])
+        if not isinstance(raw_instructions, list):
+            return []
+
+        instructions = []
+        valid_types = {"empathy", "episode", "hook"}
+
+        for inst in raw_instructions:
+            if isinstance(inst, dict):
+                content_type = inst.get("content_type", "")
+                # Validate content_type
+                if content_type not in valid_types:
+                    logger.warning(f"Invalid placement content_type: {content_type}, skipping")
+                    continue
+
+                instructions.append(
+                    {
+                        "content_type": content_type,
+                        "target_section": inst.get("target_section", ""),
+                        "content": inst.get("content", ""),
+                    }
+                )
+
+        return instructions
+
     async def execute(
         self,
         ctx: ExecutionContext,
@@ -154,15 +264,20 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         # Extract relevant data for prompt
         persona_info = step3a_data.get("query_analysis", "")
         if isinstance(persona_info, dict):
-            persona_info = str(persona_info)
+            persona_info = json.dumps(persona_info, ensure_ascii=False, indent=2)
 
         cooccurrence_keywords = step3b_data.get("cooccurrence_analysis", "")
         if isinstance(cooccurrence_keywords, dict):
-            cooccurrence_keywords = str(cooccurrence_keywords)
+            cooccurrence_keywords = json.dumps(cooccurrence_keywords, ensure_ascii=False, indent=2)
 
         competitor_insights = step3c_data.get("competitor_analysis", "")
         if isinstance(competitor_insights, dict):
-            competitor_insights = str(competitor_insights)
+            competitor_insights = json.dumps(competitor_insights, ensure_ascii=False, indent=2)
+
+        # Extract three_phase_mapping from step3a (blog.System Ver8.3)
+        three_phase_mapping = step3a_data.get("three_phase_mapping", "")
+        if isinstance(three_phase_mapping, dict):
+            three_phase_mapping = json.dumps(three_phase_mapping, ensure_ascii=False, indent=2)
 
         # Render prompt
         try:
@@ -172,6 +287,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
                 persona=persona_info,
                 competitor_insights=competitor_insights,
                 cooccurrence_keywords=cooccurrence_keywords,
+                three_phase_mapping=three_phase_mapping,
             )
         except Exception as e:
             raise ActivityError(
@@ -336,6 +452,19 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         if not isinstance(emotional_hooks, list):
             emotional_hooks = []
 
+        # ============================================================
+        # blog.System Ver8.3 Extensions
+        # ============================================================
+
+        # Extract phase_emotional_map (3フェーズ別感情マップ)
+        phase_emotional_map = self._extract_phase_emotional_map(parsed_data)
+
+        # Extract behavioral_economics_hooks (行動経済学フック)
+        behavioral_economics_hooks = self._extract_behavioral_economics_hooks(parsed_data)
+
+        # Extract placement_instructions (配置指示)
+        placement_instructions = self._extract_placement_instructions(parsed_data)
+
         output_data = {
             "step": self.step_id,
             "keyword": keyword,
@@ -344,6 +473,10 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             "human_touch_patterns": human_touch_patterns,
             "experience_episodes": experience_episodes,
             "emotional_hooks": emotional_hooks,
+            # blog.System Ver8.3 extensions
+            "phase_emotional_map": phase_emotional_map,
+            "behavioral_economics_hooks": behavioral_economics_hooks,
+            "placement_instructions": placement_instructions,
             # Raw output for debugging and fallback
             "raw_output": content,
             "parsed_data": parsed_data if parsed_data else None,

@@ -6,8 +6,10 @@ from apps.worker.helpers.input_validator import InputValidator
 from apps.worker.helpers.output_parser import OutputParser
 from apps.worker.helpers.quality_retry_loop import QualityRetryLoop, RetryLoopResult
 from apps.worker.helpers.quality_validator import (
+    ArticleStrategyValidator,
     CompletenessValidator,
     CompositeValidator,
+    FourPillarsValidator,
     KeywordValidator,
     QualityValidator,
     RequiredElementsValidator,
@@ -34,6 +36,9 @@ __all__ = [
     "CompletenessValidator",
     "KeywordValidator",
     "CompositeValidator",
+    # blog.System Ver8.3 バリデータ
+    "FourPillarsValidator",
+    "ArticleStrategyValidator",
     # Metrics & Checkpoint
     "ContentMetrics",
     "CheckpointManager",

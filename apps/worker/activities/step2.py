@@ -13,6 +13,8 @@ Uses Validation module for data integrity checks.
 import hashlib
 import logging
 import re
+import statistics
+from collections import Counter
 from typing import Any
 
 from temporalio import activity
@@ -90,8 +92,34 @@ class Step2CSVValidation(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
-        competitors = step1_data.get("competitors", [])  # type: ignore
-        logger.info(f"[STEP2] Processing {len(competitors)} competitors")
+        competitors = list(step1_data.get("competitors", []))  # type: ignore
+        step1_competitor_count = len(competitors)
+
+        # Integrate step1_5 competitors into validation
+        step1_5_competitor_count = 0
+        if step1_5_data and not step1_5_data.get("skipped"):
+            for kw_data in step1_5_data.get("related_competitor_data", []):
+                for comp in kw_data.get("competitors", []):
+                    # Map step1_5 fields to step1 format for unified validation
+                    competitors.append(
+                        {
+                            "url": comp.get("url", ""),
+                            "title": comp.get("title", ""),
+                            "content": comp.get("content_summary", ""),  # content_summary -> content
+                            "word_count": comp.get("word_count", 0),
+                            "headings": comp.get("headings", []),
+                            "source": "step1_5",  # Identify source for tracking
+                            "related_keyword": comp.get("related_keyword", ""),
+                        }
+                    )
+                    step1_5_competitor_count += 1
+
+            if step1_5_competitor_count > 0:
+                logger.info(f"[STEP2] Integrated {step1_5_competitor_count} competitors from step1_5")
+
+        logger.info(
+            f"[STEP2] Processing {len(competitors)} competitors (step1: {step1_competitor_count}, step1_5: {step1_5_competitor_count})"
+        )
 
         # === Validation Progress Checkpoint ===
         progress_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "validation_progress")
@@ -184,6 +212,22 @@ class Step2CSVValidation(BaseActivity):
 
         logger.info(f"[STEP2] Completed: {len(validated_records)} valid, {len(validation_issues)} rejected, {auto_fix_count} auto-fixed")
 
+        # Compute aggregate analysis for blog.System integration
+        word_count_analysis = self._compute_word_count_analysis(validated_records)
+        structure_analysis = self._compute_structure_analysis(validated_records)
+
+        if word_count_analysis:
+            logger.info(
+                f"[STEP2] Word count analysis: min={word_count_analysis['min']}, "
+                f"max={word_count_analysis['max']}, avg={word_count_analysis['average']}"
+            )
+        if structure_analysis:
+            logger.info(
+                f"[STEP2] Structure analysis: avg_h2={structure_analysis['avg_h2_count']}, "
+                f"avg_h3={structure_analysis['avg_h3_count']}, "
+                f"patterns={len(structure_analysis['common_patterns'])}"
+            )
+
         return {
             "step": self.step_id,
             "is_valid": True,
@@ -191,6 +235,8 @@ class Step2CSVValidation(BaseActivity):
             "validated_data": validated_records,
             "rejected_data": [{"url": v["url"], "issues": v["issues"]} for v in validation_issues],
             "validation_issues": validation_issues,
+            "word_count_analysis": word_count_analysis,
+            "structure_analysis": structure_analysis,
         }
 
     def _auto_fix(self, record: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
@@ -389,6 +435,102 @@ class Step2CSVValidation(BaseActivity):
             score -= 0.1
 
         return min(max(score, 0.0), 1.0)
+
+    def _compute_word_count_analysis(self, validated_records: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Compute word count analysis for validated records.
+
+        Args:
+            validated_records: List of validated competitor records
+
+        Returns:
+            Word count analysis dict or None if no records
+        """
+        if not validated_records:
+            return None
+
+        word_counts = []
+        for record in validated_records:
+            content = record.get("content", "")
+            text_metrics = self.metrics.text_metrics(content, lang="ja")
+            word_counts.append(text_metrics.word_count)
+
+        if not word_counts:
+            return None
+
+        return {
+            "min": min(word_counts),
+            "max": max(word_counts),
+            "average": round(statistics.mean(word_counts), 1),
+            "median": round(statistics.median(word_counts), 1),
+        }
+
+    def _compute_structure_analysis(self, validated_records: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Compute structure analysis for validated records.
+
+        Args:
+            validated_records: List of validated competitor records
+
+        Returns:
+            Structure analysis dict or None if no records
+        """
+        if not validated_records:
+            return None
+
+        h2_counts: list[int] = []
+        h3_counts: list[int] = []
+        all_headings: list[str] = []
+
+        for record in validated_records:
+            headings = record.get("headings", [])
+            h2_count = 0
+            h3_count = 0
+
+            for heading in headings:
+                # Markdown style or HTML style
+                if heading.startswith("## ") or heading.lower().startswith("<h2"):
+                    h2_count += 1
+                elif heading.startswith("### ") or heading.lower().startswith("<h3"):
+                    h3_count += 1
+
+                # Extract heading text for pattern analysis
+                text = self._extract_heading_text(heading)
+                if text:
+                    all_headings.append(text.lower())
+
+            h2_counts.append(h2_count)
+            h3_counts.append(h3_count)
+
+        # Find common patterns (headings appearing in 50%+ of articles)
+        threshold = max(len(validated_records) // 2, 1)
+        heading_counter = Counter(all_headings)
+        common_patterns = [heading for heading, count in heading_counter.most_common(10) if count >= threshold]
+
+        return {
+            "avg_h2_count": round(statistics.mean(h2_counts), 1) if h2_counts else 0.0,
+            "avg_h3_count": round(statistics.mean(h3_counts), 1) if h3_counts else 0.0,
+            "common_patterns": common_patterns[:5],  # Top 5 patterns
+        }
+
+    def _extract_heading_text(self, heading: str) -> str:
+        """Extract plain text from heading.
+
+        Args:
+            heading: Heading with markdown or HTML formatting
+
+        Returns:
+            Plain text heading
+        """
+        # Remove markdown prefix
+        if heading.startswith("### "):
+            return heading[4:].strip()
+        if heading.startswith("## "):
+            return heading[3:].strip()
+        if heading.startswith("# "):
+            return heading[2:].strip()
+
+        # Remove HTML tags
+        text = re.sub(r"<[^>]+>", "", heading)
+        return text.strip()
 
 
 @activity.defn(name="step2_csv_validation")
