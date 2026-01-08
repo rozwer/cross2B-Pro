@@ -4,12 +4,19 @@ IMPORTANT: Auto-execution without explicit pack_id is forbidden.
 All prompt loading requires an explicit pack_id parameter.
 
 Prompts are loaded from JSON files in the packs/ directory.
+
+blog.System Ver8.3 対応:
+- unified_knowledge.json の読み込みサポート
+- knowledge_path フィールドによる外部知識注入
 """
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class PromptPackError(Exception):
@@ -76,10 +83,16 @@ class PromptPack:
 
     A prompt pack contains all prompts needed for a complete workflow run.
     Each step has exactly one prompt template.
+
+    blog.System Ver8.3 対応:
+    - knowledge_path: 外部知識ファイルへのパス（unified_knowledge.json等）
+    - unified_knowledge: 読み込まれた知識データ（辞書形式）
     """
 
     pack_id: str
     prompts: dict[str, PromptTemplate] = field(default_factory=dict)
+    knowledge_path: str | None = None
+    unified_knowledge: dict[str, Any] | None = None
 
     def get_prompt(self, step: str) -> PromptTemplate:
         """Get prompt template for a step.
@@ -223,7 +236,10 @@ class PromptPackLoader:
                 variables=prompt_data.get("variables", {}),
             )
 
-        return PromptPack(pack_id=pack_id, prompts=prompts)
+        # blog.System Ver8.3: knowledge_path の取得
+        knowledge_path = data.get("knowledge_path")
+
+        return PromptPack(pack_id=pack_id, prompts=prompts, knowledge_path=knowledge_path)
 
     def _load_mock_pack(self) -> PromptPack:
         """Load mock prompt pack for testing.
@@ -731,3 +747,81 @@ Markdown形式で最終版本文を出力""",
     def invalidate(self, pack_id: str) -> None:
         """Remove a specific pack from cache."""
         self._cache.pop(pack_id, None)
+
+    def load_unified_knowledge(self, pack: PromptPack, base_dir: Path | None = None) -> dict[str, Any] | None:
+        """Load unified knowledge from external JSON file.
+
+        blog.System Ver8.3 対応:
+        プロンプトパックの knowledge_path が指定されている場合、
+        外部の unified_knowledge.json を読み込んでプロンプトに注入可能にする。
+
+        Args:
+            pack: PromptPack instance with optional knowledge_path
+            base_dir: Base directory for resolving relative paths.
+                     Defaults to project root (3 levels up from this file).
+
+        Returns:
+            dict[str, Any] | None: Loaded knowledge data, or None if not available
+
+        Example:
+            loader = PromptPackLoader()
+            pack = loader.load("v2_blog_system")
+            knowledge = loader.load_unified_knowledge(pack)
+            if knowledge:
+                # Use knowledge in prompt rendering
+                prompt = pack.render_prompt("step0", keyword="SEO", **knowledge)
+        """
+        if not pack.knowledge_path:
+            return None
+
+        # Already loaded
+        if pack.unified_knowledge is not None:
+            return pack.unified_knowledge
+
+        # Resolve base directory
+        if base_dir is None:
+            # Default: project root (apps/api/prompts/loader.py -> 3 levels up)
+            base_dir = Path(__file__).parent.parent.parent.parent
+
+        knowledge_path = base_dir / pack.knowledge_path
+
+        if not knowledge_path.exists():
+            logger.warning(
+                f"Unified knowledge file not found: {knowledge_path} (pack: {pack.pack_id}, knowledge_path: {pack.knowledge_path})"
+            )
+            return None
+
+        try:
+            with open(knowledge_path, encoding="utf-8") as f:
+                data = json.load(f)
+            # Cache in pack
+            pack.unified_knowledge = data
+            logger.info(f"Loaded unified knowledge for pack '{pack.pack_id}' from {knowledge_path}")
+            return data
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in unified knowledge file: {knowledge_path}: {e}")
+            return None
+        except OSError as e:
+            logger.error(f"Failed to read unified knowledge file: {knowledge_path}: {e}")
+            return None
+
+    def get_pack_with_knowledge(self, pack_id: str | None) -> PromptPack:
+        """Load a prompt pack and its unified knowledge in one call.
+
+        Convenience method that loads the pack and automatically loads
+        unified knowledge if knowledge_path is specified.
+
+        Args:
+            pack_id: Prompt pack identifier
+
+        Returns:
+            PromptPack with unified_knowledge populated (if available)
+
+        Raises:
+            ValueError: If pack_id is None
+            PromptPackNotFoundError: If pack does not exist
+        """
+        pack = self.load(pack_id)
+        if pack.knowledge_path:
+            self.load_unified_knowledge(pack)
+        return pack

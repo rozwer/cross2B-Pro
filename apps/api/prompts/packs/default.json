@@ -55,33 +55,61 @@
     },
     "step3b": {
       "step": "step3b",
-      "version": 1,
-      "content": "キーワード「{{keyword}}」の共起語分析を行ってください。\n競合サマリー: {{competitor_summaries}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"cooccurrence_keywords\": [\"共起語1\", \"共起語2\"],\n  \"semantic_clusters\": [{\"cluster\": \"クラスタ名\", \"keywords\": []}],\n  \"content_gaps\": [\"ギャップ1\"]\n}\n```",
+      "version": 2,
+      "content": "あなたは工程3B「共起語・関連キーワード抽出【心臓部】」の専門家です。\nSEO・NLP・コンテンツマーケティングの専門家として、競合記事から共起語と関連キーワードを網羅的に抽出し、戦略的に分類します。\n\n**重要**: この工程は本フロー全体の「心臓部」です。記事の成否を決定づける最重要工程です。\n\n# 入力情報\n\n## キーワード\n{{keyword}}\n\n## 競合情報（上位10サイト）\n{{competitor_summaries}}\n\n## 抽出目標\n- 共起語: {{target_cooccurrence}}個（100-150個目標）\n- 関連キーワード: {{target_related}}個（30-50個目標）\n\n## 事前分析ヒント\n{{keyword_hints}}\n\n# 抽出タスク\n\n## 1. 共起語の抽出（100〜150個）\nメインキーワードと共に頻繁に出現する単語を抽出します。\n- 名詞、動詞、形容詞を対象\n- 最低出現頻度: 3回以上\n- 最低記事カバレッジ: 3記事以上\n- 重要度スコアを算出\n\n## 2. 関連キーワードの抽出（30〜50個）\n- 類義語: 同義・類似表現\n- 派生語: メインKWからの派生\n- 関連トピック: 関連する別トピック\n\n## 3. キーワードの3カテゴリ分類（Essential/Standard/Unique）\n- Essential（必須）: 10記事中7記事以上で使用（70%+）\n- Standard（標準）: 10記事中4〜6記事で使用（40-60%）\n- Unique（独自性）: 10記事中1〜3記事で使用（10-30%）※差別化機会\n\n## 4. 3フェーズへのキーワードマッピング【重要】\n\n### Phase 1: 不安・課題認識（記事の0〜30%）\n- 脳の状態: 扁桃体活性化\n- 適したキーワード: 「課題」「問題」「悩み」「失敗」「リスク」「損失」「離職率」\n- 期待効果: 注意喚起、危機感の醸成、読者の共感獲得\n\n### Phase 2: 理解・納得（記事の30〜75%）\n- 脳の状態: 前頭前野による論理的処理\n- 適したキーワード: 「方法」「ステップ」「事例」「データ」「比較」「メリット」「効果」\n- 期待効果: 論理的納得、信頼構築、ソリューション理解\n\n### Phase 3: 行動決定（記事の75〜100%）\n- 脳の状態: 線条体による報酬予測\n- 適したキーワード: 「今すぐ」「簡単」「無料」「実績」「成功」「導入」「改善」\n- 期待効果: 行動喚起、問い合わせ誘導\n\n## 5. LLMO要素の抽出【重要】\n\n### 音声検索対応キーワード\n- 疑問詞: 「どのくらい」「どのように」「なぜ」「いつ」「何を」\n- 自然な口語: 「〜ですか？」「〜でしょうか？」\n\n### 質問形式キーワード\n- 「〜とは」「〜方法」「〜やり方」\n- 「〜メリット」「〜デメリット」\n- 「〜費用」「〜期間」\n\n## 6. 行動経済学6原則に基づく心理トリガーキーワード【重要】\n\n### 損失回避\n- キーワード例: 「損失」「無駄」「失う」「○○万円の損」\n\n### 社会的証明\n- キーワード例: 「○○社導入」「○○%が満足」「実績○○件」\n\n### 権威性\n- キーワード例: 「専門家」「○○研究」「厚生労働省」\n\n### 一貫性\n- キーワード例: 「まずは」「次に」「最後に」\n\n### 好意\n- キーワード例: 「お困りですよね」「よく分かります」「私たちも」\n\n### 希少性\n- キーワード例: 「期間限定」「先着○名」「残り○枠」\n\n## 7. CTA用キーワードの抽出\n問い合わせ誘導に効果的なキーワードを抽出します。\n- 緊急性: 「今すぐ」「すぐに」「即座に」\n- 容易性: 「簡単」「手軽」「3ステップ」\n- 無料性: 「無料」「0円」「費用なし」\n- 専門性: 「専門家」「プロ」「実績」\n\n## 8. セマンティッククラスター\nキーワードを意味的に関連するグループに分類します。\n各クラスターに密度スコア（0-1）を算出してください。\n\n## 9. 競合のキーワードギャップ分析\n競合が見落としているキーワード（差別化機会）を特定します。\n- 出現率30%以下のキーワードを抽出\n- 差別化機会スコアを算出\n\n# 出力形式\n\n以下のJSON形式で出力してください。\n\n```json\n{\n  \"primary_keyword\": \"メインキーワード\",\n  \"total_articles_analyzed\": 10,\n  \"cooccurrence_keywords\": [\n    {\n      \"keyword\": \"共起語\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 15,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    }\n  ],\n  \"lsi_keywords\": [\n    {\n      \"keyword\": \"LSIキーワード\",\n      \"category\": \"lsi\",\n      \"importance\": 0.7,\n      \"frequency\": 10,\n      \"article_coverage\": 6\n    }\n  ],\n  \"related_keywords\": [\n    {\n      \"keyword\": \"関連キーワード\",\n      \"category\": \"related\",\n      \"importance\": 0.6,\n      \"frequency\": 8,\n      \"article_coverage\": 5\n    }\n  ],\n  \"long_tail_variations\": [\"ロングテール1\", \"ロングテール2\"],\n  \"keyword_categorization\": {\n    \"essential\": [{\"keyword\": \"必須KW\", \"article_coverage\": 8}],\n    \"standard\": [{\"keyword\": \"標準KW\", \"article_coverage\": 5}],\n    \"unique\": [{\"keyword\": \"独自KW\", \"article_coverage\": 2}]\n  },\n  \"three_phase_distribution\": {\n    \"phase1_keywords\": [{\"keyword\": \"不安KW\", \"phase\": 1}],\n    \"phase2_keywords\": [{\"keyword\": \"理解KW\", \"phase\": 2}],\n    \"phase3_keywords\": [{\"keyword\": \"行動KW\", \"phase\": 3}]\n  },\n  \"llmo_optimized_keywords\": {\n    \"question_format\": [\"〜とは\", \"〜方法\"],\n    \"voice_search\": [\"どのように〜\", \"なぜ〜\"]\n  },\n  \"behavioral_economics_triggers\": {\n    \"loss_aversion\": [\"損失\", \"無駄\"],\n    \"social_proof\": [\"導入実績\", \"○○社\"],\n    \"authority\": [\"専門家\", \"研究\"],\n    \"consistency\": [\"まずは\", \"次に\"],\n    \"liking\": [\"お困り\", \"サポート\"],\n    \"scarcity\": [\"限定\", \"先着\"]\n  },\n  \"cta_keywords\": {\n    \"urgency\": [\"今すぐ\"],\n    \"ease\": [\"簡単\"],\n    \"free\": [\"無料\"],\n    \"expertise\": [\"専門家\"]\n  },\n  \"keyword_clusters\": [\n    {\n      \"theme\": \"クラスタテーマ\",\n      \"keywords\": [{\"keyword\": \"KW1\"}, {\"keyword\": \"KW2\"}],\n      \"relevance_to_main\": 0.8,\n      \"density_score\": 0.6\n    }\n  ],\n  \"competitor_keyword_gaps\": [\n    {\n      \"keyword\": \"ギャップKW\",\n      \"coverage_rate\": 0.2,\n      \"differentiation_score\": 0.8\n    }\n  ],\n  \"recommendations\": [\n    \"Phase1で○○を強調して不安を喚起\",\n    \"Phase3で○○を使ってCVRを向上\"\n  ]\n}\n```\n\n# 重要な注意事項\n\n1. **網羅性を最優先**: 100個では不十分な場合は150個まで拡張してください\n2. **定量的分析**: すべての判断は出現頻度・記事カバレッジ等の数値に基づいてください\n3. **3フェーズの妥当性**: 各キーワードが割り当てられたフェーズで効果を発揮するか検証してください\n4. **差別化視点**: 競合が見落としているキーワードを積極的に発掘してください\n5. **CV（問い合わせ）への貢献**: 最終的にお問い合わせにつながるかを常に意識してください",
       "variables": {
         "keyword": {
           "required": true,
-          "type": "string"
+          "type": "string",
+          "description": "分析対象キーワード"
         },
         "competitor_summaries": {
           "required": false,
           "type": "array",
-          "default": []
+          "default": [],
+          "description": "競合情報（上位10サイト）"
+        },
+        "target_cooccurrence": {
+          "required": false,
+          "type": "number",
+          "default": 150,
+          "description": "共起語抽出目標数"
+        },
+        "target_related": {
+          "required": false,
+          "type": "number",
+          "default": 50,
+          "description": "関連KW抽出目標数"
+        },
+        "keyword_hints": {
+          "required": false,
+          "type": "object",
+          "default": {},
+          "description": "事前分析からのヒント（頻出語、フェーズ候補等）"
         }
       }
     },
     "step3c": {
       "step": "step3c",
-      "version": 1,
-      "content": "キーワード「{{keyword}}」の競合分析を行ってください。\n競合情報: {{competitors}}\n\nJSON形式で以下を出力:\n```json\n{\n  \"competitor_analysis\": [{\"url\": \"\", \"strengths\": [], \"weaknesses\": []}],\n  \"differentiation_opportunities\": [\"差別化ポイント\"],\n  \"recommended_word_count\": 3000\n}\n```",
+      "version": 2,
+      "content": "あなたは競合分析のエキスパートです。上位10記事を多角的に分析し、自社記事の差別化ポイントを発見します。\n\n# 入力情報\n\n## キーワード\n{{keyword}}\n\n## 文字数モード\n{{word_count_mode}}\n\n## 競合情報（上位10サイト）\n{{competitors}}\n\n# 分析タスク\n\n## 1. 文字数統計分析\n競合10記事の文字数を集計し、モードに応じてtarget_word_countを算出してください。\n- ai_seo_optimized: 平均+20%\n- ai_readability: 平均-10%\n- ai_balanced: 平均±5%\n- manual: スキップ（analysis_skipped: true）\n\n## 2. 上位表示要因・ユーザー満足深層分析（5 Whys）\n上位3記事について、3軸×5レベルの深層分析を実施してください。\n\n### 3軸の定義\n- 認知的満足（cognitive）: 頭で理解できた満足（「わかった」「納得した」）\n- 感情的満足（emotional）: 心で安心できた満足（「安心した」「不安が消えた」）\n- 行動的満足（actionable）: 体で動ける満足（「できそう」「次に何すればいいかわかる」）\n\n### 各軸で5 Whys質問\n- Level 1: この記事の特徴によって、ユーザーは何を得られるか？\n- Level 2: なぜそれがユーザーにとって価値があるのか？\n- Level 3: その価値がないと、ユーザーはどんな問題を抱えるか？\n- Level 4: その問題の背景にある、ユーザーの本当の課題は何か？\n- Level 5: その課題を解決することで、ユーザーのどんな根本的ニーズが満たされるか？\n\n### 根本ニーズカテゴリ（Level 5で使用）\n- 不確実性の解消\n- 認知負荷の軽減\n- 社会的リスクの回避\n- 自己効力感の向上\n- 時間/労力の節約\n- 意思決定の正当化\n\n### E-E-A-T分析\n各記事のE-E-A-T（Experience, Expertise, Authoritativeness, Trustworthiness）を評価してください。\n\n## 3. 4本柱差別化設計\n神経科学・行動経済学・LLMO・KGIの各観点で競合との差別化戦略を設計してください。\n\n### 神経科学（3フェーズ）\n- Phase 1（不安・課題認識）: 扁桃体活性化、損失回避\n- Phase 2（理解・納得）: 前頭前野処理、論理的納得\n- Phase 3（行動決定）: 報酬系活性化、行動喚起\n\n### 行動経済学（6原則）\n- 損失回避: 具体的損失額の明示\n- 社会的証明: 導入実績・事例\n- 権威性: 専門家引用・公的データ\n- 一貫性: 段階的コミットメント\n- 好意: 共感的トーン\n- 希少性: 緊急性訴求\n\n### LLMO（AI検索最適化）\n- 質問形式見出し: 競合平均 vs 自社目標\n- セクション独立性: RAG検索最適化\n\n### KGI（CVR向上）\n- CTA配置: 3段階CTA（Early/Mid/Final）\n- CTA訴求: 具体的ベネフィット\n\n## 4. 競合CTA分析\n競合10記事のCTA配置・回数・訴求を分析し、自社の差別化戦略を提案してください。\n\n# 出力形式\n\n以下のJSON形式で出力してください。\n\n```json\n{\n  \"keyword\": \"対象キーワード\",\n  \"market_overview\": \"市場概要（200字程度）\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"URL\",\n      \"title\": \"タイトル\",\n      \"strengths\": [\"強み1\", \"強み2\"],\n      \"weaknesses\": [\"弱み1\", \"弱み2\"],\n      \"content_focus\": [\"フォーカス領域\"],\n      \"unique_value\": \"独自価値\",\n      \"threat_level\": \"high/medium/low\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"word_count_mode\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"キーワード\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 5000,\n      \"median_word_count\": 4800,\n      \"max_word_count\": 8000,\n      \"min_word_count\": 3000,\n      \"standard_deviation\": 1200,\n      \"data_points\": 10\n    },\n    \"article_details\": [\n      {\"rank\": 1, \"title\": \"タイトル\", \"url\": \"URL\", \"word_count\": 5000, \"notes\": \"\"}\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 6000,\n      \"suggestion_logic\": \"平均5000字 × 1.2（ai_seo_optimized）= 6000字\",\n      \"note\": \"\"\n    },\n    \"ai_suggested_word_count\": 6000,\n    \"rationale\": \"平均5000字 × 1.2 = 6000字\",\n    \"target_word_count_range\": {\n      \"min\": 5700,\n      \"min_relaxed\": 5500,\n      \"max\": 6300,\n      \"target\": 6000\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±300字です。\"\n  },\n  \"target_word_count\": 6000,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は〜の特徴を持ち〜\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 1,\n        \"title\": \"タイトル\",\n        \"url\": \"URL\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"記事の特徴\",\n            \"level_1\": \"ユーザーが得られるもの\",\n            \"level_2\": \"なぜ価値があるか\",\n            \"level_3\": \"ないとどんな問題か\",\n            \"level_4\": \"背景にある課題\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"記事の特徴\",\n            \"level_1\": \"ユーザーが得られるもの\",\n            \"level_2\": \"なぜ価値があるか\",\n            \"level_3\": \"ないとどんな問題か\",\n            \"level_4\": \"背景にある課題\",\n            \"level_5_root\": \"社会的リスクの回避\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"記事の特徴\",\n            \"level_1\": \"ユーザーが得られるもの\",\n            \"level_2\": \"なぜ価値があるか\",\n            \"level_3\": \"ないとどんな問題か\",\n            \"level_4\": \"背景にある課題\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"社会的リスクの回避\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"実体験に基づく記述あり\",\n          \"expertise\": \"専門的知識の深さ\",\n          \"authoritativeness\": \"引用元の信頼性\",\n          \"trustworthiness\": \"情報の正確性\",\n          \"search_intent_fulfillment\": \"検索意図への対応度\",\n          \"user_experience_signals\": \"読みやすさ・構成\"\n        },\n        \"user_journey_fulfillment\": \"検索から行動までのジャーニー設計\"\n      }\n    ],\n    \"common_ranking_factors\": [\"要因1\", \"要因2\", \"要因3\", \"要因4\", \"要因5\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"パターン1\"],\n      \"emotional_satisfaction\": [\"パターン1\"],\n      \"actionable_satisfaction\": [\"パターン1\"]\n    },\n    \"actionable_insights\": [\"後工程で活用すべき知見1\", \"知見2\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"必須要素1\", \"必須要素2\"],\n      \"differentiation_opportunities\": [\"差別化ポイント1\"],\n      \"user_journey_design\": \"ユーザージャーニー設計への示唆\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"競合のアプローチ\",\n        \"our_differentiation\": \"自社の差別化\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"競合のアプローチ\",\n        \"our_differentiation\": \"自社の差別化\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"競合のアプローチ\",\n        \"our_differentiation\": \"自社の差別化\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"social_proof\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"authority\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"consistency\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"liking\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"scarcity\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"}\n    },\n    \"llmo\": {\n      \"question_headings\": {\"competitor_count\": 2, \"our_target\": 5},\n      \"section_independence\": {\"competitor_issue\": \"\", \"our_approach\": \"\"},\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\"competitor_average\": 1.2, \"our_strategy\": \"3段階CTA\"},\n      \"cta_appeal\": {\"competitor_approach\": \"\", \"our_differentiation\": \"\"},\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"ユーザー心理\",\n      \"competitor_weakness\": \"競合の弱点\",\n      \"our_differentiation\": [\"差別化1\", \"差別化2\"],\n      \"expected_metrics\": \"離脱率-13pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"ユーザー心理\",\n      \"competitor_weakness\": \"競合の弱点\",\n      \"our_differentiation\": [\"差別化1\", \"差別化2\"],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"ユーザー心理\",\n      \"competitor_weakness\": \"競合の弱点\",\n      \"our_differentiation\": [\"差別化1\", \"差別化2\"],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.8,\n    \"average_cta_count\": 1.2,\n    \"main_cta_positions\": [\"記事末尾\", \"サイドバー\"],\n    \"our_differentiation_strategy\": \"3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"差別化戦略の説明\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"実装ヒント\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"ギャップタイプ\",\n      \"description\": \"説明\",\n      \"competitors_missing\": [\"URL1\", \"URL2\"],\n      \"value_potential\": 0.8\n    }\n  ],\n  \"content_recommendations\": [\"推奨1\", \"推奨2\"]\n}\n```\n\n# 重要な注意事項\n\n1. **客観性**: すべて具体的内容に基づいた分析を行ってください\n2. **定量的根拠**: 「競合の30%しかカバーしていない」等、数値で示してください\n3. **実装可能性**: 差別化ポイントは実装可能なものに限定してください\n4. **後工程への引き継ぎ**: ranking_factor_analysisは工程4, 7Aで参照されます\n5. **target_word_count**: ai_*モードの場合、この工程で最終確定されます",
       "variables": {
         "keyword": {
           "required": true,
-          "type": "string"
+          "type": "string",
+          "description": "分析対象キーワード"
+        },
+        "word_count_mode": {
+          "required": false,
+          "type": "string",
+          "default": "ai_balanced",
+          "description": "文字数モード（manual/ai_seo_optimized/ai_readability/ai_balanced）"
         },
         "competitors": {
           "required": false,
           "type": "array",
-          "default": []
+          "default": [],
+          "description": "競合情報（上位10サイト）"
         }
       }
     },
@@ -266,8 +294,8 @@
     },
     "step8": {
       "step": "step8",
-      "version": 1,
-      "content": "ファクトチェックを行ってください。\nキーワード: {{keyword}}\n記事:\n{{polished}}\n\n矛盾や誤りがあれば指摘してください。",
+      "version": 2,
+      "content": "あなたは工程8「ファクトチェック・FAQ生成」の専門家です。\n\n# 入力情報\n\n## キーワード\n{{keyword}}\n\n## ブラッシュアップ後の記事\n{{polished}}\n\n# タスク\n\n記事の事実確認とFAQ生成を行い、品質向上のための提案を行ってください。\n\n## 1. ファクトチェック\n- データの数値が正確か\n- 引用元の組織名が正しいか\n- 発表年月が正しいか\n- 文脈の適切性確認\n\n## 2. FAQ生成（10-15個）\n- 音声検索に最適化\n- 4本柱（神経科学・行動経済学・LLMO・KGI）を各FAQに適用\n- 結論先行で回答\n\n## 重要\n**自動修正禁止**: 矛盾や問題を発見した場合、人間レビュー用にフラグを立てるだけで、自動修正は行わないでください。",
       "variables": {
         "keyword": {
           "required": true,
@@ -281,8 +309,8 @@
     },
     "step8_claims": {
       "step": "step8_claims",
-      "version": 1,
-      "content": "以下の記事から事実確認が必要な主張・クレームを抽出してください。\n\n記事内容:\n{{content}}\n\n各主張を箇条書きで出力してください。",
+      "version": 2,
+      "content": "あなたはファクトチェックの専門家です。以下の記事から事実確認が必要な主張を抽出してください。\n\n# 記事内容\n{{content}}\n\n# 抽出タスク\n\n記事中の全ての数値データ、引用、主張を抽出し、以下の4カテゴリに分類してください。\n\n## 検証カテゴリ\n1. **numeric_data**: 数値データ（統計、パーセンテージ、金額）\n2. **source_accuracy**: 引用元の正確性（組織名、文献タイトル）\n3. **timeline_consistency**: 時系列の整合性（日付、年、順序）\n4. **logical_consistency**: 論理的整合性（比較、文脈、解釈）\n\n# 出力形式\n\n```json\n{\n  \"claims\": [\n    {\n      \"claim_id\": \"C1\",\n      \"text\": \"主張のテキスト\",\n      \"source_section\": \"記事内の該当セクション\",\n      \"claim_type\": \"statistic|fact|opinion|definition\",\n      \"verification_category\": \"numeric_data|source_accuracy|timeline_consistency|logical_consistency\",\n      \"data_anchor_id\": \"[PS-01]など該当する場合\"\n    }\n  ]\n}\n```\n\n# 注意事項\n- 全てのデータアンカー（[PS-XX], [ER-XX]等）を漏れなく抽出\n- 具体的な数値・統計は必ず抽出\n- 引用元の名称・年月を含む主張を抽出",
       "variables": {
         "content": {
           "required": true,
@@ -292,8 +320,8 @@
     },
     "step8_verify": {
       "step": "step8_verify",
-      "version": 1,
-      "content": "以下の主張を検証してください。\nキーワード: {{keyword}}\n\n主張一覧:\n{{claims}}\n\n各主張について、正確性を評価し、矛盾があれば指摘してください。",
+      "version": 2,
+      "content": "あなたはファクトチェックの専門家です。以下の主張を検証してください。\n\n# キーワード\n{{keyword}}\n\n# 主張一覧\n{{claims}}\n\n# 検証タスク\n\n各主張について、以下の観点で検証してください。\n\n## 検証方法\n1. **数値データ**: 公式統計・調査データとの照合\n2. **引用元**: 組織の公式サイト、文献の存在確認\n3. **時系列**: 日付・年の正確性\n4. **論理性**: 文脈での使用が適切か\n\n## 重要: 自動修正禁止\n- 矛盾を発見しても**自動修正は禁止**\n- 問題点をフラグし、人間レビューを推奨するのみ\n- 修正案は提案として記載（自動適用しない）\n\n# 出力形式\n\n```json\n{\n  \"verification_results\": [\n    {\n      \"claim_id\": \"C1\",\n      \"status\": \"verified|unverified|contradicted|partially_verified\",\n      \"confidence\": 0.0-1.0,\n      \"evidence\": \"検証の根拠\",\n      \"source\": \"検証に使用した情報源\",\n      \"recommendation\": \"推奨アクション\",\n      \"verification_method\": \"web_search|source_check|logic_analysis\",\n      \"url_checked\": true|false,\n      \"url_valid\": true|false|null\n    }\n  ]\n}\n```\n\n# 判定基準\n- **verified**: 正確性が確認できた（confidence > 0.8）\n- **unverified**: 確認できなかった（情報不足）\n- **contradicted**: 矛盾が見つかった（要人間レビュー）\n- **partially_verified**: 一部のみ確認できた",
       "variables": {
         "keyword": {
           "required": true,
@@ -307,8 +335,8 @@
     },
     "step8_faq": {
       "step": "step8_faq",
-      "version": 1,
-      "content": "キーワード「{{keyword}}」に関するFAQセクションを生成してください。\n\n検証結果:\n{{verification}}\n\nよくある質問と回答を5つ程度、Markdown形式で出力してください。",
+      "version": 2,
+      "content": "あなたはFAQ生成の専門家です。キーワード「{{keyword}}」に関する音声検索最適化されたFAQセクションを生成してください。\n\n# 検証結果\n{{verification}}\n\n# FAQ生成タスク\n\n10〜15個のFAQを生成してください。\n\n## 音声検索最適化（必須）\n質問文は自然な口語で、以下の疑問詞を使用:\n- 「どのくらい」（費用・期間・規模）\n- 「どのように」（方法・手順）\n- 「なぜ」（理由）\n- 「いつ」（タイミング）\n- 「何を」「どこで」「だれが」\n\n## 4本柱の各FAQへの適用（最重要）\n\n### 神経科学\n- **結論先行**: 最初の1-2文で回答\n- **驚きのデータ**: Aha Moment\n\n### 行動経済学\n- **社会的証明**: 統計・導入事例\n- **意思決定の簡素化**: 3択や明確な選択肢\n\n### LLMO\n- **質問と回答が明確に分離**\n- **回答が独立して意味を持つ**\n- **回答長: 120-180文字または箇条書き**\n\n### KGI\n- **適切なFAQにCTA統合**\n- **内部リンクで本文へ誘導**\n\n# 出力形式\n\n```json\n{\n  \"faq_items\": [\n    {\n      \"question\": \"〜ですか？（自然な口語）\",\n      \"answer\": \"結論先行の回答文（120-180文字）\",\n      \"related_claims\": [\"C1\", \"C2\"],\n      \"voice_search_optimized\": true,\n      \"has_data_anchor\": true,\n      \"has_cta\": false,\n      \"has_internal_link\": true,\n      \"four_pillars\": {\n        \"neuroscience_applied\": true,\n        \"neuroscience_details\": \"結論先行で回答\",\n        \"behavioral_economics_applied\": true,\n        \"behavioral_economics_details\": \"統計データで社会的証明\",\n        \"llmo_optimized\": true,\n        \"llmo_details\": \"音声検索対応、独立回答\",\n        \"kgi_integrated\": false,\n        \"kgi_details\": \"\"\n      }\n    }\n  ]\n}\n```\n\n# 注意事項\n- 全FAQに4本柱を適用\n- CTA統合は3-5個のFAQに限定\n- 内部リンクは記事本文の詳細セクションへ誘導",
       "variables": {
         "keyword": {
           "required": true,
@@ -322,26 +350,48 @@
     },
     "step9": {
       "step": "step9",
-      "version": 2,
-      "content": "最終リライトを行ってください。\nキーワード: {{keyword}}\nブラッシュアップ後の記事:\n{{polished_content}}\n\nFAQ:\n{{faq}}\n\n検証メモ:\n{{verification_notes}}\n\n最終版の記事をMarkdown形式でそのまま出力してください。\nJSONやコードブロックで囲まないでください。\nFAQセクションを適切な位置に統合してください。",
+      "version": 3,
+      "content": "あなたは工程9「最終リライト・品質向上」の専門家です。\n\n# 入力情報\n\n## キーワード\n{{keyword}}\n\n## 目標文字数\n{{target_word_count}}文字\n\n## 現在の文字数\n{{current_word_count}}文字\n\n## ブラッシュアップ後の記事\n{{polished_content}}\n\n## FAQ\n{{faq}}\n\n## ファクトチェック結果\n{{verification_notes}}\n\n## 工程0で指定されたCTA\n{{cta_info}}\n\n# 実行タスク\n\n## 1. 文字数監査（最優先）\n現在の記事が目標文字数の110%を超過している場合、冗長箇所を削除して目標以内に収めてください。\n- 超過判定: {{current_word_count}} > {{target_word_count}} × 1.1\n- 圧縮時もデータ・引用・構造は維持\n\n## 2. ファクトチェック結果の反映\nverification_notesで指摘された全ての問題を修正してください。\n- データの誤り、引用元の誤り、URLの無効、専門用語の誤用を修正\n- 修正内容を記録\n\n## 3. FAQ統合\nFAQを適切な位置（結論の前、結論の後、または独立セクション）に統合してください。\n\n## 4. 読みやすさの最終調整\n- 文章のリズム、接続の自然さ\n- 冗長表現の削除\n- 長文（60文字以上）の分割\n- 専門用語の補足\n- 脚注形式の維持: `<sup id=\"refN\">[N]</sup>`と`[↩︎](#refN)`\n\n## 5. 見出しクリーンアップ（必須）\n- H2-1, H3-2 等の管理番号をすべて削除\n- 読者向けの文章のみを残す\n\n## 6. SEO最適化の最終確認\n- キーワード密度（メイン: 1.5〜2.0%、共起語: 各0.5〜1.0%）\n- 見出し構造（H2/H3の配置）\n- メタディスクリプション（160文字以内）\n\n## 7. 4本柱の最終チェック（最重要）\n\n### 神経科学\n- 衝撃的データの正確性確認\n- 3概念以内を維持\n- 文の長さ20-35文字を維持\n- 3フェーズ配分を維持\n\n### 行動経済学\n- 社会的証明のデータ検証\n- 6原則の配置確認（損失回避/社会的証明/権威/一貫性/好意/希少性）\n- 具体的数値の維持\n\n### LLMO\n- 引用形式確認\n- トークン数400-600維持\n- 箇条書き維持\n- セクション独立性維持\n\n### KGI\n- CTA周辺データの重点検証\n- 3段階CTA配置確認（Early/Mid/Final）\n- 内部リンク維持\n- **重要**: CTAテキストが工程0指定と一致しているか確認\n\n## 8. CTA最終確認（最重要）\n- 記事内の全CTAが工程0で指定されたCTAと完全一致しているか確認\n- 指定外のCTA（「無料〜」「ダウンロード」「請求」等）があれば削除\n\n## 9. 品質スコア算出\n8項目をスコアリング（各0.0〜1.0）:\n1. 正確性\n2. 読みやすさ\n3. 説得力\n4. 網羅性\n5. 差別化\n6. 実用性\n7. SEO最適化\n8. CTA効果\n\n総合品質スコア = 平均値（目標: 0.90以上）\n\n# 出力形式\n\n以下のJSON形式で出力してください。\n\n```json\n{\n  \"final_content\": \"最終版の記事本文（Markdown形式）\",\n  \"meta_description\": \"メタディスクリプション（160文字以内）\",\n  \"factcheck_corrections\": [\n    {\n      \"claim_id\": \"修正対象ID\",\n      \"original\": \"修正前\",\n      \"corrected\": \"修正後\",\n      \"reason\": \"修正理由\",\n      \"source\": \"出典\"\n    }\n  ],\n  \"faq_placement\": {\n    \"position\": \"before_conclusion/after_conclusion/separate_section\",\n    \"items_count\": 5,\n    \"integrated\": true\n  },\n  \"seo_final_adjustments\": {\n    \"headings_optimized\": [\"最適化した見出し1\", \"最適化した見出し2\"],\n    \"internal_links_added\": 3,\n    \"alt_texts_generated\": [],\n    \"meta_description_optimized\": true,\n    \"keyword_density\": 1.8,\n    \"heading_cleanup_done\": true\n  },\n  \"four_pillars_final_verification\": {\n    \"all_compliant\": true,\n    \"issues_remaining\": [],\n    \"manual_review_needed\": false,\n    \"neuroscience\": {\n      \"shocking_data_verified\": true,\n      \"concepts_within_limit\": true,\n      \"sentence_length_ok\": true,\n      \"three_phase_maintained\": true,\n      \"issues\": []\n    },\n    \"behavioral_economics\": {\n      \"social_proof_verified\": true,\n      \"six_principles_placed\": true,\n      \"specific_numbers_maintained\": true,\n      \"issues\": []\n    },\n    \"llmo\": {\n      \"citation_format_correct\": true,\n      \"token_count_in_range\": true,\n      \"bullet_points_maintained\": true,\n      \"section_independence\": true,\n      \"issues\": []\n    },\n    \"kgi\": {\n      \"cta_data_verified\": true,\n      \"three_stage_cta\": true,\n      \"internal_links_maintained\": true,\n      \"cta_text_matches_step0\": true,\n      \"issues\": []\n    }\n  },\n  \"word_count_final\": {\n    \"target\": 6000,\n    \"actual\": 5850,\n    \"variance\": -150,\n    \"variance_percent\": -2.5,\n    \"status\": \"achieved\",\n    \"compression_applied\": false\n  },\n  \"quality_scores\": {\n    \"accuracy\": 0.95,\n    \"readability\": 0.90,\n    \"persuasiveness\": 0.88,\n    \"comprehensiveness\": 0.92,\n    \"differentiation\": 0.85,\n    \"practicality\": 0.90,\n    \"seo_optimization\": 0.88,\n    \"cta_effectiveness\": 0.85,\n    \"total_score\": 0.89,\n    \"publication_ready\": false\n  },\n  \"redundancy_check\": {\n    \"redundant_expressions_removed\": 5,\n    \"duplicate_content_merged\": 2,\n    \"long_sentences_split\": 3\n  },\n  \"changes_summary\": [\n    {\n      \"change_type\": \"factcheck_correction\",\n      \"section\": \"セクション名\",\n      \"description\": \"変更内容\",\n      \"original\": \"修正前\",\n      \"corrected\": \"修正後\"\n    }\n  ],\n  \"internal_link_suggestions\": [\"内部リンク候補1\", \"内部リンク候補2\"],\n  \"quality_warnings\": []\n}\n```\n\n# 重要な注意事項\n\n1. **公開準備完了状態への仕上げ**: この工程が最終調整。次の工程10は最終出力のみ\n2. **品質スコア0.90以上を目標**: 8項目の平均が0.90未満の場合は改善を継続\n3. **CTAは工程0指定のみ使用**: 指定外のCTAは絶対禁止\n4. **参考文献セクション維持**: 記事末尾の「## 参考文献」を削除しない\n5. **見出しクリーンアップ必須**: H2-1, H3-2等の管理番号を全て削除",
       "variables": {
         "keyword": {
           "required": true,
-          "type": "string"
+          "type": "string",
+          "description": "対象キーワード"
+        },
+        "target_word_count": {
+          "required": false,
+          "type": "number",
+          "default": 6000,
+          "description": "目標文字数"
+        },
+        "current_word_count": {
+          "required": false,
+          "type": "number",
+          "default": 0,
+          "description": "現在の文字数"
         },
         "polished_content": {
           "required": true,
-          "type": "string"
+          "type": "string",
+          "description": "ブラッシュアップ後の記事（step7b）"
         },
         "faq": {
           "required": false,
           "type": "string",
-          "default": ""
+          "default": "",
+          "description": "FAQ（step8）"
         },
         "verification_notes": {
           "required": false,
           "type": "string",
-          "default": ""
+          "default": "",
+          "description": "ファクトチェック結果（step8）"
+        },
+        "cta_info": {
+          "required": false,
+          "type": "string",
+          "default": "",
+          "description": "工程0で指定されたCTA情報"
         }
       }
     },
