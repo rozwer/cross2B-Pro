@@ -1,0 +1,277 @@
+{
+    "process_info": {
+        "name": "工程12: WordPress用HTML生成",
+        "version": "1.0",
+        "purpose": "工程12: WordPress用HTML生成の全知識を統合したファイル",
+        "note": "このJSONにはガイドライン・テンプレート・実例・チェックリストの全てが含まれています"
+    },
+    "guidelines": {
+        "source": "detailed_guidelines.md",
+        "content": {
+            "input_data_structure": {
+                "required_files": [
+                    {
+                        "file": "工程0_キーワード選定結果.json",
+                        "usage": "CTA情報"
+                    },
+                    {
+                        "file": "工程6.5_構成案.md",
+                        "usage": "構成案（参考用）"
+                    },
+                    {
+                        "file": "工程10_final_article.md",
+                        "usage": "完成記事（HTML変換対象）"
+                    },
+                    {
+                        "file": "工程10_meta_info.json",
+                        "usage": "メタ情報"
+                    },
+                    {
+                        "file": "工程11_推奨画像提案.md",
+                        "usage": "前工程の出力（画像配置指示）"
+                    }
+                ],
+                "total_files": 5,
+                "note": "★精度重視：元データを直接参照★"
+            },
+            "overview": {
+                "purpose": "工程10で完成したSEO記事（Markdown）をWordPressのブロックエディタ（Gutenberg）で編集しやすいHTML形式に変換する",
+                "key_points": [
+                    "Gutenbergブロック対応のHTMLを生成",
+                    "ブロックエディタで直接編集可能な形式に変換",
+                    "カスタムHTMLブロックではなく、ネイティブブロックとして認識される形式",
+                    "工程11の画像提案に基づく画像挿入位置のプレースホルダーを配置"
+                ],
+                "workflow": "HTMLをカスタムHTMLブロックに貼り付け → 「ブロックへ変換」 → 各要素が独立したブロックになる"
+            },
+            "wordpress_block_html": {
+                "heading": {
+                    "h1": "<h1>タイトル</h1>",
+                    "h2": "<h2 id=\"section-[番号]\">見出し</h2>",
+                    "h3": "<h3 id=\"section-[H2番号]-[H3番号]\">小見出し</h3>",
+                    "note": "目次プラグイン対応のため、全見出しにIDを付与"
+                },
+                "paragraph": {
+                    "format": "<p>段落テキスト</p>",
+                    "note": "空行で区切られた段落は別々の<p>タグ"
+                },
+                "list": {
+                    "unordered": "<ul>\n<li>項目1</li>\n<li>項目2</li>\n</ul>",
+                    "ordered": "<ol>\n<li>手順1</li>\n<li>手順2</li>\n</ol>"
+                },
+                "quote": {
+                    "format": "<blockquote>\n<p>引用テキスト</p>\n<cite>引用元</cite>\n</blockquote>"
+                },
+                "image": {
+                    "format": "<figure class=\"wp-block-image size-large\">\n<img src=\"[URL]\" alt=\"[alt属性]\">\n<figcaption>[キャプション]</figcaption>\n</figure>"
+                },
+                "table": {
+                    "format": "<figure class=\"wp-block-table\">\n<table>\n<thead><tr><th>ヘッダー</th></tr></thead>\n<tbody><tr><td>データ</td></tr></tbody>\n</table>\n</figure>"
+                },
+                "separator": {
+                    "format": "<hr class=\"wp-block-separator\">"
+                },
+                "button": {
+                    "format": "<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"[URL]\">[テキスト]</a>\n</div>\n</div>",
+                    "use_case": "CTA（コール・トゥ・アクション）に使用"
+                }
+            },
+            "conversion_rules": {
+                "markdown_to_html": {
+                    "heading": {
+                        "# タイトル": "<h1>タイトル</h1>",
+                        "## 見出し": "<h2 id=\"section-N\">見出し</h2>",
+                        "### 小見出し": "<h3 id=\"section-N-M\">小見出し</h3>"
+                    },
+                    "text": {
+                        "通常テキスト": "<p>テキスト</p>",
+                        "**太字**": "<strong>太字</strong>",
+                        "*斜体*": "<em>斜体</em>"
+                    },
+                    "list": {
+                        "- 項目": "<ul><li>項目</li></ul>",
+                        "1. 項目": "<ol><li>項目</li></ol>"
+                    },
+                    "link": {
+                        "[テキスト](URL)": "<a href=\"URL\">テキスト</a>"
+                    },
+                    "quote": {
+                        "> 引用文": "<blockquote><p>引用文</p></blockquote>"
+                    },
+                    "references": {
+                        "## 参考文献": "<h2 id=\"references\">参考文献</h2>\n<ul>\n<li>[出典]</li>\n</ul>"
+                    }
+                }
+            },
+            "cta_conversion": {
+                "description": "CTAはWordPressのボタンブロック形式に変換",
+                "positions": [
+                    "Early CTA（約650字）",
+                    "Mid CTA（約2800字）",
+                    "Final CTA（約4500字 + 専用セクション）"
+                ],
+                "html_format": "<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"[CTAのURL]\">[CTAのテキスト]</a>\n</div>\n</div>",
+                "note": "CTAのURLとテキストは工程0で定義されたものを使用"
+            },
+            "image_placeholder": {
+                "description": "工程11の画像提案に基づき、画像挿入位置にプレースホルダーを配置",
+                "format": "<!-- 画像挿入位置: [番号] [タイトル] -->\n<figure class=\"wp-block-image size-large\">\n<img src=\"#IMAGE_PLACEHOLDER_[番号]\" alt=\"[alt属性]\">\n<figcaption>[キャプション]</figcaption>\n</figure>\n<!-- /画像挿入位置 -->",
+                "eyecatch_note": "アイキャッチ画像は記事本文には含めず、別途指示として記載"
+            },
+            "faq_schema": {
+                "description": "FAQセクションにSchema.org構造化データを追加し、リッチスニペット表示を狙う",
+                "format": "<div itemscope itemtype=\"https://schema.org/FAQPage\">\n<h2 id=\"faq\">よくある質問（FAQ）</h2>\n<div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n<h3 itemprop=\"name\">Q1. 質問文</h3>\n<div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n<p itemprop=\"text\">回答文</p>\n</div>\n</div>\n</div>"
+            },
+            "table_of_contents": {
+                "description": "目次プラグイン（Table of Contents Plus等）対応",
+                "id_naming": {
+                    "h2": "section-[番号]（例: section-1, section-2）",
+                    "h3": "section-[H2番号]-[H3番号]（例: section-1-1, section-1-2）"
+                }
+            }
+        }
+    },
+    "templates": {
+        "source": "templates.json",
+        "content": {
+            "full_html_structure": {
+                "description": "完成版HTMLの全体構造",
+                "template": "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n<meta charset=\"UTF-8\">\n<title>[記事タイトル] - WordPress用HTML</title>\n</head>\n<body>\n\n<!--\n=============================================\nWordPress投稿手順\n=============================================\n1. <body>内のHTMLをコピー\n2. WordPress新規投稿 → カスタムHTMLブロック\n3. 貼り付け → 「ブロックへ変換」\n4. 画像プレースホルダーを実際の画像に置換\n5. アイキャッチ画像を設定\n6. プレビュー確認 → 公開\n=============================================\n-->\n\n<!-- アイキャッチ画像設定 -->\n<!--\nファイル名: [推奨ファイル名]\nalt属性: [alt属性テキスト]\n設定場所: 投稿編集画面右サイドバー「アイキャッチ画像」\n-->\n\n<!-- 記事本文 -->\n\n[HTMLコンテンツ]\n\n</body>\n</html>"
+            },
+            "article_section": {
+                "description": "記事セクションの構造",
+                "template": "<h2 id=\"section-[番号]\">[見出し]</h2>\n\n<p>[導入文]</p>\n\n<h3 id=\"section-[番号]-1\">[小見出し1]</h3>\n\n<p>[本文]</p>\n\n<ul>\n<li>[項目1]</li>\n<li>[項目2]</li>\n<li>[項目3]</li>\n</ul>\n\n<!-- 画像挿入位置 -->\n<figure class=\"wp-block-image size-large\">\n<img src=\"#IMAGE_PLACEHOLDER_[番号]\" alt=\"[alt属性]\">\n<figcaption>[キャプション]</figcaption>\n</figure>"
+            },
+            "cta_block": {
+                "description": "CTAブロックのテンプレート",
+                "template": "<!-- [CTA種別] CTA -->\n<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"[URL]\">[CTAテキスト]</a>\n</div>\n</div>"
+            },
+            "faq_block": {
+                "description": "FAQ構造化データ付きブロック",
+                "template": "<div itemscope itemtype=\"https://schema.org/FAQPage\">\n\n<h2 id=\"faq\">よくある質問（FAQ）</h2>\n\n<div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n<h3 itemprop=\"name\">Q1. [質問文]</h3>\n<div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n<p itemprop=\"text\">[回答文]</p>\n</div>\n</div>\n\n<div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n<h3 itemprop=\"name\">Q2. [質問文]</h3>\n<div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n<p itemprop=\"text\">[回答文]</p>\n</div>\n</div>\n\n</div>"
+            },
+            "image_placeholder_block": {
+                "description": "画像プレースホルダーブロック",
+                "template": "<!-- 画像挿入位置: [番号] [画像タイトル] -->\n<figure class=\"wp-block-image size-large\">\n<img src=\"#IMAGE_PLACEHOLDER_[番号]\" alt=\"[alt属性テキスト]\">\n<figcaption>[キャプション]</figcaption>\n</figure>\n<!-- /画像挿入位置 -->"
+            },
+            "references_block": {
+                "description": "参考文献セクション（リスト形式）",
+                "template": "<!-- 参考文献セクション -->\n<h2 id=\"references\">参考文献</h2>\n<ul>\n<li>[著者/組織]. \"[記事タイトル]\". [サイト名]. [URL]</li>\n<li>[著者/組織]. \"[記事タイトル]\". [サイト名]. [URL]</li>\n</ul>"
+            }
+        }
+    },
+    "examples": {
+        "source": "examples.json",
+        "content": {
+            "heading_examples": {
+                "h2_with_id": "<h2 id=\"section-1\">派遣社員教育の重要性と現状</h2>",
+                "h3_with_id": "<h3 id=\"section-1-1\">なぜ今、派遣社員教育が注目されているのか</h3>"
+            },
+            "paragraph_example": {
+                "simple": "<p>派遣社員の3ヶ月以内離職率は29.3%に達しています。この数字は正社員と比較して約2倍の水準です。</p>",
+                "with_strong": "<p>派遣社員の教育は、企業にとって<strong>重要な投資</strong>です。適切な教育により、定着率が大幅に向上します。</p>"
+            },
+            "list_examples": {
+                "unordered": "<ul>\n<li>受入準備の徹底</li>\n<li>初日オリエンテーションの実施</li>\n<li>OJT・Off-JTの組み合わせ</li>\n<li>定期的なフォローアップ</li>\n<li>評価とフィードバック</li>\n</ul>",
+                "ordered": "<ol>\n<li>教育担当者を選定する</li>\n<li>教育計画を策定する</li>\n<li>必要な資料を準備する</li>\n<li>教育を実施する</li>\n<li>効果を測定・改善する</li>\n</ol>"
+            },
+            "cta_example": {
+                "early_cta": "<!-- Early CTA -->\n<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"https://example.com/contact\">無料相談を予約する</a>\n</div>\n</div>",
+                "mid_cta": "<!-- Mid CTA -->\n<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"https://example.com/download\">教育プログラム資料をダウンロード</a>\n</div>\n</div>",
+                "final_cta": "<!-- Final CTA -->\n<div class=\"wp-block-buttons is-layout-flex\">\n<div class=\"wp-block-button\">\n<a class=\"wp-block-button__link wp-element-button\" href=\"https://example.com/contact\">今すぐ専門家に相談する</a>\n</div>\n</div>"
+            },
+            "image_placeholder_example": "<!-- 画像挿入位置: 1 派遣社員教育の5ステップフローチャート -->\n<figure class=\"wp-block-image size-large\">\n<img src=\"#IMAGE_PLACEHOLDER_1\" alt=\"派遣社員教育の5ステップを示すフローチャート：受入準備から定着確認まで\">\n<figcaption>派遣社員教育の5ステップ</figcaption>\n</figure>\n<!-- /画像挿入位置 -->",
+            "faq_example": "<div itemscope itemtype=\"https://schema.org/FAQPage\">\n\n<h2 id=\"faq\">よくある質問（FAQ）</h2>\n\n<div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n<h3 itemprop=\"name\">Q1. 派遣社員の教育は誰が行うべきですか？</h3>\n<div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n<p itemprop=\"text\">派遣社員の教育は、派遣先企業の教育担当者が主に行います。ただし、派遣元企業と連携し、役割分担を明確にすることが重要です。具体的には、業務スキルは派遣先、ビジネスマナーは派遣元が担当するケースが多いです。</p>\n</div>\n</div>\n\n<div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n<h3 itemprop=\"name\">Q2. 教育にかける時間の目安はどのくらいですか？</h3>\n<div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n<p itemprop=\"text\">一般的に、初期教育として1〜2週間、フォローアップ研修として月1回（1〜2時間）が目安です。ただし、業務の複雑さや派遣社員の経験によって調整が必要です。</p>\n</div>\n</div>\n\n</div>",
+            "table_example": "<figure class=\"wp-block-table\">\n<table>\n<thead>\n<tr>\n<th>項目</th>\n<th>OJT</th>\n<th>Off-JT</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>特徴</td>\n<td>実務を通じた教育</td>\n<td>座学・研修形式</td>\n</tr>\n<tr>\n<td>メリット</td>\n<td>実践的スキルが身につく</td>\n<td>体系的に学べる</td>\n</tr>\n<tr>\n<td>デメリット</td>\n<td>教える側の負担が大きい</td>\n<td>実務との乖離が起きやすい</td>\n</tr>\n</tbody>\n</table>\n<figcaption>OJTとOff-JTの比較</figcaption>\n</figure>"
+        }
+    },
+    "checklist": {
+        "source": "checklist.md",
+        "content": {
+            "pre_conversion_checklist": {
+                "description": "変換前の確認事項",
+                "items": [
+                    "工程10の完成記事（Markdown）を読み込んだか",
+                    "工程11の画像提案を確認したか",
+                    "工程0のCTA情報を確認したか",
+                    "記事全体の構成を把握したか"
+                ]
+            },
+            "html_conversion_checklist": {
+                "description": "HTML変換のチェックリスト",
+                "items": [
+                    "全ての見出しにIDを付与したか",
+                    "段落を<p>タグで囲んだか",
+                    "リストを<ul>/<ol>タグで変換したか",
+                    "強調を<strong>/<em>タグで変換したか",
+                    "リンクを<a>タグで変換したか",
+                    "引用を<blockquote>タグで変換したか"
+                ]
+            },
+            "cta_checklist": {
+                "description": "CTA変換のチェックリスト",
+                "items": [
+                    "Early CTAをボタンブロック形式に変換したか",
+                    "Mid CTAをボタンブロック形式に変換したか",
+                    "Final CTAをボタンブロック形式に変換したか",
+                    "CTAのURLは工程0で定義されたものを使用したか",
+                    "CTAのテキストは工程0で定義されたものを使用したか"
+                ]
+            },
+            "image_checklist": {
+                "description": "画像プレースホルダーのチェックリスト",
+                "items": [
+                    "工程11で提案された全ての画像位置にプレースホルダーを配置したか",
+                    "各画像にalt属性を設定したか",
+                    "各画像にキャプションを設定したか",
+                    "アイキャッチ画像の設定指示を記載したか"
+                ]
+            },
+            "faq_checklist": {
+                "description": "FAQ構造化データのチェックリスト",
+                "items": [
+                    "FAQセクションにFAQPage Schemaを追加したか",
+                    "各Q&AにQuestion/Answer Schemaを追加したか",
+                    "itemprop属性を正しく設定したか"
+                ]
+            },
+            "final_checklist": {
+                "description": "最終確認チェックリスト",
+                "items": [
+                    "HTMLの構文エラーがないか",
+                    "全ての要素がWordPressブロックとして認識される形式か",
+                    "参考文献セクションが正しくリスト変換されているか",
+                    "WordPress投稿手順を記載したか",
+                    "アイキャッチ画像設定の指示を記載したか",
+                    "画像プレースホルダーの置換手順を記載したか"
+                ]
+            }
+        }
+    },
+    "wordpress_posting_guide": {
+        "steps": [
+            "1. 生成されたHTMLファイルを開く",
+            "2. <body>タグ内のHTMLをコピー",
+            "3. WordPressの新規投稿画面を開く",
+            "4. 「+」ボタン → 「カスタムHTML」ブロックを追加",
+            "5. コピーしたHTMLを貼り付け",
+            "6. ブロックの「・・・」メニュー → 「ブロックへ変換」を選択",
+            "7. 各要素が独立したブロックになる",
+            "8. 画像プレースホルダー（#IMAGE_PLACEHOLDER_N）を実際の画像に置き換え",
+            "9. アイキャッチ画像を設定（右サイドバー「アイキャッチ画像」）",
+            "10. プレビューで確認",
+            "11. 問題なければ公開"
+        ],
+        "tips": [
+            "画像はメディアライブラリから選択するのが簡単",
+            "ボタンの色はブロック設定で変更可能",
+            "見出しのスタイルもブロック設定で調整可能"
+        ]
+    },
+    "important_notes": {
+        "block_conversion": "HTMLを貼り付け後、必ず「ブロックへ変換」を実行すること。これにより各要素が独立したブロックになり、編集が容易になる。",
+        "image_replacement": "プレースホルダー（#IMAGE_PLACEHOLDER_N）は実際の画像URLに置き換える必要がある。WordPress上でメディアライブラリから選択するのが最も簡単。",
+        "cta_source": "CTAのURLとテキストは必ず工程0で定義されたものを使用すること。",
+        "schema_validity": "FAQ構造化データはGoogleのリッチリザルトテストで検証可能。"
+    }
+}

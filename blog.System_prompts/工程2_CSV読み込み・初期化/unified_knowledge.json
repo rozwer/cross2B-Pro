@@ -1,0 +1,572 @@
+{
+    "process_info": {
+        "name": "工程2:CSV読み込み・初期化",
+        "version": "5.5",
+        "purpose": "GASから出力されたCSVファイルの存在と品質を確認し、簡易レポートを出力します。この工程はデータ加工を行いません。",
+        "kgi": "後続工程への円滑な引き継ぎとデータ品質の保証"
+    },
+    "guidelines": {
+        "core_principles": {
+            "no_data_processing": "データ加工は一切行わない（JSON変換・データ整形・文字数カウント等は禁止）",
+            "validation_only": "ファイルの存在と基本的な品質のみを確認",
+            "trust_gas_output": "GASの出力を信頼し、そのまま活用",
+            "csv_attachment": "工程3〜10では、このCSVファイルを直接添付して使用"
+        },
+        "processing_flow": [
+            "工程0の情報確認（{{target_word_count}}, {{strategy}}, {{main_keyword}}）",
+            "CSVファイルの存在確認（工程1_1.1統合_上位10サイト競合記事本文.csv）",
+            "CSVファイルの簡易チェック（ファイルサイズ、行数、必須カラム）",
+            "簡易統計レポートの出力"
+        ],
+        "validation_checks": {
+            "file_existence": {
+                "type": "必須",
+                "description": "CSVファイルが存在するか確認",
+                "error_on_fail": "file_not_found"
+            },
+            "file_size_not_zero": {
+                "type": "必須",
+                "description": "ファイルサイズが0バイトでないか確認",
+                "error_on_fail": "file_size_zero"
+            },
+            "required_columns": {
+                "type": "必須",
+                "columns": [
+                    "順位",
+                    "サイト名",
+                    "記事タイトル/URL",
+                    "スニペット",
+                    "本文(H2,4つ,P,LI,Blockquote,最大5万文字)"
+                ],
+                "error_on_fail": "missing_required_columns"
+            },
+            "data_row_count": {
+                "type": "警告",
+                "expected_value": 10,
+                "warning_on_fail": "data_row_count_low"
+            },
+            "file_size_limit": {
+                "type": "警告",
+                "max_size_mb": 10,
+                "warning_on_fail": "file_size_large"
+            }
+        },
+        "error_handling": {
+            "error_types": {
+                "file_not_found": {
+                    "message": "CSVファイルが見つかりません",
+                    "solution": [
+                        "Google Apps Script (GAS) を実行してください",
+                        "CSVファイルが正しい場所に出力されているか確認してください",
+                        "ファイル名が正確か確認してください"
+                    ],
+                    "action": "処理を中断"
+                },
+                "file_size_zero": {
+                    "message": "CSVファイルのサイズが0バイトです",
+                    "solution": [
+                        "GASスクリプトが正常に実行されたか確認してください",
+                        "検索結果が取得できているか確認してください",
+                        "GASのログを確認してください"
+                    ],
+                    "action": "処理を中断"
+                },
+                "missing_required_columns": {
+                    "message": "必須カラムが不足しています",
+                    "solution": [
+                        "GASスクリプトを確認してください",
+                        "CSVファイルの構造を確認してください",
+                        "不足しているカラム: {{missing_columns}}"
+                    ],
+                    "action": "処理を中断"
+                }
+            },
+            "warning_types": {
+                "data_row_count_low": {
+                    "message": "データ行数が期待値（10行）を下回っています。",
+                    "action": "警告のみ表示し、処理を継続"
+                },
+                "file_size_large": {
+                    "message": "ファイルサイズが異常に大きい（10MB超）です。",
+                    "action": "警告のみ表示し、処理を継続"
+                }
+            }
+        },
+        "csv_file_spec": {
+            "file_name": "工程1_1.1統合_上位10サイト競合記事本文.csv",
+            "expected_structure": {
+                "headers": [
+                    "順位",
+                    "サイト名",
+                    "記事タイトル/URL",
+                    "スニペット",
+                    "本文(H2,4つ,P,LI,Blockquote,最大5万文字)"
+                ],
+                "expected_row_count": 11,
+                "note": "ヘッダー1行 + データ10行"
+            }
+        },
+        "content": "# 工程2: CSV確認 - 詳細ガイドライン\n\nこのドキュメントは、工程2「CSV確認」を正確に実行するための詳細ガイドラインです。\n\n---\n\n## 🎯 工程の目的\n\n**GASから出力されたCSVファイルの存在と品質を確認し、簡易レポートを出力します。**\n\n**重要**: この工程はデータ加工を行いません。CSVファイルの確認のみを行います。\n\n---\n\n## 📊 処理フロー\n\n### 1. 工程0の情報確認\n\n工程0から受け取った以下の情報を確認します：\n\n```json\n{\n  \"target_word_count\": 12000,\n  \"strategy\": \"standard\",\n  \"main_keyword\": \"派遣社員 教育方法\"\n}\n```\n\n- **{{target_word_count}}**: 全工程で厳守すべきターゲット文字数の上限\n- **{{strategy}}**: 標準記事（\"standard\"） / トピッククラスター戦略（\"topic_cluster\"）\n- **キーワード**: メインキーワード\n\n### 2. CSVファイルの存在確認\n\nファイルパス: `工程1_1.1統合_上位10サイト競合記事本文.csv`\n\n存在しない場合 → エラーメッセージを表示し、処理を中断\n\n```\n❌ エラー: CSVファイルが見つかりません\n\nファイル名: 工程1_1.1統合_上位10サイト競合記事本文.csv\n\n【対応方法】\n1. Google Apps Script (GAS) を実行してください\n2. CSVファイルが正しい場所に出力されているか確認してください\n3. ファイル名が正確か確認してください\n```\n\n### 3. CSVファイルの簡易チェック\n\n以下の項目を確認します（**データ加工は行いません**）：\n\n#### 3.1 ファイルサイズ確認\n- ファイルサイズが0バイトでないか確認\n\n#### 3.2 行数カウント\n- ヘッダー行 + データ行の合計数を確認\n- 期待値: 11行（ヘッダー1行 + データ10行）\n\n#### 3.3 必須カラムの存在確認\n以下のカラムが存在するか確認:\n- `順位`\n- `サイト名`\n- `記事タイトル/URL`\n- `スニペット`\n- `本文(H2,4つ,P,LI,Blockquote,最大5万文字)`\n\n### 4. 簡易統計レポートの出力\n\n以下の情報を含むテキストレポートを出力します：\n\n```\n✅ 工程2完了（CSV確認）\n━━━━━━━━━━━━━━━━━━━━━━\nCSVファイル確認結果:\n├─ ファイル名: 工程1_1.1統合_上位10サイト競合記事本文.csv\n├─ ファイルサイズ: ○○ KB\n├─ データ行数: ○行 / 期待: 10行\n├─ 必須カラム: ✅ 全て存在 / ❌ 不足あり\n└─ 検証ステータス: ✅ OK / ⚠️ 警告あり\n\nプロジェクト設定（工程0）:\n├─ キーワード: <キーワード>\n├─ ターゲット文字数: <文字数>字\n└─ 戦略: <standard/topic_cluster>\n\n⚠️ 重要な注意事項:\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。\n工程2ではデータ加工を行いません。GASの出力をそのまま使用します。\n\n次の工程:\n工程3A/3B/3C（並列実行）に進んでください。\n※必ずCSVファイルを添付してください\n```\n\n---\n\n## 🚫 重要な原則\n\n### 1. データ加工の禁止（最重要）\nこの工程では、CSVファイルのデータを一切加工しません。\n- ❌ JSON変換しない\n- ❌ データ整形しない\n- ❌ 文字数カウントしない\n- ✅ ファイルの存在と基本的な品質のみ確認\n\n### 2. 後続工程でのCSV使用\n- 工程3〜10では、このCSVファイルを**直接添付**して使用します\n- GASの出力を信頼し、そのまま活用します\n\n### 3. エラーハンドリング\n\n#### エラーを表示し、処理を中断:\n- CSVファイルが存在しない\n- ファイルサイズが0バイト\n- 必須カラムが不足\n\n#### 警告のみ表示し、処理を継続:\n- データ行数が10行未満\n- ファイルサイズが異常に大きい（10MB超）\n\n---\n\n## 📝 CSVファイルの仕様\n\n### ファイル名\n`工程1_1.1統合_上位10サイト競合記事本文.csv`\n\n### 必須カラム\n| カラム名 | 説明 |\n|---------|------|\n| 順位 | 検索順位（1〜10） |\n| サイト名 | サイトのタイトル |\n| 記事タイトル/URL | ページURL |\n| スニペット | 検索結果のスニペット |\n| 本文(H2,4つ,P,LI,Blockquote,最大5万文字) | 抽出された記事本文 |\n\n---\n\n## ✅ 完了確認\n\n出力後、以下を表示してください：\n\n```\n✅ 工程2完了（CSV確認）\n━━━━━━━━━━━━━━━━━━━━━━\nCSVファイル確認結果:\n├─ ファイル名: 工程1_1.1統合_上位10サイト競合記事本文.csv\n├─ ファイルサイズ: <サイズ> KB\n├─ データ行数: <行数>行 / 期待: 10行\n├─ 必須カラム: ✅ 全て存在\n└─ 検証ステータス: ✅ OK\n\nプロジェクト設定（工程0）:\n├─ キーワード: <キーワード>\n├─ ターゲット文字数: <文字数>字\n└─ 戦略: <standard/topic_cluster>\n\n⚠️ 重要:\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。\n\n次の工程: 工程3A/3B/3C（並列実行）\n※CSVファイルを必ず添付してください\n━━━━━━━━━━━━━━━━━━━━━━\n```\n\n---\n\n## 🔄 次の工程への引き継ぎ\n\n工程3A/3B/3C（並列実行）に進んでください。\n\n**重要**: 必ず`工程1_1.1統合_上位10サイト競合記事本文.csv`を添付してください。\n",
+        "content_source": "detailed_guidelines.md (full text)"
+    },
+    "templates": {
+        "success_report": {
+            "format": "テキストレポート",
+            "structure": [
+                "✅ 工程2完了（CSV確認）",
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "CSVファイル確認結果:",
+                "├─ ファイル名: {{csv_file_name}}",
+                "├─ ファイルサイズ: {{file_size_kb}} KB",
+                "├─ データ行数: {{data_row_count}}行 / 期待: 10行",
+                "├─ 必須カラム: {{required_columns_status}}",
+                "└─ 検証ステータス: {{validation_status}}",
+                "",
+                "プロジェクト設定（工程0）:",
+                "├─ キーワード: {{main_keyword}}",
+                "├─ ターゲット文字数: {{target_word_count}}字",
+                "└─ 戦略: {{strategy}}",
+                "",
+                "⚠️ 重要:",
+                "このCSVファイルを工程3以降の全ての工程で直接添付してください。",
+                "",
+                "次の工程: 工程3A/3B/3C（並列実行）",
+                "※CSVファイルを必ず添付してください",
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            ]
+        },
+        "warning_report": {
+            "format": "テキストレポート",
+            "structure": [
+                "⚠️ 工程2完了（CSV確認 - 警告あり）",
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "CSVファイル確認結果:",
+                "├─ ファイル名: {{csv_file_name}}",
+                "├─ ファイルサイズ: {{file_size_kb}} KB",
+                "├─ データ行数: {{data_row_count}}行 / 期待: 10行",
+                "├─ 必須カラム: {{required_columns_status}}",
+                "└─ 検証ステータス: ⚠️ 警告あり",
+                "",
+                "⚠️ 警告内容:",
+                "{{warning_message}}",
+                "",
+                "プロジェクト設定（工程0）:",
+                "├─ キーワード: {{main_keyword}}",
+                "├─ ターゲット文字数: {{target_word_count}}字",
+                "└─ 戦略: {{strategy}}",
+                "",
+                "⚠️ 重要:",
+                "警告がありますが、処理を継続します。",
+                "このCSVファイルを工程3以降の全ての工程で直接添付してください。",
+                "",
+                "次の工程: 工程3A/3B/3C（並列実行）",
+                "※CSVファイルを必ず添付してください",
+                "━━━━━━━━━━━━━━━━━━━━━━"
+            ]
+        },
+        "error_report": {
+            "format": "エラーメッセージ",
+            "structure": [
+                "❌ エラー: {{error_message}}",
+                "",
+                "ファイル名: {{csv_file_name}}",
+                "",
+                "【対応方法】",
+                "{{solution_steps}}"
+            ],
+            "note": "solution_stepsはerror_handling.error_typesのsolution配列を参照し、各要素を改行で連結して出力（例: \"1. ステップ1\\n2. ステップ2\\n3. ステップ3\"）"
+        },
+        "legacy_templates": {
+            "process_name": "工程2: CSV確認",
+            "description": "GASから出力されたCSVファイルの存在と品質を確認し、簡易レポートを出力します。",
+            "output_templates": {
+                "success_report": {
+                    "format": "テキストレポート",
+                    "sections": [
+                        {
+                            "section_name": "ヘッダー",
+                            "content": "✅ 工程2完了（CSV確認）\n━━━━━━━━━━━━━━━━━━━━━━"
+                        },
+                        {
+                            "section_name": "CSV確認結果",
+                            "fields": [
+                                "ファイル名: {{csv_file_name}}",
+                                "ファイルサイズ: {{file_size_kb}} KB",
+                                "データ行数: {{data_row_count}}行 / 期待: 10行",
+                                "必須カラム: {{required_columns_status}}",
+                                "検証ステータス: {{validation_status}}"
+                            ]
+                        },
+                        {
+                            "section_name": "プロジェクト設定（工程0）",
+                            "fields": [
+                                "キーワード: {{main_keyword}}",
+                                "ターゲット文字数: {{target_word_count}}字",
+                                "戦略: {{strategy}}"
+                            ]
+                        },
+                        {
+                            "section_name": "重要な注意事項",
+                            "content": "⚠️ 重要:\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。"
+                        },
+                        {
+                            "section_name": "次の工程",
+                            "content": "次の工程: 工程3A/3B/3C（並列実行）\n※CSVファイルを必ず添付してください"
+                        },
+                        {
+                            "section_name": "フッター",
+                            "content": "━━━━━━━━━━━━━━━━━━━━━━"
+                        }
+                    ]
+                },
+                "warning_report": {
+                    "format": "テキストレポート",
+                    "sections": [
+                        {
+                            "section_name": "ヘッダー",
+                            "content": "⚠️ 工程2完了（CSV確認 - 警告あり）\n━━━━━━━━━━━━━━━━━━━━━━"
+                        },
+                        {
+                            "section_name": "CSV確認結果",
+                            "fields": [
+                                "ファイル名: {{csv_file_name}}",
+                                "ファイルサイズ: {{file_size_kb}} KB",
+                                "データ行数: {{data_row_count}}行 / 期待: 10行",
+                                "必須カラム: {{required_columns_status}}",
+                                "検証ステータス: ⚠️ 警告あり"
+                            ]
+                        },
+                        {
+                            "section_name": "警告内容",
+                            "content": "⚠️ {{warning_message}}"
+                        },
+                        {
+                            "section_name": "プロジェクト設定（工程0）",
+                            "fields": [
+                                "キーワード: {{main_keyword}}",
+                                "ターゲット文字数: {{target_word_count}}字",
+                                "戦略: {{strategy}}"
+                            ]
+                        },
+                        {
+                            "section_name": "重要な注意事項",
+                            "content": "⚠️ 重要:\n警告がありますが、処理を継続します。\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。"
+                        },
+                        {
+                            "section_name": "次の工程",
+                            "content": "次の工程: 工程3A/3B/3C（並列実行）\n※CSVファイルを必ず添付してください"
+                        },
+                        {
+                            "section_name": "フッター",
+                            "content": "━━━━━━━━━━━━━━━━━━━━━━"
+                        }
+                    ]
+                },
+                "error_report": {
+                    "format": "エラーメッセージ",
+                    "sections": [
+                        {
+                            "section_name": "エラーメッセージ",
+                            "content": "❌ エラー: {{error_message}}"
+                        },
+                        {
+                            "section_name": "ファイル情報",
+                            "content": "ファイル名: {{csv_file_name}}"
+                        },
+                        {
+                            "section_name": "対応方法",
+                            "content": "【対応方法】\n{{solution_steps}}"
+                        }
+                    ]
+                }
+            },
+            "error_types": {
+                "file_not_found": {
+                    "error_message": "CSVファイルが見つかりません",
+                    "solution_steps": [
+                        "1. Google Apps Script (GAS) を実行してください",
+                        "2. CSVファイルが正しい場所に出力されているか確認してください",
+                        "3. ファイル名が正確か確認してください"
+                    ],
+                    "action": "処理を中断"
+                },
+                "file_size_zero": {
+                    "error_message": "CSVファイルのサイズが0バイトです",
+                    "solution_steps": [
+                        "1. GASスクリプトが正常に実行されたか確認してください",
+                        "2. 検索結果が取得できているか確認してください",
+                        "3. GASのログを確認してください"
+                    ],
+                    "action": "処理を中断"
+                },
+                "missing_required_columns": {
+                    "error_message": "必須カラムが不足しています",
+                    "solution_steps": [
+                        "1. GASスクリプトを確認してください",
+                        "2. CSVファイルの構造を確認してください",
+                        "3. 不足しているカラム: {{missing_columns}}"
+                    ],
+                    "action": "処理を中断"
+                }
+            },
+            "warning_types": {
+                "data_row_count_low": {
+                    "warning_message": "データ行数が期待値（10行）を下回っています。",
+                    "action": "警告のみ表示し、処理を継続"
+                },
+                "file_size_large": {
+                    "warning_message": "ファイルサイズが異常に大きい（10MB超）です。",
+                    "action": "警告のみ表示し、処理を継続"
+                }
+            },
+            "validation_checks": {
+                "file_existence": {
+                    "check_type": "必須",
+                    "error_on_fail": "file_not_found"
+                },
+                "file_size_not_zero": {
+                    "check_type": "必須",
+                    "error_on_fail": "file_size_zero"
+                },
+                "required_columns": {
+                    "check_type": "必須",
+                    "columns": [
+                        "順位",
+                        "サイト名",
+                        "記事タイトル/URL",
+                        "スニペット",
+                        "本文(H2,4つ,P,LI,Blockquote,最大5万文字)"
+                    ],
+                    "error_on_fail": "missing_required_columns"
+                },
+                "data_row_count": {
+                    "check_type": "警告",
+                    "expected_value": 10,
+                    "warning_on_fail": "data_row_count_low"
+                },
+                "file_size_limit": {
+                    "check_type": "警告",
+                    "max_size_mb": 10,
+                    "warning_on_fail": "file_size_large"
+                }
+            },
+            "important_notes": [
+                "この工程はデータ加工を行いません",
+                "CSV変換、JSON変換、文字数カウント等は一切行いません",
+                "ファイルの存在と基本的な品質のみ確認します",
+                "工程3〜10では、このCSVファイルを直接添付して使用します",
+                "GASの出力を信頼し、そのまま活用します"
+            ]
+        },
+        "legacy_templates_source": "templates.json (structured)",
+        "legacy_templates_raw": "{\n  \"process_name\": \"工程2: CSV確認\",\n  \"description\": \"GASから出力されたCSVファイルの存在と品質を確認し、簡易レポートを出力します。\",\n\n  \"output_templates\": {\n    \"success_report\": {\n      \"format\": \"テキストレポート\",\n      \"sections\": [\n        {\n          \"section_name\": \"ヘッダー\",\n          \"content\": \"✅ 工程2完了（CSV確認）\\n━━━━━━━━━━━━━━━━━━━━━━\"\n        },\n        {\n          \"section_name\": \"CSV確認結果\",\n          \"fields\": [\n            \"ファイル名: {{csv_file_name}}\",\n            \"ファイルサイズ: {{file_size_kb}} KB\",\n            \"データ行数: {{data_row_count}}行 / 期待: 10行\",\n            \"必須カラム: {{required_columns_status}}\",\n            \"検証ステータス: {{validation_status}}\"\n          ]\n        },\n        {\n          \"section_name\": \"プロジェクト設定（工程0）\",\n          \"fields\": [\n            \"キーワード: {{main_keyword}}\",\n            \"ターゲット文字数: {{target_word_count}}字\",\n            \"戦略: {{strategy}}\"\n          ]\n        },\n        {\n          \"section_name\": \"重要な注意事項\",\n          \"content\": \"⚠️ 重要:\\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。\"\n        },\n        {\n          \"section_name\": \"次の工程\",\n          \"content\": \"次の工程: 工程3A/3B/3C（並列実行）\\n※CSVファイルを必ず添付してください\"\n        },\n        {\n          \"section_name\": \"フッター\",\n          \"content\": \"━━━━━━━━━━━━━━━━━━━━━━\"\n        }\n      ]\n    },\n\n    \"warning_report\": {\n      \"format\": \"テキストレポート\",\n      \"sections\": [\n        {\n          \"section_name\": \"ヘッダー\",\n          \"content\": \"⚠️ 工程2完了（CSV確認 - 警告あり）\\n━━━━━━━━━━━━━━━━━━━━━━\"\n        },\n        {\n          \"section_name\": \"CSV確認結果\",\n          \"fields\": [\n            \"ファイル名: {{csv_file_name}}\",\n            \"ファイルサイズ: {{file_size_kb}} KB\",\n            \"データ行数: {{data_row_count}}行 / 期待: 10行\",\n            \"必須カラム: {{required_columns_status}}\",\n            \"検証ステータス: ⚠️ 警告あり\"\n          ]\n        },\n        {\n          \"section_name\": \"警告内容\",\n          \"content\": \"⚠️ {{warning_message}}\"\n        },\n        {\n          \"section_name\": \"プロジェクト設定（工程0）\",\n          \"fields\": [\n            \"キーワード: {{main_keyword}}\",\n            \"ターゲット文字数: {{target_word_count}}字\",\n            \"戦略: {{strategy}}\"\n          ]\n        },\n        {\n          \"section_name\": \"重要な注意事項\",\n          \"content\": \"⚠️ 重要:\\n警告がありますが、処理を継続します。\\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。\"\n        },\n        {\n          \"section_name\": \"次の工程\",\n          \"content\": \"次の工程: 工程3A/3B/3C（並列実行）\\n※CSVファイルを必ず添付してください\"\n        },\n        {\n          \"section_name\": \"フッター\",\n          \"content\": \"━━━━━━━━━━━━━━━━━━━━━━\"\n        }\n      ]\n    },\n\n    \"error_report\": {\n      \"format\": \"エラーメッセージ\",\n      \"sections\": [\n        {\n          \"section_name\": \"エラーメッセージ\",\n          \"content\": \"❌ エラー: {{error_message}}\"\n        },\n        {\n          \"section_name\": \"ファイル情報\",\n          \"content\": \"ファイル名: {{csv_file_name}}\"\n        },\n        {\n          \"section_name\": \"対応方法\",\n          \"content\": \"【対応方法】\\n{{solution_steps}}\"\n        }\n      ]\n    }\n  },\n\n  \"error_types\": {\n    \"file_not_found\": {\n      \"error_message\": \"CSVファイルが見つかりません\",\n      \"solution_steps\": [\n        \"1. Google Apps Script (GAS) を実行してください\",\n        \"2. CSVファイルが正しい場所に出力されているか確認してください\",\n        \"3. ファイル名が正確か確認してください\"\n      ],\n      \"action\": \"処理を中断\"\n    },\n    \"file_size_zero\": {\n      \"error_message\": \"CSVファイルのサイズが0バイトです\",\n      \"solution_steps\": [\n        \"1. GASスクリプトが正常に実行されたか確認してください\",\n        \"2. 検索結果が取得できているか確認してください\",\n        \"3. GASのログを確認してください\"\n      ],\n      \"action\": \"処理を中断\"\n    },\n    \"missing_required_columns\": {\n      \"error_message\": \"必須カラムが不足しています\",\n      \"solution_steps\": [\n        \"1. GASスクリプトを確認してください\",\n        \"2. CSVファイルの構造を確認してください\",\n        \"3. 不足しているカラム: {{missing_columns}}\"\n      ],\n      \"action\": \"処理を中断\"\n    }\n  },\n\n  \"warning_types\": {\n    \"data_row_count_low\": {\n      \"warning_message\": \"データ行数が期待値（10行）を下回っています。\",\n      \"action\": \"警告のみ表示し、処理を継続\"\n    },\n    \"file_size_large\": {\n      \"warning_message\": \"ファイルサイズが異常に大きい（10MB超）です。\",\n      \"action\": \"警告のみ表示し、処理を継続\"\n    }\n  },\n\n  \"validation_checks\": {\n    \"file_existence\": {\n      \"check_type\": \"必須\",\n      \"error_on_fail\": \"file_not_found\"\n    },\n    \"file_size_not_zero\": {\n      \"check_type\": \"必須\",\n      \"error_on_fail\": \"file_size_zero\"\n    },\n    \"required_columns\": {\n      \"check_type\": \"必須\",\n      \"columns\": [\n        \"順位\",\n        \"サイト名\",\n        \"記事タイトル/URL\",\n        \"スニペット\",\n        \"本文(H2,4つ,P,LI,Blockquote,最大5万文字)\"\n      ],\n      \"error_on_fail\": \"missing_required_columns\"\n    },\n    \"data_row_count\": {\n      \"check_type\": \"警告\",\n      \"expected_value\": 10,\n      \"warning_on_fail\": \"data_row_count_low\"\n    },\n    \"file_size_limit\": {\n      \"check_type\": \"警告\",\n      \"max_size_mb\": 10,\n      \"warning_on_fail\": \"file_size_large\"\n    }\n  },\n\n  \"important_notes\": [\n    \"この工程はデータ加工を行いません\",\n    \"CSV変換、JSON変換、文字数カウント等は一切行いません\",\n    \"ファイルの存在と基本的な品質のみ確認します\",\n    \"工程3〜10では、このCSVファイルを直接添付して使用します\",\n    \"GASの出力を信頼し、そのまま活用します\"\n  ]\n}\n"
+    },
+    "examples": [
+        {
+            "id": "EX2-001",
+            "scenario": "正常ケース",
+            "csv_status": "存在する、ファイルサイズ正常、全カラム存在",
+            "output": {
+                "status": "✅ OK",
+                "file_size_kb": 1250,
+                "data_row_count": 10,
+                "required_columns_status": "✅ 全て存在",
+                "validation_status": "✅ OK"
+            }
+        },
+        {
+            "id": "EX2-002",
+            "scenario": "警告ケース（データ行数不足）",
+            "csv_status": "存在する、ファイルサイズ正常、全カラム存在、データ行数7行",
+            "output": {
+                "status": "⚠️ 警告あり",
+                "file_size_kb": 850,
+                "data_row_count": 7,
+                "required_columns_status": "✅ 全て存在",
+                "validation_status": "⚠️ 警告あり",
+                "warning_message": "データ行数が期待値（10行）を下回っています。"
+            }
+        },
+        {
+            "id": "EX2-003",
+            "scenario": "エラーケース（CSVファイル不存在）",
+            "csv_status": "存在しない",
+            "output": {
+                "status": "❌ エラー",
+                "error_type": "file_not_found",
+                "error_message": "CSVファイルが見つかりません",
+                "solution": [
+                    "Google Apps Script (GAS) を実行してください",
+                    "CSVファイルが正しい場所に出力されているか確認してください",
+                    "ファイル名が正確か確認してください"
+                ],
+                "action": "処理を中断"
+            }
+        },
+        {
+            "id": "EX2-004",
+            "scenario": "エラーケース（必須カラム不足）",
+            "csv_status": "存在する、ファイルサイズ正常、カラム不足（「本文」カラムなし）",
+            "output": {
+                "status": "❌ エラー",
+                "error_type": "missing_required_columns",
+                "error_message": "必須カラムが不足しています",
+                "missing_columns": [
+                    "本文(H2,4つ,P,LI,Blockquote,最大5万文字)"
+                ],
+                "solution": [
+                    "GASスクリプトを確認してください",
+                    "CSVファイルの構造を確認してください",
+                    "不足しているカラム: {{missing_columns}}"
+                ],
+                "action": "処理を中断"
+            }
+        },
+        {
+            "id": "LEGACY_SOURCE_EXAMPLES",
+            "process_name": "工程2: CSV確認",
+            "description": "GASから出力されたCSVファイルの存在と品質を確認し、簡易レポートを出力します。この工程はデータ加工を行いません。",
+            "examples": [
+                {
+                    "example_id": "EX2-001",
+                    "scenario": "正常ケース",
+                    "csv_file": "工程1_1.1統合_上位10サイト競合記事本文.csv",
+                    "csv_status": "存在する、ファイルサイズ正常、全カラム存在",
+                    "expected_output": {
+                        "report_type": "テキストレポート",
+                        "status": "✅ OK",
+                        "file_size_kb": 1250,
+                        "data_row_count": 10,
+                        "required_columns_status": "✅ 全て存在",
+                        "validation_status": "✅ OK",
+                        "message": "CSVファイルを工程3以降の全ての工程で直接添付してください。"
+                    }
+                },
+                {
+                    "example_id": "EX2-002",
+                    "scenario": "警告ケース（データ行数不足）",
+                    "csv_file": "工程1_1.1統合_上位10サイト競合記事本文.csv",
+                    "csv_status": "存在する、ファイルサイズ正常、全カラム存在、データ行数7行",
+                    "expected_output": {
+                        "report_type": "テキストレポート",
+                        "status": "⚠️ 警告あり",
+                        "file_size_kb": 850,
+                        "data_row_count": 7,
+                        "required_columns_status": "✅ 全て存在",
+                        "validation_status": "⚠️ 警告あり",
+                        "warning_message": "データ行数が期待値（10行）を下回っています。",
+                        "message": "警告がありますが、処理を継続します。CSVファイルを工程3以降で直接添付してください。"
+                    }
+                },
+                {
+                    "example_id": "EX2-003",
+                    "scenario": "エラーケース（CSVファイル不存在）",
+                    "csv_file": "工程1_1.1統合_上位10サイト競合記事本文.csv",
+                    "csv_status": "存在しない",
+                    "expected_output": {
+                        "report_type": "エラーメッセージ",
+                        "status": "❌ エラー",
+                        "error_type": "file_not_found",
+                        "error_message": "CSVファイルが見つかりません",
+                        "solution": [
+                            "Google Apps Script (GAS) を実行してください",
+                            "CSVファイルが正しい場所に出力されているか確認してください",
+                            "ファイル名が正確か確認してください"
+                        ],
+                        "action": "処理を中断"
+                    }
+                },
+                {
+                    "example_id": "EX2-004",
+                    "scenario": "エラーケース（必須カラム不足）",
+                    "csv_file": "工程1_1.1統合_上位10サイト競合記事本文.csv",
+                    "csv_status": "存在する、ファイルサイズ正常、カラム不足（「本文」カラムなし）",
+                    "expected_output": {
+                        "report_type": "エラーメッセージ",
+                        "status": "❌ エラー",
+                        "error_type": "missing_required_columns",
+                        "error_message": "必須カラムが不足しています",
+                        "missing_columns": [
+                            "本文(H2,4つ,P,LI,Blockquote,最大5万文字)"
+                        ],
+                        "solution": [
+                            "GASスクリプトを確認してください",
+                            "CSVファイルの構造を確認してください"
+                        ],
+                        "action": "処理を中断"
+                    }
+                }
+            ],
+            "output_template": {
+                "正常ケース": {
+                    "format": "テキストレポート",
+                    "content": "✅ 工程2完了（CSV確認）\n━━━━━━━━━━━━━━━━━━━━━━\nCSVファイル確認結果:\n├─ ファイル名: 工程1_1.1統合_上位10サイト競合記事本文.csv\n├─ ファイルサイズ: <サイズ> KB\n├─ データ行数: <行数>行 / 期待: 10行\n├─ 必須カラム: ✅ 全て存在\n└─ 検証ステータス: ✅ OK\n\nプロジェクト設定（工程0）:\n├─ キーワード: <キーワード>\n├─ ターゲット文字数: <文字数>字\n└─ 戦略: <standard/topic_cluster>\n\n⚠️ 重要:\nこのCSVファイルを工程3以降の全ての工程で直接添付してください。\n\n次の工程: 工程3A/3B/3C（並列実行）\n※CSVファイルを必ず添付してください\n━━━━━━━━━━━━━━━━━━━━━━"
+                },
+                "エラーケース": {
+                    "format": "エラーメッセージ",
+                    "content": "❌ エラー: CSVファイルが見つかりません\n\nファイル名: 工程1_1.1統合_上位10サイト競合記事本文.csv\n\n【対応方法】\n1. Google Apps Script (GAS) を実行してください\n2. CSVファイルが正しい場所に出力されているか確認してください\n3. ファイル名が正確か確認してください"
+                }
+            },
+            "important_notes": [
+                "この工程はデータ加工を行いません",
+                "CSV変換、JSON変換、文字数カウント等は一切行いません",
+                "ファイルの存在と基本的な品質のみ確認します",
+                "工程3〜10では、このCSVファイルを直接添付して使用します",
+                "GASの出力を信頼し、そのまま活用します"
+            ]
+        }
+    ],
+    "checklist": {
+        "neuroscience": [
+            "階層構造を視覚的に表現（├─、└─ 等）",
+            "ステータスを絵文字で明確化（✅ ❌ ⚠️）",
+            "エラーメッセージが明確",
+            "対応方法が具体的",
+            "情報がカテゴリ分けされている",
+            "不要な情報を表示していない"
+        ],
+        "behavioral_economics": [
+            "工程2の役割（確認のみ）が明確",
+            "データ加工を行わないことを強調",
+            "GASの出力を信頼することを伝える",
+            "次のアクションへの誘導が明確",
+            "エラー時の対応方法が具体的"
+        ],
+        "llmo": [
+            "テキスト形式で出力",
+            "階層構造を視覚的に表現",
+            "絵文字を使って視覚的に強調",
+            "完了メッセージが明確（✅ 工程2完了）",
+            "次の工程への指示が明確"
+        ],
+        "kgi": [
+            "CSVファイルの存在を確認",
+            "ファイルサイズが正常か確認",
+            "必須カラムが存在するか確認",
+            "データ行数が適切か確認",
+            "CSVファイルを直接添付するよう指示",
+            "データ加工を行わないことを強調"
+        ],
+        "completion": [
+            "すべての検証チェックを実行した",
+            "適切なレポートを出力した（成功/警告/エラー）",
+            "次の工程への指示が明確",
+            "CSVファイルの添付を促した"
+        ],
+        "content": "# 工程2: CSV確認 - 4本柱チェックリスト\n\nこのチェックリストは、工程2「CSV確認」において4本柱を完璧に適用するための指針です。\n\n---\n\n## 🧠 第1の柱: 神経科学（認知負荷の最小化）\n\n### 1. 読みやすさの原則\n\n#### 出力形式の工夫\n- ✅ 階層構造を視覚的に表現（├─、└─ 等）\n- ✅ 重要な情報を冒頭に配置\n- ✅ ステータスを絵文字で明確化（✅ ❌ ⚠️）\n\n#### エラーメッセージの明確化\n- ✅ エラーの原因を簡潔に説明\n- ✅ 対応方法を具体的に提示\n- ✅ 読者がすぐに行動できる指示\n\n### 2. 認知負荷の軽減\n\n#### 情報の整理\n- ✅ 確認結果をカテゴリ分け（ファイル情報、プロジェクト設定、次の工程）\n- ✅ 不要な情報は表示しない（データ加工は行わないため）\n- ✅ 簡潔なレポート（長文は避ける）\n\n---\n\n## 💰 第2の柱: 行動経済学（説得力の構築）\n\n### 1. 信頼性の担保\n\n#### 明確な役割定義\n- ✅ 工程2は「確認のみ」を行うことを明示\n- ✅ データ加工を行わないことを強調\n- ✅ GASの出力を信頼することを伝える\n\n### 2. 次のアクションへの誘導\n\n#### 明確な指示\n- ✅ 「次の工程: 工程3A/3B/3C（並列実行）」と明示\n- ✅ 「CSVファイルを必ず添付してください」と具体的に指示\n- ✅ エラー時は対応方法を具体的に提示\n\n---\n\n## 🤖 第3の柱: LLMO（LLM最適化）\n\n### 1. 構造化された出力\n\n#### テキスト形式の最適化\n- ✅ マークダウン形式ではなく、プレーンテキストで出力\n- ✅ 階層構造を視覚的に表現（├─、└─ 等）\n- ✅ 絵文字を使って視覚的に強調\n\n### 2. 明確な完了メッセージ\n\n#### 完了確認\n- ✅ 「✅ 工程2完了（CSV確認）」と明示\n- ✅ 次の工程への指示を明確に\n- ✅ CSVファイルの添付を促す\n\n---\n\n## 📈 第4の柱: KGI（お問い合わせ率の最大化）\n\n### 1. 信頼性の保証\n\n#### データ品質の確認\n- ✅ CSVファイルの存在を確認\n- ✅ ファイルサイズが正常か確認\n- ✅ 必須カラムが存在するか確認\n- ✅ データ行数が適切か確認\n\n### 2. 後続工程への円滑な引き継ぎ\n\n#### 明確な指示\n- ✅ CSVファイルを直接添付するよう指示\n- ✅ データ加工を行わないことを強調\n- ✅ GASの出力を信頼することを伝える\n\n---\n\n## ✅ 工程2の4本柱チェックリスト\n\n### 神経科学: 認知負荷の最小化\n- [ ] 階層構造を視覚的に表現\n- [ ] ステータスを絵文字で明確化\n- [ ] エラーメッセージが明確\n- [ ] 対応方法が具体的\n- [ ] 情報がカテゴリ分けされている\n- [ ] 不要な情報を表示していない\n\n### 行動経済学: 説得力の構築\n- [ ] 工程2の役割が明確\n- [ ] データ加工を行わないことを強調\n- [ ] GASの出力を信頼することを伝える\n- [ ] 次のアクションへの誘導が明確\n- [ ] エラー時の対応方法が具体的\n\n### LLMO: LLM最適化\n- [ ] テキスト形式で出力\n- [ ] 階層構造を視覚的に表現\n- [ ] 絵文字を使って視覚的に強調\n- [ ] 完了メッセージが明確\n- [ ] 次の工程への指示が明確\n\n### KGI: お問い合わせ率の最大化\n- [ ] CSVファイルの存在を確認\n- [ ] ファイルサイズが正常か確認\n- [ ] 必須カラムが存在するか確認\n- [ ] データ行数が適切か確認\n- [ ] CSVファイルを直接添付するよう指示\n- [ ] データ加工を行わないことを強調\n\n---\n\n## 📝 工程2の特殊性\n\n工程2は他の工程と異なり、**データ加工を行わず、確認のみを行います**。\n\n### 他の工程との違い\n- ❌ JSON変換しない\n- ❌ データ整形しない\n- ❌ 文字数カウントしない\n- ✅ ファイルの存在と基本的な品質のみ確認\n\n### 4本柱の適用方法\n- **神経科学**: 簡潔なレポートで認知負荷を最小化\n- **行動経済学**: 工程2の役割を明確にして信頼を構築\n- **LLMO**: 構造化された出力で読みやすさを最適化\n- **KGI**: データ品質を確認して後続工程の精度を保証\n\n---\n\n## 🎯 完了確認\n\n工程2の完了時、以下の4本柱がすべて実装されているか確認してください：\n\n```\n✅ 神経科学: 簡潔なレポートで認知負荷を最小化\n✅ 行動経済学: 工程2の役割を明確にして信頼を構築\n✅ LLMO: 構造化された出力で読みやすさを最適化\n✅ KGI: データ品質を確認して後続工程の精度を保証\n```\n\n**すべての項目にチェックが入ったら、工程2完了です！**\n",
+        "content_source": "four_pillars_checklist.md (full text)"
+    },
+    "important_notes": [
+        "この工程はデータ加工を行いません",
+        "CSV変換、JSON変換、文字数カウント等は一切行いません",
+        "ファイルの存在と基本的な品質のみ確認します",
+        "工程3〜10では、このCSVファイルを直接添付して使用します",
+        "GASの出力を信頼し、そのまま活用します"
+    ],
+    "four_pillars_application": {
+        "neuroscience": "簡潔なレポートで認知負荷を最小化",
+        "behavioral_economics": "工程2の役割を明確にして信頼を構築",
+        "llmo": "構造化された出力で読みやすさを最適化",
+        "kgi": "データ品質を確認して後続工程の精度を保証"
+    }
+}

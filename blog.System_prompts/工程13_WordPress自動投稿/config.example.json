@@ -1,0 +1,12 @@
+{
+    "wordpress": {
+        "site_url": "https://あなたのサイト.com",
+        "username": "ユーザー名",
+        "app_password": "xxxx xxxx xxxx xxxx xxxx xxxx"
+    },
+    "default_settings": {
+        "post_status": "draft",
+        "category_ids": [1],
+        "tag_ids": []
+    }
+}

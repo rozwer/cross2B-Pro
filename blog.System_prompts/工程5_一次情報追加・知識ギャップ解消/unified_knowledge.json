@@ -1,0 +1,1593 @@
+{
+    "process_info": {
+        "name": "工程5:一次情報追加・知識ギャップ解消",
+        "version": "5.5",
+        "purpose": "工程5:一次情報追加・知識ギャップ解消の全知識を統合したファイル",
+        "note": "このJSONにはガイドライン・テンプレート・実例・チェックリストの全てが含まれています"
+    },
+    "guidelines": {
+        "source": "detailed_guidelines.md",
+        "content": "# 工程5: 一次情報追加・知識ギャップ解消 - 詳細ガイドライン\n\n## 1. 工程の目的\n\n工程4で作成したアウトラインに、最新の信頼できる一次情報を追加し、記事の信頼性と差別化を最大化する工程です。\n\n### なぜ重要なのか？\n- **信頼性の向上**: 公的機関の最新データで記事の信頼性を担保\n- **差別化の強化**: 競合が見落としている最新情報で圧倒的優位\n- **3フェーズ設計の強化**: 各フェーズに適したデータで心理的効果を最大化\n- **SEO順位の向上**: 最新データ使用により、検索エンジンの評価が向上\n\n**この工程で収集した一次情報の品質が、記事の成果を決定づけます。**\n\n---\n\n## 2. 入力データ構造\n\n### 必須入力（3つ）\n\n**工程4: 戦略的アウトラインの結果**\n```json\n{\n  \"sections\": [...], // 全H2セクション\n  \"three_phase_breakdown\": {...} // 3フェーズ配分\n}\n```\n\n**工程3A: クエリ分析の結果（参考）**\n```json\n{\n  \"search_intent\": {...},\n  \"persona\": {...}\n}\n```\n\n**工程3C: 競合分析の結果（参考）**\n```json\n{\n  \"content_freshness_analysis\": {...}, // 競合のデータ年\n  \"differentiation_strategy\": {...}\n}\n```\n\n---\n\n## 3. 出力データ構造\n\n### JSON形式（完全版）\ntemplates.jsonの完全な構造を参照してください。\n\n主要なセクション：\n1. **primary_sources**: 一次情報源（15〜25個）\n2. **phase_specific_data**: 3フェーズ別データ分類（新規追加）\n3. **knowledge_gaps_filled**: 知識ギャップ（5〜10個）\n4. **section_enhancements**: セクション強化計画\n5. **competitive_advantages**: 競合優位性\n6. **data_freshness_comparison**: 鮮度比較\n\n---\n\n## 4. 最新の公的統計データの収集\n\n### 4.1 優先ソース\n\n#### 厚生労働省\n**検索対象**:\n- 派遣労働者実態調査\n- 労働者派遣事業報告書\n- 雇用動向調査\n\n**検索クエリ例**:\n```\n- 「派遣労働者 離職率 2024」\n- 「派遣社員 教育訓練 統計 {{current_year}}」\n- 「厚生労働省 派遣労働者実態調査」\n- 「令和6年 派遣事業報告」\n```\n\n**取得データ**:\n- 離職率（全体・3ヶ月以内・1年以内）\n- 定着率\n- 教育訓練実施状況\n- 企業規模別データ\n\n**URL例**:\n```\nhttps://www.mhlw.go.jp/toukei/list/...\n```\n\n---\n\n#### 経済産業省\n**検索対象**:\n- 企業の人材育成投資調査\n- 人材投資実態調査\n\n**検索クエリ例**:\n```\n- 「人材育成投資 統計 2024」\n- 「企業規模別 教育予算 調査」\n- 「経済産業省 人材投資」\n```\n\n**取得データ**:\n- 教育投資額（企業規模別）\n- 投資効果（費用対効果）\n- 教育コストの内訳\n\n---\n\n#### 総務省\n**検索対象**:\n- 労働力調査\n- 就業構造基本調査\n\n**検索クエリ例**:\n```\n- 「労働力調査 非正規雇用 {{current_year}}」\n- 「派遣労働者数 推移」\n- 「総務省 労働力調査」\n```\n\n**取得データ**:\n- 派遣労働者数\n- 非正規雇用動向\n- 雇用形態別推移\n\n---\n\n#### JILPT（労働政策研究・研修機構）\n**検索対象**:\n- 派遣労働者に関する調査研究\n- 人材育成に関する研究\n\n**検索クエリ例**:\n```\n- 「JILPT 派遣社員 教育 調査」\n- 「派遣労働者 定着率 研究」\n- 「労働政策研究 派遣」\n```\n\n**取得データ**:\n- 研究結果\n- 実証データ\n- 政策提言\n\n---\n\n### 4.2 収集要件\n\n**データ年**:\n- {{current_year}}年: 最優先\n- 2024年: 優先\n- 2023年: 許容（最新データがない場合のみ）\n- 2022年以前: 避ける\n\n**信頼性**:\n- 公的機関の公式発表のみ\n- 査読付き論文\n- 公式レポート\n\n**形式**:\n- 具体的な数値データ\n- 調査概要（サンプル数、期間）\n- URL\n\n**必須記録項目**:\n- source_id: 識別子（PS001, PS002...）\n- source_type: タイプ（government_statistics/academic_research/industry_report）\n- title: タイトル\n- organization: 組織名\n- publication_date: 発表日（YYYY-MM-DD）\n- url: URL\n- access_date: アクセス日\n- key_findings: 主要な発見（3〜5個）\n- data_points: 具体的なデータポイント（配列）\n\n---\n\n## 5. 学術研究・専門機関レポートの収集\n\n### 5.1 検索対象\n\n#### JILPT（労働政策研究・研修機構）\n**検索クエリ例**:\n```\n- 「JILPT 派遣社員 教育 調査」\n- 「派遣労働者 定着率 研究」\n- 「OJT Off-JT 効果測定」\n```\n\n#### 人材派遣業界団体\n**検索対象**:\n- 日本人材派遣協会\n- 全国民営職業紹介事業協会\n\n**検索クエリ例**:\n```\n- 「日本人材派遣協会 統計」\n- 「派遣業界 動向 2024」\n- 「人材派遣協会 白書」\n```\n\n#### 大学研究機関\n**検索クエリ例**:\n```\n- 「派遣社員 教育効果 論文」\n- 「OJT Off-JT 効果測定 研究」\n- 「人材育成 費用対効果 研究」\n```\n\n### 5.2 収集要件\n\n**発表年**: 2023年以降\n\n**信頼性**:\n- 査読付き論文\n- 公式レポート\n- 実証研究\n\n**内容**:\n- 具体的な研究結果\n- 数値データ\n- 統計的有意性\n\n---\n\n## 6. 法令・制度の最新情報の収集\n\n### 6.1 労働者派遣法の改正情報\n\n**検索クエリ例**:\n```\n- 「労働者派遣法 改正 2024」\n- 「派遣法 教育訓練 義務」\n- 「派遣法改正 {{current_year}}年施行」\n```\n\n**取得情報**:\n- 改正内容\n- 施行日\n- 企業への影響\n\n### 6.2 助成金・補助金制度\n\n**検索クエリ例**:\n```\n- 「人材育成 助成金 {{current_year}}」\n- 「キャリアアップ助成金 派遣社員」\n- 「人材開発支援助成金」\n```\n\n**取得情報**:\n- 制度名\n- 支給額\n- 申請要件\n- 申請方法\n\n---\n\n## 7. 3フェーズ対応のデータ収集（最重要）\n\n収集した一次情報を、3つの心理的フェーズに分類します。これにより、記事の心理的設計が強化されます。\n\n### 7.1 Phase 1用データ（不安喚起）\n\n**目的**: 扁桃体を活性化し、読者の注意を引きつける\n\n**収集すべきデータ**:\n- 問題の深刻さを示す統計\n- 損失データ\n- リスクデータ\n- 失敗率\n- 悪化トレンド\n\n**具体例**:\n```json\n{\n  \"source_id\": \"PS001\",\n  \"phase_alignment\": \"phase1_anxiety\",\n  \"key_data\": \"派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）\",\n  \"psychological_effect\": \"扁桃体活性化: 問題の深刻さを数値で示し、危機感を醸成\",\n  \"usage_section\": \"導入部、H2-1（失敗する理由）\"\n}\n```\n\n**Phase 1で使用するデータの特徴**:\n- 感情に訴える数値（離職率、損失額）\n- 前年比のマイナストレンド（悪化を示す）\n- 具体的な損失額（「55万円の損失」等）\n\n**収集目標**: 5〜8個\n\n---\n\n### 7.2 Phase 2用データ（理解納得）\n\n**目的**: 前頭前野で論理的に処理させ、納得を得る\n\n**収集すべきデータ**:\n- 解決策の有効性を示す研究\n- 方法論の裏付けデータ\n- 成功率\n- 効果測定結果\n- 比較データ（A vs B）\n\n**具体例**:\n```json\n{\n  \"source_id\": \"PS005\",\n  \"phase_alignment\": \"phase2_understanding\",\n  \"key_data\": \"教育投資1人あたり年間30万円で定着率42%向上（JILPT 2024年研究）\",\n  \"psychological_effect\": \"前頭前野処理: 投資額と費用対効果を明示し、論理的納得を促す\",\n  \"usage_section\": \"H2-3（5ステップ）、H2-6（予算別プラン）\"\n}\n```\n\n**Phase 2で使用するデータの特徴**:\n- 解決策の効果を示す数値（「定着率42%向上」）\n- 投資対効果（費用対効果）\n- 比較データ（OJT vs Off-JT等）\n- 最適比率（「OJT:Off-JT = 7:3」）\n- 実証研究の結果\n\n**収集目標**: 10〜15個\n\n---\n\n### 7.3 Phase 3用データ（行動決定）\n\n**目的**: 線条体を活性化し、報酬予測を促す\n\n**収集すべきデータ**:\n- 成功事例\n- 具体的な費用対効果\n- 導入実績（「300社が導入」）\n- 満足度データ（「96.8%が満足」）\n- 短期間での効果（「3ヶ月で効果実感」）\n\n**具体例**:\n```json\n{\n  \"source_id\": \"PS012\",\n  \"phase_alignment\": \"phase3_action\",\n  \"key_data\": \"導入企業300社、平均3ヶ月で離職率35%低下、顧客満足度96.8%\",\n  \"psychological_effect\": \"線条体活性化: 成功イメージと報酬予測を促す\",\n  \"usage_section\": \"H2-11（今すぐ始められる3ステップ）、Final CTA周辺\"\n}\n```\n\n**Phase 3で使用するデータの特徴**:\n- 導入実績の数（社会的証明）\n- 短期間での成果（「3ヶ月で」）\n- 満足度の高さ（「96.8%」）\n- 具体的な改善数値（「離職率42%→18%」）\n\n**収集目標**: 3〜5個\n\n---\n\n### 7.4 3フェーズ分類の実装\n\n**各一次情報に phase_alignment フィールドを追加**:\n```json\n{\n  \"source_id\": \"PS001\",\n  \"phase_alignment\": \"phase1_anxiety\",\n  \"title\": \"...\",\n  \"data\": \"...\"\n}\n```\n\n**phase_specific_data セクションを作成**:\n```json\n{\n  \"phase_specific_data\": {\n    \"phase1_anxiety\": {\n      \"sources\": [\"PS001\", \"PS002\", \"PS003\"],\n      \"total_count\": 5,\n      \"key_data_summary\": [\n        \"離職率29.3%（前年比+3.2pt）\",\n        \"1人離職で55万円の損失\",\n        \"教育未実施企業の離職率は2倍\"\n      ]\n    },\n    \"phase2_understanding\": {\n      \"sources\": [\"PS005\", \"PS006\", \"PS007\", \"...\"],\n      \"total_count\": 12,\n      \"key_data_summary\": [\n        \"教育投資で定着率42%向上\",\n        \"OJT:Off-JT = 7:3が最適比率\",\n        \"メンター制度で離職率35%低下\"\n      ]\n    },\n    \"phase3_action\": {\n      \"sources\": [\"PS012\", \"PS013\", \"PS014\"],\n      \"total_count\": 4,\n      \"key_data_summary\": [\n        \"導入企業300社\",\n        \"3ヶ月で離職率35%低下\",\n        \"顧客満足度96.8%\"\n      ]\n    }\n  }\n}\n```\n\n---\n\n## 8. 知識ギャップの特定\n\n### 8.1 ギャップ発見の方法\n\n**ステップ1**: 工程3Cの競合分析結果を確認\n```json\n{\n  \"content_gap_matrix\": {\n    \"リモート教育\": {\n      \"coverage_rate\": 0.2, // 10記事中2記事のみ\n      \"status\": \"差別化機会（大）\"\n    }\n  }\n}\n```\n\n**ステップ2**: カバレッジ30%以下のトピックをリストアップ\n\n**ステップ3**: 各トピックについて一次情報を検索\n\n**ステップ4**: 一次情報が見つかったトピックを「知識ギャップ」として記録\n\n### 8.2 知識ギャップの記録\n\n**各ギャップについて以下を記録**:\n```json\n{\n  \"gap_id\": \"KG001\",\n  \"gap_description\": \"2024年の助成金制度改正（人材開発支援助成金の拡充）\",\n  \"competitor_coverage\": \"0/10記事（誰も言及していない）\",\n  \"primary_source_id\": \"PS005\",\n  \"primary_source_details\": {\n    \"title\": \"令和6年度 人材開発支援助成金のご案内\",\n    \"organization\": \"厚生労働省\",\n    \"publication_date\": \"2024-04-01\",\n    \"url\": \"https://www.mhlw.go.jp/...\",\n    \"key_finding\": \"派遣社員向け教育訓練に対する助成金が拡充、最大50万円/人\"\n  },\n  \"implementation_section\": \"H2-6: 予算別プラン\",\n  \"implementation_strategy\": \"20万円プランのセクションで「助成金活用で実質負担0円も可能」と提示\",\n  \"differentiation_value\": \"high\",\n  \"expected_impact\": \"予算制約のある中小企業への具体的支援策として強力な差別化\",\n  \"psychological_phase\": \"phase2_understanding\",\n  \"behavioral_trigger\": \"損失回避（実質0円）+ 権威性（厚労省制度）\"\n}\n```\n\n### 8.3 知識ギャップの優先順位\n\n**high（最優先）**:\n- 競合カバレッジ0%（誰も触れていない）\n- 一次情報が存在する\n- ユーザーニーズが高い\n\n**medium**:\n- 競合カバレッジ10〜30%（少数のみ）\n- 一次情報が存在する\n- ユーザーニーズが中程度\n\n**low**:\n- 競合カバレッジ30%以上\n- または一次情報が不足\n\n**収集目標**: 5〜10個（うち high が 3個以上）\n\n---\n\n## 9. 各セクションへの一次情報割り当て\n\n### 9.1 割り当て基準\n\n**Phase 1セクション（導入部、H2-1〜H2-2）**:\n- Phase 1用データを優先\n- 最新の課題データ\n- 損失データ\n\n**Phase 2セクション（H2-3〜H2-10）**:\n- Phase 2用データを優先\n- 方法論の裏付けデータ\n- 成功率データ\n- 比較データ\n\n**Phase 3セクション（H2-11〜H2-12）**:\n- Phase 3用データを優先\n- 実績データ\n- 成果データ\n- 費用対効果データ\n\n### 9.2 セクション強化の記録\n\n**各セクションについて以下を記録**:\n```json\n{\n  \"section_id\": \"introduction\",\n  \"section_title\": \"導入部\",\n  \"assigned_sources\": [\"PS001\", \"PS002\"],\n  \"enhancement_strategy\": \"2024〜{{current_year}}年の最新データで課題の深刻さを数値化\",\n  \"specific_data_to_use\": [\n    {\n      \"source_id\": \"PS001\",\n      \"data\": \"派遣社員の3ヶ月以内離職率29.3%（2024年厚労省調査、前年比+3.2pt）\",\n      \"placement\": \"オープニングフック\",\n      \"citation_format\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n      \"psychological_effect\": \"扁桃体活性化: 衝撃的な数値で注意を引く\",\n      \"behavioral_trigger\": \"損失回避\"\n    },\n    {\n      \"source_id\": \"PS002\",\n      \"data\": \"1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円\",\n      \"placement\": \"データアンカー\",\n      \"citation_format\": \"（出典: 経済産業省「企業の人材育成投資調査」2024年）\",\n      \"psychological_effect\": \"扁桃体活性化: 具体的な損失額で危機感醸成\",\n      \"behavioral_trigger\": \"損失回避\"\n    }\n  ],\n  \"expected_improvement\": \"競合の80%が2023年以前データ、鮮度で圧倒的優位。具体的損失額で損失回避動機を強化。\"\n}\n```\n\n### 9.3 全セクションへの割り当て\n\n工程4のアウトラインの**全てのH2セクション**に一次情報を割り当ててください。\n\n**割り当て数の目安**:\n- 導入部: 2〜3個\n- Phase 1セクション: 各2〜3個\n- Phase 2セクション: 各1〜3個\n- Phase 3セクション: 各2〜3個\n\n---\n\n## 10. 競合との情報鮮度比較\n\n### 10.1 競合の分析\n\n工程3Cの結果から以下を確認：\n```json\n{\n  \"content_freshness_analysis\": {\n    \"latest_data_year\": 2023,\n    \"update_distribution\": {\n      \"within_1_year\": 2,\n      \"1_to_2_years\": 5,\n      \"over_2_years\": 3\n    },\n    \"average_freshness_score\": 0.45\n  }\n}\n```\n\n**算出項目**:\n- 競合の最新データ年（10記事中の最新）\n- 競合の平均データ年\n- 2024年以降データを使用している記事数\n\n### 10.2 自社の目標設定\n```json\n{\n  \"our_article\": {\n    \"latest_data_year\": {{current_year}},\n    \"sources_with_2024_plus_data\": 12,\n    \"sources_with_2023_data\": 6,\n    \"average_data_year\": 2024.3\n  }\n}\n```\n\n**目標**:\n- 最新データ年: {{current_year}}年\n- 2024年以降データの比率: 60%以上\n- 平均データ年: 2024年以上\n\n### 10.3 優位性のサマリー\n```json\n{\n  \"advantage_summary\": \"平均1.5年の鮮度優位、競合の0%に対し当社は67%が2024年以降データ\"\n}\n```\n\n---\n\n## 11. 4本柱での情報収集\n\n### 11.1 神経科学\n\n**Phase 1（扁桃体活性化）用データ**:\n- 感情に訴える統計\n- 損失・リスクデータ\n- 悪化トレンド\n\n**Phase 2（前頭前野処理）用データ**:\n- 論理的な裏付けデータ\n- 比較データ\n- 効果測定結果\n\n**Phase 3（線条体活性化）用データ**:\n- 成功イメージを喚起するデータ\n- 報酬予測データ\n- 短期間での成果\n\n### 11.2 行動経済学\n\n**社会的証明のデータ**:\n- 導入実績（「300社が導入」）\n- 満足度（「96.8%が満足」）\n- 成功率（「85%が効果実感」）\n\n**権威性のデータ**:\n- 公的機関の統計\n- 専門家の研究\n- 認証・受賞\n\n### 11.3 LLMO\n\n**AI引用可能な形式**:\n- データと出典を明確に分離\n- 引用形式を統一\n- URLを必ず記録\n\n**例**:\n```\nデータ: 「派遣社員の3ヶ月以内離職率29.3%」\n出典: 「厚生労働省『令和6年派遣労働者実態調査』2024年12月」\nURL: https://www.mhlw.go.jp/...\n```\n\n### 11.4 KGI\n\n**CTA周辺で使用するデータ**:\n- 導入実績（社会的証明）\n- 成功事例\n- 費用対効果\n- 短期間での効果\n\n**例**:\n```\nFinal CTA周辺で使用:\n「導入企業300社、平均3ヶ月で離職率35%低下、顧客満足度96.8%」\n```\n\n---\n\n## 12. 引用形式のガイドライン\n\n### 12.1 引用形式\n\n**本文中の引用**:\n```\n（出典: 組織名「タイトル」発表年月）\n```\n\n**例**:\n```\n派遣社員の3ヶ月以内離職率は29.3%（前年比+3.2pt）です（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。\n```\n\n### 12.2 参考文献リスト\n\n記事末尾に参考文献リストを作成：\n```markdown\n## 参考文献\n\n1. 厚生労働省「令和6年派遣労働者実態調査」2024年12月\n   https://www.mhlw.go.jp/...\n\n2. 経済産業省「企業の人材育成投資調査」2024年\n   https://www.meti.go.jp/...\n\n3. 労働政策研究・研修機構「派遣社員の教育投資効果に関する実証研究」2024年8月\n   https://www.jil.go.jp/...\n```\n\n### 12.3 URLの取り扱い\n\n- 本文中: 組織名のみ記載\n- 記事末尾: 参考文献リストにURL掲載\n- JSON出力: 全ての一次情報にURLを記録\n\n---\n\n## 13. 完了基準\n\n工程5は以下の条件を全て満たした時点で完了:\n- [ ] 15〜25個の一次情報源を収集している\n- [ ] 全ての一次情報に出典（組織名・発表年月・URL）を記録している\n- [ ] 2024〜{{current_year}}年の最新データを優先的に収集している（60%以上）\n- [ ] **3フェーズに対応したデータ分類を完了している**\n- [ ] 競合が見落としている知識ギャップを5〜10個発見している\n- [ ] 工程4の全H2セクションに一次情報を割り当てている\n- [ ] 引用形式のガイドラインを設定している\n- [ ] 競合との情報鮮度比較を完了している\n- [ ] JSON形式で出力している\n- [ ] 4本柱チェックリストの全項目を確認している\n\n---\n\nこれで detailed_guidelines.md は完了です。\n",
+        "note": "完全なガイドラインをMarkdown形式で保持（精度優先）",
+        "content_source": "detailed_guidelines.md (full text)"
+    },
+    "templates": {
+        "source": "templates.json",
+        "content": {
+            "output_template_complete": {
+                "collection_date": "string (ISO 8601形式: {{current_year}}-10-21T18:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "primary_sources": [
+                    {
+                        "source_id": "string (PS001, PS002...)",
+                        "source_type": "string (government_statistics / academic_research / industry_report / legal_document)",
+                        "title": "string (タイトル)",
+                        "organization": "string (組織名)",
+                        "publication_date": "string (YYYY-MM-DD)",
+                        "url": "string (URL)",
+                        "access_date": "string (YYYY-MM-DD)",
+                        "key_findings": [
+                            "string (主要な発見1)",
+                            "string (主要な発見2)",
+                            "string (主要な発見3〜5)"
+                        ],
+                        "data_points": [
+                            {
+                                "metric": "string (指標名)",
+                                "value": "string (値)",
+                                "previous_year": "string (前年値、あれば)",
+                                "change": "string (変化、あれば)",
+                                "context": "string (背景・調査概要)"
+                            }
+                        ],
+                        "phase_alignment": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_effect": "string (心理的効果の説明)",
+                        "behavioral_trigger": "string (行動経済学トリガー)",
+                        "credibility_score": "number (信頼性スコア、0.0〜1.0)",
+                        "freshness_score": "number (鮮度スコア、0.0〜1.0)",
+                        "relevance_to_keyword": "string (very_high / high / medium)"
+                    }
+                ],
+                "phase_specific_data": {
+                    "phase1_anxiety": {
+                        "description": "string (このフェーズのデータの説明)",
+                        "sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "total_count": "number (データ数)",
+                        "key_data_summary": [
+                            "string (主要データ1)",
+                            "string (主要データ2〜N)"
+                        ],
+                        "psychological_goal": "string (心理的目標)",
+                        "usage_sections": [
+                            "string (使用セクション1)",
+                            "string (使用セクション2〜N)"
+                        ],
+                        "expected_effect": "string (期待効果)"
+                    },
+                    "phase2_understanding": {
+                        "description": "string",
+                        "sources": [
+                            "string"
+                        ],
+                        "total_count": "number",
+                        "key_data_summary": [
+                            "string"
+                        ],
+                        "psychological_goal": "string",
+                        "usage_sections": [
+                            "string"
+                        ],
+                        "expected_effect": "string"
+                    },
+                    "phase3_action": {
+                        "description": "string",
+                        "sources": [
+                            "string"
+                        ],
+                        "total_count": "number",
+                        "key_data_summary": [
+                            "string"
+                        ],
+                        "psychological_goal": "string",
+                        "usage_sections": [
+                            "string"
+                        ],
+                        "expected_effect": "string"
+                    }
+                },
+                "knowledge_gaps_filled": [
+                    {
+                        "gap_id": "string (KG001, KG002...)",
+                        "gap_description": "string (ギャップの説明)",
+                        "competitor_coverage": "string (競合のカバレッジ、例: 0/10記事)",
+                        "primary_source_id": "string (source_id)",
+                        "primary_source_details": {
+                            "title": "string",
+                            "organization": "string",
+                            "publication_date": "string",
+                            "url": "string",
+                            "key_finding": "string"
+                        },
+                        "implementation_section": "string (実装セクション)",
+                        "implementation_strategy": "string (具体的な実装方法)",
+                        "differentiation_value": "string (high / medium / low)",
+                        "expected_impact": "string (期待される影響)",
+                        "psychological_phase": "string (phase1/phase2/phase3)",
+                        "behavioral_trigger": "string (行動経済学トリガー)"
+                    }
+                ],
+                "section_enhancements": [
+                    {
+                        "section_id": "string (introduction / H2-1 / H2-2...)",
+                        "section_title": "string (セクション名)",
+                        "assigned_sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "enhancement_strategy": "string (強化戦略の説明)",
+                        "specific_data_to_use": [
+                            {
+                                "source_id": "string",
+                                "data": "string (使用する具体的なデータ)",
+                                "placement": "string (配置箇所)",
+                                "citation_format": "string (引用形式)",
+                                "psychological_effect": "string (心理的効果)",
+                                "behavioral_trigger": "string (行動トリガー)"
+                            }
+                        ],
+                        "expected_improvement": "string (期待される改善効果)"
+                    }
+                ],
+                "competitive_advantages": [
+                    {
+                        "advantage_id": "string (CA001, CA002...)",
+                        "advantage": "string (優位性の名称)",
+                        "competitor_status": {
+                            "latest_data_year": "number (競合の最新データ年)",
+                            "average_data_year": "number (競合の平均データ年)",
+                            "articles_with_2024_data": "number (2024年データ使用記事数)",
+                            "missing_topics_count": "number (欠落トピック数、該当する場合)",
+                            "shallow_coverage_topics": "number (浅いカバレッジのトピック数、該当する場合)"
+                        },
+                        "our_status": {
+                            "latest_data_year": "number (自社の最新データ年)",
+                            "average_data_year": "number (自社の平均データ年)",
+                            "sources_count": "number (一次情報源数)",
+                            "sources_with_2024_plus_data": "number (2024年以降データ数)",
+                            "filled_gaps_count": "number (埋めたギャップ数、該当する場合)",
+                            "deep_coverage_topics": "number (深いカバレッジのトピック数、該当する場合)"
+                        },
+                        "impact": "string (インパクトの説明)",
+                        "implementation": "string (実装方法)"
+                    }
+                ],
+                "data_freshness_comparison": {
+                    "competitor_analysis": {
+                        "average_latest_data_year": "number (競合の平均最新データ年)",
+                        "articles_with_2024_plus_data": "number (2024年以降データ使用記事数)",
+                        "articles_with_2023_data": "number (2023年データ使用記事数)",
+                        "articles_with_2022_or_older": "number (2022年以前データ記事数)"
+                    },
+                    "our_article": {
+                        "latest_data_year": "number (自社の最新データ年)",
+                        "sources_with_2024_plus_data": "number (2024年以降データ数)",
+                        "sources_with_2023_data": "number (2023年データ数)",
+                        "average_data_year": "number (自社の平均データ年)"
+                    },
+                    "advantage_summary": "string (優位性のサマリー)"
+                },
+                "citation_guidelines": {
+                    "format": "string (引用形式)",
+                    "example": "string (引用例)",
+                    "placement": "string (配置ルール)",
+                    "url_handling": "string (URLの扱い方)"
+                },
+                "implementation_priority": [
+                    {
+                        "priority": "number (優先順位: 1, 2, 3...)",
+                        "section": "string (セクション名)",
+                        "sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "reason": "string (優先する理由)"
+                    }
+                ]
+            },
+            "completion_message_template": {
+                "header": "✅ 工程5完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "collection_summary": {
+                    "title": "一次情報収集結果:",
+                    "items": [
+                        "├─ 収集数: ○個 / 目標: 15〜25個",
+                        "├─ 最新データ年: {{current_year}}年",
+                        "├─ 平均データ年: 2024.○年",
+                        "├─ 2024年以降データ: ○個（○%）",
+                        "└─ 公的機関データ: ○個"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全て確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 3フェーズ対応データ収集",
+                        "│  ├─ Phase 1: ○個（扁桃体活性化）",
+                        "│  ├─ Phase 2: ○個（前頭前野処理）",
+                        "│  └─ Phase 3: ○個（線条体活性化）",
+                        "├─ 行動経済学: ✓ 社会的証明・権威性データ確保",
+                        "│  ├─ 損失回避: ○個",
+                        "│  ├─ 社会的証明: ○個",
+                        "│  ├─ 権威性: ○個",
+                        "│  └─ その他原則: ○個",
+                        "├─ LLMO: ✓ AI引用可能形式で保存",
+                        "│  ├─ 引用形式統一: 完了",
+                        "│  └─ URL記録: 全て完了",
+                        "└─ KGI: ✓ CTA用データ特定",
+                        "   ├─ Early CTA用: ○個",
+                        "   ├─ Mid CTA用: ○個",
+                        "   └─ Final CTA用: ○個"
+                    ]
+                },
+                "phase_distribution": {
+                    "title": "3フェーズ配分:",
+                    "items": [
+                        "├─ Phase 1用データ: ○個 / 目標: 5〜8個",
+                        "│  └─ 使用セクション: 導入部、H2-1、H2-2",
+                        "├─ Phase 2用データ: ○個 / 目標: 10〜15個",
+                        "│  └─ 使用セクション: H2-3〜H2-10",
+                        "└─ Phase 3用データ: ○個 / 目標: 3〜5個",
+                        "   └─ 使用セクション: H2-11、H2-12、CTA"
+                    ]
+                },
+                "knowledge_gaps_summary": {
+                    "title": "知識ギャップ:",
+                    "items": [
+                        "├─ 発見数: ○個 / 目標: 5〜10個",
+                        "├─ 競合カバレッジ0%: ○個",
+                        "├─ 差別化価値high: ○個",
+                        "└─ 主要ギャップ:",
+                        "   ├─ KG001: [ギャップ名]",
+                        "   ├─ KG002: [ギャップ名]",
+                        "   └─ KG003: [ギャップ名]"
+                    ]
+                },
+                "section_assignment": {
+                    "title": "セクション割り当て:",
+                    "items": [
+                        "├─ 全○セクションに一次情報を割り当て完了",
+                        "├─ 導入部: ○個",
+                        "├─ Phase 1セクション: 各○個",
+                        "├─ Phase 2セクション: 各○個",
+                        "└─ Phase 3セクション: 各○個"
+                    ]
+                },
+                "competitive_comparison": {
+                    "title": "競合比較:",
+                    "items": [
+                        "├─ 競合平均データ年: 2022.○年",
+                        "├─ 自社平均データ年: 2024.○年",
+                        "├─ 鮮度優位: +○年",
+                        "├─ 2024年以降データ比率:",
+                        "│  ├─ 競合: ○%",
+                        "│  └─ 自社: ○%",
+                        "└─ 知識ギャップ解消: ○個のトピックをカバー"
+                    ]
+                },
+                "expected_effects": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ 信頼性: +45%（最新データ使用）",
+                        "├─ 差別化: 知識ギャップ○個をカバー",
+                        "├─ SEO順位: +2〜3位（鮮度優位）",
+                        "├─ 読了率: +25%（Phase 1データ効果）",
+                        "└─ CVR: 2.7% → 4.0%+（Phase 3データ効果）"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程6（アウトライン再生成・強化版）",
+                    "description": "工程4のアウトライン + 工程5の一次情報 = 最強アウトライン完成",
+                    "note": "工程5で収集した一次情報を工程4のアウトラインに統合し、各セクションに具体的なデータを配置します。"
+                }
+            }
+        },
+        "note": "出力構造のテンプレート",
+        "legacy_templates": {
+            "output_template_complete": {
+                "collection_date": "string (ISO 8601形式: {{current_year}}-10-21T18:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "primary_sources": [
+                    {
+                        "source_id": "string (PS001, PS002...)",
+                        "source_type": "string (government_statistics / academic_research / industry_report / legal_document)",
+                        "title": "string (タイトル)",
+                        "organization": "string (組織名)",
+                        "publication_date": "string (YYYY-MM-DD)",
+                        "url": "string (URL)",
+                        "access_date": "string (YYYY-MM-DD)",
+                        "key_findings": [
+                            "string (主要な発見1)",
+                            "string (主要な発見2)",
+                            "string (主要な発見3〜5)"
+                        ],
+                        "data_points": [
+                            {
+                                "metric": "string (指標名)",
+                                "value": "string (値)",
+                                "previous_year": "string (前年値、あれば)",
+                                "change": "string (変化、あれば)",
+                                "context": "string (背景・調査概要)"
+                            }
+                        ],
+                        "phase_alignment": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_effect": "string (心理的効果の説明)",
+                        "behavioral_trigger": "string (行動経済学トリガー)",
+                        "credibility_score": "number (信頼性スコア、0.0〜1.0)",
+                        "freshness_score": "number (鮮度スコア、0.0〜1.0)",
+                        "relevance_to_keyword": "string (very_high / high / medium)"
+                    }
+                ],
+                "phase_specific_data": {
+                    "phase1_anxiety": {
+                        "description": "string (このフェーズのデータの説明)",
+                        "sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "total_count": "number (データ数)",
+                        "key_data_summary": [
+                            "string (主要データ1)",
+                            "string (主要データ2〜N)"
+                        ],
+                        "psychological_goal": "string (心理的目標)",
+                        "usage_sections": [
+                            "string (使用セクション1)",
+                            "string (使用セクション2〜N)"
+                        ],
+                        "expected_effect": "string (期待効果)"
+                    },
+                    "phase2_understanding": {
+                        "description": "string",
+                        "sources": [
+                            "string"
+                        ],
+                        "total_count": "number",
+                        "key_data_summary": [
+                            "string"
+                        ],
+                        "psychological_goal": "string",
+                        "usage_sections": [
+                            "string"
+                        ],
+                        "expected_effect": "string"
+                    },
+                    "phase3_action": {
+                        "description": "string",
+                        "sources": [
+                            "string"
+                        ],
+                        "total_count": "number",
+                        "key_data_summary": [
+                            "string"
+                        ],
+                        "psychological_goal": "string",
+                        "usage_sections": [
+                            "string"
+                        ],
+                        "expected_effect": "string"
+                    }
+                },
+                "knowledge_gaps_filled": [
+                    {
+                        "gap_id": "string (KG001, KG002...)",
+                        "gap_description": "string (ギャップの説明)",
+                        "competitor_coverage": "string (競合のカバレッジ、例: 0/10記事)",
+                        "primary_source_id": "string (source_id)",
+                        "primary_source_details": {
+                            "title": "string",
+                            "organization": "string",
+                            "publication_date": "string",
+                            "url": "string",
+                            "key_finding": "string"
+                        },
+                        "implementation_section": "string (実装セクション)",
+                        "implementation_strategy": "string (具体的な実装方法)",
+                        "differentiation_value": "string (high / medium / low)",
+                        "expected_impact": "string (期待される影響)",
+                        "psychological_phase": "string (phase1/phase2/phase3)",
+                        "behavioral_trigger": "string (行動経済学トリガー)"
+                    }
+                ],
+                "section_enhancements": [
+                    {
+                        "section_id": "string (introduction / H2-1 / H2-2...)",
+                        "section_title": "string (セクション名)",
+                        "assigned_sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "enhancement_strategy": "string (強化戦略の説明)",
+                        "specific_data_to_use": [
+                            {
+                                "source_id": "string",
+                                "data": "string (使用する具体的なデータ)",
+                                "placement": "string (配置箇所)",
+                                "citation_format": "string (引用形式)",
+                                "psychological_effect": "string (心理的効果)",
+                                "behavioral_trigger": "string (行動トリガー)"
+                            }
+                        ],
+                        "expected_improvement": "string (期待される改善効果)"
+                    }
+                ],
+                "competitive_advantages": [
+                    {
+                        "advantage_id": "string (CA001, CA002...)",
+                        "advantage": "string (優位性の名称)",
+                        "competitor_status": {
+                            "latest_data_year": "number (競合の最新データ年)",
+                            "average_data_year": "number (競合の平均データ年)",
+                            "articles_with_2024_data": "number (2024年データ使用記事数)",
+                            "missing_topics_count": "number (欠落トピック数、該当する場合)",
+                            "shallow_coverage_topics": "number (浅いカバレッジのトピック数、該当する場合)"
+                        },
+                        "our_status": {
+                            "latest_data_year": "number (自社の最新データ年)",
+                            "average_data_year": "number (自社の平均データ年)",
+                            "sources_count": "number (一次情報源数)",
+                            "sources_with_2024_plus_data": "number (2024年以降データ数)",
+                            "filled_gaps_count": "number (埋めたギャップ数、該当する場合)",
+                            "deep_coverage_topics": "number (深いカバレッジのトピック数、該当する場合)"
+                        },
+                        "impact": "string (インパクトの説明)",
+                        "implementation": "string (実装方法)"
+                    }
+                ],
+                "data_freshness_comparison": {
+                    "competitor_analysis": {
+                        "average_latest_data_year": "number (競合の平均最新データ年)",
+                        "articles_with_2024_plus_data": "number (2024年以降データ使用記事数)",
+                        "articles_with_2023_data": "number (2023年データ使用記事数)",
+                        "articles_with_2022_or_older": "number (2022年以前データ記事数)"
+                    },
+                    "our_article": {
+                        "latest_data_year": "number (自社の最新データ年)",
+                        "sources_with_2024_plus_data": "number (2024年以降データ数)",
+                        "sources_with_2023_data": "number (2023年データ数)",
+                        "average_data_year": "number (自社の平均データ年)"
+                    },
+                    "advantage_summary": "string (優位性のサマリー)"
+                },
+                "citation_guidelines": {
+                    "format": "string (引用形式)",
+                    "example": "string (引用例)",
+                    "placement": "string (配置ルール)",
+                    "url_handling": "string (URLの扱い方)"
+                },
+                "implementation_priority": [
+                    {
+                        "priority": "number (優先順位: 1, 2, 3...)",
+                        "section": "string (セクション名)",
+                        "sources": [
+                            "string (source_id1)",
+                            "string (source_id2〜N)"
+                        ],
+                        "reason": "string (優先する理由)"
+                    }
+                ]
+            },
+            "completion_message_template": {
+                "header": "✅ 工程5完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "collection_summary": {
+                    "title": "一次情報収集結果:",
+                    "items": [
+                        "├─ 収集数: ○個 / 目標: 15〜25個",
+                        "├─ 最新データ年: {{current_year}}年",
+                        "├─ 平均データ年: 2024.○年",
+                        "├─ 2024年以降データ: ○個（○%）",
+                        "└─ 公的機関データ: ○個"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全て確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 3フェーズ対応データ収集",
+                        "│  ├─ Phase 1: ○個（扁桃体活性化）",
+                        "│  ├─ Phase 2: ○個（前頭前野処理）",
+                        "│  └─ Phase 3: ○個（線条体活性化）",
+                        "├─ 行動経済学: ✓ 社会的証明・権威性データ確保",
+                        "│  ├─ 損失回避: ○個",
+                        "│  ├─ 社会的証明: ○個",
+                        "│  ├─ 権威性: ○個",
+                        "│  └─ その他原則: ○個",
+                        "├─ LLMO: ✓ AI引用可能形式で保存",
+                        "│  ├─ 引用形式統一: 完了",
+                        "│  └─ URL記録: 全て完了",
+                        "└─ KGI: ✓ CTA用データ特定",
+                        "   ├─ Early CTA用: ○個",
+                        "   ├─ Mid CTA用: ○個",
+                        "   └─ Final CTA用: ○個"
+                    ]
+                },
+                "phase_distribution": {
+                    "title": "3フェーズ配分:",
+                    "items": [
+                        "├─ Phase 1用データ: ○個 / 目標: 5〜8個",
+                        "│  └─ 使用セクション: 導入部、H2-1、H2-2",
+                        "├─ Phase 2用データ: ○個 / 目標: 10〜15個",
+                        "│  └─ 使用セクション: H2-3〜H2-10",
+                        "└─ Phase 3用データ: ○個 / 目標: 3〜5個",
+                        "   └─ 使用セクション: H2-11、H2-12、CTA"
+                    ]
+                },
+                "knowledge_gaps_summary": {
+                    "title": "知識ギャップ:",
+                    "items": [
+                        "├─ 発見数: ○個 / 目標: 5〜10個",
+                        "├─ 競合カバレッジ0%: ○個",
+                        "├─ 差別化価値high: ○個",
+                        "└─ 主要ギャップ:",
+                        "   ├─ KG001: [ギャップ名]",
+                        "   ├─ KG002: [ギャップ名]",
+                        "   └─ KG003: [ギャップ名]"
+                    ]
+                },
+                "section_assignment": {
+                    "title": "セクション割り当て:",
+                    "items": [
+                        "├─ 全○セクションに一次情報を割り当て完了",
+                        "├─ 導入部: ○個",
+                        "├─ Phase 1セクション: 各○個",
+                        "├─ Phase 2セクション: 各○個",
+                        "└─ Phase 3セクション: 各○個"
+                    ]
+                },
+                "competitive_comparison": {
+                    "title": "競合比較:",
+                    "items": [
+                        "├─ 競合平均データ年: 2022.○年",
+                        "├─ 自社平均データ年: 2024.○年",
+                        "├─ 鮮度優位: +○年",
+                        "├─ 2024年以降データ比率:",
+                        "│  ├─ 競合: ○%",
+                        "│  └─ 自社: ○%",
+                        "└─ 知識ギャップ解消: ○個のトピックをカバー"
+                    ]
+                },
+                "expected_effects": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ 信頼性: +45%（最新データ使用）",
+                        "├─ 差別化: 知識ギャップ○個をカバー",
+                        "├─ SEO順位: +2〜3位（鮮度優位）",
+                        "├─ 読了率: +25%（Phase 1データ効果）",
+                        "└─ CVR: 2.7% → 4.0%+（Phase 3データ効果）"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程6（アウトライン再生成・強化版）",
+                    "description": "工程4のアウトライン + 工程5の一次情報 = 最強アウトライン完成",
+                    "note": "工程5で収集した一次情報を工程4のアウトラインに統合し、各セクションに具体的なデータを配置します。"
+                }
+            }
+        },
+        "legacy_templates_source": "templates.json (structured)",
+        "legacy_templates_raw": "{\n    \"output_template_complete\": {\n        \"collection_date\": \"string (ISO 8601形式: {{current_year}}-10-21T18:00:00Z)\",\n        \"keyword\": \"string (メインキーワード)\",\n        \"primary_sources\": [\n            {\n                \"source_id\": \"string (PS001, PS002...)\",\n                \"source_type\": \"string (government_statistics / academic_research / industry_report / legal_document)\",\n                \"title\": \"string (タイトル)\",\n                \"organization\": \"string (組織名)\",\n                \"publication_date\": \"string (YYYY-MM-DD)\",\n                \"url\": \"string (URL)\",\n                \"access_date\": \"string (YYYY-MM-DD)\",\n                \"key_findings\": [\n                    \"string (主要な発見1)\",\n                    \"string (主要な発見2)\",\n                    \"string (主要な発見3〜5)\"\n                ],\n                \"data_points\": [\n                    {\n                        \"metric\": \"string (指標名)\",\n                        \"value\": \"string (値)\",\n                        \"previous_year\": \"string (前年値、あれば)\",\n                        \"change\": \"string (変化、あれば)\",\n                        \"context\": \"string (背景・調査概要)\"\n                    }\n                ],\n                \"phase_alignment\": \"string (phase1_anxiety / phase2_understanding / phase3_action)\",\n                \"psychological_effect\": \"string (心理的効果の説明)\",\n                \"behavioral_trigger\": \"string (行動経済学トリガー)\",\n                \"credibility_score\": \"number (信頼性スコア、0.0〜1.0)\",\n                \"freshness_score\": \"number (鮮度スコア、0.0〜1.0)\",\n                \"relevance_to_keyword\": \"string (very_high / high / medium)\"\n            }\n        ],\n        \"phase_specific_data\": {\n            \"phase1_anxiety\": {\n                \"description\": \"string (このフェーズのデータの説明)\",\n                \"sources\": [\n                    \"string (source_id1)\",\n                    \"string (source_id2〜N)\"\n                ],\n                \"total_count\": \"number (データ数)\",\n                \"key_data_summary\": [\n                    \"string (主要データ1)\",\n                    \"string (主要データ2〜N)\"\n                ],\n                \"psychological_goal\": \"string (心理的目標)\",\n                \"usage_sections\": [\n                    \"string (使用セクション1)\",\n                    \"string (使用セクション2〜N)\"\n                ],\n                \"expected_effect\": \"string (期待効果)\"\n            },\n            \"phase2_understanding\": {\n                \"description\": \"string\",\n                \"sources\": [\n                    \"string\"\n                ],\n                \"total_count\": \"number\",\n                \"key_data_summary\": [\n                    \"string\"\n                ],\n                \"psychological_goal\": \"string\",\n                \"usage_sections\": [\n                    \"string\"\n                ],\n                \"expected_effect\": \"string\"\n            },\n            \"phase3_action\": {\n                \"description\": \"string\",\n                \"sources\": [\n                    \"string\"\n                ],\n                \"total_count\": \"number\",\n                \"key_data_summary\": [\n                    \"string\"\n                ],\n                \"psychological_goal\": \"string\",\n                \"usage_sections\": [\n                    \"string\"\n                ],\n                \"expected_effect\": \"string\"\n            }\n        },\n        \"knowledge_gaps_filled\": [\n            {\n                \"gap_id\": \"string (KG001, KG002...)\",\n                \"gap_description\": \"string (ギャップの説明)\",\n                \"competitor_coverage\": \"string (競合のカバレッジ、例: 0/10記事)\",\n                \"primary_source_id\": \"string (source_id)\",\n                \"primary_source_details\": {\n                    \"title\": \"string\",\n                    \"organization\": \"string\",\n                    \"publication_date\": \"string\",\n                    \"url\": \"string\",\n                    \"key_finding\": \"string\"\n                },\n                \"implementation_section\": \"string (実装セクション)\",\n                \"implementation_strategy\": \"string (具体的な実装方法)\",\n                \"differentiation_value\": \"string (high / medium / low)\",\n                \"expected_impact\": \"string (期待される影響)\",\n                \"psychological_phase\": \"string (phase1/phase2/phase3)\",\n                \"behavioral_trigger\": \"string (行動経済学トリガー)\"\n            }\n        ],\n        \"section_enhancements\": [\n            {\n                \"section_id\": \"string (introduction / H2-1 / H2-2...)\",\n                \"section_title\": \"string (セクション名)\",\n                \"assigned_sources\": [\n                    \"string (source_id1)\",\n                    \"string (source_id2〜N)\"\n                ],\n                \"enhancement_strategy\": \"string (強化戦略の説明)\",\n                \"specific_data_to_use\": [\n                    {\n                        \"source_id\": \"string\",\n                        \"data\": \"string (使用する具体的なデータ)\",\n                        \"placement\": \"string (配置箇所)\",\n                        \"citation_format\": \"string (引用形式)\",\n                        \"psychological_effect\": \"string (心理的効果)\",\n                        \"behavioral_trigger\": \"string (行動トリガー)\"\n                    }\n                ],\n                \"expected_improvement\": \"string (期待される改善効果)\"\n            }\n        ],\n        \"competitive_advantages\": [\n            {\n                \"advantage_id\": \"string (CA001, CA002...)\",\n                \"advantage\": \"string (優位性の名称)\",\n                \"competitor_status\": {\n                    \"latest_data_year\": \"number (競合の最新データ年)\",\n                    \"average_data_year\": \"number (競合の平均データ年)\",\n                    \"articles_with_2024_data\": \"number (2024年データ使用記事数)\",\n                    \"missing_topics_count\": \"number (欠落トピック数、該当する場合)\",\n                    \"shallow_coverage_topics\": \"number (浅いカバレッジのトピック数、該当する場合)\"\n                },\n                \"our_status\": {\n                    \"latest_data_year\": \"number (自社の最新データ年)\",\n                    \"average_data_year\": \"number (自社の平均データ年)\",\n                    \"sources_count\": \"number (一次情報源数)\",\n                    \"sources_with_2024_plus_data\": \"number (2024年以降データ数)\",\n                    \"filled_gaps_count\": \"number (埋めたギャップ数、該当する場合)\",\n                    \"deep_coverage_topics\": \"number (深いカバレッジのトピック数、該当する場合)\"\n                },\n                \"impact\": \"string (インパクトの説明)\",\n                \"implementation\": \"string (実装方法)\"\n            }\n        ],\n        \"data_freshness_comparison\": {\n            \"competitor_analysis\": {\n                \"average_latest_data_year\": \"number (競合の平均最新データ年)\",\n                \"articles_with_2024_plus_data\": \"number (2024年以降データ使用記事数)\",\n                \"articles_with_2023_data\": \"number (2023年データ使用記事数)\",\n                \"articles_with_2022_or_older\": \"number (2022年以前データ記事数)\"\n            },\n            \"our_article\": {\n                \"latest_data_year\": \"number (自社の最新データ年)\",\n                \"sources_with_2024_plus_data\": \"number (2024年以降データ数)\",\n                \"sources_with_2023_data\": \"number (2023年データ数)\",\n                \"average_data_year\": \"number (自社の平均データ年)\"\n            },\n            \"advantage_summary\": \"string (優位性のサマリー)\"\n        },\n        \"citation_guidelines\": {\n            \"format\": \"string (引用形式)\",\n            \"example\": \"string (引用例)\",\n            \"placement\": \"string (配置ルール)\",\n            \"url_handling\": \"string (URLの扱い方)\"\n        },\n        \"implementation_priority\": [\n            {\n                \"priority\": \"number (優先順位: 1, 2, 3...)\",\n                \"section\": \"string (セクション名)\",\n                \"sources\": [\n                    \"string (source_id1)\",\n                    \"string (source_id2〜N)\"\n                ],\n                \"reason\": \"string (優先する理由)\"\n            }\n        ]\n    },\n    \"completion_message_template\": {\n        \"header\": \"✅ 工程5完了\",\n        \"separator\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"collection_summary\": {\n            \"title\": \"一次情報収集結果:\",\n            \"items\": [\n                \"├─ 収集数: ○個 / 目標: 15〜25個\",\n                \"├─ 最新データ年: {{current_year}}年\",\n                \"├─ 平均データ年: 2024.○年\",\n                \"├─ 2024年以降データ: ○個（○%）\",\n                \"└─ 公的機関データ: ○個\"\n            ]\n        },\n        \"four_pillar_check\": {\n            \"title\": \"4本柱チェック: 全て確認済み\",\n            \"items\": [\n                \"├─ 神経科学: ✓ 3フェーズ対応データ収集\",\n                \"│  ├─ Phase 1: ○個（扁桃体活性化）\",\n                \"│  ├─ Phase 2: ○個（前頭前野処理）\",\n                \"│  └─ Phase 3: ○個（線条体活性化）\",\n                \"├─ 行動経済学: ✓ 社会的証明・権威性データ確保\",\n                \"│  ├─ 損失回避: ○個\",\n                \"│  ├─ 社会的証明: ○個\",\n                \"│  ├─ 権威性: ○個\",\n                \"│  └─ その他原則: ○個\",\n                \"├─ LLMO: ✓ AI引用可能形式で保存\",\n                \"│  ├─ 引用形式統一: 完了\",\n                \"│  └─ URL記録: 全て完了\",\n                \"└─ KGI: ✓ CTA用データ特定\",\n                \"   ├─ Early CTA用: ○個\",\n                \"   ├─ Mid CTA用: ○個\",\n                \"   └─ Final CTA用: ○個\"\n            ]\n        },\n        \"phase_distribution\": {\n            \"title\": \"3フェーズ配分:\",\n            \"items\": [\n                \"├─ Phase 1用データ: ○個 / 目標: 5〜8個\",\n                \"│  └─ 使用セクション: 導入部、H2-1、H2-2\",\n                \"├─ Phase 2用データ: ○個 / 目標: 10〜15個\",\n                \"│  └─ 使用セクション: H2-3〜H2-10\",\n                \"└─ Phase 3用データ: ○個 / 目標: 3〜5個\",\n                \"   └─ 使用セクション: H2-11、H2-12、CTA\"\n            ]\n        },\n        \"knowledge_gaps_summary\": {\n            \"title\": \"知識ギャップ:\",\n            \"items\": [\n                \"├─ 発見数: ○個 / 目標: 5〜10個\",\n                \"├─ 競合カバレッジ0%: ○個\",\n                \"├─ 差別化価値high: ○個\",\n                \"└─ 主要ギャップ:\",\n                \"   ├─ KG001: [ギャップ名]\",\n                \"   ├─ KG002: [ギャップ名]\",\n                \"   └─ KG003: [ギャップ名]\"\n            ]\n        },\n        \"section_assignment\": {\n            \"title\": \"セクション割り当て:\",\n            \"items\": [\n                \"├─ 全○セクションに一次情報を割り当て完了\",\n                \"├─ 導入部: ○個\",\n                \"├─ Phase 1セクション: 各○個\",\n                \"├─ Phase 2セクション: 各○個\",\n                \"└─ Phase 3セクション: 各○個\"\n            ]\n        },\n        \"competitive_comparison\": {\n            \"title\": \"競合比較:\",\n            \"items\": [\n                \"├─ 競合平均データ年: 2022.○年\",\n                \"├─ 自社平均データ年: 2024.○年\",\n                \"├─ 鮮度優位: +○年\",\n                \"├─ 2024年以降データ比率:\",\n                \"│  ├─ 競合: ○%\",\n                \"│  └─ 自社: ○%\",\n                \"└─ 知識ギャップ解消: ○個のトピックをカバー\"\n            ]\n        },\n        \"expected_effects\": {\n            \"title\": \"期待効果:\",\n            \"items\": [\n                \"├─ 信頼性: +45%（最新データ使用）\",\n                \"├─ 差別化: 知識ギャップ○個をカバー\",\n                \"├─ SEO順位: +2〜3位（鮮度優位）\",\n                \"├─ 読了率: +25%（Phase 1データ効果）\",\n                \"└─ CVR: 2.7% → 4.0%+（Phase 3データ効果）\"\n            ]\n        },\n        \"footer\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"next_step\": {\n            \"title\": \"次の工程: 工程6（アウトライン再生成・強化版）\",\n            \"description\": \"工程4のアウトライン + 工程5の一次情報 = 最強アウトライン完成\",\n            \"note\": \"工程5で収集した一次情報を工程4のアウトラインに統合し、各セクションに具体的なデータを配置します。\"\n        }\n    }\n}\n"
+    },
+    "examples": {
+        "source": "examples.json",
+        "content": {
+            "example_1_complete_collection": {
+                "scenario": "完全な一次情報収集の例（3フェーズ対応）",
+                "input": {
+                    "keyword": "派遣社員 教育方法"
+                },
+                "output": {
+                    "collection_date": "{{current_year}}-10-21T18:00:00Z",
+                    "keyword": "派遣社員 教育方法",
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "source_type": "government_statistics",
+                            "title": "令和6年 派遣労働者実態調査",
+                            "organization": "厚生労働省",
+                            "publication_date": "2024-12-15",
+                            "url": "https://www.mhlw.go.jp/toukei/list/6-18c-r06.html",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "派遣社員の3ヶ月以内離職率: 29.3%（前年比+3.2pt）",
+                                "教育訓練実施企業: 45.2%（前年比+2.1pt）",
+                                "定着率向上効果: 教育実施企業は未実施企業より18.5pt高い"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "3ヶ月以内離職率",
+                                    "value": "29.3%",
+                                    "previous_year": "26.1%",
+                                    "change": "+3.2pt",
+                                    "context": "2024年度調査、有効回答数3,542社"
+                                },
+                                {
+                                    "metric": "教育訓練実施率",
+                                    "value": "45.2%",
+                                    "previous_year": "43.1%",
+                                    "change": "+2.1pt",
+                                    "context": "派遣会社を対象とした調査"
+                                },
+                                {
+                                    "metric": "定着率の差",
+                                    "value": "18.5pt",
+                                    "context": "教育実施企業と未実施企業の比較"
+                                }
+                            ],
+                            "phase_alignment": "phase1_anxiety",
+                            "psychological_effect": "扁桃体活性化: 離職率29.3%という衝撃的数値で注意を引く、前年比+3.2ptで悪化トレンドを示す",
+                            "behavioral_trigger": "損失回避",
+                            "credibility_score": 0.98,
+                            "freshness_score": 0.95,
+                            "relevance_to_keyword": "very_high"
+                        },
+                        {
+                            "source_id": "PS002",
+                            "source_type": "government_statistics",
+                            "title": "企業の人材育成投資調査 令和6年",
+                            "organization": "経済産業省",
+                            "publication_date": "2024-09-20",
+                            "url": "https://www.meti.go.jp/statistics/...",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "1人の派遣社員離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                                "中小企業の平均教育投資: 1人あたり年間18.5万円",
+                                "教育投資の費用対効果: 平均240%（投資額の2.4倍の成果）"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "離職による損失額",
+                                    "value": "55万円",
+                                    "breakdown": "採用コスト35万円 + 教育コスト20万円",
+                                    "context": "派遣社員1人あたりの平均"
+                                },
+                                {
+                                    "metric": "中小企業の教育投資",
+                                    "value": "18.5万円/人・年",
+                                    "context": "従業員50〜300名規模の企業平均"
+                                },
+                                {
+                                    "metric": "教育投資の費用対効果",
+                                    "value": "240%",
+                                    "context": "3年間の追跡調査結果"
+                                }
+                            ],
+                            "phase_alignment": "phase1_anxiety",
+                            "psychological_effect": "扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化",
+                            "behavioral_trigger": "損失回避",
+                            "credibility_score": 0.96,
+                            "freshness_score": 0.92,
+                            "relevance_to_keyword": "high"
+                        },
+                        {
+                            "source_id": "PS005",
+                            "source_type": "academic_research",
+                            "title": "派遣社員の教育投資効果に関する実証研究",
+                            "organization": "労働政策研究・研修機構（JILPT）",
+                            "publication_date": "2024-08-20",
+                            "url": "https://www.jil.go.jp/institute/reports/2024/...",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "教育投資1人あたり年間30万円で定着率42%向上",
+                                "OJTとOff-JTの組み合わせが最も効果的（単独より1.8倍）",
+                                "最適比率: OJT 70% : Off-JT 30%",
+                                "メンター制度導入企業は離職率が35%低下"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "教育投資額と定着率の相関",
+                                    "value": "年間30万円投資で42%向上",
+                                    "context": "中小企業300社を対象とした3年間の追跡調査"
+                                },
+                                {
+                                    "metric": "OJT+Off-JT vs 単独",
+                                    "value": "効果1.8倍",
+                                    "context": "組み合わせ実施企業と単独実施企業の比較"
+                                },
+                                {
+                                    "metric": "最適比率",
+                                    "value": "OJT 70% : Off-JT 30%",
+                                    "context": "定着率が最も高かった比率"
+                                }
+                            ],
+                            "phase_alignment": "phase2_understanding",
+                            "psychological_effect": "前頭前野処理: 投資額と費用対効果を明示し、論理的納得を促す。最適比率で具体的な実装方法を提示",
+                            "behavioral_trigger": "権威性（JILPT研究） + 社会的証明（300社調査）",
+                            "credibility_score": 0.92,
+                            "freshness_score": 0.88,
+                            "relevance_to_keyword": "very_high"
+                        },
+                        {
+                            "source_id": "PS012",
+                            "source_type": "industry_report",
+                            "title": "人材派遣業界白書 2024",
+                            "organization": "日本人材派遣協会",
+                            "publication_date": "2024-06-15",
+                            "url": "https://www.jassa.or.jp/keywords/index3.html",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "体系的教育プログラム導入企業: 300社（2024年時点）",
+                                "導入企業の平均離職率低下: 35%",
+                                "導入企業の顧客満足度: 96.8%",
+                                "効果実感までの平均期間: 3ヶ月"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "導入企業数",
+                                    "value": "300社",
+                                    "context": "2024年6月時点の累計"
+                                },
+                                {
+                                    "metric": "離職率低下",
+                                    "value": "35%",
+                                    "context": "導入前後の平均比較"
+                                },
+                                {
+                                    "metric": "顧客満足度",
+                                    "value": "96.8%",
+                                    "context": "導入企業へのアンケート調査（N=250）"
+                                },
+                                {
+                                    "metric": "効果実感期間",
+                                    "value": "平均3ヶ月",
+                                    "context": "「効果を実感した」と回答した企業の平均"
+                                }
+                            ],
+                            "phase_alignment": "phase3_action",
+                            "psychological_effect": "線条体活性化: 導入実績300社で社会的証明、3ヶ月で効果で短期報酬予測、満足度96.8%で成功イメージ",
+                            "behavioral_trigger": "社会的証明 + 希少性（実績ある企業の仲間入り）",
+                            "credibility_score": 0.88,
+                            "freshness_score": 0.9,
+                            "relevance_to_keyword": "high"
+                        }
+                    ],
+                    "phase_specific_data": {
+                        "phase1_anxiety": {
+                            "sources": [
+                                "PS001",
+                                "PS002",
+                                "PS003"
+                            ],
+                            "total_count": 5,
+                            "key_data_summary": [
+                                "離職率29.3%（前年比+3.2pt、悪化トレンド）",
+                                "1人離職で55万円の損失（採用35万円+教育20万円）",
+                                "教育未実施企業の離職率は実施企業より18.5pt高い",
+                                "年間4人離職で220万円の損失",
+                                "教育に費やした160時間が無駄に"
+                            ],
+                            "psychological_goal": "扁桃体活性化、損失回避動機の喚起、危機感の醸成",
+                            "usage_sections": [
+                                "導入部",
+                                "H2-1",
+                                "H2-2"
+                            ]
+                        },
+                        "phase2_understanding": {
+                            "sources": [
+                                "PS005",
+                                "PS006",
+                                "PS007",
+                                "PS008",
+                                "PS009",
+                                "PS010"
+                            ],
+                            "total_count": 12,
+                            "key_data_summary": [
+                                "教育投資年間30万円で定着率42%向上（JILPT研究）",
+                                "OJT:Off-JT = 7:3が最適比率",
+                                "組み合わせ実施は単独より効果1.8倍",
+                                "メンター制度で離職率35%低下",
+                                "教育投資の費用対効果平均240%",
+                                "定期フィードバックで定着率+28%"
+                            ],
+                            "psychological_goal": "前頭前野処理、論理的納得、実践可能性の認識",
+                            "usage_sections": [
+                                "H2-3",
+                                "H2-4",
+                                "H2-5",
+                                "H2-6",
+                                "H2-7",
+                                "H2-8",
+                                "H2-9",
+                                "H2-10"
+                            ]
+                        },
+                        "phase3_action": {
+                            "sources": [
+                                "PS012",
+                                "PS013",
+                                "PS014"
+                            ],
+                            "total_count": 4,
+                            "key_data_summary": [
+                                "導入企業300社（2024年時点）",
+                                "平均3ヶ月で離職率35%低下",
+                                "顧客満足度96.8%（N=250）",
+                                "85%が「効果を実感した」と回答"
+                            ],
+                            "psychological_goal": "線条体活性化、報酬予測、成功イメージ、行動決定",
+                            "usage_sections": [
+                                "H2-11",
+                                "H2-12",
+                                "Final CTA周辺"
+                            ]
+                        }
+                    },
+                    "knowledge_gaps_filled": [
+                        {
+                            "gap_id": "KG001",
+                            "gap_description": "2024年4月施行の人材開発支援助成金の拡充",
+                            "competitor_coverage": "0/10記事（誰も言及していない）",
+                            "primary_source_id": "PS008",
+                            "primary_source_details": {
+                                "title": "令和6年度 人材開発支援助成金のご案内",
+                                "organization": "厚生労働省",
+                                "publication_date": "2024-04-01",
+                                "url": "https://www.mhlw.go.jp/...",
+                                "key_finding": "派遣社員向け教育訓練に対する助成金が拡充、Off-JT訓練で最大50万円/人、OJTで最大20万円/人"
+                            },
+                            "implementation_section": "H2-6: 予算別プラン",
+                            "implementation_strategy": "20万円プランのセクションで「助成金活用で実質負担0円〜10万円も可能」と提示。50万円プランでも「助成金併用で実質負担20〜30万円に」と明記。",
+                            "differentiation_value": "high",
+                            "expected_impact": "予算制約のある中小企業への具体的支援策として強力な差別化。「実質0円」という訴求で損失回避動機をさらに強化。",
+                            "psychological_phase": "phase2_understanding",
+                            "behavioral_trigger": "損失回避（実質0円） + 権威性（厚労省制度）"
+                        },
+                        {
+                            "gap_id": "KG002",
+                            "gap_description": "リモート・ハイブリッド環境でのOJT実施方法",
+                            "competitor_coverage": "2/10記事（浅い言及のみ、具体的方法の記載なし）",
+                            "primary_source_id": "PS010",
+                            "primary_source_details": {
+                                "title": "テレワーク環境における人材育成の実態調査",
+                                "organization": "労働政策研究・研修機構（JILPT）",
+                                "publication_date": "2024-07-10",
+                                "url": "https://www.jil.go.jp/...",
+                                "key_finding": "リモートOJTを実施している企業は32.5%。効果的な実施のための3つのポイント: ①オンラインツールの活用、②週1回以上の1on1、③進捗の可視化"
+                            },
+                            "implementation_section": "H2-7: リモート・ハイブリッド対応の教育方法",
+                            "implementation_strategy": "H2セクションとして独立展開。JILPT調査の3つのポイントを詳細解説。Zoom/Teams等の具体的ツール紹介、1on1の進め方、進捗管理ツール（Trello、Asana等）の活用方法。",
+                            "differentiation_value": "high",
+                            "expected_impact": "{{current_year}}年の働き方に対応した最新情報として強力。競合の80%が未対応のトピック。",
+                            "psychological_phase": "phase2_understanding",
+                            "behavioral_trigger": "権威性（JILPT調査） + 一貫性（具体的ステップ提示）"
+                        }
+                    ],
+                    "section_enhancements": [
+                        {
+                            "section_id": "introduction",
+                            "section_title": "導入部",
+                            "assigned_sources": [
+                                "PS001",
+                                "PS002"
+                            ],
+                            "enhancement_strategy": "2024〜{{current_year}}年の最新データで課題の深刻さを数値化。競合の80%が2023年以前データ、鮮度で圧倒的優位。",
+                            "specific_data_to_use": [
+                                {
+                                    "source_id": "PS001",
+                                    "data": "派遣社員の3ヶ月以内離職率29.3%（2024年厚労省調査、前年比+3.2pt）",
+                                    "placement": "オープニングフック",
+                                    "citation_format": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                                    "psychological_effect": "扁桃体活性化: 29.3%という具体的数値で注意を引く。前年比+3.2ptで悪化トレンドを示し、危機感を醸成。",
+                                    "behavioral_trigger": "損失回避"
+                                },
+                                {
+                                    "source_id": "PS002",
+                                    "data": "1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                                    "placement": "データアンカー",
+                                    "citation_format": "（出典: 経済産業省「企業の人材育成投資調査」2024年）",
+                                    "psychological_effect": "扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化。年間4人離職で220万円という計算も提示。",
+                                    "behavioral_trigger": "損失回避"
+                                }
+                            ],
+                            "expected_improvement": "競合の80%が2023年以前データ、鮮度で圧倒的優位。具体的損失額で損失回避動機を強化し、離脱率-13pt、読了率+25%を実現。"
+                        }
+                    ],
+                    "competitive_advantages": [
+                        {
+                            "advantage_id": "CA001",
+                            "advantage": "情報の鮮度",
+                            "competitor_status": {
+                                "latest_data_year": 2023,
+                                "average_data_year": 2022.3,
+                                "articles_with_2024_data": 0
+                            },
+                            "our_status": {
+                                "latest_data_year": {{current_year}},
+                                "average_data_year": 2024.6,
+                                "sources_count": 18,
+                                "sources_with_2024_plus_data": 12
+                            },
+                            "impact": "競合より平均2.3年新しいデータで圧倒的優位。検索順位+2〜3位の効果。",
+                            "implementation": "導入部、Phase 1、各セクションの冒頭で最新データを強調。「2024年最新」「{{current_year}}年調査」等のフレーズを使用。"
+                        },
+                        {
+                            "advantage_id": "CA002",
+                            "advantage": "知識ギャップの解消",
+                            "competitor_status": {
+                                "missing_topics_count": 8,
+                                "shallow_coverage_topics": 5
+                            },
+                            "our_status": {
+                                "filled_gaps_count": 8,
+                                "deep_coverage_topics": 5
+                            },
+                            "impact": "競合が見落としている8つのトピックをカバー。ユニークビジター+20%、直帰率-15%の効果。",
+                            "implementation": "差別化セクション（H2-7: リモート教育、H2-9: AI活用等）として独立展開。各セクションで「競合が触れていない最新情報」と明記。"
+                        }
+                    ],
+                    "data_freshness_comparison": {
+                        "competitor_analysis": {
+                            "average_latest_data_year": 2022.8,
+                            "articles_with_2024_plus_data": 0,
+                            "articles_with_2023_data": 2,
+                            "articles_with_2022_or_older": 8
+                        },
+                        "our_article": {
+                            "latest_data_year": {{current_year}},
+                            "sources_with_2024_plus_data": 12,
+                            "sources_with_2023_data": 6,
+                            "average_data_year": 2024.3
+                        },
+                        "advantage_summary": "平均1.5年の鮮度優位、競合の0%に対し当社は67%が2024年以降データ"
+                    }
+                },
+                "explanation": "完全な一次情報収集の例。3フェーズ対応のデータ分類を含む。"
+            },
+            "example_2_phase_specific_data": {
+                "scenario": "3フェーズ別データ分類の詳細例",
+                "phase_specific_data": {
+                    "phase1_anxiety": {
+                        "description": "扁桃体活性化のためのデータ。問題の深刻さ、損失、リスクを強調。",
+                        "sources": [
+                            "PS001",
+                            "PS002",
+                            "PS003",
+                            "PS004",
+                            "PS005"
+                        ],
+                        "total_count": 5,
+                        "key_data_summary": [
+                            "離職率29.3%（前年比+3.2pt）→ 悪化トレンド",
+                            "1人離職で55万円の損失 → 具体的金額",
+                            "年間4人離職で220万円 → 年間換算",
+                            "教育未実施企業は実施企業より離職率18.5pt高い → リスク明示",
+                            "教育に費やした160時間が無駄に → 時間損失"
+                        ],
+                        "psychological_goal": "扁桃体活性化、損失回避動機の喚起、危機感の醸成",
+                        "usage_sections": [
+                            "導入部",
+                            "H2-1: 失敗する理由",
+                            "H2-2: 教育が必要な理由"
+                        ],
+                        "expected_effect": "離脱率-13pt、読了率+25%、Phase 1→Phase 2への遷移率+18%"
+                    },
+                    "phase2_understanding": {
+                        "description": "前頭前野処理のためのデータ。解決策の有効性、論理的裏付けを提供。",
+                        "sources": [
+                            "PS006",
+                            "PS007",
+                            "PS008",
+                            "PS009",
+                            "PS010",
+                            "PS011",
+                            "PS012",
+                            "PS013",
+                            "PS014",
+                            "PS015",
+                            "PS016",
+                            "PS017"
+                        ],
+                        "total_count": 12,
+                        "key_data_summary": [
+                            "教育投資年間30万円で定着率42%向上",
+                            "OJT:Off-JT = 7:3が最適比率",
+                            "組み合わせ実施は単独より効果1.8倍",
+                            "メンター制度で離職率35%低下",
+                            "教育投資の費用対効果平均240%",
+                            "定期フィードバックで定着率+28%",
+                            "助成金併用で実質負担0〜30万円",
+                            "リモートOJTの成功率: 週1回1on1実施で75%"
+                        ],
+                        "psychological_goal": "前頭前野処理、論理的納得、実践可能性の認識、「これなら解決できる」という確信",
+                        "usage_sections": [
+                            "H2-3: 5ステップ",
+                            "H2-4: OJTとOff-JT",
+                            "H2-5: メンター制度",
+                            "H2-6: 予算別プラン",
+                            "H2-7: リモート対応",
+                            "H2-8: 成功事例",
+                            "H2-9: AI活用",
+                            "H2-10: 評価方法"
+                        ],
+                        "expected_effect": "記事滞在時間+40%、信頼度+45%、Phase 2→Phase 3への遷移率+30%"
+                    },
+                    "phase3_action": {
+                        "description": "線条体活性化のためのデータ。成功イメージ、報酬予測、短期効果を強調。",
+                        "sources": [
+                            "PS018",
+                            "PS019",
+                            "PS020",
+                            "PS021"
+                        ],
+                        "total_count": 4,
+                        "key_data_summary": [
+                            "導入企業300社（社会的証明）",
+                            "平均3ヶ月で離職率35%低下（短期効果）",
+                            "顧客満足度96.8%（高満足度）",
+                            "85%が「効果を実感した」と回答（成功率）"
+                        ],
+                        "psychological_goal": "線条体活性化、報酬予測、成功イメージ、「今すぐやろう」という行動決定",
+                        "usage_sections": [
+                            "H2-11: 今すぐ始められる3ステップ",
+                            "H2-12: よくある質問",
+                            "Final CTA周辺"
+                        ],
+                        "expected_effect": "CVR: 2.7% → 4.0%+（+48%）、Final CTA CVR: 5.0%+"
+                    }
+                },
+                "explanation": "3フェーズ別データ分類の詳細例。各フェーズの心理的目標、使用セクション、期待効果を明記。"
+            },
+            "bad_example_1_old_data": {
+                "scenario": "データが古い（悪い例）",
+                "bad_output": {
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "publication_date": "2021-03-15",
+                            "key_data": "派遣社員の離職率25%"
+                        }
+                    ]
+                },
+                "problems": [
+                    "データが2021年で古すぎる（4年前）",
+                    "2024〜{{current_year}}年の最新データを優先すべき",
+                    "競合との鮮度優位性がない"
+                ],
+                "correction": "2024〜{{current_year}}年の最新データを優先的に収集する。2023年以前のデータは避ける。",
+                "explanation": "情報の鮮度が差別化の鍵。古いデータでは競合に勝てない。"
+            },
+            "bad_example_2_missing_phase_alignment": {
+                "scenario": "3フェーズ分類の欠落（悪い例）",
+                "bad_output": {
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "key_data": "離職率29.3%"
+                        }
+                    ]
+                },
+                "problems": [
+                    "phase_alignment フィールドがない",
+                    "phase_specific_data セクションがない",
+                    "どのフェーズで使用するか不明"
+                ],
+                "correction": "全ての一次情報に phase_alignment（phase1_anxiety/phase2_understanding/phase3_action）を記録する。phase_specific_data セクションを作成する。",
+                "explanation": "3フェーズ対応は記事の心理的設計を強化する最重要要素。必ず実装する。"
+            }
+        },
+        "note": "実際の使用例",
+        "legacy_examples": {
+            "example_1_complete_collection": {
+                "scenario": "完全な一次情報収集の例（3フェーズ対応）",
+                "input": {
+                    "keyword": "派遣社員 教育方法"
+                },
+                "output": {
+                    "collection_date": "{{current_year}}-10-21T18:00:00Z",
+                    "keyword": "派遣社員 教育方法",
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "source_type": "government_statistics",
+                            "title": "令和6年 派遣労働者実態調査",
+                            "organization": "厚生労働省",
+                            "publication_date": "2024-12-15",
+                            "url": "https://www.mhlw.go.jp/toukei/list/6-18c-r06.html",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "派遣社員の3ヶ月以内離職率: 29.3%（前年比+3.2pt）",
+                                "教育訓練実施企業: 45.2%（前年比+2.1pt）",
+                                "定着率向上効果: 教育実施企業は未実施企業より18.5pt高い"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "3ヶ月以内離職率",
+                                    "value": "29.3%",
+                                    "previous_year": "26.1%",
+                                    "change": "+3.2pt",
+                                    "context": "2024年度調査、有効回答数3,542社"
+                                },
+                                {
+                                    "metric": "教育訓練実施率",
+                                    "value": "45.2%",
+                                    "previous_year": "43.1%",
+                                    "change": "+2.1pt",
+                                    "context": "派遣会社を対象とした調査"
+                                },
+                                {
+                                    "metric": "定着率の差",
+                                    "value": "18.5pt",
+                                    "context": "教育実施企業と未実施企業の比較"
+                                }
+                            ],
+                            "phase_alignment": "phase1_anxiety",
+                            "psychological_effect": "扁桃体活性化: 離職率29.3%という衝撃的数値で注意を引く、前年比+3.2ptで悪化トレンドを示す",
+                            "behavioral_trigger": "損失回避",
+                            "credibility_score": 0.98,
+                            "freshness_score": 0.95,
+                            "relevance_to_keyword": "very_high"
+                        },
+                        {
+                            "source_id": "PS002",
+                            "source_type": "government_statistics",
+                            "title": "企業の人材育成投資調査 令和6年",
+                            "organization": "経済産業省",
+                            "publication_date": "2024-09-20",
+                            "url": "https://www.meti.go.jp/statistics/...",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "1人の派遣社員離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                                "中小企業の平均教育投資: 1人あたり年間18.5万円",
+                                "教育投資の費用対効果: 平均240%（投資額の2.4倍の成果）"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "離職による損失額",
+                                    "value": "55万円",
+                                    "breakdown": "採用コスト35万円 + 教育コスト20万円",
+                                    "context": "派遣社員1人あたりの平均"
+                                },
+                                {
+                                    "metric": "中小企業の教育投資",
+                                    "value": "18.5万円/人・年",
+                                    "context": "従業員50〜300名規模の企業平均"
+                                },
+                                {
+                                    "metric": "教育投資の費用対効果",
+                                    "value": "240%",
+                                    "context": "3年間の追跡調査結果"
+                                }
+                            ],
+                            "phase_alignment": "phase1_anxiety",
+                            "psychological_effect": "扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化",
+                            "behavioral_trigger": "損失回避",
+                            "credibility_score": 0.96,
+                            "freshness_score": 0.92,
+                            "relevance_to_keyword": "high"
+                        },
+                        {
+                            "source_id": "PS005",
+                            "source_type": "academic_research",
+                            "title": "派遣社員の教育投資効果に関する実証研究",
+                            "organization": "労働政策研究・研修機構（JILPT）",
+                            "publication_date": "2024-08-20",
+                            "url": "https://www.jil.go.jp/institute/reports/2024/...",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "教育投資1人あたり年間30万円で定着率42%向上",
+                                "OJTとOff-JTの組み合わせが最も効果的（単独より1.8倍）",
+                                "最適比率: OJT 70% : Off-JT 30%",
+                                "メンター制度導入企業は離職率が35%低下"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "教育投資額と定着率の相関",
+                                    "value": "年間30万円投資で42%向上",
+                                    "context": "中小企業300社を対象とした3年間の追跡調査"
+                                },
+                                {
+                                    "metric": "OJT+Off-JT vs 単独",
+                                    "value": "効果1.8倍",
+                                    "context": "組み合わせ実施企業と単独実施企業の比較"
+                                },
+                                {
+                                    "metric": "最適比率",
+                                    "value": "OJT 70% : Off-JT 30%",
+                                    "context": "定着率が最も高かった比率"
+                                }
+                            ],
+                            "phase_alignment": "phase2_understanding",
+                            "psychological_effect": "前頭前野処理: 投資額と費用対効果を明示し、論理的納得を促す。最適比率で具体的な実装方法を提示",
+                            "behavioral_trigger": "権威性（JILPT研究） + 社会的証明（300社調査）",
+                            "credibility_score": 0.92,
+                            "freshness_score": 0.88,
+                            "relevance_to_keyword": "very_high"
+                        },
+                        {
+                            "source_id": "PS012",
+                            "source_type": "industry_report",
+                            "title": "人材派遣業界白書 2024",
+                            "organization": "日本人材派遣協会",
+                            "publication_date": "2024-06-15",
+                            "url": "https://www.jassa.or.jp/keywords/index3.html",
+                            "access_date": "{{current_year}}-10-21",
+                            "key_findings": [
+                                "体系的教育プログラム導入企業: 300社（2024年時点）",
+                                "導入企業の平均離職率低下: 35%",
+                                "導入企業の顧客満足度: 96.8%",
+                                "効果実感までの平均期間: 3ヶ月"
+                            ],
+                            "data_points": [
+                                {
+                                    "metric": "導入企業数",
+                                    "value": "300社",
+                                    "context": "2024年6月時点の累計"
+                                },
+                                {
+                                    "metric": "離職率低下",
+                                    "value": "35%",
+                                    "context": "導入前後の平均比較"
+                                },
+                                {
+                                    "metric": "顧客満足度",
+                                    "value": "96.8%",
+                                    "context": "導入企業へのアンケート調査（N=250）"
+                                },
+                                {
+                                    "metric": "効果実感期間",
+                                    "value": "平均3ヶ月",
+                                    "context": "「効果を実感した」と回答した企業の平均"
+                                }
+                            ],
+                            "phase_alignment": "phase3_action",
+                            "psychological_effect": "線条体活性化: 導入実績300社で社会的証明、3ヶ月で効果で短期報酬予測、満足度96.8%で成功イメージ",
+                            "behavioral_trigger": "社会的証明 + 希少性（実績ある企業の仲間入り）",
+                            "credibility_score": 0.88,
+                            "freshness_score": 0.9,
+                            "relevance_to_keyword": "high"
+                        }
+                    ],
+                    "phase_specific_data": {
+                        "phase1_anxiety": {
+                            "sources": [
+                                "PS001",
+                                "PS002",
+                                "PS003"
+                            ],
+                            "total_count": 5,
+                            "key_data_summary": [
+                                "離職率29.3%（前年比+3.2pt、悪化トレンド）",
+                                "1人離職で55万円の損失（採用35万円+教育20万円）",
+                                "教育未実施企業の離職率は実施企業より18.5pt高い",
+                                "年間4人離職で220万円の損失",
+                                "教育に費やした160時間が無駄に"
+                            ],
+                            "psychological_goal": "扁桃体活性化、損失回避動機の喚起、危機感の醸成",
+                            "usage_sections": [
+                                "導入部",
+                                "H2-1",
+                                "H2-2"
+                            ]
+                        },
+                        "phase2_understanding": {
+                            "sources": [
+                                "PS005",
+                                "PS006",
+                                "PS007",
+                                "PS008",
+                                "PS009",
+                                "PS010"
+                            ],
+                            "total_count": 12,
+                            "key_data_summary": [
+                                "教育投資年間30万円で定着率42%向上（JILPT研究）",
+                                "OJT:Off-JT = 7:3が最適比率",
+                                "組み合わせ実施は単独より効果1.8倍",
+                                "メンター制度で離職率35%低下",
+                                "教育投資の費用対効果平均240%",
+                                "定期フィードバックで定着率+28%"
+                            ],
+                            "psychological_goal": "前頭前野処理、論理的納得、実践可能性の認識",
+                            "usage_sections": [
+                                "H2-3",
+                                "H2-4",
+                                "H2-5",
+                                "H2-6",
+                                "H2-7",
+                                "H2-8",
+                                "H2-9",
+                                "H2-10"
+                            ]
+                        },
+                        "phase3_action": {
+                            "sources": [
+                                "PS012",
+                                "PS013",
+                                "PS014"
+                            ],
+                            "total_count": 4,
+                            "key_data_summary": [
+                                "導入企業300社（2024年時点）",
+                                "平均3ヶ月で離職率35%低下",
+                                "顧客満足度96.8%（N=250）",
+                                "85%が「効果を実感した」と回答"
+                            ],
+                            "psychological_goal": "線条体活性化、報酬予測、成功イメージ、行動決定",
+                            "usage_sections": [
+                                "H2-11",
+                                "H2-12",
+                                "Final CTA周辺"
+                            ]
+                        }
+                    },
+                    "knowledge_gaps_filled": [
+                        {
+                            "gap_id": "KG001",
+                            "gap_description": "2024年4月施行の人材開発支援助成金の拡充",
+                            "competitor_coverage": "0/10記事（誰も言及していない）",
+                            "primary_source_id": "PS008",
+                            "primary_source_details": {
+                                "title": "令和6年度 人材開発支援助成金のご案内",
+                                "organization": "厚生労働省",
+                                "publication_date": "2024-04-01",
+                                "url": "https://www.mhlw.go.jp/...",
+                                "key_finding": "派遣社員向け教育訓練に対する助成金が拡充、Off-JT訓練で最大50万円/人、OJTで最大20万円/人"
+                            },
+                            "implementation_section": "H2-6: 予算別プラン",
+                            "implementation_strategy": "20万円プランのセクションで「助成金活用で実質負担0円〜10万円も可能」と提示。50万円プランでも「助成金併用で実質負担20〜30万円に」と明記。",
+                            "differentiation_value": "high",
+                            "expected_impact": "予算制約のある中小企業への具体的支援策として強力な差別化。「実質0円」という訴求で損失回避動機をさらに強化。",
+                            "psychological_phase": "phase2_understanding",
+                            "behavioral_trigger": "損失回避（実質0円） + 権威性（厚労省制度）"
+                        },
+                        {
+                            "gap_id": "KG002",
+                            "gap_description": "リモート・ハイブリッド環境でのOJT実施方法",
+                            "competitor_coverage": "2/10記事（浅い言及のみ、具体的方法の記載なし）",
+                            "primary_source_id": "PS010",
+                            "primary_source_details": {
+                                "title": "テレワーク環境における人材育成の実態調査",
+                                "organization": "労働政策研究・研修機構（JILPT）",
+                                "publication_date": "2024-07-10",
+                                "url": "https://www.jil.go.jp/...",
+                                "key_finding": "リモートOJTを実施している企業は32.5%。効果的な実施のための3つのポイント: ①オンラインツールの活用、②週1回以上の1on1、③進捗の可視化"
+                            },
+                            "implementation_section": "H2-7: リモート・ハイブリッド対応の教育方法",
+                            "implementation_strategy": "H2セクションとして独立展開。JILPT調査の3つのポイントを詳細解説。Zoom/Teams等の具体的ツール紹介、1on1の進め方、進捗管理ツール（Trello、Asana等）の活用方法。",
+                            "differentiation_value": "high",
+                            "expected_impact": "{{current_year}}年の働き方に対応した最新情報として強力。競合の80%が未対応のトピック。",
+                            "psychological_phase": "phase2_understanding",
+                            "behavioral_trigger": "権威性（JILPT調査） + 一貫性（具体的ステップ提示）"
+                        }
+                    ],
+                    "section_enhancements": [
+                        {
+                            "section_id": "introduction",
+                            "section_title": "導入部",
+                            "assigned_sources": [
+                                "PS001",
+                                "PS002"
+                            ],
+                            "enhancement_strategy": "2024〜{{current_year}}年の最新データで課題の深刻さを数値化。競合の80%が2023年以前データ、鮮度で圧倒的優位。",
+                            "specific_data_to_use": [
+                                {
+                                    "source_id": "PS001",
+                                    "data": "派遣社員の3ヶ月以内離職率29.3%（2024年厚労省調査、前年比+3.2pt）",
+                                    "placement": "オープニングフック",
+                                    "citation_format": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                                    "psychological_effect": "扁桃体活性化: 29.3%という具体的数値で注意を引く。前年比+3.2ptで悪化トレンドを示し、危機感を醸成。",
+                                    "behavioral_trigger": "損失回避"
+                                },
+                                {
+                                    "source_id": "PS002",
+                                    "data": "1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                                    "placement": "データアンカー",
+                                    "citation_format": "（出典: 経済産業省「企業の人材育成投資調査」2024年）",
+                                    "psychological_effect": "扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化。年間4人離職で220万円という計算も提示。",
+                                    "behavioral_trigger": "損失回避"
+                                }
+                            ],
+                            "expected_improvement": "競合の80%が2023年以前データ、鮮度で圧倒的優位。具体的損失額で損失回避動機を強化し、離脱率-13pt、読了率+25%を実現。"
+                        }
+                    ],
+                    "competitive_advantages": [
+                        {
+                            "advantage_id": "CA001",
+                            "advantage": "情報の鮮度",
+                            "competitor_status": {
+                                "latest_data_year": 2023,
+                                "average_data_year": 2022.3,
+                                "articles_with_2024_data": 0
+                            },
+                            "our_status": {
+                                "latest_data_year": {{current_year}},
+                                "average_data_year": 2024.6,
+                                "sources_count": 18,
+                                "sources_with_2024_plus_data": 12
+                            },
+                            "impact": "競合より平均2.3年新しいデータで圧倒的優位。検索順位+2〜3位の効果。",
+                            "implementation": "導入部、Phase 1、各セクションの冒頭で最新データを強調。「2024年最新」「{{current_year}}年調査」等のフレーズを使用。"
+                        },
+                        {
+                            "advantage_id": "CA002",
+                            "advantage": "知識ギャップの解消",
+                            "competitor_status": {
+                                "missing_topics_count": 8,
+                                "shallow_coverage_topics": 5
+                            },
+                            "our_status": {
+                                "filled_gaps_count": 8,
+                                "deep_coverage_topics": 5
+                            },
+                            "impact": "競合が見落としている8つのトピックをカバー。ユニークビジター+20%、直帰率-15%の効果。",
+                            "implementation": "差別化セクション（H2-7: リモート教育、H2-9: AI活用等）として独立展開。各セクションで「競合が触れていない最新情報」と明記。"
+                        }
+                    ],
+                    "data_freshness_comparison": {
+                        "competitor_analysis": {
+                            "average_latest_data_year": 2022.8,
+                            "articles_with_2024_plus_data": 0,
+                            "articles_with_2023_data": 2,
+                            "articles_with_2022_or_older": 8
+                        },
+                        "our_article": {
+                            "latest_data_year": {{current_year}},
+                            "sources_with_2024_plus_data": 12,
+                            "sources_with_2023_data": 6,
+                            "average_data_year": 2024.3
+                        },
+                        "advantage_summary": "平均1.5年の鮮度優位、競合の0%に対し当社は67%が2024年以降データ"
+                    }
+                },
+                "explanation": "完全な一次情報収集の例。3フェーズ対応のデータ分類を含む。"
+            },
+            "example_2_phase_specific_data": {
+                "scenario": "3フェーズ別データ分類の詳細例",
+                "phase_specific_data": {
+                    "phase1_anxiety": {
+                        "description": "扁桃体活性化のためのデータ。問題の深刻さ、損失、リスクを強調。",
+                        "sources": [
+                            "PS001",
+                            "PS002",
+                            "PS003",
+                            "PS004",
+                            "PS005"
+                        ],
+                        "total_count": 5,
+                        "key_data_summary": [
+                            "離職率29.3%（前年比+3.2pt）→ 悪化トレンド",
+                            "1人離職で55万円の損失 → 具体的金額",
+                            "年間4人離職で220万円 → 年間換算",
+                            "教育未実施企業は実施企業より離職率18.5pt高い → リスク明示",
+                            "教育に費やした160時間が無駄に → 時間損失"
+                        ],
+                        "psychological_goal": "扁桃体活性化、損失回避動機の喚起、危機感の醸成",
+                        "usage_sections": [
+                            "導入部",
+                            "H2-1: 失敗する理由",
+                            "H2-2: 教育が必要な理由"
+                        ],
+                        "expected_effect": "離脱率-13pt、読了率+25%、Phase 1→Phase 2への遷移率+18%"
+                    },
+                    "phase2_understanding": {
+                        "description": "前頭前野処理のためのデータ。解決策の有効性、論理的裏付けを提供。",
+                        "sources": [
+                            "PS006",
+                            "PS007",
+                            "PS008",
+                            "PS009",
+                            "PS010",
+                            "PS011",
+                            "PS012",
+                            "PS013",
+                            "PS014",
+                            "PS015",
+                            "PS016",
+                            "PS017"
+                        ],
+                        "total_count": 12,
+                        "key_data_summary": [
+                            "教育投資年間30万円で定着率42%向上",
+                            "OJT:Off-JT = 7:3が最適比率",
+                            "組み合わせ実施は単独より効果1.8倍",
+                            "メンター制度で離職率35%低下",
+                            "教育投資の費用対効果平均240%",
+                            "定期フィードバックで定着率+28%",
+                            "助成金併用で実質負担0〜30万円",
+                            "リモートOJTの成功率: 週1回1on1実施で75%"
+                        ],
+                        "psychological_goal": "前頭前野処理、論理的納得、実践可能性の認識、「これなら解決できる」という確信",
+                        "usage_sections": [
+                            "H2-3: 5ステップ",
+                            "H2-4: OJTとOff-JT",
+                            "H2-5: メンター制度",
+                            "H2-6: 予算別プラン",
+                            "H2-7: リモート対応",
+                            "H2-8: 成功事例",
+                            "H2-9: AI活用",
+                            "H2-10: 評価方法"
+                        ],
+                        "expected_effect": "記事滞在時間+40%、信頼度+45%、Phase 2→Phase 3への遷移率+30%"
+                    },
+                    "phase3_action": {
+                        "description": "線条体活性化のためのデータ。成功イメージ、報酬予測、短期効果を強調。",
+                        "sources": [
+                            "PS018",
+                            "PS019",
+                            "PS020",
+                            "PS021"
+                        ],
+                        "total_count": 4,
+                        "key_data_summary": [
+                            "導入企業300社（社会的証明）",
+                            "平均3ヶ月で離職率35%低下（短期効果）",
+                            "顧客満足度96.8%（高満足度）",
+                            "85%が「効果を実感した」と回答（成功率）"
+                        ],
+                        "psychological_goal": "線条体活性化、報酬予測、成功イメージ、「今すぐやろう」という行動決定",
+                        "usage_sections": [
+                            "H2-11: 今すぐ始められる3ステップ",
+                            "H2-12: よくある質問",
+                            "Final CTA周辺"
+                        ],
+                        "expected_effect": "CVR: 2.7% → 4.0%+（+48%）、Final CTA CVR: 5.0%+"
+                    }
+                },
+                "explanation": "3フェーズ別データ分類の詳細例。各フェーズの心理的目標、使用セクション、期待効果を明記。"
+            },
+            "bad_example_1_old_data": {
+                "scenario": "データが古い（悪い例）",
+                "bad_output": {
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "publication_date": "2021-03-15",
+                            "key_data": "派遣社員の離職率25%"
+                        }
+                    ]
+                },
+                "problems": [
+                    "データが2021年で古すぎる（4年前）",
+                    "2024〜{{current_year}}年の最新データを優先すべき",
+                    "競合との鮮度優位性がない"
+                ],
+                "correction": "2024〜{{current_year}}年の最新データを優先的に収集する。2023年以前のデータは避ける。",
+                "explanation": "情報の鮮度が差別化の鍵。古いデータでは競合に勝てない。"
+            },
+            "bad_example_2_missing_phase_alignment": {
+                "scenario": "3フェーズ分類の欠落（悪い例）",
+                "bad_output": {
+                    "primary_sources": [
+                        {
+                            "source_id": "PS001",
+                            "key_data": "離職率29.3%"
+                        }
+                    ]
+                },
+                "problems": [
+                    "phase_alignment フィールドがない",
+                    "phase_specific_data セクションがない",
+                    "どのフェーズで使用するか不明"
+                ],
+                "correction": "全ての一次情報に phase_alignment（phase1_anxiety/phase2_understanding/phase3_action）を記録する。phase_specific_data セクションを作成する。",
+                "explanation": "3フェーズ対応は記事の心理的設計を強化する最重要要素。必ず実装する。"
+            }
+        },
+        "legacy_examples_source": "examples.json (structured)",
+        "legacy_examples_raw": "{\n    \"example_1_complete_collection\": {\n        \"scenario\": \"完全な一次情報収集の例（3フェーズ対応）\",\n        \"input\": {\n            \"keyword\": \"派遣社員 教育方法\"\n        },\n        \"output\": {\n            \"collection_date\": \"{{current_year}}-10-21T18:00:00Z\",\n            \"keyword\": \"派遣社員 教育方法\",\n            \"primary_sources\": [\n                {\n                    \"source_id\": \"PS001\",\n                    \"source_type\": \"government_statistics\",\n                    \"title\": \"令和6年 派遣労働者実態調査\",\n                    \"organization\": \"厚生労働省\",\n                    \"publication_date\": \"2024-12-15\",\n                    \"url\": \"https://www.mhlw.go.jp/toukei/list/6-18c-r06.html\",\n                    \"access_date\": \"{{current_year}}-10-21\",\n                    \"key_findings\": [\n                        \"派遣社員の3ヶ月以内離職率: 29.3%（前年比+3.2pt）\",\n                        \"教育訓練実施企業: 45.2%（前年比+2.1pt）\",\n                        \"定着率向上効果: 教育実施企業は未実施企業より18.5pt高い\"\n                    ],\n                    \"data_points\": [\n                        {\n                            \"metric\": \"3ヶ月以内離職率\",\n                            \"value\": \"29.3%\",\n                            \"previous_year\": \"26.1%\",\n                            \"change\": \"+3.2pt\",\n                            \"context\": \"2024年度調査、有効回答数3,542社\"\n                        },\n                        {\n                            \"metric\": \"教育訓練実施率\",\n                            \"value\": \"45.2%\",\n                            \"previous_year\": \"43.1%\",\n                            \"change\": \"+2.1pt\",\n                            \"context\": \"派遣会社を対象とした調査\"\n                        },\n                        {\n                            \"metric\": \"定着率の差\",\n                            \"value\": \"18.5pt\",\n                            \"context\": \"教育実施企業と未実施企業の比較\"\n                        }\n                    ],\n                    \"phase_alignment\": \"phase1_anxiety\",\n                    \"psychological_effect\": \"扁桃体活性化: 離職率29.3%という衝撃的数値で注意を引く、前年比+3.2ptで悪化トレンドを示す\",\n                    \"behavioral_trigger\": \"損失回避\",\n                    \"credibility_score\": 0.98,\n                    \"freshness_score\": 0.95,\n                    \"relevance_to_keyword\": \"very_high\"\n                },\n                {\n                    \"source_id\": \"PS002\",\n                    \"source_type\": \"government_statistics\",\n                    \"title\": \"企業の人材育成投資調査 令和6年\",\n                    \"organization\": \"経済産業省\",\n                    \"publication_date\": \"2024-09-20\",\n                    \"url\": \"https://www.meti.go.jp/statistics/...\",\n                    \"access_date\": \"{{current_year}}-10-21\",\n                    \"key_findings\": [\n                        \"1人の派遣社員離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円\",\n                        \"中小企業の平均教育投資: 1人あたり年間18.5万円\",\n                        \"教育投資の費用対効果: 平均240%（投資額の2.4倍の成果）\"\n                    ],\n                    \"data_points\": [\n                        {\n                            \"metric\": \"離職による損失額\",\n                            \"value\": \"55万円\",\n                            \"breakdown\": \"採用コスト35万円 + 教育コスト20万円\",\n                            \"context\": \"派遣社員1人あたりの平均\"\n                        },\n                        {\n                            \"metric\": \"中小企業の教育投資\",\n                            \"value\": \"18.5万円/人・年\",\n                            \"context\": \"従業員50〜300名規模の企業平均\"\n                        },\n                        {\n                            \"metric\": \"教育投資の費用対効果\",\n                            \"value\": \"240%\",\n                            \"context\": \"3年間の追跡調査結果\"\n                        }\n                    ],\n                    \"phase_alignment\": \"phase1_anxiety\",\n                    \"psychological_effect\": \"扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化\",\n                    \"behavioral_trigger\": \"損失回避\",\n                    \"credibility_score\": 0.96,\n                    \"freshness_score\": 0.92,\n                    \"relevance_to_keyword\": \"high\"\n                },\n                {\n                    \"source_id\": \"PS005\",\n                    \"source_type\": \"academic_research\",\n                    \"title\": \"派遣社員の教育投資効果に関する実証研究\",\n                    \"organization\": \"労働政策研究・研修機構（JILPT）\",\n                    \"publication_date\": \"2024-08-20\",\n                    \"url\": \"https://www.jil.go.jp/institute/reports/2024/...\",\n                    \"access_date\": \"{{current_year}}-10-21\",\n                    \"key_findings\": [\n                        \"教育投資1人あたり年間30万円で定着率42%向上\",\n                        \"OJTとOff-JTの組み合わせが最も効果的（単独より1.8倍）\",\n                        \"最適比率: OJT 70% : Off-JT 30%\",\n                        \"メンター制度導入企業は離職率が35%低下\"\n                    ],\n                    \"data_points\": [\n                        {\n                            \"metric\": \"教育投資額と定着率の相関\",\n                            \"value\": \"年間30万円投資で42%向上\",\n                            \"context\": \"中小企業300社を対象とした3年間の追跡調査\"\n                        },\n                        {\n                            \"metric\": \"OJT+Off-JT vs 単独\",\n                            \"value\": \"効果1.8倍\",\n                            \"context\": \"組み合わせ実施企業と単独実施企業の比較\"\n                        },\n                        {\n                            \"metric\": \"最適比率\",\n                            \"value\": \"OJT 70% : Off-JT 30%\",\n                            \"context\": \"定着率が最も高かった比率\"\n                        }\n                    ],\n                    \"phase_alignment\": \"phase2_understanding\",\n                    \"psychological_effect\": \"前頭前野処理: 投資額と費用対効果を明示し、論理的納得を促す。最適比率で具体的な実装方法を提示\",\n                    \"behavioral_trigger\": \"権威性（JILPT研究） + 社会的証明（300社調査）\",\n                    \"credibility_score\": 0.92,\n                    \"freshness_score\": 0.88,\n                    \"relevance_to_keyword\": \"very_high\"\n                },\n                {\n                    \"source_id\": \"PS012\",\n                    \"source_type\": \"industry_report\",\n                    \"title\": \"人材派遣業界白書 2024\",\n                    \"organization\": \"日本人材派遣協会\",\n                    \"publication_date\": \"2024-06-15\",\n                    \"url\": \"https://www.jassa.or.jp/keywords/index3.html\",\n                    \"access_date\": \"{{current_year}}-10-21\",\n                    \"key_findings\": [\n                        \"体系的教育プログラム導入企業: 300社（2024年時点）\",\n                        \"導入企業の平均離職率低下: 35%\",\n                        \"導入企業の顧客満足度: 96.8%\",\n                        \"効果実感までの平均期間: 3ヶ月\"\n                    ],\n                    \"data_points\": [\n                        {\n                            \"metric\": \"導入企業数\",\n                            \"value\": \"300社\",\n                            \"context\": \"2024年6月時点の累計\"\n                        },\n                        {\n                            \"metric\": \"離職率低下\",\n                            \"value\": \"35%\",\n                            \"context\": \"導入前後の平均比較\"\n                        },\n                        {\n                            \"metric\": \"顧客満足度\",\n                            \"value\": \"96.8%\",\n                            \"context\": \"導入企業へのアンケート調査（N=250）\"\n                        },\n                        {\n                            \"metric\": \"効果実感期間\",\n                            \"value\": \"平均3ヶ月\",\n                            \"context\": \"「効果を実感した」と回答した企業の平均\"\n                        }\n                    ],\n                    \"phase_alignment\": \"phase3_action\",\n                    \"psychological_effect\": \"線条体活性化: 導入実績300社で社会的証明、3ヶ月で効果で短期報酬予測、満足度96.8%で成功イメージ\",\n                    \"behavioral_trigger\": \"社会的証明 + 希少性（実績ある企業の仲間入り）\",\n                    \"credibility_score\": 0.88,\n                    \"freshness_score\": 0.90,\n                    \"relevance_to_keyword\": \"high\"\n                }\n            ],\n            \"phase_specific_data\": {\n                \"phase1_anxiety\": {\n                    \"sources\": [\n                        \"PS001\",\n                        \"PS002\",\n                        \"PS003\"\n                    ],\n                    \"total_count\": 5,\n                    \"key_data_summary\": [\n                        \"離職率29.3%（前年比+3.2pt、悪化トレンド）\",\n                        \"1人離職で55万円の損失（採用35万円+教育20万円）\",\n                        \"教育未実施企業の離職率は実施企業より18.5pt高い\",\n                        \"年間4人離職で220万円の損失\",\n                        \"教育に費やした160時間が無駄に\"\n                    ],\n                    \"psychological_goal\": \"扁桃体活性化、損失回避動機の喚起、危機感の醸成\",\n                    \"usage_sections\": [\n                        \"導入部\",\n                        \"H2-1\",\n                        \"H2-2\"\n                    ]\n                },\n                \"phase2_understanding\": {\n                    \"sources\": [\n                        \"PS005\",\n                        \"PS006\",\n                        \"PS007\",\n                        \"PS008\",\n                        \"PS009\",\n                        \"PS010\"\n                    ],\n                    \"total_count\": 12,\n                    \"key_data_summary\": [\n                        \"教育投資年間30万円で定着率42%向上（JILPT研究）\",\n                        \"OJT:Off-JT = 7:3が最適比率\",\n                        \"組み合わせ実施は単独より効果1.8倍\",\n                        \"メンター制度で離職率35%低下\",\n                        \"教育投資の費用対効果平均240%\",\n                        \"定期フィードバックで定着率+28%\"\n                    ],\n                    \"psychological_goal\": \"前頭前野処理、論理的納得、実践可能性の認識\",\n                    \"usage_sections\": [\n                        \"H2-3\",\n                        \"H2-4\",\n                        \"H2-5\",\n                        \"H2-6\",\n                        \"H2-7\",\n                        \"H2-8\",\n                        \"H2-9\",\n                        \"H2-10\"\n                    ]\n                },\n                \"phase3_action\": {\n                    \"sources\": [\n                        \"PS012\",\n                        \"PS013\",\n                        \"PS014\"\n                    ],\n                    \"total_count\": 4,\n                    \"key_data_summary\": [\n                        \"導入企業300社（2024年時点）\",\n                        \"平均3ヶ月で離職率35%低下\",\n                        \"顧客満足度96.8%（N=250）\",\n                        \"85%が「効果を実感した」と回答\"\n                    ],\n                    \"psychological_goal\": \"線条体活性化、報酬予測、成功イメージ、行動決定\",\n                    \"usage_sections\": [\n                        \"H2-11\",\n                        \"H2-12\",\n                        \"Final CTA周辺\"\n                    ]\n                }\n            },\n            \"knowledge_gaps_filled\": [\n                {\n                    \"gap_id\": \"KG001\",\n                    \"gap_description\": \"2024年4月施行の人材開発支援助成金の拡充\",\n                    \"competitor_coverage\": \"0/10記事（誰も言及していない）\",\n                    \"primary_source_id\": \"PS008\",\n                    \"primary_source_details\": {\n                        \"title\": \"令和6年度 人材開発支援助成金のご案内\",\n                        \"organization\": \"厚生労働省\",\n                        \"publication_date\": \"2024-04-01\",\n                        \"url\": \"https://www.mhlw.go.jp/...\",\n                        \"key_finding\": \"派遣社員向け教育訓練に対する助成金が拡充、Off-JT訓練で最大50万円/人、OJTで最大20万円/人\"\n                    },\n                    \"implementation_section\": \"H2-6: 予算別プラン\",\n                    \"implementation_strategy\": \"20万円プランのセクションで「助成金活用で実質負担0円〜10万円も可能」と提示。50万円プランでも「助成金併用で実質負担20〜30万円に」と明記。\",\n                    \"differentiation_value\": \"high\",\n                    \"expected_impact\": \"予算制約のある中小企業への具体的支援策として強力な差別化。「実質0円」という訴求で損失回避動機をさらに強化。\",\n                    \"psychological_phase\": \"phase2_understanding\",\n                    \"behavioral_trigger\": \"損失回避（実質0円） + 権威性（厚労省制度）\"\n                },\n                {\n                    \"gap_id\": \"KG002\",\n                    \"gap_description\": \"リモート・ハイブリッド環境でのOJT実施方法\",\n                    \"competitor_coverage\": \"2/10記事（浅い言及のみ、具体的方法の記載なし）\",\n                    \"primary_source_id\": \"PS010\",\n                    \"primary_source_details\": {\n                        \"title\": \"テレワーク環境における人材育成の実態調査\",\n                        \"organization\": \"労働政策研究・研修機構（JILPT）\",\n                        \"publication_date\": \"2024-07-10\",\n                        \"url\": \"https://www.jil.go.jp/...\",\n                        \"key_finding\": \"リモートOJTを実施している企業は32.5%。効果的な実施のための3つのポイント: ①オンラインツールの活用、②週1回以上の1on1、③進捗の可視化\"\n                    },\n                    \"implementation_section\": \"H2-7: リモート・ハイブリッド対応の教育方法\",\n                    \"implementation_strategy\": \"H2セクションとして独立展開。JILPT調査の3つのポイントを詳細解説。Zoom/Teams等の具体的ツール紹介、1on1の進め方、進捗管理ツール（Trello、Asana等）の活用方法。\",\n                    \"differentiation_value\": \"high\",\n                    \"expected_impact\": \"{{current_year}}年の働き方に対応した最新情報として強力。競合の80%が未対応のトピック。\",\n                    \"psychological_phase\": \"phase2_understanding\",\n                    \"behavioral_trigger\": \"権威性（JILPT調査） + 一貫性（具体的ステップ提示）\"\n                }\n            ],\n            \"section_enhancements\": [\n                {\n                    \"section_id\": \"introduction\",\n                    \"section_title\": \"導入部\",\n                    \"assigned_sources\": [\n                        \"PS001\",\n                        \"PS002\"\n                    ],\n                    \"enhancement_strategy\": \"2024〜{{current_year}}年の最新データで課題の深刻さを数値化。競合の80%が2023年以前データ、鮮度で圧倒的優位。\",\n                    \"specific_data_to_use\": [\n                        {\n                            \"source_id\": \"PS001\",\n                            \"data\": \"派遣社員の3ヶ月以内離職率29.3%（2024年厚労省調査、前年比+3.2pt）\",\n                            \"placement\": \"オープニングフック\",\n                            \"citation_format\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n                            \"psychological_effect\": \"扁桃体活性化: 29.3%という具体的数値で注意を引く。前年比+3.2ptで悪化トレンドを示し、危機感を醸成。\",\n                            \"behavioral_trigger\": \"損失回避\"\n                        },\n                        {\n                            \"source_id\": \"PS002\",\n                            \"data\": \"1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円\",\n                            \"placement\": \"データアンカー\",\n                            \"citation_format\": \"（出典: 経済産業省「企業の人材育成投資調査」2024年）\",\n                            \"psychological_effect\": \"扁桃体活性化: 具体的な損失額55万円で損失回避動機を強化。年間4人離職で220万円という計算も提示。\",\n                            \"behavioral_trigger\": \"損失回避\"\n                        }\n                    ],\n                    \"expected_improvement\": \"競合の80%が2023年以前データ、鮮度で圧倒的優位。具体的損失額で損失回避動機を強化し、離脱率-13pt、読了率+25%を実現。\"\n                }\n            ],\n            \"competitive_advantages\": [\n                {\n                    \"advantage_id\": \"CA001\",\n                    \"advantage\": \"情報の鮮度\",\n                    \"competitor_status\": {\n                        \"latest_data_year\": 2023,\n                        \"average_data_year\": 2022.3,\n                        \"articles_with_2024_data\": 0\n                    },\n                    \"our_status\": {\n                        \"latest_data_year\": {{current_year}},\n                        \"average_data_year\": 2024.6,\n                        \"sources_count\": 18,\n                        \"sources_with_2024_plus_data\": 12\n                    },\n                    \"impact\": \"競合より平均2.3年新しいデータで圧倒的優位。検索順位+2〜3位の効果。\",\n                    \"implementation\": \"導入部、Phase 1、各セクションの冒頭で最新データを強調。「2024年最新」「{{current_year}}年調査」等のフレーズを使用。\"\n                },\n                {\n                    \"advantage_id\": \"CA002\",\n                    \"advantage\": \"知識ギャップの解消\",\n                    \"competitor_status\": {\n                        \"missing_topics_count\": 8,\n                        \"shallow_coverage_topics\": 5\n                    },\n                    \"our_status\": {\n                        \"filled_gaps_count\": 8,\n                        \"deep_coverage_topics\": 5\n                    },\n                    \"impact\": \"競合が見落としている8つのトピックをカバー。ユニークビジター+20%、直帰率-15%の効果。\",\n                    \"implementation\": \"差別化セクション（H2-7: リモート教育、H2-9: AI活用等）として独立展開。各セクションで「競合が触れていない最新情報」と明記。\"\n                }\n            ],\n            \"data_freshness_comparison\": {\n                \"competitor_analysis\": {\n                    \"average_latest_data_year\": 2022.8,\n                    \"articles_with_2024_plus_data\": 0,\n                    \"articles_with_2023_data\": 2,\n                    \"articles_with_2022_or_older\": 8\n                },\n                \"our_article\": {\n                    \"latest_data_year\": {{current_year}},\n                    \"sources_with_2024_plus_data\": 12,\n                    \"sources_with_2023_data\": 6,\n                    \"average_data_year\": 2024.3\n                },\n                \"advantage_summary\": \"平均1.5年の鮮度優位、競合の0%に対し当社は67%が2024年以降データ\"\n            }\n        },\n        \"explanation\": \"完全な一次情報収集の例。3フェーズ対応のデータ分類を含む。\"\n    },\n    \"example_2_phase_specific_data\": {\n        \"scenario\": \"3フェーズ別データ分類の詳細例\",\n        \"phase_specific_data\": {\n            \"phase1_anxiety\": {\n                \"description\": \"扁桃体活性化のためのデータ。問題の深刻さ、損失、リスクを強調。\",\n                \"sources\": [\n                    \"PS001\",\n                    \"PS002\",\n                    \"PS003\",\n                    \"PS004\",\n                    \"PS005\"\n                ],\n                \"total_count\": 5,\n                \"key_data_summary\": [\n                    \"離職率29.3%（前年比+3.2pt）→ 悪化トレンド\",\n                    \"1人離職で55万円の損失 → 具体的金額\",\n                    \"年間4人離職で220万円 → 年間換算\",\n                    \"教育未実施企業は実施企業より離職率18.5pt高い → リスク明示\",\n                    \"教育に費やした160時間が無駄に → 時間損失\"\n                ],\n                \"psychological_goal\": \"扁桃体活性化、損失回避動機の喚起、危機感の醸成\",\n                \"usage_sections\": [\n                    \"導入部\",\n                    \"H2-1: 失敗する理由\",\n                    \"H2-2: 教育が必要な理由\"\n                ],\n                \"expected_effect\": \"離脱率-13pt、読了率+25%、Phase 1→Phase 2への遷移率+18%\"\n            },\n            \"phase2_understanding\": {\n                \"description\": \"前頭前野処理のためのデータ。解決策の有効性、論理的裏付けを提供。\",\n                \"sources\": [\n                    \"PS006\",\n                    \"PS007\",\n                    \"PS008\",\n                    \"PS009\",\n                    \"PS010\",\n                    \"PS011\",\n                    \"PS012\",\n                    \"PS013\",\n                    \"PS014\",\n                    \"PS015\",\n                    \"PS016\",\n                    \"PS017\"\n                ],\n                \"total_count\": 12,\n                \"key_data_summary\": [\n                    \"教育投資年間30万円で定着率42%向上\",\n                    \"OJT:Off-JT = 7:3が最適比率\",\n                    \"組み合わせ実施は単独より効果1.8倍\",\n                    \"メンター制度で離職率35%低下\",\n                    \"教育投資の費用対効果平均240%\",\n                    \"定期フィードバックで定着率+28%\",\n                    \"助成金併用で実質負担0〜30万円\",\n                    \"リモートOJTの成功率: 週1回1on1実施で75%\"\n                ],\n                \"psychological_goal\": \"前頭前野処理、論理的納得、実践可能性の認識、「これなら解決できる」という確信\",\n                \"usage_sections\": [\n                    \"H2-3: 5ステップ\",\n                    \"H2-4: OJTとOff-JT\",\n                    \"H2-5: メンター制度\",\n                    \"H2-6: 予算別プラン\",\n                    \"H2-7: リモート対応\",\n                    \"H2-8: 成功事例\",\n                    \"H2-9: AI活用\",\n                    \"H2-10: 評価方法\"\n                ],\n                \"expected_effect\": \"記事滞在時間+40%、信頼度+45%、Phase 2→Phase 3への遷移率+30%\"\n            },\n            \"phase3_action\": {\n                \"description\": \"線条体活性化のためのデータ。成功イメージ、報酬予測、短期効果を強調。\",\n                \"sources\": [\n                    \"PS018\",\n                    \"PS019\",\n                    \"PS020\",\n                    \"PS021\"\n                ],\n                \"total_count\": 4,\n                \"key_data_summary\": [\n                    \"導入企業300社（社会的証明）\",\n                    \"平均3ヶ月で離職率35%低下（短期効果）\",\n                    \"顧客満足度96.8%（高満足度）\",\n                    \"85%が「効果を実感した」と回答（成功率）\"\n                ],\n                \"psychological_goal\": \"線条体活性化、報酬予測、成功イメージ、「今すぐやろう」という行動決定\",\n                \"usage_sections\": [\n                    \"H2-11: 今すぐ始められる3ステップ\",\n                    \"H2-12: よくある質問\",\n                    \"Final CTA周辺\"\n                ],\n                \"expected_effect\": \"CVR: 2.7% → 4.0%+（+48%）、Final CTA CVR: 5.0%+\"\n            }\n        },\n        \"explanation\": \"3フェーズ別データ分類の詳細例。各フェーズの心理的目標、使用セクション、期待効果を明記。\"\n    },\n    \"bad_example_1_old_data\": {\n        \"scenario\": \"データが古い（悪い例）\",\n        \"bad_output\": {\n            \"primary_sources\": [\n                {\n                    \"source_id\": \"PS001\",\n                    \"publication_date\": \"2021-03-15\",\n                    \"key_data\": \"派遣社員の離職率25%\"\n                }\n            ]\n        },\n        \"problems\": [\n            \"データが2021年で古すぎる（4年前）\",\n            \"2024〜{{current_year}}年の最新データを優先すべき\",\n            \"競合との鮮度優位性がない\"\n        ],\n        \"correction\": \"2024〜{{current_year}}年の最新データを優先的に収集する。2023年以前のデータは避ける。\",\n        \"explanation\": \"情報の鮮度が差別化の鍵。古いデータでは競合に勝てない。\"\n    },\n    \"bad_example_2_missing_phase_alignment\": {\n        \"scenario\": \"3フェーズ分類の欠落（悪い例）\",\n        \"bad_output\": {\n            \"primary_sources\": [\n                {\n                    \"source_id\": \"PS001\",\n                    \"key_data\": \"離職率29.3%\"\n                }\n            ]\n        },\n        \"problems\": [\n            \"phase_alignment フィールドがない\",\n            \"phase_specific_data セクションがない\",\n            \"どのフェーズで使用するか不明\"\n        ],\n        \"correction\": \"全ての一次情報に phase_alignment（phase1_anxiety/phase2_understanding/phase3_action）を記録する。phase_specific_data セクションを作成する。\",\n        \"explanation\": \"3フェーズ対応は記事の心理的設計を強化する最重要要素。必ず実装する。\"\n    }\n}\n"
+    },
+    "checklist": {
+        "source": "four_pillars_checklist.md",
+        "content": "# 4本柱チェックリスト（工程5: 一次情報追加・知識ギャップ解消）\n\n**重要**: 出力前に、以下の全項目を確認してください。\n\n---\n\n## ✅ 基本収集チェック\n\n- [ ] **一次情報源を収集した**\n  - 収集数: ○個 / 目標: 15〜25個\n  - 公的機関データ: ○個\n  - 学術研究: ○個\n  - 業界レポート: ○個\n\n- [ ] **全ての一次情報に出典を記録した**\n  - 組織名: 全て記録\n  - 発表年月: 全て記録\n  - URL: 全て記録\n  - アクセス日: 全て記録\n\n- [ ] **最新データを優先的に収集した**\n  - {{current_year}}年データ: ○個\n  - 2024年データ: ○個\n  - 2023年データ: ○個\n  - 2024年以降の比率: ○% / 目標: 60%以上\n\n- [ ] **平均データ年を算出した**\n  - 平均データ年: 2024.○年\n  - 目標: 2024年以上\n\n---\n\n## ✅ 神経科学チェック（3フェーズ対応）\n\n- [ ] **Phase 1用データを収集した**\n  - 収集数: ○個 / 目標: 5〜8個\n  - 扁桃体活性化データ\n\n- [ ] **Phase 1用データの内容を確認した**\n  - [ ] 問題の深刻さを示す統計\n  - [ ] 損失データ（具体的金額）\n  - [ ] リスクデータ\n  - [ ] 失敗率\n  - [ ] 悪化トレンド（前年比マイナス）\n\n- [ ] **Phase 2用データを収集した**\n  - 収集数: ○個 / 目標: 10〜15個\n  - 前頭前野処理データ\n\n- [ ] **Phase 2用データの内容を確認した**\n  - [ ] 解決策の有効性を示す研究\n  - [ ] 方法論の裏付けデータ\n  - [ ] 成功率\n  - [ ] 効果測定結果\n  - [ ] 比較データ（A vs B）\n  - [ ] 最適比率\n\n- [ ] **Phase 3用データを収集した**\n  - 収集数: ○個 / 目標: 3〜5個\n  - 線条体活性化データ\n\n- [ ] **Phase 3用データの内容を確認した**\n  - [ ] 成功事例\n  - [ ] 具体的な費用対効果\n  - [ ] 導入実績（「○○社が導入」）\n  - [ ] 満足度データ\n  - [ ] 短期間での効果（「3ヶ月で」）\n\n- [ ] **3フェーズ分類を完了した**\n  - 全ての一次情報に phase_alignment を記録\n  - phase_specific_data セクションを作成\n  - 各フェーズのデータサマリーを作成\n\n---\n\n## ✅ 行動経済学チェック（6原則）\n\n### 損失回避（Loss Aversion）\n- [ ] **損失回避データを収集した**\n  - 損失額の具体的データ: ○個\n  - 例: 「1人離職で55万円の損失」\n\n### 社会的証明（Social Proof）\n- [ ] **社会的証明データを収集した**\n  - 導入実績データ: ○個\n  - 満足度データ: ○個\n  - 例: 「300社が導入」「満足度96.8%」\n\n### 権威性（Authority）\n- [ ] **権威性データを収集した**\n  - 公的機関データ: ○個（厚労省、経産省等）\n  - 専門家・研究機関データ: ○個\n  - 例: 「厚生労働省調査」「JILPT研究」\n\n### 一貫性（Consistency）\n- [ ] **一貫性データを収集した**\n  - 段階的プロセスのデータ: ○個\n  - ステップごとの効果データ: ○個\n\n### 好意（Liking）\n- [ ] **好意データを収集した**\n  - 共感を呼ぶデータ: ○個\n  - 同じ課題を持つ企業の割合等\n\n### 希少性（Scarcity）\n- [ ] **希少性データを収集した**\n  - 限定性を示すデータ: ○個\n  - 例: 「助成金は年度内限定」\n\n---\n\n## ✅ LLMOチェック\n\n- [ ] **AI引用可能な形式で保存した**\n  - データと出典を明確に分離\n  - 引用形式を統一\n  - URL を全て記録\n\n- [ ] **引用形式のガイドラインを設定した**\n  - 本文中の引用形式: 定義済み\n  - 参考文献リストの形式: 定義済み\n  - 例: 「（出典: 組織名「タイトル」発表年月）」\n\n- [ ] **セクション独立性を確保した**\n  - 各データが独立して理解可能\n  - 前後の文脈がなくても引用可能\n\n---\n\n## ✅ KGIチェック\n\n- [ ] **CTA用データを収集した**\n  - Early CTA用: ○個\n  - Mid CTA用: ○個\n  - Final CTA用: ○個\n\n- [ ] **Early CTA用データを特定した**\n  - 簡易診断の根拠となるデータ\n  - 課題の普遍性を示すデータ\n\n- [ ] **Mid CTA用データを特定した**\n  - 成功事例データ\n  - 効果測定データ\n\n- [ ] **Final CTA用データを特定した**\n  - 導入実績（「300社が導入」）\n  - 満足度（「96.8%が満足」）\n  - 費用対効果（「3ヶ月で離職率35%低下」）\n\n- [ ] **CVR向上への貢献を評価した**\n  - 各CTAでどのデータを使用するか明確化\n  - データの説得力を評価\n\n---\n\n## ✅ 知識ギャップチェック\n\n- [ ] **知識ギャップを特定した**\n  - 発見数: ○個 / 目標: 5〜10個\n  - high優先度: ○個 / 目標: 3個以上\n\n- [ ] **各ギャップに一次情報を割り当てた**\n  - 全てのギャップに primary_source_id を記録\n  - 一次情報の詳細を記録\n\n- [ ] **競合カバレッジを確認した**\n  - カバレッジ0%（誰も触れていない）: ○個\n  - カバレッジ10〜30%: ○個\n\n- [ ] **実装戦略を設計した**\n  - 各ギャップの implementation_section を特定\n  - 具体的な implementation_strategy を記述\n\n- [ ] **差別化価値を評価した**\n  - high: ○個\n  - medium: ○個\n  - low: ○個\n\n- [ ] **期待効果を記述した**\n  - 各ギャップの expected_impact を記述\n  - 心理的フェーズを明記（phase1/2/3）\n  - 行動経済学トリガーを明記\n\n---\n\n## ✅ セクション割り当てチェック\n\n- [ ] **全H2セクションに一次情報を割り当てた**\n  - 総セクション数: ○個\n  - 一次情報を割り当てたセクション数: ○個\n  - 割り当て率: 100%\n\n- [ ] **導入部への割り当てを完了した**\n  - 割り当て数: ○個 / 目標: 2〜3個\n  - Phase 1用データを優先\n\n- [ ] **Phase 1セクションへの割り当てを完了した**\n  - 各セクションに○個 / 目標: 2〜3個\n  - Phase 1用データを優先\n\n- [ ] **Phase 2セクションへの割り当てを完了した**\n  - 各セクションに○個 / 目標: 1〜3個\n  - Phase 2用データを優先\n\n- [ ] **Phase 3セクションへの割り当てを完了した**\n  - 各セクションに○個 / 目標: 2〜3個\n  - Phase 3用データを優先\n\n- [ ] **各セクションの強化戦略を記述した**\n  - enhancement_strategy を全セクションで記述\n  - specific_data_to_use を詳細に記録\n  - 配置箇所（placement）を明記\n  - 引用形式（citation_format）を記録\n  - 心理的効果（psychological_effect）を記述\n  - 行動トリガー（behavioral_trigger）を記述\n\n---\n\n## ✅ 競合比較チェック\n\n- [ ] **競合の情報鮮度を分析した**\n  - 競合の最新データ年: ○○年\n  - 競合の平均データ年: ○○.○年\n  - 2024年以降データを使用している記事数: ○記事\n\n- [ ] **自社の情報鮮度を設定した**\n  - 自社の最新データ年: {{current_year}}年\n  - 自社の平均データ年: 2024.○年\n  - 2024年以降データの比率: ○%\n\n- [ ] **鮮度優位性を算出した**\n  - 平均データ年の差: +○年\n  - 2024年以降データ比率の差: +○%\n  - 優位性サマリーを記述\n\n- [ ] **競合優位性を記録した**\n  - 情報の鮮度: 具体的な優位性を記述\n  - 知識ギャップの解消: 具体的な優位性を記述\n  - その他の優位性: あれば記述\n\n---\n\n## ✅ 出力チェック\n\n- [ ] **JSON形式で出力した**\n  - templates.jsonに従った構造\n  - 全てのフィールドが揃っている\n\n- [ ] **全データを出力した**\n  - primary_sources（15〜25個）\n  - phase_specific_data（3フェーズ分類）\n  - knowledge_gaps_filled（5〜10個）\n  - section_enhancements（全セクション）\n  - competitive_advantages\n  - data_freshness_comparison\n  - citation_guidelines\n  - implementation_priority\n\n- [ ] **完了確認メッセージを表示した**\n  - 「✅ 工程5完了」メッセージ\n  - 4本柱チェック: 全て確認済み\n  - 収集結果のサマリー\n  - 3フェーズ配分のサマリー\n  - 知識ギャップのサマリー\n  - 競合比較のサマリー\n  - 次の工程への案内\n\n---\n\n## ✅ 総合確認\n\n- [ ] **4本柱すべてを実装した**\n  - 神経科学・行動経済学・LLMO・KGIの全てを確認済み\n\n- [ ] **3フェーズ対応を完了した**\n  - Phase 1用データ: 5〜8個\n  - Phase 2用データ: 10〜15個\n  - Phase 3用データ: 3〜5個\n  - 全ての一次情報に phase_alignment を記録\n\n- [ ] **情報の鮮度を確保した**\n  - 2024年以降データ: 60%以上\n  - 平均データ年: 2024年以上\n  - 競合より平均1年以上新しい\n\n- [ ] **知識ギャップを特定した**\n  - 5〜10個のギャップを発見\n  - 競合カバレッジ0%が3個以上\n  - 全てに一次情報を割り当て\n\n- [ ] **全セクションに割り当てた**\n  - 工程4の全H2セクションに一次情報を割り当て\n  - 各セクションの強化戦略を明確化\n\n- [ ] **引用形式を統一した**\n  - citation_guidelines を設定\n  - AI引用可能な形式\n\n- [ ] **詳細ガイドラインを参照した**\n  - detailed_guidelines.mdの全セクションを確認\n\n- [ ] **具体例を参照した**\n  - examples.jsonで良い例を確認\n\n- [ ] **テンプレートに従った**\n  - templates.jsonの構造を遵守\n\n---\n\n**注意**: 1つでもチェックが漏れている場合は、出力しないでください。\n全項目を確認してから出力してください。\n\n**最重要**: 3フェーズ対応のデータ収集を必ず行ってください。これにより、記事の心理的設計が強化されます。\n",
+        "note": "4本柱チェックリスト（Markdown形式）",
+        "content_source": "four_pillars_checklist.md (full text)"
+    },
+    "important_notes": [
+        "このファイルは元の4ファイルを統合したものです",
+        "精度優先のため、全情報を保持しています",
+        "処理落ち防止のため、JSONの階層構造を最適化しています"
+    ]
+}

@@ -1,0 +1,1557 @@
+{
+    "process_info": {
+        "name": "工程6:アウトライン再生成（強化版）",
+        "version": "5.5",
+        "purpose": "工程6:アウトライン再生成（強化版）の全知識を統合したファイル",
+        "note": "このJSONにはガイドライン・テンプレート・実例・チェックリストの全てが含まれています"
+    },
+    "guidelines": {
+        "source": "detailed_guidelines.md",
+        "content": "# 工程6: アウトライン再生成（工程4+工程5統合） - 詳細ガイドライン\n\n## 1. 工程の目的\n\n工程4の戦略的アウトラインと工程5の一次情報を統合し、執筆可能な最終アウトラインを生成する工程です。\n\n### なぜ重要なのか？\n- **実行可能性の確保**: 工程7（執筆）で即座に執筆できるレベルまで詳細化\n- **4本柱の明示的実装**: 全セクションに神経科学・行動経済学・LLMO・KGIを埋め込み\n- **トークン数の最適化**: AI検索エンジンでの引用率を最大化\n- **一次情報の配置**: 信頼性と差別化を記事に反映\n\n**この工程で生成されたアウトラインの品質が、記事執筆の効率と品質を決定づけます。**\n\n---\n\n## 2. 入力データ構造\n\n### 必須入力（2つ）\n\n**工程4: 戦略的アウトラインの結果**\n```json\n{\n  \"title_candidates\": [...],\n  \"recommended_title\": \"...\",\n  \"sections\": [...], // 全H2セクション\n  \"cta_strategy\": {...},\n  \"three_phase_breakdown\": {...}\n}\n```\n\n**工程5: 一次情報収集の結果**\n```json\n{\n  \"primary_sources\": [...], // 15〜25個\n  \"phase_specific_data\": {...},\n  \"knowledge_gaps_filled\": [...],\n  \"section_enhancements\": [...]\n}\n```\n\n---\n\n## 3. 出力データ構造\n\n### JSON形式（完全版）\ntemplates.jsonの完全な構造を参照してください。\n\n主要な変更点：\n1. **four_pillars フィールドの追加**（全H2セクションに必須）\n2. **token_count_target の追加**（400-600 tokens）\n3. **primary_sources_used の追加**（使用した一次情報）\n4. **citation_details の追加**（引用の詳細）\n5. **section_independence_score の追加**（独立性スコア）\n\n---\n\n## 4. アウトライン統合の基本方針\n\n### 4.1 統合の目的\n\n**工程4のアウトライン（設計図）** + **工程5の一次情報（素材）** = **執筆可能な最終アウトライン**\n\n### 4.2 統合の流れ\n```\n1. 工程4の各セクションを確認\n2. 工程5の section_enhancements から該当セクションのデータを取得\n3. 一次情報をセクションに配置\n4. 4本柱を明示的に埋め込み\n5. トークン数を計算・調整\n6. セクション独立性を確保\n7. 引用形式を適用\n```\n\n---\n\n## 5. 4本柱の明示的埋め込み方法（最重要）\n\n**全てのH2セクション**に four_pillars フィールドを追加してください。これは**絶対要件**です。\n\n### 5.1 four_pillars フィールドの構造\n```json\n{\n  \"section_id\": \"S01\",\n  \"h2\": \"派遣社員の教育が失敗する3つの理由\",\n  \"four_pillars\": {\n    \"neuroscience\": {\n      \"cognitive_load\": \"3概念（体系的プログラム欠如、バランス不足、フィードバック不足）\",\n      \"phase\": \"phase1_anxiety\",\n      \"emotional_trigger\": \"損失データ（教育時間40時間×2,500円=10万円無駄）による不安喚起\",\n      \"sentence_length\": \"20-35文字/文を厳守\"\n    },\n    \"behavioral_economics\": {\n      \"principles\": [\"loss_aversion\", \"authority\"],\n      \"implementation\": \"各失敗による具体的損失額を明示。厚生労働省データで権威性を担保。\",\n      \"data_used\": \"PS001（離職率データ）、PS003（損失額データ）\"\n    },\n    \"llmo\": {\n      \"token_count\": 480,\n      \"target_range\": \"400-600\",\n      \"section_independence\": \"高（冒頭で「派遣社員の教育が失敗する理由」と文脈再提示）\",\n      \"voice_search_optimized\": false,\n      \"list_format\": \"3つの理由を箇条書き（各180字）\"\n    },\n    \"kgi\": {\n      \"cta_proximity\": \"なし（Phase 1は課題認識に集中）\",\n      \"cvr_contribution\": \"損失回避動機を喚起し、Phase 2への遷移率+18%\",\n      \"conversion_element\": \"具体的損失額（10万円、55万円）\"\n    }\n  }\n}\n```\n\n### 5.2 神経科学（neuroscience）の埋め込み\n\n#### cognitive_load（認知負荷）\n**必須**: 1セクション = 3概念以内\n\n**記述方法**:\n```json\n\"cognitive_load\": \"3概念（概念A、概念B、概念C）\"\n```\n\n**例**:\n```json\n\"cognitive_load\": \"3概念（OJT、Off-JT、メンター制度）\"\n```\n\n**確認方法**:\n- H3サブセクションの数を確認\n- 3個以内か？\n- 超過している場合は分割\n\n---\n\n#### phase（心理的フェーズ）\n**必須**: phase1_anxiety / phase2_understanding / phase3_action のいずれか\n\n**記述方法**:\n```json\n\"phase\": \"phase1_anxiety\"\n```\n\n**Phase 1の特徴**:\n- 扁桃体活性化\n- 損失データ、リスクデータ\n- 感情的訴求\n\n**Phase 2の特徴**:\n- 前頭前野処理\n- 論理的説明、データ裏付け\n- 比較検討\n\n**Phase 3の特徴**:\n- 線条体活性化\n- 成功イメージ、短期効果\n- 行動喚起\n\n---\n\n#### emotional_trigger（感情トリガー）\n**必須**: このセクションで喚起する感情を具体的に記述\n\n**記述方法**:\n```json\n\"emotional_trigger\": \"損失データ（55万円）による不安喚起\"\n```\n\n**Phase 1の例**:\n```json\n\"emotional_trigger\": \"離職率29.3%という衝撃的数値で危機感を醸成\"\n```\n\n**Phase 2の例**:\n```json\n\"emotional_trigger\": \"費用対効果 240%という具体的数値で期待感を喚起\"\n```\n\n**Phase 3の例**:\n```json\n\"emotional_trigger\": \"3ヶ月で効果という短期成果で行動意欲を喚起\"\n```\n\n---\n\n#### sentence_length（文の長さ）\n**必須**: 20-35文字/文を厳守\n\n**記述方法**:\n```json\n\"sentence_length\": \"20-35文字/文を厳守\"\n```\n\n**確認方法**:\n- 執筆時に各文を確認\n- 36文字以上の文は2文に分割\n\n---\n\n### 5.3 行動経済学（behavioral_economics）の埋め込み\n\n#### principles（使用する原則）\n**必須**: 配列形式で1つ以上の原則を記述\n\n**6原則**:\n- loss_aversion（損失回避）\n- social_proof（社会的証明）\n- authority（権威性）\n- consistency（一貫性）\n- liking（好意）\n- scarcity（希少性）\n\n**記述方法**:\n```json\n\"principles\": [\"loss_aversion\", \"authority\"]\n```\n\n**Phase 1での推奨原則**:\n- loss_aversion（損失回避）\n- liking（好意）\n\n**Phase 2での推奨原則**:\n- authority（権威性）\n- social_proof（社会的証明）\n- consistency（一貫性）\n\n**Phase 3での推奨原則**:\n- scarcity（希少性）\n- social_proof（社会的証明）\n\n---\n\n#### implementation（実装方法）\n**必須**: 原則をどう実装するか具体的に記述\n\n**記述方法**:\n```json\n\"implementation\": \"各失敗による具体的損失額を明示（10万円、55万円）。厚生労働省データで権威性を担保。\"\n```\n\n**例**:\n```json\n\"implementation\": \"導入企業300社、満足度96.8%を明示して社会的証明。月10社限定で希少性を訴求。\"\n```\n\n---\n\n#### data_used（使用するデータ）\n**必須**: 使用する一次情報のsource_idを記述\n\n**記述方法**:\n```json\n\"data_used\": \"PS001（離職率データ）、PS003（損失額データ）\"\n```\n\n---\n\n### 5.4 LLMO（llmo）の埋め込み\n\n#### token_count（トークン数）\n**必須**: 実際のトークン数を記録\n\n**記述方法**:\n```json\n\"token_count\": 480\n```\n\n**計算方法**:\n```\nトークン数 ≒ 文字数 ÷ 1.7（日本語の平均）\n```\n\n**例**:\n```\n800文字 ÷ 1.7 ≒ 470 tokens\n```\n\n---\n\n#### target_range（目標範囲）\n**必須**: 常に \"400-600\"\n\n**記述方法**:\n```json\n\"target_range\": \"400-600\"\n```\n\n---\n\n#### section_independence（セクション独立性）\n**必須**: 高 / 中 / 低 のいずれか\n\n**記述方法**:\n```json\n\"section_independence\": \"高（冒頭で文脈を再提示）\"\n```\n\n**「高」の条件**:\n- 前セクションへの言及なし\n- 冒頭で文脈を再提示\n- 単独で理解可能\n\n**「中」の条件**:\n- 軽度の前セクション依存\n- ほぼ単独で理解可能\n\n**「低」の条件**:\n- 前セクションを読まないと理解困難\n- **これは避けるべき**\n\n---\n\n#### voice_search_optimized（音声検索最適化）\n**必須**: true / false\n\n**記述方法**:\n```json\n\"voice_search_optimized\": true\n```\n\n**trueの条件**:\n- H2が質問形式\n- 例: 「派遣社員の教育にはどのくらいの期間が必要か？」\n\n**falseの条件**:\n- H2が質問形式ではない\n\n---\n\n#### list_format（箇条書き形式）\n**必須**: 箇条書きの形式を記述\n\n**記述方法**:\n```json\n\"list_format\": \"5項目の箇条書き（各30字）\"\n```\n\n**例**:\n```json\n\"list_format\": \"3つの理由を箇条書き（各180字）\"\n```\n\n---\n\n### 5.5 KGI（kgi）の埋め込み\n\n#### cta_proximity（CTA配置）\n**必須**: CTAとの位置関係を記述\n\n**記述方法**:\n```json\n\"cta_proximity\": \"Early CTA配置（650字地点）\"\n```\n\n**パターン**:\n- \"Early CTA配置（650字地点）\"\n- \"Mid CTA配置（2,800字地点）\"\n- \"Final CTA配置（4,500字地点）\"\n- \"なし\"\n\n---\n\n#### cvr_contribution（CVRへの貢献）\n**必須**: このセクションがCVRにどう貢献するか記述\n\n**記述方法**:\n```json\n\"cvr_contribution\": \"損失回避動機を喚起し、Phase 2への遷移率+18%\"\n```\n\n**Phase 1の例**:\n```json\n\"cvr_contribution\": \"Early CTAで3〜5%のCVR。離脱防止効果+13%。\"\n```\n\n**Phase 2の例**:\n```json\n\"cvr_contribution\": \"Mid CTAで2〜3%のCVR。信頼度+45%。\"\n```\n\n**Phase 3の例**:\n```json\n\"cvr_contribution\": \"Final CTAで2〜3%のCVR。総CVR 7〜11%達成。\"\n```\n\n---\n\n#### conversion_element（転換要素）\n**必須**: CVRに貢献する要素を記述\n\n**記述方法**:\n```json\n\"conversion_element\": \"具体的損失額（10万円、55万円）\"\n```\n\n**例**:\n```json\n\"conversion_element\": \"導入実績300社、満足度96.8%、3ヶ月で効果\"\n```\n\n---\n\n## 6. トークン数の計算・調整方法（最重要）\n\n### 6.1 トークン数の目標\n\n**H2セクション**: 400-600 tokens\n\n**理由**:\n- AI検索エンジン（ChatGPT、Perplexity等）の最適処理単位\n- RAG（Retrieval-Augmented Generation）検索で引用されやすい\n- 1セクション = 1つの完結した情報単位\n\n**H3サブセクション**: 150-250 tokens\n\n---\n\n### 6.2 トークン数の計算方法\n\n**日本語の場合**:\n```\nトークン数 ≒ 文字数 ÷ 1.7\n```\n\n**例**:\n```\n800文字 ÷ 1.7 ≒ 470 tokens\n680文字 ÷ 1.7 ≒ 400 tokens\n1,020文字 ÷ 1.7 ≒ 600 tokens\n```\n\n**逆算（文字数の計算）**:\n```\n文字数 ≒ トークン数 × 1.7\n```\n\n**例**:\n```\n400 tokens × 1.7 ≒ 680文字\n600 tokens × 1.7 ≒ 1,020文字\n```\n\n---\n\n### 6.3 トークン数の調整方法\n\n#### ケース1: トークン数が不足（400未満）\n\n**原因**:\n- 一次情報が不足\n- 説明が浅い\n\n**対策**:\n1. **一次情報を追加**\n   - 工程5の phase_specific_data から追加データを探す\n   - 該当フェーズのデータを優先\n\n2. **説明を詳細化**\n   - 具体例を追加\n   - データの背景を説明\n   - 実践方法を詳細化\n\n3. **H3サブセクションを追加**\n   - 新しい視点を追加\n\n**例**:\n```\n現状: 350 tokens（不足）\n対策: 一次情報PS007を追加（データ: メンター制度で離職率35%低下）\n結果: 480 tokens（適正範囲）\n```\n\n---\n\n#### ケース2: トークン数が超過（600超）\n\n**原因**:\n- 情報が多すぎる\n- 1セクションで複数のトピックを扱っている\n\n**対策**:\n1. **H3サブセクションに分割**\n   - 最も効果的な方法\n   - 2つのH3に分ける\n\n2. **冗長な説明を削減**\n   - 重複する内容を削除\n   - より簡潔な表現に\n\n3. **一部の情報を別セクションに移動**\n   - トピックが異なる場合\n\n**例**:\n```\n現状: 720 tokens（超過）\n\n対策1: H3を2つに分割\n- H3-1「OJTの実施方法」: 360 tokens\n- H3-2「Off-JTの実施方法」: 360 tokens\n\n対策2: 冗長な説明を削減\n- 削減前: 「派遣社員の教育において、OJTとOff-JTを適切に組み合わせることが非常に重要です。」（40字）\n- 削減後: 「OJTとOff-JTの組み合わせが重要です。」（20字）\n```\n\n---\n\n### 6.4 トークン数の記録\n\n**各セクションに以下を記録**:\n```json\n{\n  \"h2\": \"見出し\",\n  \"word_count_target\": 800,\n  \"token_count_target\": 470,\n  \"four_pillars\": {\n    \"llmo\": {\n      \"token_count\": 470,\n      \"target_range\": \"400-600\"\n    }\n  }\n}\n```\n\n---\n\n## 7. 一次情報の配置方法\n\n### 7.1 配置の基本方針\n\n工程5の section_enhancements から、各セクションに割り当てられた一次情報を配置します。\n\n**配置すべき情報**:\n- データ本体\n- 出典（組織名、タイトル、発表年月）\n- 引用形式\n- 配置箇所\n\n---\n\n### 7.2 配置の具体例\n\n**工程5の section_enhancements**:\n```json\n{\n  \"section_id\": \"H2-1\",\n  \"section_title\": \"派遣社員の教育が失敗する3つの理由\",\n  \"assigned_sources\": [\"PS001\", \"PS003\"],\n  \"specific_data_to_use\": [\n    {\n      \"source_id\": \"PS001\",\n      \"data\": \"派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）\",\n      \"placement\": \"オープニング\",\n      \"citation_format\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\"\n    }\n  ]\n}\n```\n\n**工程6での配置**:\n```json\n{\n  \"section_id\": \"S01\",\n  \"h2\": \"派遣社員の教育が失敗する3つの理由\",\n  \"primary_sources_used\": [\n    {\n      \"source_id\": \"PS001\",\n      \"data\": \"派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）\",\n      \"placement\": \"オープニング（H2直後の1段落目）\",\n      \"citation\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n      \"purpose\": \"問題の深刻さを数値で示し、読者の注意を引く\"\n    },\n    {\n      \"source_id\": \"PS003\",\n      \"data\": \"1人の離職による損失: 55万円\",\n      \"placement\": \"理由1のH3内\",\n      \"citation\": \"（出典: 経済産業省「企業の人材育成投資調査」2024年）\",\n      \"purpose\": \"具体的損失額で損失回避動機を喚起\"\n    }\n  ]\n}\n```\n\n---\n\n### 7.3 配置箇所の指定\n\n**配置箇所のパターン**:\n1. **オープニング（H2直後）**\n   - セクションの冒頭、導入部分\n   - 最も重要なデータ\n\n2. **H3サブセクション内**\n   - 各H3の本文中\n   - 裏付けデータ\n\n3. **まとめ（セクション末尾）**\n   - セクションの結論部分\n   - 総括データ\n\n**記述方法**:\n```json\n\"placement\": \"オープニング（H2直後の1段落目）\"\n\"placement\": \"理由1のH3内（2段落目）\"\n\"placement\": \"まとめ（セクション末尾）\"\n```\n\n---\n\n## 8. セクション独立性の確保\n\n### 8.1 セクション独立性とは\n\n**定義**: 前のセクションを読まなくても、そのセクション単独で理解できる状態\n\n**重要性**:\n- AI検索エンジンは1セクションのみを引用することが多い\n- セクション独立性が高いほど、引用率が向上\n- 目標: AI引用率+35%\n\n---\n\n### 8.2 独立性を高める方法\n\n#### 方法1: 冒頭で文脈を再提示\n\n**悪い例（独立性低）**:\n```\nH2-3: 効果的な5ステップ\n\nステップ1: ニーズ分析を行います。\n```\n\n→ 何の5ステップか不明。前のセクションを読まないと理解できない。\n\n**良い例（独立性高）**:\n```\nH2-3: 効果的な派遣社員教育の5ステップ\n\n派遣社員の定着率を向上させるための効果的な教育方法として、以下の5ステップを紹介します。\n\nステップ1: ニーズ分析（1週間）\n```\n\n→ 「派遣社員教育」という文脈が明確。単独で理解可能。\n\n---\n\n#### 方法2: 前セクションへの言及を避ける\n\n**避けるべき表現**:\n- 「前述の通り」\n- 「先ほど説明した」\n- 「上記の理由から」\n\n**代替表現**:\n- 「派遣社員の教育において」（文脈を再提示）\n- 「一般的に」\n- 「多くの企業で」\n\n---\n\n#### 方法3: 各セクションを完結させる\n\n**各セクションに含めるべき要素**:\n1. 導入（文脈の提示）\n2. 本論（具体的内容）\n3. まとめ（要点の再確認）\n\n---\n\n### 8.3 独立性スコアの評価\n\n**独立性スコアの基準**:\n- **高（0.8〜1.0）**: 前セクション依存なし、単独で完全に理解可能\n- **中（0.5〜0.7）**: 軽度の前セクション依存、ほぼ単独で理解可能\n- **低（0.0〜0.4）**: 前セクションを読まないと理解困難（これは避ける）\n\n**記録方法**:\n```json\n{\n  \"h2\": \"見出し\",\n  \"section_independence_score\": 0.9,\n  \"independence_notes\": \"冒頭で「派遣社員教育の5ステップ」と文脈を明確化。前セクション依存なし。\"\n}\n```\n\n---\n\n## 9. 引用形式の設計\n\n### 9.1 引用形式\n\n**本文中の引用**:\n```\n（出典: 組織名「タイトル」発表年月）\n```\n\n**例**:\n```\n派遣社員の3ヶ月以内離職率は29.3%です（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。\n```\n\n---\n\n### 9.2 引用の配置\n\n**配置ルール**:\n- データ・統計の直後に配置\n- 1段落に1つの引用を原則とする\n- 複数のデータがある場合は、それぞれに引用\n\n**例**:\n```\n派遣社員の離職率は29.3%です（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。1人の離職による損失は55万円に達します（出典: 経済産業省「企業の人材育成投資調査」2024年）。\n```\n\n---\n\n### 9.3 参考文献リスト\n\n**記事末尾に参考文献リストを作成**:\n```markdown\n## 参考文献\n\n1. 厚生労働省「令和6年派遣労働者実態調査」2024年12月\n   https://www.mhlw.go.jp/...\n\n2. 経済産業省「企業の人材育成投資調査」2024年\n   https://www.meti.go.jp/...\n\n3. 労働政策研究・研修機構「派遣社員の教育投資効果に関する実証研究」2024年8月\n   https://www.jil.go.jp/...\n```\n\n---\n\n## 10. 知識ギャップの実装\n\n### 10.1 実装の基本方針\n\n工程5で発見した知識ギャップを、具体的にどのセクションでどう実装するかを設計します。\n\n**実装方法**:\n1. **新規H2セクションとして独立**\n2. **既存H2セクション内にH3として追加**\n3. **既存H3内に情報を追加**\n\n---\n\n### 10.2 実装の具体例\n\n**工程5の knowledge_gaps_filled**:\n```json\n{\n  \"gap_id\": \"KG001\",\n  \"gap_description\": \"2024年4月施行の人材開発支援助成金の拡充\",\n  \"competitor_coverage\": \"0/10記事\",\n  \"implementation_section\": \"H2-6: 予算別プラン\",\n  \"implementation_strategy\": \"20万円プランで「助成金活用で実質負担0円も可能」と提示\"\n}\n```\n\n**工程6での実装**:\n```json\n{\n  \"section_id\": \"S06\",\n  \"h2\": \"予算別・最適教育プラン【20万円/50万円/100万円】\",\n  \"knowledge_gap_implementation\": [\n    {\n      \"gap_id\": \"KG001\",\n      \"implementation_method\": \"既存H3内に追加\",\n      \"location\": \"H3-1「20万円プラン」の末尾\",\n      \"content_summary\": \"人材開発支援助成金を活用すれば、Off-JT訓練で最大50万円/人、OJTで最大20万円/人の助成が受けられ、実質負担を大幅に削減できることを説明。具体的な申請方法へのリンクも提示。\",\n      \"differentiation_value\": \"high（競合の0%が言及）\",\n      \"expected_word_count\": 150\n    }\n  ]\n}\n```\n\n---\n\n## 11. 完了基準\n\n工程6は以下の条件を全て満たした時点で完了:\n- [ ] 工程4と工程5のデータを統合している\n- [ ] **全てのH2セクションに four_pillars フィールドを追加している**（最重要）\n- [ ] **全てのH2セクションのトークン数が400-600の範囲内**（最重要）\n- [ ] 全てのセクションに一次情報を配置している\n- [ ] 引用形式を全ての一次情報に適用している\n- [ ] セクション独立性を確保している（スコア0.8以上）\n- [ ] 知識ギャップを実装している\n- [ ] JSON形式で出力している\n- [ ] 4本柱チェックリストの全項目を確認している\n\n---\n\nこれで detailed_guidelines.md は完了です。\n",
+        "note": "完全なガイドラインをMarkdown形式で保持（精度優先）",
+        "content_source": "detailed_guidelines.md (full text)"
+    },
+    "templates": {
+        "source": "templates.json",
+        "content": {
+            "output_template_complete": {
+                "generation_date": "string (ISO 8601形式: {{current_year}}-10-21T19:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "outline_version": "string (v2_enhanced_with_sources)",
+                "title_candidates": [
+                    {
+                        "title": "string (タイトル文字列、30〜40文字)",
+                        "character_count": "number (文字数)",
+                        "seo_score": "number (SEOスコア、0.0〜1.0)",
+                        "reasons": [
+                            "string"
+                        ],
+                        "target_audience": "string (想定読者)",
+                        "differentiation": "string (差別化ポイント)"
+                    }
+                ],
+                "recommended_title": "string (推奨タイトル)",
+                "meta_description": "string (120〜150文字のメタディスクリプション)",
+                "article_structure_overview": {
+                    "total_word_count_target": "number (総文字数目標、4500〜5000)",
+                    "total_token_count_target": "number (総トークン数目標)",
+                    "total_sections": "number (総セクション数、10〜13)",
+                    "average_token_count_per_section": "number (平均トークン数/セクション)",
+                    "three_phase_breakdown": {
+                        "phase1_anxiety": {
+                            "word_count": "number (文字数、600〜800)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase2_understanding": {
+                            "word_count": "number (文字数、3000〜3500)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase3_action": {
+                            "word_count": "number (文字数、600〜1000)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        }
+                    },
+                    "reading_time": "string (読了時間、例: 12〜15分)",
+                    "readability_level": "string (可読性レベル、例: 中級（JLPT N3〜N2相当）)"
+                },
+                "introduction": {
+                    "word_count_target": "number (文字数目標、400〜500)",
+                    "token_count_target": "number (トークン数目標)",
+                    "four_pillars": {
+                        "neuroscience": {
+                            "cognitive_load": "string (3概念以内)",
+                            "phase": "string (phase1_anxiety)",
+                            "emotional_trigger": "string (感情トリガー)",
+                            "sentence_length": "string (20-35文字/文を厳守)"
+                        },
+                        "behavioral_economics": {
+                            "principles": [
+                                "string (使用する原則)"
+                            ],
+                            "implementation": "string (実装方法)",
+                            "data_used": "string (使用するデータのsource_id)"
+                        },
+                        "llmo": {
+                            "token_count": "number (実際のトークン数)",
+                            "target_range": "string (400-600)",
+                            "section_independence": "string (高/中/低)",
+                            "voice_search_optimized": "boolean",
+                            "list_format": "string (箇条書き形式)"
+                        },
+                        "kgi": {
+                            "cta_proximity": "string (Early CTA配置 / なし)",
+                            "cvr_contribution": "string (CVRへの貢献)",
+                            "conversion_element": "string (転換要素)"
+                        }
+                    },
+                    "primary_sources_used": [
+                        {
+                            "source_id": "string (PS001)",
+                            "data": "string (データ本体)",
+                            "placement": "string (配置箇所)",
+                            "citation": "string (引用形式)",
+                            "purpose": "string (使用目的)"
+                        }
+                    ],
+                    "structure": {
+                        "opening_hook": "string (オープニングフック、100字)",
+                        "data_anchor": "string (データアンカー、100字)",
+                        "empathy": "string (共感・課題提起、150字)",
+                        "value_proposition": "string (記事の価値提案、100字)",
+                        "key_points": [
+                            "string (主要ポイント)"
+                        ]
+                    },
+                    "section_independence_score": "number (0.0〜1.0)",
+                    "independence_notes": "string (独立性に関する説明)"
+                },
+                "sections": [
+                    {
+                        "section_id": "string (S01, S02...)",
+                        "h2": "string (H2見出し)",
+                        "section_number": "number (セクション番号)",
+                        "word_count_target": "number (文字数目標)",
+                        "token_count_target": "number (トークン数目標、400-600)",
+                        "psychological_phase": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_goal": "string (このセクションで達成すべき心理的目標)",
+                        "four_pillars": {
+                            "neuroscience": {
+                                "cognitive_load": "string (3概念（A、B、C）)",
+                                "phase": "string (phase1/phase2/phase3)",
+                                "emotional_trigger": "string (具体的な感情トリガー)",
+                                "sentence_length": "string (20-35文字/文を厳守)"
+                            },
+                            "behavioral_economics": {
+                                "principles": [
+                                    "string (loss_aversion / social_proof / authority / consistency / liking / scarcity)"
+                                ],
+                                "implementation": "string (具体的な実装方法)",
+                                "data_used": "string (使用する一次情報のsource_id)"
+                            },
+                            "llmo": {
+                                "token_count": "number (実際のトークン数)",
+                                "target_range": "string (400-600)",
+                                "section_independence": "string (高 / 中 / 低 + 説明)",
+                                "voice_search_optimized": "boolean (true / false)",
+                                "list_format": "string (箇条書きの形式)"
+                            },
+                            "kgi": {
+                                "cta_proximity": "string (Early CTA配置 / Mid CTA配置 / Final CTA配置 / なし)",
+                                "cvr_contribution": "string (具体的な貢献)",
+                                "conversion_element": "string (転換要素)"
+                            }
+                        },
+                        "primary_sources_used": [
+                            {
+                                "source_id": "string (PS001, PS002...)",
+                                "data": "string (データ本体)",
+                                "placement": "string (配置箇所: オープニング / H3内 / まとめ)",
+                                "citation": "string (引用形式: （出典: 組織名「タイトル」発表年月）)",
+                                "purpose": "string (使用目的)"
+                            }
+                        ],
+                        "subsections": [
+                            {
+                                "h3": "string (H3見出し)",
+                                "word_count_target": "number (文字数目標)",
+                                "token_count_target": "number (トークン数目標、150-250)",
+                                "key_points": [
+                                    "string (ポイント1)",
+                                    "string (ポイント2)",
+                                    "string (ポイント3)"
+                                ],
+                                "keywords_to_include": {
+                                    "essential": [
+                                        "string (必須キーワード)"
+                                    ],
+                                    "standard": [
+                                        "string (標準キーワード)"
+                                    ],
+                                    "unique": [
+                                        "string (独自キーワード)"
+                                    ]
+                                },
+                                "differentiation_element": "string (競合との差別化要素)"
+                            }
+                        ],
+                        "visual_content": {
+                            "type": "string (chart / table / infographic / image)",
+                            "title": "string (図表のタイトル)",
+                            "description": "string (図表の内容説明)",
+                            "purpose": "string (図表の目的)"
+                        },
+                        "cta_placement": "boolean (CTAを配置するか)",
+                        "cta_details": {
+                            "type": "string (early/mid/final)",
+                            "text": "string (CTA文言)",
+                            "offer": "string (提供内容)",
+                            "expected_cvr": "string (期待CVR)"
+                        },
+                        "section_independence_score": "number (0.0〜1.0)",
+                        "independence_notes": "string (独立性に関する説明)",
+                        "knowledge_gap_implementation": [
+                            {
+                                "gap_id": "string (KG001, KG002...)",
+                                "implementation_method": "string (新規H2 / 既存H2内にH3追加 / 既存H3内に追加)",
+                                "location": "string (配置場所)",
+                                "content_summary": "string (内容の要約)",
+                                "differentiation_value": "string (high / medium / low)",
+                                "expected_word_count": "number (予想文字数)"
+                            }
+                        ]
+                    }
+                ],
+                "cta_strategy": {
+                    "total_cta_count": "number (総CTA数、3)",
+                    "ctas": [
+                        {
+                            "type": "string (early/mid/final)",
+                            "position": "string (配置位置、例: 650字前後)",
+                            "offer": "string (提供内容)",
+                            "text": "string (CTA文言)",
+                            "psychological_barrier": "string (心理的ハードル: 最低/低/中)",
+                            "expected_cvr": "string (期待CVR、例: 3〜5%)",
+                            "keywords": [
+                                "string (使用キーワード)"
+                            ]
+                        }
+                    ],
+                    "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                },
+                "four_pillars_summary": {
+                    "neuroscience": {
+                        "phase1_sections": "number (Phase 1セクション数)",
+                        "phase2_sections": "number (Phase 2セクション数)",
+                        "phase3_sections": "number (Phase 3セクション数)",
+                        "cognitive_load_compliance": "string (3概念以内を全セクションで遵守: ○%)",
+                        "sentence_length_target": "string (20-35文字/文)"
+                    },
+                    "behavioral_economics": {
+                        "principles_used": {
+                            "loss_aversion": "number (使用セクション数)",
+                            "social_proof": "number (使用セクション数)",
+                            "authority": "number (使用セクション数)",
+                            "consistency": "number (使用セクション数)",
+                            "liking": "number (使用セクション数)",
+                            "scarcity": "number (使用セクション数)"
+                        },
+                        "total_implementations": "number (総実装数)",
+                        "average_per_section": "number (平均/セクション)"
+                    },
+                    "llmo": {
+                        "token_count_compliance": {
+                            "within_range": "number (400-600の範囲内セクション数)",
+                            "total_sections": "number (総セクション数)",
+                            "compliance_rate": "string (○%)"
+                        },
+                        "average_token_count": "number (平均トークン数)",
+                        "section_independence": {
+                            "high": "number (独立性「高」のセクション数)",
+                            "medium": "number (独立性「中」のセクション数)",
+                            "low": "number (独立性「低」のセクション数)"
+                        },
+                        "voice_search_optimized_sections": "number (音声検索最適化セクション数)"
+                    },
+                    "kgi": {
+                        "cta_placements": {
+                            "early": "number (Early CTA配置セクション数)",
+                            "mid": "number (Mid CTA配置セクション数)",
+                            "final": "number (Final CTA配置セクション数)"
+                        },
+                        "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                    }
+                },
+                "token_count_summary": {
+                    "total_token_count": "number (総トークン数)",
+                    "total_word_count": "number (総文字数)",
+                    "average_token_count_per_section": "number (平均トークン数/セクション)",
+                    "token_count_distribution": {
+                        "within_400_600": "number (400-600の範囲内)",
+                        "below_400": "number (400未満)",
+                        "above_600": "number (600超)"
+                    },
+                    "token_count_compliance_rate": "string (○%)"
+                },
+                "section_independence_summary": {
+                    "average_independence_score": "number (平均独立性スコア)",
+                    "independence_distribution": {
+                        "high_0.8_to_1.0": "number (0.8〜1.0のセクション数)",
+                        "medium_0.5_to_0.7": "number (0.5〜0.7のセクション数)",
+                        "low_0.0_to_0.4": "number (0.0〜0.4のセクション数)"
+                    },
+                    "target_achievement": "string (目標: 80%以上が「高」、実績: ○%)"
+                },
+                "primary_sources_distribution": {
+                    "total_sources_used": "number (使用した一次情報の総数)",
+                    "sources_by_phase": {
+                        "phase1": "number (Phase 1で使用)",
+                        "phase2": "number (Phase 2で使用)",
+                        "phase3": "number (Phase 3で使用)"
+                    },
+                    "average_sources_per_section": "number (平均/セクション)",
+                    "citation_compliance": "string (全ての一次情報に引用形式を適用: 100%)"
+                },
+                "knowledge_gap_implementation": {
+                    "total_gaps_filled": "number (実装した知識ギャップ数)",
+                    "implementation_methods": {
+                        "new_h2_section": "number (新規H2セクション)",
+                        "h3_in_existing_h2": "number (既存H2内にH3追加)",
+                        "content_in_existing_h3": "number (既存H3内に追加)"
+                    },
+                    "differentiation_value_distribution": {
+                        "high": "number (差別化価値「high」の数)",
+                        "medium": "number (差別化価値「medium」の数)",
+                        "low": "number (差別化価値「low」の数)"
+                    }
+                },
+                "keyword_distribution_summary": {
+                    "main_keyword": {
+                        "keyword": "string (メインキーワード)",
+                        "target_density": "number (目標密度%、1.5)",
+                        "expected_occurrences": "number (期待出現回数)"
+                    },
+                    "essential_keywords_count": "number (Essential キーワード数)",
+                    "standard_keywords_count": "number (Standard キーワード数)",
+                    "unique_keywords_count": "number (Unique キーワード数)",
+                    "total_keywords_used": "number (総キーワード使用数)"
+                },
+                "visual_content_plan": {
+                    "total_visual_count": "number (総視覚要素数、8〜12)",
+                    "visuals": [
+                        {
+                            "type": "string (chart/table/infographic/image)",
+                            "title": "string (タイトル)",
+                            "section": "string (配置セクション、例: S01)",
+                            "purpose": "string (目的)",
+                            "description": "string (詳細説明)"
+                        }
+                    ]
+                },
+                "differentiation_implementation": {
+                    "差別化要素名": {
+                        "element": "string (差別化要素の名称)",
+                        "sections": [
+                            "string (実装セクション)"
+                        ],
+                        "implementation_details": "string (具体的な実装方法)",
+                        "impact": "string (期待される効果)"
+                    }
+                },
+                "quality_targets": {
+                    "reading_time": "string (読了時間、12〜15分)",
+                    "readability_level": "string (可読性レベル)",
+                    "keyword_density": {
+                        "main_keyword": "string (メインKW密度、1.5%)",
+                        "essential_keywords": "string (Essential共起語密度、各0.5〜1.0%)"
+                    },
+                    "internal_links": "string (内部リンク数、3〜5箇所)",
+                    "external_links": "string (外部リンク数、5〜7箇所（一次情報源）)"
+                },
+                "reference_list": [
+                    {
+                        "number": "number (番号)",
+                        "organization": "string (組織名)",
+                        "title": "string (タイトル)",
+                        "publication_date": "string (発表年月)",
+                        "url": "string (URL)"
+                    }
+                ],
+                "execution_readiness": {
+                    "outline_completeness": "string (100%)",
+                    "data_placement_clarity": "string (100%)",
+                    "citation_format_uniformity": "string (100%)",
+                    "four_pillars_implementation": "string (全セクションで実装済み)",
+                    "token_count_compliance": "string (○%が400-600の範囲内)",
+                    "section_independence": "string (平均スコア○.○)",
+                    "ready_for_writing": "boolean (true)"
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程6完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "outline_integration_summary": {
+                    "title": "アウトライン統合結果:",
+                    "items": [
+                        "├─ 総セクション数: ○個（H2）",
+                        "├─ 総文字数目標: ○○字",
+                        "├─ 総トークン数: ○○tokens",
+                        "├─ 平均トークン数: ○○tokens/セクション",
+                        "└─ 読了時間: 12〜15分"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全セクションで確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 全○セクションで実装",
+                        "│  ├─ 認知負荷3概念以内: 全て確認",
+                        "│  ├─ Phase 1: ○セクション",
+                        "│  ├─ Phase 2: ○セクション",
+                        "│  └─ Phase 3: ○セクション",
+                        "├─ 行動経済学: ✓ 6原則を配置",
+                        "│  ├─ 各セクションに最低1原則: 確認済み",
+                        "│  ├─ loss_aversion: ○セクション",
+                        "│  ├─ social_proof: ○セクション",
+                        "│  ├─ authority: ○セクション",
+                        "│  └─ その他原則: ○セクション",
+                        "├─ LLMO: ✓ トークン数400-600",
+                        "│  ├─ 範囲内: ○セクション（○%）",
+                        "│  ├─ 平均トークン数: ○○tokens",
+                        "│  ├─ セクション独立性「高」: ○セクション",
+                        "│  └─ 音声検索最適化: ○セクション",
+                        "└─ KGI: ✓ 3段階CTA配置",
+                        "   ├─ Early CTA: 650字地点",
+                        "   ├─ Mid CTA: 2,800字地点",
+                        "   └─ Final CTA: 4,500字地点"
+                    ]
+                },
+                "token_count_summary": {
+                    "title": "トークン数管理:",
+                    "items": [
+                        "├─ 総トークン数: ○○tokens",
+                        "├─ 平均トークン数: ○○tokens/セクション",
+                        "├─ 400-600範囲内: ○セクション（○%）",
+                        "├─ 超過セクション: ○個（調整済み）",
+                        "└─ 不足セクション: ○個（調整済み）"
+                    ]
+                },
+                "primary_sources_distribution": {
+                    "title": "一次情報配置:",
+                    "items": [
+                        "├─ 配置済み一次情報: ○個",
+                        "├─ Phase 1用: ○個",
+                        "├─ Phase 2用: ○個",
+                        "├─ Phase 3用: ○個",
+                        "├─ 平均配置数: ○個/セクション",
+                        "└─ 引用形式統一: 100%"
+                    ]
+                },
+                "section_independence": {
+                    "title": "セクション独立性:",
+                    "items": [
+                        "├─ 平均独立性スコア: ○.○",
+                        "├─ 独立性「高」（0.8-1.0）: ○セクション（○%）",
+                        "├─ 独立性「中」（0.5-0.7）: ○セクション",
+                        "├─ 独立性「低」（0.0-0.4）: ○セクション（目標: 0個）",
+                        "└─ AI引用率向上: +35%（見込み）"
+                    ]
+                },
+                "knowledge_gap_implementation": {
+                    "title": "知識ギャップ実装:",
+                    "items": [
+                        "├─ 実装済みギャップ: ○個",
+                        "├─ 新規H2セクション: ○個",
+                        "├─ 既存H2内にH3追加: ○個",
+                        "├─ 既存H3内に追加: ○個",
+                        "└─ 差別化価値high: ○個"
+                    ]
+                },
+                "execution_readiness": {
+                    "title": "執筆準備状態:",
+                    "items": [
+                        "├─ アウトライン完全性: 100%",
+                        "├─ データ配置明確度: 100%",
+                        "├─ 引用形式統一度: 100%",
+                        "├─ 4本柱実装度: 100%",
+                        "├─ トークン数適正率: ○%",
+                        "├─ セクション独立性: 平均○.○",
+                        "└─ 執筆可能レベル: ✓ 達成"
+                    ]
+                },
+                "expected_effects": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ 信頼性: +45%（一次情報配置）",
+                        "├─ AI引用率: +35%（セクション独立性）",
+                        "├─ 読了率: +25%（3フェーズ設計）",
+                        "├─ CVR: 2.7% → 4.0%+（3段階CTA）",
+                        "└─ SEO順位: +2〜3位（情報鮮度）"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程6.5（構成案作成）",
+                    "description": "本アウトラインを基に、工程7A向けの構成案を作成します。",
+                    "notes": [
+                        "・工程6.5でタイトル/導入/各H2の概要をMarkdown化",
+                        "・各セクションの論理展開、データ配置を記載",
+                        "・工程7A以降では元ファイルを直接参照（データ統合は不要）"
+                    ]
+                }
+            }
+        },
+        "note": "出力構造のテンプレート",
+        "legacy_templates": {
+            "output_template_complete": {
+                "generation_date": "string (ISO 8601形式: {{current_year}}-10-21T19:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "outline_version": "string (v2_enhanced_with_sources)",
+                "title_candidates": [
+                    {
+                        "title": "string (タイトル文字列、30〜40文字)",
+                        "character_count": "number (文字数)",
+                        "seo_score": "number (SEOスコア、0.0〜1.0)",
+                        "reasons": [
+                            "string"
+                        ],
+                        "target_audience": "string (想定読者)",
+                        "differentiation": "string (差別化ポイント)"
+                    }
+                ],
+                "recommended_title": "string (推奨タイトル)",
+                "meta_description": "string (120〜150文字のメタディスクリプション)",
+                "article_structure_overview": {
+                    "total_word_count_target": "number (総文字数目標、4500〜5000)",
+                    "total_token_count_target": "number (総トークン数目標)",
+                    "total_sections": "number (総セクション数、10〜13)",
+                    "average_token_count_per_section": "number (平均トークン数/セクション)",
+                    "three_phase_breakdown": {
+                        "phase1_anxiety": {
+                            "word_count": "number (文字数、600〜800)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase2_understanding": {
+                            "word_count": "number (文字数、3000〜3500)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase3_action": {
+                            "word_count": "number (文字数、600〜1000)",
+                            "token_count": "number (トークン数)",
+                            "sections": [
+                                "string (セクション名)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        }
+                    },
+                    "reading_time": "string (読了時間、例: 12〜15分)",
+                    "readability_level": "string (可読性レベル、例: 中級（JLPT N3〜N2相当）)"
+                },
+                "introduction": {
+                    "word_count_target": "number (文字数目標、400〜500)",
+                    "token_count_target": "number (トークン数目標)",
+                    "four_pillars": {
+                        "neuroscience": {
+                            "cognitive_load": "string (3概念以内)",
+                            "phase": "string (phase1_anxiety)",
+                            "emotional_trigger": "string (感情トリガー)",
+                            "sentence_length": "string (20-35文字/文を厳守)"
+                        },
+                        "behavioral_economics": {
+                            "principles": [
+                                "string (使用する原則)"
+                            ],
+                            "implementation": "string (実装方法)",
+                            "data_used": "string (使用するデータのsource_id)"
+                        },
+                        "llmo": {
+                            "token_count": "number (実際のトークン数)",
+                            "target_range": "string (400-600)",
+                            "section_independence": "string (高/中/低)",
+                            "voice_search_optimized": "boolean",
+                            "list_format": "string (箇条書き形式)"
+                        },
+                        "kgi": {
+                            "cta_proximity": "string (Early CTA配置 / なし)",
+                            "cvr_contribution": "string (CVRへの貢献)",
+                            "conversion_element": "string (転換要素)"
+                        }
+                    },
+                    "primary_sources_used": [
+                        {
+                            "source_id": "string (PS001)",
+                            "data": "string (データ本体)",
+                            "placement": "string (配置箇所)",
+                            "citation": "string (引用形式)",
+                            "purpose": "string (使用目的)"
+                        }
+                    ],
+                    "structure": {
+                        "opening_hook": "string (オープニングフック、100字)",
+                        "data_anchor": "string (データアンカー、100字)",
+                        "empathy": "string (共感・課題提起、150字)",
+                        "value_proposition": "string (記事の価値提案、100字)",
+                        "key_points": [
+                            "string (主要ポイント)"
+                        ]
+                    },
+                    "section_independence_score": "number (0.0〜1.0)",
+                    "independence_notes": "string (独立性に関する説明)"
+                },
+                "sections": [
+                    {
+                        "section_id": "string (S01, S02...)",
+                        "h2": "string (H2見出し)",
+                        "section_number": "number (セクション番号)",
+                        "word_count_target": "number (文字数目標)",
+                        "token_count_target": "number (トークン数目標、400-600)",
+                        "psychological_phase": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_goal": "string (このセクションで達成すべき心理的目標)",
+                        "four_pillars": {
+                            "neuroscience": {
+                                "cognitive_load": "string (3概念（A、B、C）)",
+                                "phase": "string (phase1/phase2/phase3)",
+                                "emotional_trigger": "string (具体的な感情トリガー)",
+                                "sentence_length": "string (20-35文字/文を厳守)"
+                            },
+                            "behavioral_economics": {
+                                "principles": [
+                                    "string (loss_aversion / social_proof / authority / consistency / liking / scarcity)"
+                                ],
+                                "implementation": "string (具体的な実装方法)",
+                                "data_used": "string (使用する一次情報のsource_id)"
+                            },
+                            "llmo": {
+                                "token_count": "number (実際のトークン数)",
+                                "target_range": "string (400-600)",
+                                "section_independence": "string (高 / 中 / 低 + 説明)",
+                                "voice_search_optimized": "boolean (true / false)",
+                                "list_format": "string (箇条書きの形式)"
+                            },
+                            "kgi": {
+                                "cta_proximity": "string (Early CTA配置 / Mid CTA配置 / Final CTA配置 / なし)",
+                                "cvr_contribution": "string (具体的な貢献)",
+                                "conversion_element": "string (転換要素)"
+                            }
+                        },
+                        "primary_sources_used": [
+                            {
+                                "source_id": "string (PS001, PS002...)",
+                                "data": "string (データ本体)",
+                                "placement": "string (配置箇所: オープニング / H3内 / まとめ)",
+                                "citation": "string (引用形式: （出典: 組織名「タイトル」発表年月）)",
+                                "purpose": "string (使用目的)"
+                            }
+                        ],
+                        "subsections": [
+                            {
+                                "h3": "string (H3見出し)",
+                                "word_count_target": "number (文字数目標)",
+                                "token_count_target": "number (トークン数目標、150-250)",
+                                "key_points": [
+                                    "string (ポイント1)",
+                                    "string (ポイント2)",
+                                    "string (ポイント3)"
+                                ],
+                                "keywords_to_include": {
+                                    "essential": [
+                                        "string (必須キーワード)"
+                                    ],
+                                    "standard": [
+                                        "string (標準キーワード)"
+                                    ],
+                                    "unique": [
+                                        "string (独自キーワード)"
+                                    ]
+                                },
+                                "differentiation_element": "string (競合との差別化要素)"
+                            }
+                        ],
+                        "visual_content": {
+                            "type": "string (chart / table / infographic / image)",
+                            "title": "string (図表のタイトル)",
+                            "description": "string (図表の内容説明)",
+                            "purpose": "string (図表の目的)"
+                        },
+                        "cta_placement": "boolean (CTAを配置するか)",
+                        "cta_details": {
+                            "type": "string (early/mid/final)",
+                            "text": "string (CTA文言)",
+                            "offer": "string (提供内容)",
+                            "expected_cvr": "string (期待CVR)"
+                        },
+                        "section_independence_score": "number (0.0〜1.0)",
+                        "independence_notes": "string (独立性に関する説明)",
+                        "knowledge_gap_implementation": [
+                            {
+                                "gap_id": "string (KG001, KG002...)",
+                                "implementation_method": "string (新規H2 / 既存H2内にH3追加 / 既存H3内に追加)",
+                                "location": "string (配置場所)",
+                                "content_summary": "string (内容の要約)",
+                                "differentiation_value": "string (high / medium / low)",
+                                "expected_word_count": "number (予想文字数)"
+                            }
+                        ]
+                    }
+                ],
+                "cta_strategy": {
+                    "total_cta_count": "number (総CTA数、3)",
+                    "ctas": [
+                        {
+                            "type": "string (early/mid/final)",
+                            "position": "string (配置位置、例: 650字前後)",
+                            "offer": "string (提供内容)",
+                            "text": "string (CTA文言)",
+                            "psychological_barrier": "string (心理的ハードル: 最低/低/中)",
+                            "expected_cvr": "string (期待CVR、例: 3〜5%)",
+                            "keywords": [
+                                "string (使用キーワード)"
+                            ]
+                        }
+                    ],
+                    "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                },
+                "four_pillars_summary": {
+                    "neuroscience": {
+                        "phase1_sections": "number (Phase 1セクション数)",
+                        "phase2_sections": "number (Phase 2セクション数)",
+                        "phase3_sections": "number (Phase 3セクション数)",
+                        "cognitive_load_compliance": "string (3概念以内を全セクションで遵守: ○%)",
+                        "sentence_length_target": "string (20-35文字/文)"
+                    },
+                    "behavioral_economics": {
+                        "principles_used": {
+                            "loss_aversion": "number (使用セクション数)",
+                            "social_proof": "number (使用セクション数)",
+                            "authority": "number (使用セクション数)",
+                            "consistency": "number (使用セクション数)",
+                            "liking": "number (使用セクション数)",
+                            "scarcity": "number (使用セクション数)"
+                        },
+                        "total_implementations": "number (総実装数)",
+                        "average_per_section": "number (平均/セクション)"
+                    },
+                    "llmo": {
+                        "token_count_compliance": {
+                            "within_range": "number (400-600の範囲内セクション数)",
+                            "total_sections": "number (総セクション数)",
+                            "compliance_rate": "string (○%)"
+                        },
+                        "average_token_count": "number (平均トークン数)",
+                        "section_independence": {
+                            "high": "number (独立性「高」のセクション数)",
+                            "medium": "number (独立性「中」のセクション数)",
+                            "low": "number (独立性「低」のセクション数)"
+                        },
+                        "voice_search_optimized_sections": "number (音声検索最適化セクション数)"
+                    },
+                    "kgi": {
+                        "cta_placements": {
+                            "early": "number (Early CTA配置セクション数)",
+                            "mid": "number (Mid CTA配置セクション数)",
+                            "final": "number (Final CTA配置セクション数)"
+                        },
+                        "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                    }
+                },
+                "token_count_summary": {
+                    "total_token_count": "number (総トークン数)",
+                    "total_word_count": "number (総文字数)",
+                    "average_token_count_per_section": "number (平均トークン数/セクション)",
+                    "token_count_distribution": {
+                        "within_400_600": "number (400-600の範囲内)",
+                        "below_400": "number (400未満)",
+                        "above_600": "number (600超)"
+                    },
+                    "token_count_compliance_rate": "string (○%)"
+                },
+                "section_independence_summary": {
+                    "average_independence_score": "number (平均独立性スコア)",
+                    "independence_distribution": {
+                        "high_0.8_to_1.0": "number (0.8〜1.0のセクション数)",
+                        "medium_0.5_to_0.7": "number (0.5〜0.7のセクション数)",
+                        "low_0.0_to_0.4": "number (0.0〜0.4のセクション数)"
+                    },
+                    "target_achievement": "string (目標: 80%以上が「高」、実績: ○%)"
+                },
+                "primary_sources_distribution": {
+                    "total_sources_used": "number (使用した一次情報の総数)",
+                    "sources_by_phase": {
+                        "phase1": "number (Phase 1で使用)",
+                        "phase2": "number (Phase 2で使用)",
+                        "phase3": "number (Phase 3で使用)"
+                    },
+                    "average_sources_per_section": "number (平均/セクション)",
+                    "citation_compliance": "string (全ての一次情報に引用形式を適用: 100%)"
+                },
+                "knowledge_gap_implementation": {
+                    "total_gaps_filled": "number (実装した知識ギャップ数)",
+                    "implementation_methods": {
+                        "new_h2_section": "number (新規H2セクション)",
+                        "h3_in_existing_h2": "number (既存H2内にH3追加)",
+                        "content_in_existing_h3": "number (既存H3内に追加)"
+                    },
+                    "differentiation_value_distribution": {
+                        "high": "number (差別化価値「high」の数)",
+                        "medium": "number (差別化価値「medium」の数)",
+                        "low": "number (差別化価値「low」の数)"
+                    }
+                },
+                "keyword_distribution_summary": {
+                    "main_keyword": {
+                        "keyword": "string (メインキーワード)",
+                        "target_density": "number (目標密度%、1.5)",
+                        "expected_occurrences": "number (期待出現回数)"
+                    },
+                    "essential_keywords_count": "number (Essential キーワード数)",
+                    "standard_keywords_count": "number (Standard キーワード数)",
+                    "unique_keywords_count": "number (Unique キーワード数)",
+                    "total_keywords_used": "number (総キーワード使用数)"
+                },
+                "visual_content_plan": {
+                    "total_visual_count": "number (総視覚要素数、8〜12)",
+                    "visuals": [
+                        {
+                            "type": "string (chart/table/infographic/image)",
+                            "title": "string (タイトル)",
+                            "section": "string (配置セクション、例: S01)",
+                            "purpose": "string (目的)",
+                            "description": "string (詳細説明)"
+                        }
+                    ]
+                },
+                "differentiation_implementation": {
+                    "差別化要素名": {
+                        "element": "string (差別化要素の名称)",
+                        "sections": [
+                            "string (実装セクション)"
+                        ],
+                        "implementation_details": "string (具体的な実装方法)",
+                        "impact": "string (期待される効果)"
+                    }
+                },
+                "quality_targets": {
+                    "reading_time": "string (読了時間、12〜15分)",
+                    "readability_level": "string (可読性レベル)",
+                    "keyword_density": {
+                        "main_keyword": "string (メインKW密度、1.5%)",
+                        "essential_keywords": "string (Essential共起語密度、各0.5〜1.0%)"
+                    },
+                    "internal_links": "string (内部リンク数、3〜5箇所)",
+                    "external_links": "string (外部リンク数、5〜7箇所（一次情報源）)"
+                },
+                "reference_list": [
+                    {
+                        "number": "number (番号)",
+                        "organization": "string (組織名)",
+                        "title": "string (タイトル)",
+                        "publication_date": "string (発表年月)",
+                        "url": "string (URL)"
+                    }
+                ],
+                "execution_readiness": {
+                    "outline_completeness": "string (100%)",
+                    "data_placement_clarity": "string (100%)",
+                    "citation_format_uniformity": "string (100%)",
+                    "four_pillars_implementation": "string (全セクションで実装済み)",
+                    "token_count_compliance": "string (○%が400-600の範囲内)",
+                    "section_independence": "string (平均スコア○.○)",
+                    "ready_for_writing": "boolean (true)"
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程6完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "outline_integration_summary": {
+                    "title": "アウトライン統合結果:",
+                    "items": [
+                        "├─ 総セクション数: ○個（H2）",
+                        "├─ 総文字数目標: ○○字",
+                        "├─ 総トークン数: ○○tokens",
+                        "├─ 平均トークン数: ○○tokens/セクション",
+                        "└─ 読了時間: 12〜15分"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全セクションで確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 全○セクションで実装",
+                        "│  ├─ 認知負荷3概念以内: 全て確認",
+                        "│  ├─ Phase 1: ○セクション",
+                        "│  ├─ Phase 2: ○セクション",
+                        "│  └─ Phase 3: ○セクション",
+                        "├─ 行動経済学: ✓ 6原則を配置",
+                        "│  ├─ 各セクションに最低1原則: 確認済み",
+                        "│  ├─ loss_aversion: ○セクション",
+                        "│  ├─ social_proof: ○セクション",
+                        "│  ├─ authority: ○セクション",
+                        "│  └─ その他原則: ○セクション",
+                        "├─ LLMO: ✓ トークン数400-600",
+                        "│  ├─ 範囲内: ○セクション（○%）",
+                        "│  ├─ 平均トークン数: ○○tokens",
+                        "│  ├─ セクション独立性「高」: ○セクション",
+                        "│  └─ 音声検索最適化: ○セクション",
+                        "└─ KGI: ✓ 3段階CTA配置",
+                        "   ├─ Early CTA: 650字地点",
+                        "   ├─ Mid CTA: 2,800字地点",
+                        "   └─ Final CTA: 4,500字地点"
+                    ]
+                },
+                "token_count_summary": {
+                    "title": "トークン数管理:",
+                    "items": [
+                        "├─ 総トークン数: ○○tokens",
+                        "├─ 平均トークン数: ○○tokens/セクション",
+                        "├─ 400-600範囲内: ○セクション（○%）",
+                        "├─ 超過セクション: ○個（調整済み）",
+                        "└─ 不足セクション: ○個（調整済み）"
+                    ]
+                },
+                "primary_sources_distribution": {
+                    "title": "一次情報配置:",
+                    "items": [
+                        "├─ 配置済み一次情報: ○個",
+                        "├─ Phase 1用: ○個",
+                        "├─ Phase 2用: ○個",
+                        "├─ Phase 3用: ○個",
+                        "├─ 平均配置数: ○個/セクション",
+                        "└─ 引用形式統一: 100%"
+                    ]
+                },
+                "section_independence": {
+                    "title": "セクション独立性:",
+                    "items": [
+                        "├─ 平均独立性スコア: ○.○",
+                        "├─ 独立性「高」（0.8-1.0）: ○セクション（○%）",
+                        "├─ 独立性「中」（0.5-0.7）: ○セクション",
+                        "├─ 独立性「低」（0.0-0.4）: ○セクション（目標: 0個）",
+                        "└─ AI引用率向上: +35%（見込み）"
+                    ]
+                },
+                "knowledge_gap_implementation": {
+                    "title": "知識ギャップ実装:",
+                    "items": [
+                        "├─ 実装済みギャップ: ○個",
+                        "├─ 新規H2セクション: ○個",
+                        "├─ 既存H2内にH3追加: ○個",
+                        "├─ 既存H3内に追加: ○個",
+                        "└─ 差別化価値high: ○個"
+                    ]
+                },
+                "execution_readiness": {
+                    "title": "執筆準備状態:",
+                    "items": [
+                        "├─ アウトライン完全性: 100%",
+                        "├─ データ配置明確度: 100%",
+                        "├─ 引用形式統一度: 100%",
+                        "├─ 4本柱実装度: 100%",
+                        "├─ トークン数適正率: ○%",
+                        "├─ セクション独立性: 平均○.○",
+                        "└─ 執筆可能レベル: ✓ 達成"
+                    ]
+                },
+                "expected_effects": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ 信頼性: +45%（一次情報配置）",
+                        "├─ AI引用率: +35%（セクション独立性）",
+                        "├─ 読了率: +25%（3フェーズ設計）",
+                        "├─ CVR: 2.7% → 4.0%+（3段階CTA）",
+                        "└─ SEO順位: +2〜3位（情報鮮度）"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程7（記事執筆）",
+                    "description": "このアウトラインに沿って執筆を開始します。",
+                    "notes": [
+                        "・各セクションの four_pillars を参照しながら執筆",
+                        "・トークン数400-600を意識",
+                        "・一次情報を指定箇所に配置",
+                        "・引用形式を統一",
+                        "・セクション独立性を確保"
+                    ]
+                }
+            }
+        },
+        "legacy_templates_source": "templates.json (structured)",
+        "legacy_templates_raw": "{\n    \"output_template_complete\": {\n        \"generation_date\": \"string (ISO 8601形式: {{current_year}}-10-21T19:00:00Z)\",\n        \"keyword\": \"string (メインキーワード)\",\n        \"outline_version\": \"string (v2_enhanced_with_sources)\",\n        \"title_candidates\": [\n            {\n                \"title\": \"string (タイトル文字列、30〜40文字)\",\n                \"character_count\": \"number (文字数)\",\n                \"seo_score\": \"number (SEOスコア、0.0〜1.0)\",\n                \"reasons\": [\n                    \"string\"\n                ],\n                \"target_audience\": \"string (想定読者)\",\n                \"differentiation\": \"string (差別化ポイント)\"\n            }\n        ],\n        \"recommended_title\": \"string (推奨タイトル)\",\n        \"meta_description\": \"string (120〜150文字のメタディスクリプション)\",\n        \"article_structure_overview\": {\n            \"total_word_count_target\": \"number (総文字数目標、4500〜5000)\",\n            \"total_token_count_target\": \"number (総トークン数目標)\",\n            \"total_sections\": \"number (総セクション数、10〜13)\",\n            \"average_token_count_per_section\": \"number (平均トークン数/セクション)\",\n            \"three_phase_breakdown\": {\n                \"phase1_anxiety\": {\n                    \"word_count\": \"number (文字数、600〜800)\",\n                    \"token_count\": \"number (トークン数)\",\n                    \"sections\": [\n                        \"string (セクション名)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                },\n                \"phase2_understanding\": {\n                    \"word_count\": \"number (文字数、3000〜3500)\",\n                    \"token_count\": \"number (トークン数)\",\n                    \"sections\": [\n                        \"string (セクション名)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                },\n                \"phase3_action\": {\n                    \"word_count\": \"number (文字数、600〜1000)\",\n                    \"token_count\": \"number (トークン数)\",\n                    \"sections\": [\n                        \"string (セクション名)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                }\n            },\n            \"reading_time\": \"string (読了時間、例: 12〜15分)\",\n            \"readability_level\": \"string (可読性レベル、例: 中級（JLPT N3〜N2相当）)\"\n        },\n        \"introduction\": {\n            \"word_count_target\": \"number (文字数目標、400〜500)\",\n            \"token_count_target\": \"number (トークン数目標)\",\n            \"four_pillars\": {\n                \"neuroscience\": {\n                    \"cognitive_load\": \"string (3概念以内)\",\n                    \"phase\": \"string (phase1_anxiety)\",\n                    \"emotional_trigger\": \"string (感情トリガー)\",\n                    \"sentence_length\": \"string (20-35文字/文を厳守)\"\n                },\n                \"behavioral_economics\": {\n                    \"principles\": [\n                        \"string (使用する原則)\"\n                    ],\n                    \"implementation\": \"string (実装方法)\",\n                    \"data_used\": \"string (使用するデータのsource_id)\"\n                },\n                \"llmo\": {\n                    \"token_count\": \"number (実際のトークン数)\",\n                    \"target_range\": \"string (400-600)\",\n                    \"section_independence\": \"string (高/中/低)\",\n                    \"voice_search_optimized\": \"boolean\",\n                    \"list_format\": \"string (箇条書き形式)\"\n                },\n                \"kgi\": {\n                    \"cta_proximity\": \"string (Early CTA配置 / なし)\",\n                    \"cvr_contribution\": \"string (CVRへの貢献)\",\n                    \"conversion_element\": \"string (転換要素)\"\n                }\n            },\n            \"primary_sources_used\": [\n                {\n                    \"source_id\": \"string (PS001)\",\n                    \"data\": \"string (データ本体)\",\n                    \"placement\": \"string (配置箇所)\",\n                    \"citation\": \"string (引用形式)\",\n                    \"purpose\": \"string (使用目的)\"\n                }\n            ],\n            \"structure\": {\n                \"opening_hook\": \"string (オープニングフック、100字)\",\n                \"data_anchor\": \"string (データアンカー、100字)\",\n                \"empathy\": \"string (共感・課題提起、150字)\",\n                \"value_proposition\": \"string (記事の価値提案、100字)\",\n                \"key_points\": [\n                    \"string (主要ポイント)\"\n                ]\n            },\n            \"section_independence_score\": \"number (0.0〜1.0)\",\n            \"independence_notes\": \"string (独立性に関する説明)\"\n        },\n        \"sections\": [\n            {\n                \"section_id\": \"string (S01, S02...)\",\n                \"h2\": \"string (H2見出し)\",\n                \"section_number\": \"number (セクション番号)\",\n                \"word_count_target\": \"number (文字数目標)\",\n                \"token_count_target\": \"number (トークン数目標、400-600)\",\n                \"psychological_phase\": \"string (phase1_anxiety / phase2_understanding / phase3_action)\",\n                \"psychological_goal\": \"string (このセクションで達成すべき心理的目標)\",\n                \"four_pillars\": {\n                    \"neuroscience\": {\n                        \"cognitive_load\": \"string (3概念（A、B、C）)\",\n                        \"phase\": \"string (phase1/phase2/phase3)\",\n                        \"emotional_trigger\": \"string (具体的な感情トリガー)\",\n                        \"sentence_length\": \"string (20-35文字/文を厳守)\"\n                    },\n                    \"behavioral_economics\": {\n                        \"principles\": [\n                            \"string (loss_aversion / social_proof / authority / consistency / liking / scarcity)\"\n                        ],\n                        \"implementation\": \"string (具体的な実装方法)\",\n                        \"data_used\": \"string (使用する一次情報のsource_id)\"\n                    },\n                    \"llmo\": {\n                        \"token_count\": \"number (実際のトークン数)\",\n                        \"target_range\": \"string (400-600)\",\n                        \"section_independence\": \"string (高 / 中 / 低 + 説明)\",\n                        \"voice_search_optimized\": \"boolean (true / false)\",\n                        \"list_format\": \"string (箇条書きの形式)\"\n                    },\n                    \"kgi\": {\n                        \"cta_proximity\": \"string (Early CTA配置 / Mid CTA配置 / Final CTA配置 / なし)\",\n                        \"cvr_contribution\": \"string (具体的な貢献)\",\n                        \"conversion_element\": \"string (転換要素)\"\n                    }\n                },\n                \"primary_sources_used\": [\n                    {\n                        \"source_id\": \"string (PS001, PS002...)\",\n                        \"data\": \"string (データ本体)\",\n                        \"placement\": \"string (配置箇所: オープニング / H3内 / まとめ)\",\n                        \"citation\": \"string (引用形式: （出典: 組織名「タイトル」発表年月）)\",\n                        \"purpose\": \"string (使用目的)\"\n                    }\n                ],\n                \"subsections\": [\n                    {\n                        \"h3\": \"string (H3見出し)\",\n                        \"word_count_target\": \"number (文字数目標)\",\n                        \"token_count_target\": \"number (トークン数目標、150-250)\",\n                        \"key_points\": [\n                            \"string (ポイント1)\",\n                            \"string (ポイント2)\",\n                            \"string (ポイント3)\"\n                        ],\n                        \"keywords_to_include\": {\n                            \"essential\": [\n                                \"string (必須キーワード)\"\n                            ],\n                            \"standard\": [\n                                \"string (標準キーワード)\"\n                            ],\n                            \"unique\": [\n                                \"string (独自キーワード)\"\n                            ]\n                        },\n                        \"differentiation_element\": \"string (競合との差別化要素)\"\n                    }\n                ],\n                \"visual_content\": {\n                    \"type\": \"string (chart / table / infographic / image)\",\n                    \"title\": \"string (図表のタイトル)\",\n                    \"description\": \"string (図表の内容説明)\",\n                    \"purpose\": \"string (図表の目的)\"\n                },\n                \"cta_placement\": \"boolean (CTAを配置するか)\",\n                \"cta_details\": {\n                    \"type\": \"string (early/mid/final)\",\n                    \"text\": \"string (CTA文言)\",\n                    \"offer\": \"string (提供内容)\",\n                    \"expected_cvr\": \"string (期待CVR)\"\n                },\n                \"section_independence_score\": \"number (0.0〜1.0)\",\n                \"independence_notes\": \"string (独立性に関する説明)\",\n                \"knowledge_gap_implementation\": [\n                    {\n                        \"gap_id\": \"string (KG001, KG002...)\",\n                        \"implementation_method\": \"string (新規H2 / 既存H2内にH3追加 / 既存H3内に追加)\",\n                        \"location\": \"string (配置場所)\",\n                        \"content_summary\": \"string (内容の要約)\",\n                        \"differentiation_value\": \"string (high / medium / low)\",\n                        \"expected_word_count\": \"number (予想文字数)\"\n                    }\n                ]\n            }\n        ],\n        \"cta_strategy\": {\n            \"total_cta_count\": \"number (総CTA数、3)\",\n            \"ctas\": [\n                {\n                    \"type\": \"string (early/mid/final)\",\n                    \"position\": \"string (配置位置、例: 650字前後)\",\n                    \"offer\": \"string (提供内容)\",\n                    \"text\": \"string (CTA文言)\",\n                    \"psychological_barrier\": \"string (心理的ハードル: 最低/低/中)\",\n                    \"expected_cvr\": \"string (期待CVR、例: 3〜5%)\",\n                    \"keywords\": [\n                        \"string (使用キーワード)\"\n                    ]\n                }\n            ],\n            \"total_expected_cvr\": \"string (総CVR目標、7〜11%)\"\n        },\n        \"four_pillars_summary\": {\n            \"neuroscience\": {\n                \"phase1_sections\": \"number (Phase 1セクション数)\",\n                \"phase2_sections\": \"number (Phase 2セクション数)\",\n                \"phase3_sections\": \"number (Phase 3セクション数)\",\n                \"cognitive_load_compliance\": \"string (3概念以内を全セクションで遵守: ○%)\",\n                \"sentence_length_target\": \"string (20-35文字/文)\"\n            },\n            \"behavioral_economics\": {\n                \"principles_used\": {\n                    \"loss_aversion\": \"number (使用セクション数)\",\n                    \"social_proof\": \"number (使用セクション数)\",\n                    \"authority\": \"number (使用セクション数)\",\n                    \"consistency\": \"number (使用セクション数)\",\n                    \"liking\": \"number (使用セクション数)\",\n                    \"scarcity\": \"number (使用セクション数)\"\n                },\n                \"total_implementations\": \"number (総実装数)\",\n                \"average_per_section\": \"number (平均/セクション)\"\n            },\n            \"llmo\": {\n                \"token_count_compliance\": {\n                    \"within_range\": \"number (400-600の範囲内セクション数)\",\n                    \"total_sections\": \"number (総セクション数)\",\n                    \"compliance_rate\": \"string (○%)\"\n                },\n                \"average_token_count\": \"number (平均トークン数)\",\n                \"section_independence\": {\n                    \"high\": \"number (独立性「高」のセクション数)\",\n                    \"medium\": \"number (独立性「中」のセクション数)\",\n                    \"low\": \"number (独立性「低」のセクション数)\"\n                },\n                \"voice_search_optimized_sections\": \"number (音声検索最適化セクション数)\"\n            },\n            \"kgi\": {\n                \"cta_placements\": {\n                    \"early\": \"number (Early CTA配置セクション数)\",\n                    \"mid\": \"number (Mid CTA配置セクション数)\",\n                    \"final\": \"number (Final CTA配置セクション数)\"\n                },\n                \"total_expected_cvr\": \"string (総CVR目標、7〜11%)\"\n            }\n        },\n        \"token_count_summary\": {\n            \"total_token_count\": \"number (総トークン数)\",\n            \"total_word_count\": \"number (総文字数)\",\n            \"average_token_count_per_section\": \"number (平均トークン数/セクション)\",\n            \"token_count_distribution\": {\n                \"within_400_600\": \"number (400-600の範囲内)\",\n                \"below_400\": \"number (400未満)\",\n                \"above_600\": \"number (600超)\"\n            },\n            \"token_count_compliance_rate\": \"string (○%)\"\n        },\n        \"section_independence_summary\": {\n            \"average_independence_score\": \"number (平均独立性スコア)\",\n            \"independence_distribution\": {\n                \"high_0.8_to_1.0\": \"number (0.8〜1.0のセクション数)\",\n                \"medium_0.5_to_0.7\": \"number (0.5〜0.7のセクション数)\",\n                \"low_0.0_to_0.4\": \"number (0.0〜0.4のセクション数)\"\n            },\n            \"target_achievement\": \"string (目標: 80%以上が「高」、実績: ○%)\"\n        },\n        \"primary_sources_distribution\": {\n            \"total_sources_used\": \"number (使用した一次情報の総数)\",\n            \"sources_by_phase\": {\n                \"phase1\": \"number (Phase 1で使用)\",\n                \"phase2\": \"number (Phase 2で使用)\",\n                \"phase3\": \"number (Phase 3で使用)\"\n            },\n            \"average_sources_per_section\": \"number (平均/セクション)\",\n            \"citation_compliance\": \"string (全ての一次情報に引用形式を適用: 100%)\"\n        },\n        \"knowledge_gap_implementation\": {\n            \"total_gaps_filled\": \"number (実装した知識ギャップ数)\",\n            \"implementation_methods\": {\n                \"new_h2_section\": \"number (新規H2セクション)\",\n                \"h3_in_existing_h2\": \"number (既存H2内にH3追加)\",\n                \"content_in_existing_h3\": \"number (既存H3内に追加)\"\n            },\n            \"differentiation_value_distribution\": {\n                \"high\": \"number (差別化価値「high」の数)\",\n                \"medium\": \"number (差別化価値「medium」の数)\",\n                \"low\": \"number (差別化価値「low」の数)\"\n            }\n        },\n        \"keyword_distribution_summary\": {\n            \"main_keyword\": {\n                \"keyword\": \"string (メインキーワード)\",\n                \"target_density\": \"number (目標密度%、1.5)\",\n                \"expected_occurrences\": \"number (期待出現回数)\"\n            },\n            \"essential_keywords_count\": \"number (Essential キーワード数)\",\n            \"standard_keywords_count\": \"number (Standard キーワード数)\",\n            \"unique_keywords_count\": \"number (Unique キーワード数)\",\n            \"total_keywords_used\": \"number (総キーワード使用数)\"\n        },\n        \"visual_content_plan\": {\n            \"total_visual_count\": \"number (総視覚要素数、8〜12)\",\n            \"visuals\": [\n                {\n                    \"type\": \"string (chart/table/infographic/image)\",\n                    \"title\": \"string (タイトル)\",\n                    \"section\": \"string (配置セクション、例: S01)\",\n                    \"purpose\": \"string (目的)\",\n                    \"description\": \"string (詳細説明)\"\n                }\n            ]\n        },\n        \"differentiation_implementation\": {\n            \"差別化要素名\": {\n                \"element\": \"string (差別化要素の名称)\",\n                \"sections\": [\n                    \"string (実装セクション)\"\n                ],\n                \"implementation_details\": \"string (具体的な実装方法)\",\n                \"impact\": \"string (期待される効果)\"\n            }\n        },\n        \"quality_targets\": {\n            \"reading_time\": \"string (読了時間、12〜15分)\",\n            \"readability_level\": \"string (可読性レベル)\",\n            \"keyword_density\": {\n                \"main_keyword\": \"string (メインKW密度、1.5%)\",\n                \"essential_keywords\": \"string (Essential共起語密度、各0.5〜1.0%)\"\n            },\n            \"internal_links\": \"string (内部リンク数、3〜5箇所)\",\n            \"external_links\": \"string (外部リンク数、5〜7箇所（一次情報源）)\"\n        },\n        \"reference_list\": [\n            {\n                \"number\": \"number (番号)\",\n                \"organization\": \"string (組織名)\",\n                \"title\": \"string (タイトル)\",\n                \"publication_date\": \"string (発表年月)\",\n                \"url\": \"string (URL)\"\n            }\n        ],\n        \"execution_readiness\": {\n            \"outline_completeness\": \"string (100%)\",\n            \"data_placement_clarity\": \"string (100%)\",\n            \"citation_format_uniformity\": \"string (100%)\",\n            \"four_pillars_implementation\": \"string (全セクションで実装済み)\",\n            \"token_count_compliance\": \"string (○%が400-600の範囲内)\",\n            \"section_independence\": \"string (平均スコア○.○)\",\n            \"ready_for_writing\": \"boolean (true)\"\n        }\n    },\n    \"completion_message_template\": {\n        \"header\": \"✅ 工程6完了\",\n        \"separator\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"outline_integration_summary\": {\n            \"title\": \"アウトライン統合結果:\",\n            \"items\": [\n                \"├─ 総セクション数: ○個（H2）\",\n                \"├─ 総文字数目標: ○○字\",\n                \"├─ 総トークン数: ○○tokens\",\n                \"├─ 平均トークン数: ○○tokens/セクション\",\n                \"└─ 読了時間: 12〜15分\"\n            ]\n        },\n        \"four_pillar_check\": {\n            \"title\": \"4本柱チェック: 全セクションで確認済み\",\n            \"items\": [\n                \"├─ 神経科学: ✓ 全○セクションで実装\",\n                \"│  ├─ 認知負荷3概念以内: 全て確認\",\n                \"│  ├─ Phase 1: ○セクション\",\n                \"│  ├─ Phase 2: ○セクション\",\n                \"│  └─ Phase 3: ○セクション\",\n                \"├─ 行動経済学: ✓ 6原則を配置\",\n                \"│  ├─ 各セクションに最低1原則: 確認済み\",\n                \"│  ├─ loss_aversion: ○セクション\",\n                \"│  ├─ social_proof: ○セクション\",\n                \"│  ├─ authority: ○セクション\",\n                \"│  └─ その他原則: ○セクション\",\n                \"├─ LLMO: ✓ トークン数400-600\",\n                \"│  ├─ 範囲内: ○セクション（○%）\",\n                \"│  ├─ 平均トークン数: ○○tokens\",\n                \"│  ├─ セクション独立性「高」: ○セクション\",\n                \"│  └─ 音声検索最適化: ○セクション\",\n                \"└─ KGI: ✓ 3段階CTA配置\",\n                \"   ├─ Early CTA: 650字地点\",\n                \"   ├─ Mid CTA: 2,800字地点\",\n                \"   └─ Final CTA: 4,500字地点\"\n            ]\n        },\n        \"token_count_summary\": {\n            \"title\": \"トークン数管理:\",\n            \"items\": [\n                \"├─ 総トークン数: ○○tokens\",\n                \"├─ 平均トークン数: ○○tokens/セクション\",\n                \"├─ 400-600範囲内: ○セクション（○%）\",\n                \"├─ 超過セクション: ○個（調整済み）\",\n                \"└─ 不足セクション: ○個（調整済み）\"\n            ]\n        },\n        \"primary_sources_distribution\": {\n            \"title\": \"一次情報配置:\",\n            \"items\": [\n                \"├─ 配置済み一次情報: ○個\",\n                \"├─ Phase 1用: ○個\",\n                \"├─ Phase 2用: ○個\",\n                \"├─ Phase 3用: ○個\",\n                \"├─ 平均配置数: ○個/セクション\",\n                \"└─ 引用形式統一: 100%\"\n            ]\n        },\n        \"section_independence\": {\n            \"title\": \"セクション独立性:\",\n            \"items\": [\n                \"├─ 平均独立性スコア: ○.○\",\n                \"├─ 独立性「高」（0.8-1.0）: ○セクション（○%）\",\n                \"├─ 独立性「中」（0.5-0.7）: ○セクション\",\n                \"├─ 独立性「低」（0.0-0.4）: ○セクション（目標: 0個）\",\n                \"└─ AI引用率向上: +35%（見込み）\"\n            ]\n        },\n        \"knowledge_gap_implementation\": {\n            \"title\": \"知識ギャップ実装:\",\n            \"items\": [\n                \"├─ 実装済みギャップ: ○個\",\n                \"├─ 新規H2セクション: ○個\",\n                \"├─ 既存H2内にH3追加: ○個\",\n                \"├─ 既存H3内に追加: ○個\",\n                \"└─ 差別化価値high: ○個\"\n            ]\n        },\n        \"execution_readiness\": {\n            \"title\": \"執筆準備状態:\",\n            \"items\": [\n                \"├─ アウトライン完全性: 100%\",\n                \"├─ データ配置明確度: 100%\",\n                \"├─ 引用形式統一度: 100%\",\n                \"├─ 4本柱実装度: 100%\",\n                \"├─ トークン数適正率: ○%\",\n                \"├─ セクション独立性: 平均○.○\",\n                \"└─ 執筆可能レベル: ✓ 達成\"\n            ]\n        },\n        \"expected_effects\": {\n            \"title\": \"期待効果:\",\n            \"items\": [\n                \"├─ 信頼性: +45%（一次情報配置）\",\n                \"├─ AI引用率: +35%（セクション独立性）\",\n                \"├─ 読了率: +25%（3フェーズ設計）\",\n                \"├─ CVR: 2.7% → 4.0%+（3段階CTA）\",\n                \"└─ SEO順位: +2〜3位（情報鮮度）\"\n            ]\n        },\n        \"footer\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"next_step\": {\n            \"title\": \"次の工程: 工程7（記事執筆）\",\n            \"description\": \"このアウトラインに沿って執筆を開始します。\",\n            \"notes\": [\n                \"・各セクションの four_pillars を参照しながら執筆\",\n                \"・トークン数400-600を意識\",\n                \"・一次情報を指定箇所に配置\",\n                \"・引用形式を統一\",\n                \"・セクション独立性を確保\"\n            ]\n        }\n    }\n}\n"
+    },
+    "examples": {
+        "source": "examples.json",
+        "content": {
+            "example_1_complete_section_with_four_pillars": {
+                "scenario": "4本柱を完全に埋め込んだH2セクションの例",
+                "section": {
+                    "section_id": "S01",
+                    "h2": "派遣社員の教育が失敗する3つの理由",
+                    "word_count_target": 600,
+                    "token_count_target": 470,
+                    "psychological_phase": "phase1_anxiety",
+                    "four_pillars": {
+                        "neuroscience": {
+                            "cognitive_load": "3概念（体系的プログラム欠如、バランス不足、フィードバック不足）",
+                            "phase": "phase1_anxiety",
+                            "emotional_trigger": "損失データ（教育時間40時間×2,500円=10万円無駄、1人離職で55万円損失）による不安喚起と危機感醸成",
+                            "sentence_length": "20-35文字/文を厳守"
+                        },
+                        "behavioral_economics": {
+                            "principles": [
+                                "loss_aversion",
+                                "authority"
+                            ],
+                            "implementation": "各失敗による具体的損失額を明示（10万円、55万円）。厚生労働省データで権威性を担保し、信頼性を高める。",
+                            "data_used": "PS001（離職率29.3%）、PS003（損失額55万円）、PS004（教育効果30%低下）"
+                        },
+                        "llmo": {
+                            "token_count": 480,
+                            "target_range": "400-600",
+                            "section_independence": "高（冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。）",
+                            "voice_search_optimized": false,
+                            "list_format": "3つの理由を箇条書き（各理由180字、内訳: 説明100字 + データ50字 + 影響30字）"
+                        },
+                        "kgi": {
+                            "cta_proximity": "なし（Phase 1は課題認識に集中、Early CTAは次セクション後に配置）",
+                            "cvr_contribution": "損失回避動機を強力に喚起し、Phase 2への遷移率+18%、離脱率-13%を実現",
+                            "conversion_element": "具体的損失額（10万円、55万円）、悪化トレンド（前年比+3.2pt）"
+                        }
+                    },
+                    "primary_sources_used": [
+                        {
+                            "source_id": "PS001",
+                            "data": "派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）",
+                            "placement": "オープニング（H2直後の1段落目）",
+                            "citation": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                            "purpose": "問題の深刻さを最新データで示し、読者の注意を引く。悪化トレンド（+3.2pt）で危機感を醸成。"
+                        },
+                        {
+                            "source_id": "PS003",
+                            "data": "1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                            "placement": "理由1「体系的プログラム欠如」のH3内（2段落目）",
+                            "citation": "（出典: 経済産業省「企業の人材育成投資調査」2024年）",
+                            "purpose": "具体的損失額で損失回避動機を喚起。年間4人離職で220万円という計算も提示。"
+                        },
+                        {
+                            "source_id": "PS004",
+                            "data": "体系的プログラムがない企業は教育効果が30%低下",
+                            "placement": "理由1「体系的プログラム欠如」のH3内（3段落目）",
+                            "citation": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                            "purpose": "体系的プログラムの重要性を数値で裏付け。"
+                        }
+                    ],
+                    "subsections": [
+                        {
+                            "h3": "理由1: 体系的な教育プログラムの欠如",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "多くの企業が場当たり的な教育を実施",
+                                "結果: 教育効果が30%低下（厚労省データ）",
+                                "損失: 教育時間40時間 × 人件費2,500円 = 10万円が無駄",
+                                "体系的プログラムの必要性"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "教育プログラム",
+                                    "体系的"
+                                ],
+                                "standard": [
+                                    "計画",
+                                    "設計"
+                                ]
+                            },
+                            "differentiation_element": "具体的な損失額10万円を数値化（競合の90%がしていない）"
+                        },
+                        {
+                            "h3": "理由2: OJTとOff-JTのバランス不足",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "OJTのみ or Off-JTのみの企業が多い（60%）",
+                                "最適比率: OJT 70% : Off-JT 30%（JILPT研究）",
+                                "バランス不足により定着率が35%低下",
+                                "組み合わせ実施は単独より効果1.8倍"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "OJT",
+                                    "Off-JT"
+                                ],
+                                "standard": [
+                                    "バランス",
+                                    "組み合わせ"
+                                ]
+                            },
+                            "differentiation_element": "最適比率7:3の提示（競合は曖昧）"
+                        },
+                        {
+                            "h3": "理由3: フィードバックの不足",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "定期的なフィードバックがない企業が60%",
+                                "フィードバックなしでは改善点が分からず、離職率が2倍",
+                                "損失: 1人離職で55万円",
+                                "定期フィードバックの重要性"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "フィードバック"
+                                ],
+                                "standard": [
+                                    "評価",
+                                    "改善"
+                                ]
+                            },
+                            "differentiation_element": "離職率2倍の具体的データ（競合は言及なし）"
+                        }
+                    ],
+                    "visual_content": {
+                        "type": "chart",
+                        "description": "教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）"
+                    },
+                    "section_independence_score": 0.9,
+                    "independence_notes": "冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。各理由が独立して理解可能。"
+                },
+                "explanation": "4本柱を完全に埋め込んだセクションの例。neuroscience、behavioral_economics、llmo、kgiの全てが詳細に記録されている。トークン数480で適正範囲内。"
+            },
+            "example_2_token_count_adjustment": {
+                "scenario": "トークン数調整の例",
+                "before": {
+                    "section_id": "S03",
+                    "h2": "効果的な派遣社員教育の5ステップ",
+                    "word_count_target": 1200,
+                    "token_count_calculated": 706,
+                    "problem": "トークン数が600を超過（706 tokens）",
+                    "subsections": [
+                        {
+                            "h3": "5ステップの全体像と詳細な実施方法",
+                            "word_count_target": 600,
+                            "content_summary": "ステップ1〜5の全体像、各ステップの詳細な実施方法、期間、予算、担当者、注意点を全て1つのH3で説明"
+                        },
+                        {
+                            "h3": "なぜこの5ステップが効果的なのか",
+                            "word_count_target": 600,
+                            "content_summary": "効果の理由、データ裏付け、導入企業の声"
+                        }
+                    ]
+                },
+                "adjustment_method": "H3を分割",
+                "after": {
+                    "section_id": "S03",
+                    "h2": "効果的な派遣社員教育の5ステップ",
+                    "word_count_target": 1020,
+                    "token_count_calculated": 600,
+                    "solution": "H3を3つに分割してトークン数を適正化",
+                    "subsections": [
+                        {
+                            "h3": "5ステップの全体像",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ1〜5の概要、全体の期間と予算"
+                        },
+                        {
+                            "h3": "各ステップの詳細（ステップ1〜3）",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ1〜3の詳細な実施方法"
+                        },
+                        {
+                            "h3": "各ステップの詳細（ステップ4〜5）",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ4〜5の詳細な実施方法と効果の理由"
+                        }
+                    ],
+                    "four_pillars": {
+                        "llmo": {
+                            "token_count": 600,
+                            "target_range": "400-600",
+                            "adjustment_notes": "元の706 tokensから600 tokensに削減。H3を2個から3個に分割することで実現。"
+                        }
+                    }
+                },
+                "explanation": "トークン数が超過（706 tokens）していたため、H3を2個から3個に分割して600 tokensに調整した例。"
+            },
+            "example_3_section_independence": {
+                "scenario": "セクション独立性の改善例",
+                "before": {
+                    "section_id": "S05",
+                    "h2": "リモート環境での教育方法",
+                    "opening_paragraph": "これらの課題を解決するために、リモート環境での教育方法を紹介します。",
+                    "problem": "「これらの課題」が何を指すか不明。前セクションを読まないと理解できない。",
+                    "section_independence_score": 0.4
+                },
+                "adjustment_method": "冒頭で文脈を再提示",
+                "after": {
+                    "section_id": "S05",
+                    "h2": "リモート・ハイブリッド環境での派遣社員教育の3つのポイント",
+                    "opening_paragraph": "{{current_year}}年現在、リモートワークやハイブリッドワークを導入する企業が増えています。派遣社員の教育においても、対面だけでなくリモート環境での効果的な実施方法が求められています。ここでは、リモート環境で派遣社員教育を成功させるための3つのポイントを紹介します。",
+                    "solution": "「派遣社員の教育」「リモート環境」という文脈を冒頭で明確化。前セクション依存なし。",
+                    "section_independence_score": 0.9,
+                    "four_pillars": {
+                        "llmo": {
+                            "section_independence": "高（冒頭で「派遣社員教育」「リモート環境」という文脈を明確化。{{current_year}}年の働き方動向も提示。前セクション依存なし。）"
+                        }
+                    }
+                },
+                "explanation": "セクション独立性を「低」（0.4）から「高」（0.9）に改善した例。冒頭で文脈を再提示することで、前セクションを読まなくても理解可能に。"
+            },
+            "bad_example_1_missing_four_pillars": {
+                "scenario": "4本柱の欠落（悪い例）",
+                "bad_output": {
+                    "section_id": "S01",
+                    "h2": "派遣社員の教育が失敗する理由",
+                    "word_count_target": 600,
+                    "subsections": []
+                },
+                "problems": [
+                    "four_pillars フィールドがない",
+                    "neuroscience、behavioral_economics、llmo、kgiが全て欠落",
+                    "トークン数が記録されていない",
+                    "セクション独立性が評価されていない"
+                ],
+                "correction": "全てのH2セクションに four_pillars フィールドを追加する。neuroscience、behavioral_economics、llmo、kgiの全てを記録する。これは絶対要件。",
+                "explanation": "4本柱の実装は絶対要件。1つでも欠けていると不完全。"
+            },
+            "bad_example_2_token_count_exceeded": {
+                "scenario": "トークン数の超過（悪い例）",
+                "bad_output": {
+                    "section_id": "S03",
+                    "h2": "効果的な5ステップ",
+                    "word_count_target": 1400,
+                    "token_count_calculated": 823,
+                    "four_pillars": {
+                        "llmo": {
+                            "token_count": 823,
+                            "target_range": "400-600"
+                        }
+                    },
+                    "problem": "トークン数が823で、目標範囲（400-600）を大幅に超過"
+                },
+                "problems": [
+                    "トークン数が823（600を大幅に超過）",
+                    "AI検索エンジンでの引用率が低下",
+                    "1セクションで扱う情報が多すぎる"
+                ],
+                "correction": "H3サブセクションを分割して、トークン数を400-600に調整する。または冗長な説明を削減する。",
+                "explanation": "トークン数400-600は絶対要件。超過した場合は必ず調整する。"
+            },
+            "bad_example_3_low_independence": {
+                "scenario": "セクション独立性が低い（悪い例）",
+                "bad_output": {
+                    "section_id": "S05",
+                    "h2": "具体的な実施方法",
+                    "opening_paragraph": "前述の5ステップを実施する際の具体的な方法を説明します。",
+                    "four_pillars": {
+                        "llmo": {
+                            "section_independence": "低（前セクションへの依存が高い）"
+                        }
+                    },
+                    "section_independence_score": 0.3
+                },
+                "problems": [
+                    "「前述の5ステップ」が何か不明",
+                    "前セクションを読まないと理解できない",
+                    "AI検索エンジンで単独引用された場合、文脈不明",
+                    "独立性スコア0.3（低）"
+                ],
+                "correction": "冒頭で「派遣社員教育の5ステップ」と文脈を再提示する。「前述の」等の表現を避ける。独立性スコアを0.8以上に改善する。",
+                "explanation": "セクション独立性は必須要件。独立性「低」は避けるべき。"
+            }
+        },
+        "note": "実際の使用例",
+        "legacy_examples": {
+            "example_1_complete_section_with_four_pillars": {
+                "scenario": "4本柱を完全に埋め込んだH2セクションの例",
+                "section": {
+                    "section_id": "S01",
+                    "h2": "派遣社員の教育が失敗する3つの理由",
+                    "word_count_target": 600,
+                    "token_count_target": 470,
+                    "psychological_phase": "phase1_anxiety",
+                    "four_pillars": {
+                        "neuroscience": {
+                            "cognitive_load": "3概念（体系的プログラム欠如、バランス不足、フィードバック不足）",
+                            "phase": "phase1_anxiety",
+                            "emotional_trigger": "損失データ（教育時間40時間×2,500円=10万円無駄、1人離職で55万円損失）による不安喚起と危機感醸成",
+                            "sentence_length": "20-35文字/文を厳守"
+                        },
+                        "behavioral_economics": {
+                            "principles": [
+                                "loss_aversion",
+                                "authority"
+                            ],
+                            "implementation": "各失敗による具体的損失額を明示（10万円、55万円）。厚生労働省データで権威性を担保し、信頼性を高める。",
+                            "data_used": "PS001（離職率29.3%）、PS003（損失額55万円）、PS004（教育効果30%低下）"
+                        },
+                        "llmo": {
+                            "token_count": 480,
+                            "target_range": "400-600",
+                            "section_independence": "高（冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。）",
+                            "voice_search_optimized": false,
+                            "list_format": "3つの理由を箇条書き（各理由180字、内訳: 説明100字 + データ50字 + 影響30字）"
+                        },
+                        "kgi": {
+                            "cta_proximity": "なし（Phase 1は課題認識に集中、Early CTAは次セクション後に配置）",
+                            "cvr_contribution": "損失回避動機を強力に喚起し、Phase 2への遷移率+18%、離脱率-13%を実現",
+                            "conversion_element": "具体的損失額（10万円、55万円）、悪化トレンド（前年比+3.2pt）"
+                        }
+                    },
+                    "primary_sources_used": [
+                        {
+                            "source_id": "PS001",
+                            "data": "派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）",
+                            "placement": "オープニング（H2直後の1段落目）",
+                            "citation": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                            "purpose": "問題の深刻さを最新データで示し、読者の注意を引く。悪化トレンド（+3.2pt）で危機感を醸成。"
+                        },
+                        {
+                            "source_id": "PS003",
+                            "data": "1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円",
+                            "placement": "理由1「体系的プログラム欠如」のH3内（2段落目）",
+                            "citation": "（出典: 経済産業省「企業の人材育成投資調査」2024年）",
+                            "purpose": "具体的損失額で損失回避動機を喚起。年間4人離職で220万円という計算も提示。"
+                        },
+                        {
+                            "source_id": "PS004",
+                            "data": "体系的プログラムがない企業は教育効果が30%低下",
+                            "placement": "理由1「体系的プログラム欠如」のH3内（3段落目）",
+                            "citation": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                            "purpose": "体系的プログラムの重要性を数値で裏付け。"
+                        }
+                    ],
+                    "subsections": [
+                        {
+                            "h3": "理由1: 体系的な教育プログラムの欠如",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "多くの企業が場当たり的な教育を実施",
+                                "結果: 教育効果が30%低下（厚労省データ）",
+                                "損失: 教育時間40時間 × 人件費2,500円 = 10万円が無駄",
+                                "体系的プログラムの必要性"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "教育プログラム",
+                                    "体系的"
+                                ],
+                                "standard": [
+                                    "計画",
+                                    "設計"
+                                ]
+                            },
+                            "differentiation_element": "具体的な損失額10万円を数値化（競合の90%がしていない）"
+                        },
+                        {
+                            "h3": "理由2: OJTとOff-JTのバランス不足",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "OJTのみ or Off-JTのみの企業が多い（60%）",
+                                "最適比率: OJT 70% : Off-JT 30%（JILPT研究）",
+                                "バランス不足により定着率が35%低下",
+                                "組み合わせ実施は単独より効果1.8倍"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "OJT",
+                                    "Off-JT"
+                                ],
+                                "standard": [
+                                    "バランス",
+                                    "組み合わせ"
+                                ]
+                            },
+                            "differentiation_element": "最適比率7:3の提示（競合は曖昧）"
+                        },
+                        {
+                            "h3": "理由3: フィードバックの不足",
+                            "word_count_target": 180,
+                            "token_count_target": 150,
+                            "key_points": [
+                                "定期的なフィードバックがない企業が60%",
+                                "フィードバックなしでは改善点が分からず、離職率が2倍",
+                                "損失: 1人離職で55万円",
+                                "定期フィードバックの重要性"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "フィードバック"
+                                ],
+                                "standard": [
+                                    "評価",
+                                    "改善"
+                                ]
+                            },
+                            "differentiation_element": "離職率2倍の具体的データ（競合は言及なし）"
+                        }
+                    ],
+                    "visual_content": {
+                        "type": "chart",
+                        "description": "教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）"
+                    },
+                    "section_independence_score": 0.9,
+                    "independence_notes": "冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。各理由が独立して理解可能。"
+                },
+                "explanation": "4本柱を完全に埋め込んだセクションの例。neuroscience、behavioral_economics、llmo、kgiの全てが詳細に記録されている。トークン数480で適正範囲内。"
+            },
+            "example_2_token_count_adjustment": {
+                "scenario": "トークン数調整の例",
+                "before": {
+                    "section_id": "S03",
+                    "h2": "効果的な派遣社員教育の5ステップ",
+                    "word_count_target": 1200,
+                    "token_count_calculated": 706,
+                    "problem": "トークン数が600を超過（706 tokens）",
+                    "subsections": [
+                        {
+                            "h3": "5ステップの全体像と詳細な実施方法",
+                            "word_count_target": 600,
+                            "content_summary": "ステップ1〜5の全体像、各ステップの詳細な実施方法、期間、予算、担当者、注意点を全て1つのH3で説明"
+                        },
+                        {
+                            "h3": "なぜこの5ステップが効果的なのか",
+                            "word_count_target": 600,
+                            "content_summary": "効果の理由、データ裏付け、導入企業の声"
+                        }
+                    ]
+                },
+                "adjustment_method": "H3を分割",
+                "after": {
+                    "section_id": "S03",
+                    "h2": "効果的な派遣社員教育の5ステップ",
+                    "word_count_target": 1020,
+                    "token_count_calculated": 600,
+                    "solution": "H3を3つに分割してトークン数を適正化",
+                    "subsections": [
+                        {
+                            "h3": "5ステップの全体像",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ1〜5の概要、全体の期間と予算"
+                        },
+                        {
+                            "h3": "各ステップの詳細（ステップ1〜3）",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ1〜3の詳細な実施方法"
+                        },
+                        {
+                            "h3": "各ステップの詳細（ステップ4〜5）",
+                            "word_count_target": 340,
+                            "token_count_target": 200,
+                            "content_summary": "ステップ4〜5の詳細な実施方法と効果の理由"
+                        }
+                    ],
+                    "four_pillars": {
+                        "llmo": {
+                            "token_count": 600,
+                            "target_range": "400-600",
+                            "adjustment_notes": "元の706 tokensから600 tokensに削減。H3を2個から3個に分割することで実現。"
+                        }
+                    }
+                },
+                "explanation": "トークン数が超過（706 tokens）していたため、H3を2個から3個に分割して600 tokensに調整した例。"
+            },
+            "example_3_section_independence": {
+                "scenario": "セクション独立性の改善例",
+                "before": {
+                    "section_id": "S05",
+                    "h2": "リモート環境での教育方法",
+                    "opening_paragraph": "これらの課題を解決するために、リモート環境での教育方法を紹介します。",
+                    "problem": "「これらの課題」が何を指すか不明。前セクションを読まないと理解できない。",
+                    "section_independence_score": 0.4
+                },
+                "adjustment_method": "冒頭で文脈を再提示",
+                "after": {
+                    "section_id": "S05",
+                    "h2": "リモート・ハイブリッド環境での派遣社員教育の3つのポイント",
+                    "opening_paragraph": "{{current_year}}年現在、リモートワークやハイブリッドワークを導入する企業が増えています。派遣社員の教育においても、対面だけでなくリモート環境での効果的な実施方法が求められています。ここでは、リモート環境で派遣社員教育を成功させるための3つのポイントを紹介します。",
+                    "solution": "「派遣社員の教育」「リモート環境」という文脈を冒頭で明確化。前セクション依存なし。",
+                    "section_independence_score": 0.9,
+                    "four_pillars": {
+                        "llmo": {
+                            "section_independence": "高（冒頭で「派遣社員教育」「リモート環境」という文脈を明確化。{{current_year}}年の働き方動向も提示。前セクション依存なし。）"
+                        }
+                    }
+                },
+                "explanation": "セクション独立性を「低」（0.4）から「高」（0.9）に改善した例。冒頭で文脈を再提示することで、前セクションを読まなくても理解可能に。"
+            },
+            "bad_example_1_missing_four_pillars": {
+                "scenario": "4本柱の欠落（悪い例）",
+                "bad_output": {
+                    "section_id": "S01",
+                    "h2": "派遣社員の教育が失敗する理由",
+                    "word_count_target": 600,
+                    "subsections": []
+                },
+                "problems": [
+                    "four_pillars フィールドがない",
+                    "neuroscience、behavioral_economics、llmo、kgiが全て欠落",
+                    "トークン数が記録されていない",
+                    "セクション独立性が評価されていない"
+                ],
+                "correction": "全てのH2セクションに four_pillars フィールドを追加する。neuroscience、behavioral_economics、llmo、kgiの全てを記録する。これは絶対要件。",
+                "explanation": "4本柱の実装は絶対要件。1つでも欠けていると不完全。"
+            },
+            "bad_example_2_token_count_exceeded": {
+                "scenario": "トークン数の超過（悪い例）",
+                "bad_output": {
+                    "section_id": "S03",
+                    "h2": "効果的な5ステップ",
+                    "word_count_target": 1400,
+                    "token_count_calculated": 823,
+                    "four_pillars": {
+                        "llmo": {
+                            "token_count": 823,
+                            "target_range": "400-600"
+                        }
+                    },
+                    "problem": "トークン数が823で、目標範囲（400-600）を大幅に超過"
+                },
+                "problems": [
+                    "トークン数が823（600を大幅に超過）",
+                    "AI検索エンジンでの引用率が低下",
+                    "1セクションで扱う情報が多すぎる"
+                ],
+                "correction": "H3サブセクションを分割して、トークン数を400-600に調整する。または冗長な説明を削減する。",
+                "explanation": "トークン数400-600は絶対要件。超過した場合は必ず調整する。"
+            },
+            "bad_example_3_low_independence": {
+                "scenario": "セクション独立性が低い（悪い例）",
+                "bad_output": {
+                    "section_id": "S05",
+                    "h2": "具体的な実施方法",
+                    "opening_paragraph": "前述の5ステップを実施する際の具体的な方法を説明します。",
+                    "four_pillars": {
+                        "llmo": {
+                            "section_independence": "低（前セクションへの依存が高い）"
+                        }
+                    },
+                    "section_independence_score": 0.3
+                },
+                "problems": [
+                    "「前述の5ステップ」が何か不明",
+                    "前セクションを読まないと理解できない",
+                    "AI検索エンジンで単独引用された場合、文脈不明",
+                    "独立性スコア0.3（低）"
+                ],
+                "correction": "冒頭で「派遣社員教育の5ステップ」と文脈を再提示する。「前述の」等の表現を避ける。独立性スコアを0.8以上に改善する。",
+                "explanation": "セクション独立性は必須要件。独立性「低」は避けるべき。"
+            }
+        },
+        "legacy_examples_source": "examples.json (structured)",
+        "legacy_examples_raw": "{\n    \"example_1_complete_section_with_four_pillars\": {\n        \"scenario\": \"4本柱を完全に埋め込んだH2セクションの例\",\n        \"section\": {\n            \"section_id\": \"S01\",\n            \"h2\": \"派遣社員の教育が失敗する3つの理由\",\n            \"word_count_target\": 600,\n            \"token_count_target\": 470,\n            \"psychological_phase\": \"phase1_anxiety\",\n            \"four_pillars\": {\n                \"neuroscience\": {\n                    \"cognitive_load\": \"3概念（体系的プログラム欠如、バランス不足、フィードバック不足）\",\n                    \"phase\": \"phase1_anxiety\",\n                    \"emotional_trigger\": \"損失データ（教育時間40時間×2,500円=10万円無駄、1人離職で55万円損失）による不安喚起と危機感醸成\",\n                    \"sentence_length\": \"20-35文字/文を厳守\"\n                },\n                \"behavioral_economics\": {\n                    \"principles\": [\n                        \"loss_aversion\",\n                        \"authority\"\n                    ],\n                    \"implementation\": \"各失敗による具体的損失額を明示（10万円、55万円）。厚生労働省データで権威性を担保し、信頼性を高める。\",\n                    \"data_used\": \"PS001（離職率29.3%）、PS003（損失額55万円）、PS004（教育効果30%低下）\"\n                },\n                \"llmo\": {\n                    \"token_count\": 480,\n                    \"target_range\": \"400-600\",\n                    \"section_independence\": \"高（冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。）\",\n                    \"voice_search_optimized\": false,\n                    \"list_format\": \"3つの理由を箇条書き（各理由180字、内訳: 説明100字 + データ50字 + 影響30字）\"\n                },\n                \"kgi\": {\n                    \"cta_proximity\": \"なし（Phase 1は課題認識に集中、Early CTAは次セクション後に配置）\",\n                    \"cvr_contribution\": \"損失回避動機を強力に喚起し、Phase 2への遷移率+18%、離脱率-13%を実現\",\n                    \"conversion_element\": \"具体的損失額（10万円、55万円）、悪化トレンド（前年比+3.2pt）\"\n                }\n            },\n            \"primary_sources_used\": [\n                {\n                    \"source_id\": \"PS001\",\n                    \"data\": \"派遣社員の3ヶ月以内離職率29.3%（前年比+3.2pt）\",\n                    \"placement\": \"オープニング（H2直後の1段落目）\",\n                    \"citation\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n                    \"purpose\": \"問題の深刻さを最新データで示し、読者の注意を引く。悪化トレンド（+3.2pt）で危機感を醸成。\"\n                },\n                {\n                    \"source_id\": \"PS003\",\n                    \"data\": \"1人の離職による損失: 採用コスト35万円 + 教育コスト20万円 = 計55万円\",\n                    \"placement\": \"理由1「体系的プログラム欠如」のH3内（2段落目）\",\n                    \"citation\": \"（出典: 経済産業省「企業の人材育成投資調査」2024年）\",\n                    \"purpose\": \"具体的損失額で損失回避動機を喚起。年間4人離職で220万円という計算も提示。\"\n                },\n                {\n                    \"source_id\": \"PS004\",\n                    \"data\": \"体系的プログラムがない企業は教育効果が30%低下\",\n                    \"placement\": \"理由1「体系的プログラム欠如」のH3内（3段落目）\",\n                    \"citation\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n                    \"purpose\": \"体系的プログラムの重要性を数値で裏付け。\"\n                }\n            ],\n            \"subsections\": [\n                {\n                    \"h3\": \"理由1: 体系的な教育プログラムの欠如\",\n                    \"word_count_target\": 180,\n                    \"token_count_target\": 150,\n                    \"key_points\": [\n                        \"多くの企業が場当たり的な教育を実施\",\n                        \"結果: 教育効果が30%低下（厚労省データ）\",\n                        \"損失: 教育時間40時間 × 人件費2,500円 = 10万円が無駄\",\n                        \"体系的プログラムの必要性\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"教育プログラム\",\n                            \"体系的\"\n                        ],\n                        \"standard\": [\n                            \"計画\",\n                            \"設計\"\n                        ]\n                    },\n                    \"differentiation_element\": \"具体的な損失額10万円を数値化（競合の90%がしていない）\"\n                },\n                {\n                    \"h3\": \"理由2: OJTとOff-JTのバランス不足\",\n                    \"word_count_target\": 180,\n                    \"token_count_target\": 150,\n                    \"key_points\": [\n                        \"OJTのみ or Off-JTのみの企業が多い（60%）\",\n                        \"最適比率: OJT 70% : Off-JT 30%（JILPT研究）\",\n                        \"バランス不足により定着率が35%低下\",\n                        \"組み合わせ実施は単独より効果1.8倍\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"OJT\",\n                            \"Off-JT\"\n                        ],\n                        \"standard\": [\n                            \"バランス\",\n                            \"組み合わせ\"\n                        ]\n                    },\n                    \"differentiation_element\": \"最適比率7:3の提示（競合は曖昧）\"\n                },\n                {\n                    \"h3\": \"理由3: フィードバックの不足\",\n                    \"word_count_target\": 180,\n                    \"token_count_target\": 150,\n                    \"key_points\": [\n                        \"定期的なフィードバックがない企業が60%\",\n                        \"フィードバックなしでは改善点が分からず、離職率が2倍\",\n                        \"損失: 1人離職で55万円\",\n                        \"定期フィードバックの重要性\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"フィードバック\"\n                        ],\n                        \"standard\": [\n                            \"評価\",\n                            \"改善\"\n                        ]\n                    },\n                    \"differentiation_element\": \"離職率2倍の具体的データ（競合は言及なし）\"\n                }\n            ],\n            \"visual_content\": {\n                \"type\": \"chart\",\n                \"description\": \"教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）\"\n            },\n            \"section_independence_score\": 0.9,\n            \"independence_notes\": \"冒頭で「派遣社員の教育が失敗する理由は大きく3つあります」と文脈を明確化。前セクション依存なし。各理由が独立して理解可能。\"\n        },\n        \"explanation\": \"4本柱を完全に埋め込んだセクションの例。neuroscience、behavioral_economics、llmo、kgiの全てが詳細に記録されている。トークン数480で適正範囲内。\"\n    },\n    \"example_2_token_count_adjustment\": {\n        \"scenario\": \"トークン数調整の例\",\n        \"before\": {\n            \"section_id\": \"S03\",\n            \"h2\": \"効果的な派遣社員教育の5ステップ\",\n            \"word_count_target\": 1200,\n            \"token_count_calculated\": 706,\n            \"problem\": \"トークン数が600を超過（706 tokens）\",\n            \"subsections\": [\n                {\n                    \"h3\": \"5ステップの全体像と詳細な実施方法\",\n                    \"word_count_target\": 600,\n                    \"content_summary\": \"ステップ1〜5の全体像、各ステップの詳細な実施方法、期間、予算、担当者、注意点を全て1つのH3で説明\"\n                },\n                {\n                    \"h3\": \"なぜこの5ステップが効果的なのか\",\n                    \"word_count_target\": 600,\n                    \"content_summary\": \"効果の理由、データ裏付け、導入企業の声\"\n                }\n            ]\n        },\n        \"adjustment_method\": \"H3を分割\",\n        \"after\": {\n            \"section_id\": \"S03\",\n            \"h2\": \"効果的な派遣社員教育の5ステップ\",\n            \"word_count_target\": 1020,\n            \"token_count_calculated\": 600,\n            \"solution\": \"H3を3つに分割してトークン数を適正化\",\n            \"subsections\": [\n                {\n                    \"h3\": \"5ステップの全体像\",\n                    \"word_count_target\": 340,\n                    \"token_count_target\": 200,\n                    \"content_summary\": \"ステップ1〜5の概要、全体の期間と予算\"\n                },\n                {\n                    \"h3\": \"各ステップの詳細（ステップ1〜3）\",\n                    \"word_count_target\": 340,\n                    \"token_count_target\": 200,\n                    \"content_summary\": \"ステップ1〜3の詳細な実施方法\"\n                },\n                {\n                    \"h3\": \"各ステップの詳細（ステップ4〜5）\",\n                    \"word_count_target\": 340,\n                    \"token_count_target\": 200,\n                    \"content_summary\": \"ステップ4〜5の詳細な実施方法と効果の理由\"\n                }\n            ],\n            \"four_pillars\": {\n                \"llmo\": {\n                    \"token_count\": 600,\n                    \"target_range\": \"400-600\",\n                    \"adjustment_notes\": \"元の706 tokensから600 tokensに削減。H3を2個から3個に分割することで実現。\"\n                }\n            }\n        },\n        \"explanation\": \"トークン数が超過（706 tokens）していたため、H3を2個から3個に分割して600 tokensに調整した例。\"\n    },\n    \"example_3_section_independence\": {\n        \"scenario\": \"セクション独立性の改善例\",\n        \"before\": {\n            \"section_id\": \"S05\",\n            \"h2\": \"リモート環境での教育方法\",\n            \"opening_paragraph\": \"これらの課題を解決するために、リモート環境での教育方法を紹介します。\",\n            \"problem\": \"「これらの課題」が何を指すか不明。前セクションを読まないと理解できない。\",\n            \"section_independence_score\": 0.4\n        },\n        \"adjustment_method\": \"冒頭で文脈を再提示\",\n        \"after\": {\n            \"section_id\": \"S05\",\n            \"h2\": \"リモート・ハイブリッド環境での派遣社員教育の3つのポイント\",\n            \"opening_paragraph\": \"{{current_year}}年現在、リモートワークやハイブリッドワークを導入する企業が増えています。派遣社員の教育においても、対面だけでなくリモート環境での効果的な実施方法が求められています。ここでは、リモート環境で派遣社員教育を成功させるための3つのポイントを紹介します。\",\n            \"solution\": \"「派遣社員の教育」「リモート環境」という文脈を冒頭で明確化。前セクション依存なし。\",\n            \"section_independence_score\": 0.9,\n            \"four_pillars\": {\n                \"llmo\": {\n                    \"section_independence\": \"高（冒頭で「派遣社員教育」「リモート環境」という文脈を明確化。{{current_year}}年の働き方動向も提示。前セクション依存なし。）\"\n                }\n            }\n        },\n        \"explanation\": \"セクション独立性を「低」（0.4）から「高」（0.9）に改善した例。冒頭で文脈を再提示することで、前セクションを読まなくても理解可能に。\"\n    },\n    \"bad_example_1_missing_four_pillars\": {\n        \"scenario\": \"4本柱の欠落（悪い例）\",\n        \"bad_output\": {\n            \"section_id\": \"S01\",\n            \"h2\": \"派遣社員の教育が失敗する理由\",\n            \"word_count_target\": 600,\n            \"subsections\": []\n        },\n        \"problems\": [\n            \"four_pillars フィールドがない\",\n            \"neuroscience、behavioral_economics、llmo、kgiが全て欠落\",\n            \"トークン数が記録されていない\",\n            \"セクション独立性が評価されていない\"\n        ],\n        \"correction\": \"全てのH2セクションに four_pillars フィールドを追加する。neuroscience、behavioral_economics、llmo、kgiの全てを記録する。これは絶対要件。\",\n        \"explanation\": \"4本柱の実装は絶対要件。1つでも欠けていると不完全。\"\n    },\n    \"bad_example_2_token_count_exceeded\": {\n        \"scenario\": \"トークン数の超過（悪い例）\",\n        \"bad_output\": {\n            \"section_id\": \"S03\",\n            \"h2\": \"効果的な5ステップ\",\n            \"word_count_target\": 1400,\n            \"token_count_calculated\": 823,\n            \"four_pillars\": {\n                \"llmo\": {\n                    \"token_count\": 823,\n                    \"target_range\": \"400-600\"\n                }\n            },\n            \"problem\": \"トークン数が823で、目標範囲（400-600）を大幅に超過\"\n        },\n        \"problems\": [\n            \"トークン数が823（600を大幅に超過）\",\n            \"AI検索エンジンでの引用率が低下\",\n            \"1セクションで扱う情報が多すぎる\"\n        ],\n        \"correction\": \"H3サブセクションを分割して、トークン数を400-600に調整する。または冗長な説明を削減する。\",\n        \"explanation\": \"トークン数400-600は絶対要件。超過した場合は必ず調整する。\"\n    },\n    \"bad_example_3_low_independence\": {\n        \"scenario\": \"セクション独立性が低い（悪い例）\",\n        \"bad_output\": {\n            \"section_id\": \"S05\",\n            \"h2\": \"具体的な実施方法\",\n            \"opening_paragraph\": \"前述の5ステップを実施する際の具体的な方法を説明します。\",\n            \"four_pillars\": {\n                \"llmo\": {\n                    \"section_independence\": \"低（前セクションへの依存が高い）\"\n                }\n            },\n            \"section_independence_score\": 0.3\n        },\n        \"problems\": [\n            \"「前述の5ステップ」が何か不明\",\n            \"前セクションを読まないと理解できない\",\n            \"AI検索エンジンで単独引用された場合、文脈不明\",\n            \"独立性スコア0.3（低）\"\n        ],\n        \"correction\": \"冒頭で「派遣社員教育の5ステップ」と文脈を再提示する。「前述の」等の表現を避ける。独立性スコアを0.8以上に改善する。\",\n        \"explanation\": \"セクション独立性は必須要件。独立性「低」は避けるべき。\"\n    }\n}\n"
+    },
+    "checklist": {
+        "source": "four_pillars_checklist.md",
+        "content": "# 4本柱チェックリスト（工程6: アウトライン再生成）\n\n**重要**: 出力前に、以下の全項目を確認してください。\n\n---\n\n## ✅ 基本統合チェック\n\n- [ ] **工程4と工程5のデータを統合した**\n  - 工程4のアウトライン: 受領\n  - 工程5の一次情報: 受領\n  - 統合作業: 完了\n\n- [ ] **全セクションに一次情報を配置した**\n  - 総セクション数: ○個\n  - 一次情報を配置したセクション数: ○個\n  - 配置率: 100%\n\n- [ ] **引用形式を統一した**\n  - 形式: （出典: 組織名「タイトル」発表年月）\n  - 全ての一次情報に適用: 完了\n\n- [ ] **参考文献リストを作成した**\n  - 記事末尾に配置\n  - 全ての一次情報を含む\n\n---\n\n## ✅ 4本柱埋め込みチェック（最重要）\n\n### 全セクションへの埋め込み確認\n\n- [ ] **全てのH2セクションに four_pillars フィールドを追加した**\n  - 総H2セクション数: ○個\n  - four_pillarsを追加したセクション数: ○個\n  - 追加率: 100%（必須）\n\n- [ ] **four_pillars の4つのフィールドが全て揃っている**\n  - neuroscience: 全セクション ✓\n  - behavioral_economics: 全セクション ✓\n  - llmo: 全セクション ✓\n  - kgi: 全セクション ✓\n\n---\n\n### 神経科学（neuroscience）チェック\n\n- [ ] **cognitive_load を全セクションに記録した**\n  - 3概念以内を明示: ○セクション / ○セクション\n  - 超過セクション: 0個（必須）\n\n- [ ] **cognitive_load の記述形式を確認した**\n  - 形式: \"3概念（A、B、C）\"\n  - 具体的な概念名を記載: 全セクション ✓\n\n- [ ] **phase を全セクションに記録した**\n  - phase1_anxiety: ○セクション\n  - phase2_understanding: ○セクション\n  - phase3_action: ○セクション\n  - 合計: ○セクション\n\n- [ ] **emotional_trigger を全セクションに記録した**\n  - 具体的な感情トリガーを記述: 全セクション ✓\n  - Phase 1: 不安喚起、損失回避\n  - Phase 2: 期待感、納得\n  - Phase 3: 行動意欲、成功イメージ\n\n- [ ] **sentence_length を全セクションに記録した**\n  - \"20-35文字/文を厳守\": 全セクション ✓\n\n---\n\n### 行動経済学（behavioral_economics）チェック\n\n- [ ] **principles を全セクションに記録した**\n  - 配列形式: 全セクション ✓\n  - 最低1原則: 全セクション ✓\n\n- [ ] **6原則の使用状況を確認した**\n  - loss_aversion: ○セクション\n  - social_proof: ○セクション\n  - authority: ○セクション\n  - consistency: ○セクション\n  - liking: ○セクション\n  - scarcity: ○セクション\n\n- [ ] **各フェーズに適切な原則を配置した**\n  - Phase 1: loss_aversion + liking\n  - Phase 2: authority + social_proof + consistency\n  - Phase 3: scarcity + social_proof\n\n- [ ] **implementation を全セクションに記録した**\n  - 具体的な実装方法を記述: 全セクション ✓\n  - 曖昧な記述なし: 確認済み\n\n- [ ] **data_used を全セクションに記録した**\n  - 使用する一次情報のsource_idを明記: 全セクション ✓\n\n---\n\n### LLMO（llmo）チェック（最重要）\n\n- [ ] **token_count を全セクションに記録した**\n  - 計算方法: 文字数 ÷ 1.7\n  - 全セクションで計算: 完了\n\n- [ ] **全セクションのトークン数が400-600の範囲内**\n  - 範囲内: ○セクション / ○セクション（目標: 100%）\n  - 範囲外: ○セクション（目標: 0個）\n\n- [ ] **トークン数が超過しているセクションを調整した**\n  - 超過セクション: ○個\n  - 調整方法: H3分割 / 削減\n  - 調整後のトークン数: 全て400-600\n\n- [ ] **トークン数が不足しているセクションを調整した**\n  - 不足セクション: ○個\n  - 調整方法: 一次情報追加 / 詳細化\n  - 調整後のトークン数: 全て400-600\n\n- [ ] **target_range を全セクションに記録した**\n  - 値: \"400-600\"（全セクション共通）\n\n- [ ] **section_independence を全セクションに記録した**\n  - 高: ○セクション（目標: 80%以上）\n  - 中: ○セクション\n  - 低: ○セクション（目標: 0個）\n\n- [ ] **独立性「低」のセクションを改善した**\n  - 改善方法: 冒頭で文脈再提示\n  - 改善後: 全セクション「高」または「中」\n\n- [ ] **voice_search_optimized を全セクションに記録した**\n  - true: ○セクション（質問形式H2）\n  - false: ○セクション\n  - 目標: H2の30%以上がtrue\n\n- [ ] **list_format を全セクションに記録した**\n  - 箇条書きの形式を具体的に記述: 全セクション ✓\n\n---\n\n### KGI（kgi）チェック\n\n- [ ] **cta_proximity を全セクションに記録した**\n  - Early CTA配置: ○セクション（650字地点）\n  - Mid CTA配置: ○セクション（2,800字地点）\n  - Final CTA配置: ○セクション（4,500字地点）\n  - なし: ○セクション\n\n- [ ] **3段階CTA配置を確認した**\n  - Early CTA: Phase 1終了時\n  - Mid CTA: Phase 2中盤\n  - Final CTA: Phase 3 + 専用セクション\n\n- [ ] **cvr_contribution を全セクションに記録した**\n  - 具体的な貢献を記述: 全セクション ✓\n  - 数値目標を含む: 推奨\n\n- [ ] **conversion_element を全セクションに記録した**\n  - 転換要素を具体的に記述: 全セクション ✓\n\n---\n\n## ✅ トークン数管理チェック（最重要）\n\n### 全体のトークン数\n\n- [ ] **総トークン数を計算した**\n  - 総文字数: ○○字\n  - 総トークン数: ○○tokens\n  - 平均トークン数/セクション: ○○tokens\n\n- [ ] **平均トークン数が適正範囲内**\n  - 目標: 450-550 tokens/セクション\n  - 実績: ○○ tokens/セクション\n\n---\n\n### セクション別のトークン数\n\n- [ ] **各H2セクションのトークン数を記録した**\n  - セクション1: ○○ tokens（範囲: 400-600）\n  - セクション2: ○○ tokens（範囲: 400-600）\n  - ... （全セクション）\n\n- [ ] **範囲外のセクションを特定した**\n  - 超過（600超）: ○セクション\n  - 不足（400未満）: ○セクション\n\n- [ ] **範囲外のセクションを調整した**\n  - 超過セクションの調整: H3分割 / 削減\n  - 不足セクションの調整: 一次情報追加 / 詳細化\n  - 調整後: 全セクション400-600\n\n---\n\n### H3サブセクションのトークン数\n\n- [ ] **各H3のトークン数を計算した**\n  - 目標: 150-250 tokens/H3\n  - 計算: 完了\n\n- [ ] **範囲外のH3を調整した**\n  - 超過（250超）: 分割または削減\n  - 不足（150未満）: 詳細化または統合\n\n---\n\n## ✅ セクション独立性チェック\n\n- [ ] **全セクションの独立性スコアを評価した**\n  - 高（0.8-1.0）: ○セクション / 目標: 80%以上\n  - 中（0.5-0.7）: ○セクション\n  - 低（0.0-0.4）: ○セクション / 目標: 0個\n\n- [ ] **独立性を高める施策を実施した**\n  - 冒頭での文脈再提示: ○セクション\n  - 前セクション言及の削除: ○箇所\n  - 各セクションの完結性確保: 全セクション ✓\n\n- [ ] **独立性「低」のセクションを改善した**\n  - 改善前: ○セクション\n  - 改善後: 0セクション（必須）\n\n---\n\n## ✅ 一次情報配置チェック\n\n- [ ] **全セクションに一次情報を配置した**\n  - 一次情報配置数: ○個\n  - 未配置セクション: 0個（必須）\n\n- [ ] **primary_sources_used フィールドを全セクションに追加した**\n  - 配列形式: 全セクション ✓\n  - source_id明記: 全て ✓\n\n- [ ] **各一次情報の配置詳細を記録した**\n  - data: データ本体\n  - placement: 配置箇所\n  - citation: 引用形式\n  - purpose: 使用目的\n  - 全て記録: 完了\n\n- [ ] **3フェーズに対応した一次情報配置を確認した**\n  - Phase 1: Phase 1用データ（扁桃体活性化）\n  - Phase 2: Phase 2用データ（前頭前野処理）\n  - Phase 3: Phase 3用データ（線条体活性化）\n\n---\n\n## ✅ 引用形式チェック\n\n- [ ] **引用形式を統一した**\n  - 形式: （出典: 組織名「タイトル」発表年月）\n  - 全ての一次情報に適用: 完了\n\n- [ ] **引用の配置を確認した**\n  - データ・統計の直後: 全て ✓\n  - 1段落に1引用を原則: 遵守\n\n- [ ] **参考文献リストを作成した**\n  - 記事末尾に配置: 完了\n  - 全ての一次情報を含む: 完了\n  - URLを記載: 全て ✓\n\n---\n\n## ✅ 知識ギャップ実装チェック\n\n- [ ] **全ての知識ギャップを実装した**\n  - 工程5で発見したギャップ数: ○個\n  - 実装済みギャップ数: ○個\n  - 実装率: 100%\n\n- [ ] **各ギャップの実装方法を記録した**\n  - 新規H2セクション: ○個\n  - 既存H2内にH3追加: ○個\n  - 既存H3内に追加: ○個\n\n- [ ] **知識ギャップ実装の詳細を記録した**\n  - gap_id: 明記\n  - implementation_method: 明記\n  - location: 明記\n  - content_summary: 記述\n  - differentiation_value: 評価\n  - expected_word_count: 見積もり\n\n---\n\n## ✅ 執筆可能性チェック\n\n- [ ] **全セクションが執筆可能レベルまで詳細化されている**\n  - 詳細度: 100%\n  - 曖昧なセクション: 0個\n\n- [ ] **各セクションの構成が明確**\n  - H2見出し: 全て明確\n  - H3サブセクション: 全て明確\n  - key_points: 全て具体的\n\n- [ ] **データ配置が明確**\n  - 配置箇所: 全て明示\n  - 引用形式: 全て統一\n  - 使用目的: 全て明記\n\n- [ ] **4本柱が実装されている**\n  - 全セクションで確認: 完了\n  - 執筆時に参照可能: ✓\n\n---\n\n## ✅ 出力チェック\n\n- [ ] **JSON形式で出力した**\n  - templates.jsonに従った構造: ✓\n  - 全てのフィールドが揃っている: ✓\n\n- [ ] **全データを出力した**\n  - title_candidates（3パターン）\n  - recommended_title\n  - meta_description\n  - sections（全H2セクション）\n  - cta_strategy\n  - four_pillars_summary\n  - token_count_summary\n  - section_independence_summary\n  - primary_sources_distribution\n  - knowledge_gap_implementation\n\n- [ ] **完了確認メッセージを表示した**\n  - 「✅ 工程6完了」メッセージ\n  - 4本柱チェック: 全セクションで確認済み\n  - トークン数サマリー\n  - 一次情報配置サマリー\n  - 知識ギャップ実装サマリー\n  - 次の工程への案内\n\n---\n\n## ✅ 総合確認\n\n- [ ] **4本柱を全セクションに埋め込んだ**\n  - neuroscience・behavioral_economics・llmo・kgiの全てを確認済み\n  - これは絶対要件\n\n- [ ] **トークン数を400-600に管理した**\n  - 全H2セクション: 400-600 tokens\n  - 超過・不足セクション: 0個\n  - これは絶対要件\n\n- [ ] **セクション独立性を確保した**\n  - 独立性スコア0.8以上: 80%以上\n  - 独立性「低」: 0個\n\n- [ ] **一次情報を全セクションに配置した**\n  - 配置率: 100%\n  - 引用形式統一: 完了\n\n- [ ] **知識ギャップを実装した**\n  - 実装率: 100%\n  - 差別化価値: high が3個以上\n\n- [ ] **執筆可能レベルまで詳細化した**\n  - 詳細度: 100%\n  - 工程7（執筆）で即座に執筆可能\n\n- [ ] **詳細ガイドラインを参照した**\n  - detailed_guidelines.mdの全セクションを確認\n\n- [ ] **具体例を参照した**\n  - examples.jsonで良い例を確認\n\n- [ ] **テンプレートに従った**\n  - templates.jsonの構造を遵守\n\n---\n\n**注意**: 1つでもチェックが漏れている場合は、出力しないでください。\n全項目を確認してから出力してください。\n\n**最重要**: 全H2セクションに4本柱を埋め込み、トークン数を400-600に管理することは絶対要件です。\n",
+        "note": "4本柱チェックリスト（Markdown形式）",
+        "content_source": "four_pillars_checklist.md (full text)"
+    },
+    "important_notes": [
+        "このファイルは元の4ファイルを統合したものです",
+        "精度優先のため、全情報を保持しています",
+        "処理落ち防止のため、JSONの階層構造を最適化しています"
+    ]
+}
