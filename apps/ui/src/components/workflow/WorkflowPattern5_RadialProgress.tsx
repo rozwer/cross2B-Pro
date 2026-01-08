@@ -104,9 +104,6 @@ const PARALLEL_PARENT_CHILDREN: Record<string, string[]> = {
   step7: ["step7a", "step7b"],
 };
 
-// Key steps to show labels for (evenly distributed around the circle)
-const KEY_LABEL_STEPS = ["step-1", "step4", "step7a", "step10", "step12"];
-
 // All step names for progress calculation (use STEP_NAMES to avoid duplicates)
 const ALL_STEP_NAMES = [...STEP_NAMES];
 
@@ -269,7 +266,9 @@ export function WorkflowPattern5_RadialProgress({
 
       {/* Radial View + Detail Panel */}
       <div className="relative p-8 flex items-start justify-center gap-4">
-        <svg width="400" height="400" className="overflow-visible flex-shrink-0">
+        {/* SVG container with relative positioning for labels */}
+        <div className="relative flex-shrink-0" style={{ width: 400, height: 400 }}>
+        <svg width="400" height="400" className="overflow-visible">
           <defs>
             {/* Glow filter */}
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -424,7 +423,10 @@ export function WorkflowPattern5_RadialProgress({
               {completedCount} / {totalSteps}
             </text>
           </g>
+
         </svg>
+
+        </div>
 
         {/* Detail Panel - appears when step is selected */}
         {selectedStep && (
@@ -617,60 +619,6 @@ export function WorkflowPattern5_RadialProgress({
           </div>
         )}
 
-        {/* Floating labels for key steps - rendered inside SVG for proper positioning */}
-        {!selectedStep && (
-          <svg
-            width="400"
-            height="400"
-            className="absolute pointer-events-none"
-            style={{ left: 0, top: 0 }}
-          >
-            {stepPositions
-              .filter((pos) => KEY_LABEL_STEPS.includes(pos.step))
-              .map((pos) => {
-                // Use effective status for label styling
-                const effectiveStatus = getEffectiveStatus(pos.step);
-                // Position label outside the node
-                const isRight = pos.x > centerX;
-                const labelX = isRight ? pos.x + 28 : pos.x - 28;
-                const labelY = pos.y;
-
-                // Determine colors based on status
-                let bgColor = "rgba(229, 231, 235, 0.8)"; // gray-200
-                let textColor = "#6b7280"; // gray-500
-                if (effectiveStatus === "completed") {
-                  bgColor = "rgba(16, 185, 129, 0.2)"; // emerald-500/20
-                  textColor = "#10b981"; // emerald-500
-                } else if (effectiveStatus === "running") {
-                  bgColor = "rgba(6, 182, 212, 0.2)"; // cyan-500/20
-                  textColor = "#06b6d4"; // cyan-500
-                }
-
-                return (
-                  <g key={`label-${pos.step}`}>
-                    <rect
-                      x={isRight ? labelX : labelX - 80}
-                      y={labelY - 10}
-                      width="80"
-                      height="20"
-                      rx="10"
-                      fill={bgColor}
-                    />
-                    <text
-                      x={isRight ? labelX + 40 : labelX - 40}
-                      y={labelY + 4}
-                      textAnchor="middle"
-                      fontSize="11"
-                      fontWeight="500"
-                      fill={textColor}
-                    >
-                      {STEP_LABELS[pos.step]}
-                    </text>
-                  </g>
-                );
-              })}
-          </svg>
-        )}
       </div>
 
       {/* Action bar for approval */}

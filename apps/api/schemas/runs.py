@@ -89,9 +89,10 @@ class CreateRunInput(BaseModel):
         """Normalize input to a consistent format for storage and workflow."""
         if isinstance(self.input, ArticleHearingInput):
             # New format: store full structure and also extract legacy fields
+            # Use mode="json" to ensure HttpUrl and other types are JSON serializable
             return {
                 "format": "article_hearing_v1",
-                "data": self.input.model_dump(),
+                "data": self.input.model_dump(mode="json"),
                 # Legacy fields for backward compatibility
                 "keyword": self.input.get_effective_keyword(),
                 "target_audience": self.input.business.target_audience,

@@ -106,9 +106,9 @@ async def generate_keywords_with_llm(
     safe_audience = sanitize_user_input(target_audience)
 
     prompt = KEYWORD_SUGGESTION_PROMPT.format(
-        theme_topics=safe_theme.escaped,
-        business_description=safe_business.escaped,
-        target_audience=safe_audience.escaped,
+        theme_topics=safe_theme,
+        business_description=safe_business,
+        target_audience=safe_audience,
     )
 
     logger.info(
