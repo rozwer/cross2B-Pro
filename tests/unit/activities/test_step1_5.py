@@ -11,6 +11,9 @@ from apps.worker.activities.step1_5 import (
     step1_5_related_keyword_extraction,
 )
 
+# Path for patching load_step_data (imported inside execute method)
+LOAD_STEP_DATA_PATH = "apps.worker.activities.base.load_step_data"
+
 
 class TestStep1_5RelatedKeywordExtraction:
     """Tests for Step1_5RelatedKeywordExtraction activity."""
@@ -33,7 +36,11 @@ class TestStep1_5RelatedKeywordExtraction:
 
         mock_state = MagicMock()
 
-        result = await activity.execute(mock_ctx, mock_state)
+        with patch("apps.worker.activities.base.load_step_data") as mock_load:
+            # Return empty step1 data, then empty step0 data
+            mock_load.side_effect = [{}, {}]
+
+            result = await activity.execute(mock_ctx, mock_state)
 
         assert result["step"] == "step1_5"
         assert result["skipped"] is True
@@ -53,7 +60,11 @@ class TestStep1_5RelatedKeywordExtraction:
 
         mock_state = MagicMock()
 
-        result = await activity.execute(mock_ctx, mock_state)
+        with patch("apps.worker.activities.base.load_step_data") as mock_load:
+            # Return empty step1 data, then empty step0 data
+            mock_load.side_effect = [{}, {}]
+
+            result = await activity.execute(mock_ctx, mock_state)
 
         assert result["skipped"] is True
         assert result["skip_reason"] == "no_related_keywords"
@@ -106,7 +117,11 @@ class TestStep1_5RelatedKeywordExtraction:
             mock_registry.return_value = mock_registry_instance
 
             with patch("apps.worker.activities.step1_5.activity"):
-                result = await activity.execute(mock_ctx, mock_state)
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return empty step1 data, then empty step0 data
+                    mock_load.side_effect = [{}, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
 
         assert result["step"] == "step1_5"
         assert result["skipped"] is False
@@ -145,7 +160,11 @@ class TestStep1_5RelatedKeywordExtraction:
             mock_registry.return_value = mock_registry_instance
 
             with patch("apps.worker.activities.step1_5.activity"):
-                result = await activity.execute(mock_ctx, mock_state)
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return empty step1 data, then empty step0 data
+                    mock_load.side_effect = [{}, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
 
         # Should only process MAX_RELATED_KEYWORDS (5)
         assert result["related_keywords_analyzed"] <= activity.MAX_RELATED_KEYWORDS
@@ -170,11 +189,15 @@ class TestStep1_5RelatedKeywordExtraction:
             mock_registry_instance.get = MagicMock(side_effect=Exception("Tool not found"))
             mock_registry.return_value = mock_registry_instance
 
-            with pytest.raises(ActivityError) as exc_info:
-                await activity.execute(mock_ctx, mock_state)
+            with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                # Return empty step1 data, then empty step0 data
+                mock_load.side_effect = [{}, {}]
 
-            assert exc_info.value.category == ErrorCategory.NON_RETRYABLE
-            assert "Required tool not found" in str(exc_info.value)
+                with pytest.raises(ActivityError) as exc_info:
+                    await activity.execute(mock_ctx, mock_state)
+
+                assert exc_info.value.category == ErrorCategory.NON_RETRYABLE
+                assert "Required tool not found" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_checkpoint_resume(self) -> None:
@@ -218,12 +241,206 @@ class TestStep1_5RelatedKeywordExtraction:
             mock_registry.return_value = mock_registry_instance
 
             with patch("apps.worker.activities.step1_5.activity"):
-                result = await activity.execute(mock_ctx, mock_state)
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return empty step1 data, then empty step0 data
+                    mock_load.side_effect = [{}, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
 
         # Should include data from checkpoint + newly processed
         assert result["related_keywords_analyzed"] == 2
         # SERP should only be called for keyword2 (keyword1 was in checkpoint)
         assert mock_serp_tool.execute.call_count == 1
+
+
+class TestStep1_5Step1Deduplication:
+    """Tests for step1 URL deduplication."""
+
+    @pytest.mark.asyncio
+    async def test_excludes_step1_duplicate_urls(self) -> None:
+        """Test execution excludes URLs already fetched in step1."""
+        activity = Step1_5RelatedKeywordExtraction()
+
+        # Mock checkpoint (no existing data)
+        activity.checkpoint = MagicMock()
+        activity.checkpoint.load = AsyncMock(return_value=None)
+        activity.checkpoint.save = AsyncMock()
+
+        # Mock context
+        mock_ctx = MagicMock()
+        mock_ctx.config = {"related_keywords": ["keyword1"]}
+        mock_ctx.tenant_id = "test_tenant"
+        mock_ctx.run_id = "test_run"
+
+        mock_state = MagicMock()
+
+        # Mock step1 data with some URLs
+        step1_data = {
+            "competitors": [
+                {"url": "https://example.com/1"},
+                {"url": "https://example.com/2"},
+            ]
+        }
+
+        # Mock SERP result returning URLs including duplicates from step1
+        mock_serp_result = MagicMock()
+        mock_serp_result.success = True
+        mock_serp_result.data = {
+            "results": [
+                {"url": "https://example.com/1"},  # Duplicate from step1
+                {"url": "https://example.com/3"},  # New URL
+                {"url": "https://example.com/4"},  # New URL
+            ]
+        }
+
+        mock_page_result = MagicMock()
+        mock_page_result.success = True
+        mock_page_result.data = {
+            "title": "Test Page",
+            "body_text": "Test content " * 50,
+            "headings": [],
+        }
+
+        mock_serp_tool = MagicMock()
+        mock_serp_tool.execute = AsyncMock(return_value=mock_serp_result)
+
+        mock_page_tool = MagicMock()
+        mock_page_tool.execute = AsyncMock(return_value=mock_page_result)
+
+        with patch("apps.worker.activities.step1_5.ToolRegistry") as mock_registry:
+            mock_registry_instance = MagicMock()
+            mock_registry_instance.get = MagicMock(side_effect=lambda name: mock_serp_tool if name == "serp_fetch" else mock_page_tool)
+            mock_registry.return_value = mock_registry_instance
+
+            with patch("apps.worker.activities.step1_5.activity"):
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return step1 data, then step0 data (empty)
+                    mock_load.side_effect = [step1_data, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
+
+        # Should have processed 1 keyword
+        assert result["related_keywords_analyzed"] == 1
+
+        # page_tool should only be called for non-duplicate URLs (2 calls: /3 and /4)
+        assert mock_page_tool.execute.call_count == 2
+
+        # Check that skipped_duplicate_count is tracked
+        kw_data = result["related_competitor_data"][0]
+        assert kw_data["skipped_duplicate_count"] == 1  # /1 was skipped
+
+    @pytest.mark.asyncio
+    async def test_works_when_step1_empty(self) -> None:
+        """Test execution works normally when step1 has no competitors."""
+        activity = Step1_5RelatedKeywordExtraction()
+
+        activity.checkpoint = MagicMock()
+        activity.checkpoint.load = AsyncMock(return_value=None)
+        activity.checkpoint.save = AsyncMock()
+
+        mock_ctx = MagicMock()
+        mock_ctx.config = {"related_keywords": ["keyword1"]}
+        mock_ctx.tenant_id = "test_tenant"
+        mock_ctx.run_id = "test_run"
+
+        mock_state = MagicMock()
+
+        # Mock SERP result
+        mock_serp_result = MagicMock()
+        mock_serp_result.success = True
+        mock_serp_result.data = {
+            "results": [
+                {"url": "https://example.com/1"},
+            ]
+        }
+
+        mock_page_result = MagicMock()
+        mock_page_result.success = True
+        mock_page_result.data = {
+            "title": "Test Page",
+            "body_text": "Test content " * 50,
+            "headings": [],
+        }
+
+        mock_serp_tool = MagicMock()
+        mock_serp_tool.execute = AsyncMock(return_value=mock_serp_result)
+
+        mock_page_tool = MagicMock()
+        mock_page_tool.execute = AsyncMock(return_value=mock_page_result)
+
+        with patch("apps.worker.activities.step1_5.ToolRegistry") as mock_registry:
+            mock_registry_instance = MagicMock()
+            mock_registry_instance.get = MagicMock(side_effect=lambda name: mock_serp_tool if name == "serp_fetch" else mock_page_tool)
+            mock_registry.return_value = mock_registry_instance
+
+            with patch("apps.worker.activities.step1_5.activity"):
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return empty step1 data, then empty step0 data
+                    mock_load.side_effect = [{"competitors": []}, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
+
+        # Should process normally
+        assert result["skipped"] is False
+        assert result["related_keywords_analyzed"] == 1
+
+        # No duplicates to skip
+        kw_data = result["related_competitor_data"][0]
+        assert kw_data["skipped_duplicate_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_works_when_step1_not_found(self) -> None:
+        """Test execution works normally when step1 data is not found."""
+        activity = Step1_5RelatedKeywordExtraction()
+
+        activity.checkpoint = MagicMock()
+        activity.checkpoint.load = AsyncMock(return_value=None)
+        activity.checkpoint.save = AsyncMock()
+
+        mock_ctx = MagicMock()
+        mock_ctx.config = {"related_keywords": ["keyword1"]}
+        mock_ctx.tenant_id = "test_tenant"
+        mock_ctx.run_id = "test_run"
+
+        mock_state = MagicMock()
+
+        mock_serp_result = MagicMock()
+        mock_serp_result.success = True
+        mock_serp_result.data = {
+            "results": [
+                {"url": "https://example.com/1"},
+            ]
+        }
+
+        mock_page_result = MagicMock()
+        mock_page_result.success = True
+        mock_page_result.data = {
+            "title": "Test Page",
+            "body_text": "Test content " * 50,
+            "headings": [],
+        }
+
+        mock_serp_tool = MagicMock()
+        mock_serp_tool.execute = AsyncMock(return_value=mock_serp_result)
+
+        mock_page_tool = MagicMock()
+        mock_page_tool.execute = AsyncMock(return_value=mock_page_result)
+
+        with patch("apps.worker.activities.step1_5.ToolRegistry") as mock_registry:
+            mock_registry_instance = MagicMock()
+            mock_registry_instance.get = MagicMock(side_effect=lambda name: mock_serp_tool if name == "serp_fetch" else mock_page_tool)
+            mock_registry.return_value = mock_registry_instance
+
+            with patch("apps.worker.activities.step1_5.activity"):
+                with patch("apps.worker.activities.base.load_step_data") as mock_load:
+                    # Return None for step1 (not found), then empty step0 data
+                    mock_load.side_effect = [None, {}]
+
+                    result = await activity.execute(mock_ctx, mock_state)
+
+        # Should process normally without errors
+        assert result["skipped"] is False
+        assert result["related_keywords_analyzed"] == 1
 
 
 class TestStep1_5ContentValidation:
