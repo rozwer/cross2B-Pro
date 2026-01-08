@@ -1,0 +1,810 @@
+{
+    "process_info": {
+        "name": "工程9:最終リライト・品質向上",
+        "version": "5.5",
+        "purpose": "工程9:最終リライト・品質向上の全知識を統合したファイル",
+        "note": "このJSONにはガイドライン・テンプレート・実例・チェックリストの全てが含まれています"
+    },
+    "guidelines": {
+        "source": "detailed_guidelines.md",
+        "content": "# 工程9: 最終リライト・品質向上（SEO最終チェック・公開準備） - 詳細ガイドライン\n\n## 1. 工程の目的\n\n工程8のファクトチェック結果を反映し、記事を公開準備完了状態に仕上げる工程です。\n\n### なぜ重要なのか？\n- **誤りの完全排除**: ファクトチェックで発見された全ての問題を修正\n- **品質の最終保証**: 公開に値する品質を担保\n- **読者体験の最適化**: 最後まで読まれる記事に仕上げる\n- **CV率の最大化**: CTAの効果を最大限に引き出す\n- **SEO効果の最大化**: 検索順位上昇を狙う\n\n**この工程が最終調整です。次の工程10は最終出力のみです。**\n\n---\n\n## 2. 入力データ構造\n\n### 必須入力（5ファイル）\n\n**★精度重視：元データを直接参照★**\n\n1. **工程0_キーワード選定結果.json** ← CTA情報（修正時に使用）\n2. **工程5_一次情報収集結果.json** ← [PS-XX]一次情報（正確性検証の照合元）\n3. **工程6.5_構成案.md** ← 構成案（参考用）\n4. **工程8_ファクトチェック結果.json** ← 前工程の出力（修正指示）\n5. **工程8_FAQ統合版.md** ← 前工程の出力（修正対象）\n\n**参照ルール:**\n- 工程8_ファクトチェック結果.jsonのissues_foundを**全て**修正すること\n- 修正時は工程5_一次情報収集結果.jsonの[PS-XX]を参照し、正確に転記\n- 数値・引用元を勝手に変更しない（工程5の一次情報が「正」）\n- CTAは工程0_キーワード選定結果.jsonのcta_specificationを使用\n- 修正箇所は全てcorrections_madeに記録\n\n---\n\n## 3. 出力データ構造\n\n### Part 1: 修正版記事本文（Markdown）\n### Part 2: 修正レポート（JSON）\n\n---\n\n## 4. タスク1: ファクトチェック結果の反映（最重要）\n\n### 4.1 修正すべき問題の特定\n\n工程8Aの `issues_found` セクションを確認し、全ての問題をリストアップします。\n\n**問題の種類**:\n1. **data_inaccuracy**: データの誤り\n2. **broken_link**: URLの無効\n3. **outdated_info**: 古い情報\n4. **missing_source**: 引用元の欠如\n5. **context_error**: 文脈の誤り\n\n---\n\n### 4.2 修正方法\n\n#### データの誤りの修正\n\n**工程8Aの例**:\n```json\n{\n  \"issue_id\": \"ISS001\",\n  \"severity\": \"high\",\n  \"issue_type\": \"data_inaccuracy\",\n  \"location\": \"H2-1\",\n  \"description\": \"離職による損失額が55万円と記載されているが、正しくは52万円\",\n  \"correction_required\": \"55万円 → 52万円\",\n  \"alternative_source\": {\n    \"source\": \"経済産業省「企業の人材育成投資調査」2024年9月\",\n    \"url\": \"https://www.meti.go.jp/...\",\n    \"correct_data\": \"平均52万円\"\n  }\n}\n```\n\n**修正前**:\n```markdown\n1人の派遣社員が離職すると、採用コスト35万円 + 教育コスト20万円 = 計55万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。\n```\n\n**修正後**:\n```markdown\n1人の派遣社員が離職すると、採用コスト32万円 + 教育コスト20万円 = 計52万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。\n```\n\n**重要**:\n- 数値を正確に修正（55万円 → 52万円）\n- 内訳も修正（35万円 → 32万円）\n- 引用は維持\n\n---\n\n#### URLの無効の修正\n\n**工程8Aの例**:\n```json\n{\n  \"issue_id\": \"ISS002\",\n  \"severity\": \"medium\",\n  \"issue_type\": \"broken_link\",\n  \"location\": \"参考文献リスト\",\n  \"description\": \"REF002のURLが404エラー\",\n  \"correction_required\": \"URLを最新のものに更新\",\n  \"corrected_url\": \"https://www.meti.go.jp/correct_path/...\"\n}\n```\n\n**修正前**:\n```markdown\n2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/old_path/... （参照: {{current_year}}-10-21）\n```\n\n**修正後**:\n```markdown\n2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/correct_path/... （参照: {{current_year}}-10-21）\n```\n\n---\n\n### 4.3 全ての問題を修正\n\n工程8Aの `issues_found` に記載された全ての問題を、1つずつ確実に修正してください。\n\n**修正確認**:\n- [ ] 全ての `data_inaccuracy` を修正したか\n- [ ] 全ての `broken_link` を修正したか\n- [ ] 全ての `outdated_info` を修正したか\n- [ ] 全ての `missing_source` を修正したか\n- [ ] 全ての `context_error` を修正したか\n\n---\n\n## 5. タスク2: 読みやすさの最終調整\n\n### 5.1 文章のリズム\n\n**確認項目**:\n- 長短のバランス: 長文と短文が適度に混在しているか\n- 読むリズム: スムーズに読めるか\n- 単調さの回避: 同じ文末表現が連続していないか\n\n**例**:\n```\n❌ 悪い例（単調）:\n派遣社員の教育が重要です。教育により定着率が向上します。定着率が向上すれば、採用コストが削減できます。\n\n✅ 良い例（リズムがある）:\n派遣社員の教育は、企業にとって重要な投資です。適切な教育により、定着率が向上します。その結果、採用コストを大幅に削減できるのです。\n```\n\n---\n\n### 5.2 接続の自然さ\n\n**確認項目**:\n- セクション間の繋がり: 唐突な転換がないか\n- 段落間の繋がり: 論理的な流れがあるか\n- 接続詞の適切な使用: 「しかし」「さらに」「そのため」等\n\n**例**:\n```\n❌ 悪い例（接続が不自然）:\n派遣社員の離職率が高い。教育が必要だ。\n\n✅ 良い例（接続が自然）:\n派遣社員の離職率が高いという課題があります。そのため、適切な教育が必要です。\n```\n\n---\n\n### 5.3 冗長表現の削除\n\n**確認項目**:\n- 不要な繰り返し: 同じ内容を何度も述べていないか\n- 回りくどい表現: 簡潔に言い換えられないか\n\n**例**:\n```\n❌ 冗長: 派遣社員の教育というものは、企業にとって非常に重要なものであり、適切に実施することが求められるものです。\n\n✅ 簡潔: 派遣社員の教育は、企業にとって重要であり、適切な実施が求められます。\n```\n\n---\n\n### 5.4 専門用語の補足\n\n**確認項目**:\n- 全ての専門用語に補足があるか\n- 補足が分かりやすいか\n\n**例**:\n```\n❌ 補足なし: OJTとOff-JTを組み合わせる\n\n✅ 補足あり: OJT（実務を通じた教育）とOff-JT（座学研修）を組み合わせる\n```\n\n---\n\n### 5.5 箇条書きの整理\n\n**確認項目**:\n- 箇条書きが見やすいか\n- 項目数が適切か（3〜5項目が理想）\n- 各項目の長さが揃っているか\n\n---\n\n## 6. タスク3: 説得力の強化\n\n### 6.1 Phase 1（不安・課題認識）の強化\n\n**確認項目**:\n- [ ] 読者の不安を十分に喚起できているか\n- [ ] 損失回避動機が明確か\n- [ ] データで危機感を与えられているか\n\n**強化例**:\n```\nBefore（弱い）:\n派遣社員の離職率が高いという問題があります。\n\nAfter（強化）:\n派遣社員の3ヶ月以内離職率は29.3%に達し、1人の離職で52万円の損失が発生します（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。年間4人が離職すれば、208万円もの損失になります。\n```\n\n---\n\n### 6.2 Phase 2（理解・納得）の強化\n\n**確認項目**:\n- [ ] 解決策が具体的で実行可能か\n- [ ] データで信頼性を示せているか\n- [ ] 読者が「できる」と感じられるか\n\n**強化例**:\n```\nBefore（抽象的）:\n教育により定着率が向上します。\n\nAfter（具体的）:\n体系的な教育プログラムを導入した企業300社のうち、85%が「効果を実感した」と回答しています（出典: 日本人材派遣協会「人材派遣業界白書」2024年）。具体的には、3ヶ月以内の離職率が29.3%から18.7%に低下しています。\n```\n\n---\n\n### 6.3 Phase 3（行動決定）の強化\n\n**確認項目**:\n- [ ] 行動への後押しが十分か\n- [ ] ハードルが低く設定されているか\n- [ ] CTAが魅力的か\n\n**強化例**:\n```\nBefore（弱い）:\nぜひ導入を検討してください。\n\nAfter（強化）:\n今なら、専門家による無料コンサルティング（30分）を実施しています。あなたの会社に最適な教育プランを無料で提案します。月10社限定、今月の残り枠は3社のみです。\n→ 今すぐ無料相談を予約する\n```\n\n---\n\n## 7. タスク4: SEO最適化の最終確認\n\n### 7.1 キーワード密度\n\n**確認項目**:\n- メインキーワード: 1.5〜2.0%\n- Essential共起語: 各0.5〜1.0%\n- 過度な詰め込みがないか\n\n**計算方法**:\n```\nキーワード密度 = (キーワード出現回数 ÷ 総単語数) × 100\n```\n\n**例**:\n```\n総単語数: 5,000語\nメインキーワード「派遣社員 教育」出現回数: 85回\n密度: 85 ÷ 5,000 × 100 = 1.7%（適正範囲）\n```\n\n---\n\n### 7.2 見出し構造\n\n**確認項目**:\n- H2が適切に配置されているか（10〜13個）\n- H3が論理的に構成されているか（H2あたり2〜3個）\n- 質問形式見出しが30%以上か\n\n---\n\n### 7.3 内部リンク候補\n\n**提案項目**:\n- 他の記事へのリンク候補を2〜5個提案\n- 適切な箇所を特定\n- アンカーテキストを提案\n\n**例**:\n```json\n{\n  \"anchor_text\": \"派遣社員のメンター制度\",\n  \"target_article\": \"派遣社員のメンター制度導入ガイド\",\n  \"location\": \"H2-3\",\n  \"reason\": \"メンター制度について言及しているため\"\n}\n```\n\n---\n\n### 7.4 メタ情報の最終確認\n\n**確認項目**:\n- タイトルが魅力的か（30〜40文字）\n- メタディスクリプションが適切か（120〜150文字）\n- キーワードが含まれているか\n\n---\n\n## 8. タスク5: 4本柱の最終チェック（最重要）\n\n### 8.1 神経科学の最終チェック\n\n#### 衝撃的データの正確性を最優先で確認\n\n**確認項目**:\n- [ ] Phase 1の衝撃的データが正確か\n  - 例: 離職率29.3%、損失52万円\n- [ ] Phase 2の信頼性データが正確か\n  - 例: 満足度85%、導入企業300社\n- [ ] Phase 3の成功データが正確か\n  - 例: 離職率35%低下、3ヶ月で効果\n\n**重要**:\n衝撃的なデータほど、読者の印象に残ります。そのため、これらのデータの正確性を最優先で確認してください。\n\n---\n\n#### 3概念以内を維持\n\n**確認項目**:\n- [ ] 各H2セクションで3概念以内を維持しているか\n- [ ] 概念が明確に分離されているか\n\n---\n\n#### 文の長さ20-35文字を維持\n\n**確認項目**:\n- [ ] 1文が20-35文字に収まっているか（80%以上）\n- [ ] 長文（60文字以上）を分割したか\n\n---\n\n#### 3フェーズ配分を維持\n\n**確認項目**:\n- [ ] Phase 1: 600-800字\n- [ ] Phase 2: 3,000-3,500字\n- [ ] Phase 3: 600-1,000字\n\n---\n\n### 8.2 行動経済学の最終チェック\n\n#### 社会的証明のデータを検証\n\n**確認項目**:\n- [ ] 社会的証明に使用されている全てのデータが正確か\n  - 例: 導入企業300社、満足度85%\n- [ ] 実績数・満足度が正確か\n- [ ] 権威性データ（公的機関）が正確か\n\n**重要**:\n社会的証明は読者の行動を促す重要な要素です。これらのデータが不正確だと、記事の信頼性全体が損なわれます。\n\n**確認例**:\n```\nBefore修正: 導入企業300社のうち、85%が「効果を実感」\n↓ ファクトチェックで発見\nAfter修正: 導入企業280社のうち、82%が「効果を実感」\n```\n\n---\n\n#### 6原則の配置を維持\n\n**確認項目**:\n- [ ] 損失回避: Phase 1で配置されているか\n- [ ] 社会的証明: Phase 2で配置されているか\n- [ ] 権威性: Phase 2で配置されているか\n- [ ] 一貫性: Phase 2-3で配置されているか\n- [ ] 好意: Phase 1とPhase 3で配置されているか\n- [ ] 希少性: Phase 3で配置されているか\n\n---\n\n### 8.3 LLMOの最終チェック\n\n#### 引用形式が正しいか確認\n\n**確認項目**:\n- [ ] 全ての引用が統一形式か\n  - 形式: （出典: 組織名「タイトル」発表年月）\n- [ ] 引用が正確か\n- [ ] 引用が最新か\n\n**重要**:\n引用形式が統一されていないと、AI検索エンジンが正しく情報を抽出できません。\n\n**確認例**:\n```\n❌ NG: （厚労省 2024年）\n❌ NG: （出典: 厚生労働省）\n✅ OK: （出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\n```\n\n---\n\n#### トークン数400-600を維持\n\n**確認項目**:\n- [ ] 各H2セクションが400-600 tokensの範囲内か\n- [ ] 大幅な増減がないか（±10%以内）\n\n---\n\n#### 箇条書きを維持\n\n**確認項目**:\n- [ ] 各セクションに箇条書きが1箇所以上あるか\n- [ ] 箇条書きの項目数が適切か（3〜5項目）\n\n---\n\n#### セクション独立性を維持\n\n**確認項目**:\n- [ ] 各セクション冒頭で文脈を再提示しているか\n- [ ] 「前述の通り」等の依存表現がないか\n\n---\n\n### 8.4 KGIの最終チェック\n\n#### CTA周辺のデータを重点的に検証\n\n**確認項目**:\n- [ ] Early CTA周辺のデータが正確か\n  - 例: 損失額、離職率\n- [ ] Mid CTA周辺のデータが正確か\n  - 例: 成功事例の数値\n- [ ] Final CTA周辺のデータが正確か\n  - 例: 実績数、満足度、改善率\n\n**重要**:\nCTA周辺のデータは、読者の行動決定に最も影響を与えます。これらのデータが不正確だと、CVRが大きく低下します。\n\n**確認例**:\n```\nFinal CTA周辺:\nBefore修正: 支援企業数 300社以上、顧客満足度 96.8%\n↓ ファクトチェックで発見\nAfter修正: 支援企業数 280社以上、顧客満足度 94.5%\n```\n\n---\n\n#### 3段階CTA配置を維持\n\n**確認項目**:\n- [ ] Early CTA: 650字前後に配置されているか\n- [ ] Mid CTA: 2,800字前後に配置されているか\n- [ ] Final CTA: 4,500字前後 + 専用セクションに配置されているか\n\n---\n\n#### 内部リンクを維持\n\n**確認項目**:\n- [ ] 全てのFAQに内部リンクがあるか\n- [ ] 内部リンクが適切な箇所を指しているか\n\n---\n\n## 9. 見出しのクリーンアップ
+
+工程7以前の構成案で使用していた `H2-1` や `H3-2` といった内部管理番号は、読者には不要です。工程9の最終リライトでは以下を徹底してください。
+
+- すべての見出しから管理番号・コロンを削除し、自然な見出しのみを残す
+- 本文中に残った `H2-3` などのIDも削除または人間可読な表現に置き換える
+- 番号を残す場合は「第1章」「STEP1」など読者向けに意味が伝わる形に再構成する
+- 出力前に `H2-` `H3-` `S0` 等で全文検索し、痕跡がないことを確認する
+
+---
+
+## 10. タスク6: 品質スコアの算出\n\n### 9.1 スコアリング項目（各0.0〜1.0）\n\n#### 1. 正確性（Accuracy）\n- **定義**: データ・引用の正確性\n- **評価基準**:\n  - 1.0: 全てのデータ・引用が正確\n  - 0.9: 1〜2個の軽微な誤り\n  - 0.8: 3〜5個の軽微な誤り\n  - 0.7以下: 6個以上の誤り、または重大な誤り\n\n---\n\n#### 2. 読みやすさ（Readability）\n- **定義**: 文章の読みやすさ\n- **評価基準**:\n  - 1.0: 非常に読みやすい、リズムが良い\n  - 0.9: 読みやすい、多少の改善余地\n  - 0.8: 普通、いくつかの改善が必要\n  - 0.7以下: 読みにくい、大幅な改善が必要\n\n---\n\n#### 3. 説得力（Persuasiveness）\n- **定義**: 読者を納得させる力\n- **評価基準**:\n  - 1.0: 非常に説得力がある、データと論理が完璧\n  - 0.9: 説得力がある、多少の改善余地\n  - 0.8: 普通、いくつかの改善が必要\n  - 0.7以下: 説得力が弱い、大幅な改善が必要\n\n---\n\n#### 4. 網羅性（Comprehensiveness）\n- **定義**: 必要な情報が全て含まれているか\n- **評価基準**:\n  - 1.0: 全ての必要情報が含まれている\n  - 0.9: ほぼ全ての情報が含まれている\n  - 0.8: 一部の情報が不足\n  - 0.7以下: 重要な情報が欠けている\n\n---\n\n#### 5. 差別化（Differentiation）\n- **定義**: 競合との違いが明確か\n- **評価基準**:\n  - 1.0: 明確な差別化、競合を大きく上回る\n  - 0.9: 差別化されている、多少の改善余地\n  - 0.8: やや差別化されている\n  - 0.7以下: 競合と大差ない\n\n---\n\n#### 6. 実用性（Practicality）\n- **定義**: 読者が実際に行動できるか\n- **評価基準**:\n  - 1.0: 非常に実用的、すぐに行動できる\n  - 0.9: 実用的、多少の改善余地\n  - 0.8: やや実用的\n  - 0.7以下: 実用性が低い\n\n---\n\n#### 7. SEO最適化（SEO Optimization）\n- **定義**: キーワード・構造の最適化\n- **評価基準**:\n  - 1.0: 完璧に最適化されている\n  - 0.9: よく最適化されている\n  - 0.8: 普通に最適化されている\n  - 0.7以下: 最適化が不十分\n\n---\n\n#### 8. CTA効果（CTA Effectiveness）\n- **定義**: 行動喚起の効果\n- **評価基準**:\n  - 1.0: 非常に効果的、CVR最大化\n  - 0.9: 効果的、多少の改善余地\n  - 0.8: 普通、いくつかの改善が必要\n  - 0.7以下: 効果が低い\n\n---\n\n### 9.2 総合品質スコアの算出\n\n**計算方法**:\n```\n総合品質スコア = (正確性 + 読みやすさ + 説得力 + 網羅性 + 差別化 + 実用性 + SEO最適化 + CTA効果) ÷ 8\n```\n\n**目標**: 0.90以上\n\n**例**:\n```\n正確性: 0.98\n読みやすさ: 0.92\n説得力: 0.90\n網羅性: 0.95\n差別化: 0.93\n実用性: 0.91\nSEO最適化: 0.94\nCTA効果: 0.92\n\n総合品質スコア: (0.98 + 0.92 + 0.90 + 0.95 + 0.93 + 0.91 + 0.94 + 0.92) ÷ 8 = 0.93\n```\n\n---\n\n## 10. 完了基準\n\n工程9は以下の条件を全て満たした時点で完了:\n- [] 工程8Aの全ての問題を修正した\n- [] 読みやすさを最終調整した\n- [] 説得力を強化した\n- [] SEO要素を最適確認した\n- [] 4本柱を最終チェックした\n- [] 品質スコアを算出した（0.90以上）\n- [] Part 1（修正版記事）を出力した\n- [] Part 2（修正レポート）を出力した\n\n---\n\nこれで detailed_guidelines.md は完了です。\n","note": "完全なガイドラインをMarkdown形式で保持（精度優先）","content_source": "detailed_guidelines.md (full text)"
+    },
+    "templates": {
+        "source": "templates.json",
+        "content": {
+            "output_part1_revised_article": {
+                "description": "Part 1: 修正版記事本文のMarkdown形式テンプレート",
+                "template": "# タイトル（変更なし）\n\n（導入部 - 修正・調整済み）\n\n---\n【Early CTA】（変更なし）\n---\n\n## H2-1（変更なし）\n\n（本文 - 修正・調整済み）\n\n### H3-1-1（変更なし）\n\n（本文 - 修正・調整済み）\n\n（以下、全セクション同様）\n\n---\n【Mid CTA】（変更なし）\n---\n\n（中略）\n\n## Final CTAセクション（変更なし）\n\n（本文 - 修正・調整済み）\n\n---\n\n## よくある質問（FAQ）（変更なし）\n\n（FAQ - 変更なし）\n\n---\n\n## まとめ（変更なし）\n\n（本文 - 修正・調整済み）\n\n---\n\n## 参考文献（変更なし）\n\n1. ...（URLを修正済み）\n2. ..."
+            },
+            "output_part2_revision_report": {
+                "description": "Part 2: 修正レポートのJSON形式テンプレート",
+                "template": {
+                    "revision_date": "{{current_year}}-10-21T10:00:00Z",
+                    "article_title": "記事タイトル",
+                    "corrections_made": [
+                        {
+                            "correction_id": "COR001",
+                            "location": "H2-1",
+                            "issue": "離職コストが55万円と誤記",
+                            "correction": "52万円に修正",
+                            "source": "経済産業省「企業の人材育成投資調査」2024年9月",
+                            "severity": "high"
+                        }
+                    ],
+                    "improvements_made": [
+                        {
+                            "improvement_id": "IMP001",
+                            "location": "導入部",
+                            "improvement_type": "readability",
+                            "description": "長文を2文に分割、読みやすさ向上",
+                            "before_character_count": 78,
+                            "after_character_count": "36 + 19"
+                        }
+                    ],
+                    "seo_checks": {
+                        "keyword_density": {
+                            "main_keyword": "1.8%",
+                            "status": "optimal",
+                            "target_range": "1.5-2.0%"
+                        },
+                        "heading_structure": {
+                            "h2_count": 12,
+                            "h3_count": 28,
+                            "status": "good",
+                            "target_h2_range": "10-13",
+                            "target_h3_per_h2": "2-3"
+                        },
+                        "word_count": 4850,
+                        "target_range": "4500-5000",
+                        "readability": "medium"
+                    },
+                    "four_pillars_final_check": {
+                        "neuroscience": {
+                            "shocking_data_accuracy": "all_verified",
+                            "concept_count_per_section": "3以内（全セクション）",
+                            "sentence_length": "80%が20-35文字",
+                            "phase_distribution": "Phase1: 750字、Phase2: 3200字、Phase3: 900字"
+                        },
+                        "behavioral_economics": {
+                            "social_proof_data_verification": "all_verified",
+                            "six_principles_placement": "全て配置済み",
+                            "specific_numbers": "全て正確"
+                        },
+                        "llmo": {
+                            "citation_format_check": "統一率100%",
+                            "token_count_range": "90%が400-600 tokens",
+                            "bullet_points": "各セクション1箇所以上",
+                            "section_independence": "全セクション確保"
+                        },
+                        "kgi": {
+                            "cta_surrounding_data_verification": "all_verified",
+                            "three_stage_cta_placement": "Early: 650字、Mid: 2800字、Final: 4500字",
+                            "internal_links": "全FAQ + 2箇所追加提案"
+                        }
+                    },
+                    "cta_effectiveness": {
+                        "early_cta": {
+                            "location": "650字",
+                            "effectiveness": "high",
+                            "notes": "心理的ハードル最低、データ正確"
+                        },
+                        "mid_cta": {
+                            "location": "2800字",
+                            "effectiveness": "high",
+                            "notes": "提供価値明確、データ修正済み"
+                        },
+                        "final_cta": {
+                            "location": "4500字+専用セクション",
+                            "effectiveness": "high",
+                            "notes": "最強の訴求、データ修正済み、希少性明示"
+                        }
+                    },
+                    "differentiation_elements": [
+                        "2024〜{{current_year}}年最新データ使用（競合の0%）",
+                        "2024年新設助成金制度の詳解（競合が誰も触れていない）",
+                        "リモート・ハイブリッド対応教育方法（競合の20%のみ）",
+                        "中小企業向け低予算プラン（競合の30%のみ）"
+                    ],
+                    "quality_scores": {
+                        "accuracy": 0.98,
+                        "readability": 0.92,
+                        "persuasiveness": 0.9,
+                        "comprehensiveness": 0.95,
+                        "differentiation": 0.93,
+                        "practicality": 0.91,
+                        "seo_optimization": 0.94,
+                        "cta_effectiveness": 0.92,
+                        "overall_quality_score": 0.93
+                    },
+                    "internal_link_suggestions": [
+                        {
+                            "anchor_text": "派遣社員のメンター制度",
+                            "target_article": "派遣社員のメンター制度導入ガイド",
+                            "location": "H2-3",
+                            "reason": "メンター制度について詳細に言及"
+                        },
+                        {
+                            "anchor_text": "助成金申請方法",
+                            "target_article": "人材開発支援助成金の申請手順",
+                            "location": "H2-6",
+                            "reason": "助成金について詳細に言及"
+                        }
+                    ],
+                    "publication_readiness": {
+                        "ready_for_publication": true,
+                        "remaining_issues": 0,
+                        "recommendations": [
+                            "全ての修正完了",
+                            "品質スコア0.93、公開準備完了",
+                            "内部リンクを2箇所追加推奨",
+                            "公開後1ヶ月でデータ更新を推奨"
+                        ],
+                        "next_steps": "工程10（最終出力・公開用パッケージ作成）へ進む"
+                    }
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程9完了（最終リライト版）",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "revision_result": {
+                    "title": "修正結果:",
+                    "items": [
+                        "├─ 修正した問題: ○個",
+                        "├─ 実施した改善: ○個",
+                        "├─ 総文字数: ○○字",
+                        "└─ 総合品質スコア: ○.○○"
+                    ]
+                },
+                "four_pillars_final_check": {
+                    "title": "4本柱最終チェック: 全て確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓",
+                        "│  ├─ 衝撃的データの正確性: 全て確認",
+                        "│  ├─ 3概念以内: 全セクション維持",
+                        "│  ├─ 文の長さ: 80%が20-35文字",
+                        "│  └─ 3フェーズ配分: 維持",
+                        "├─ 行動経済学: ✓",
+                        "│  ├─ 社会的証明のデータ: 全て検証",
+                        "│  ├─ 6原則の配置: 全て維持",
+                        "│  └─ 具体的な数値: 全て正確",
+                        "├─ LLMO: ✓",
+                        "│  ├─ 引用形式: 統一率100%",
+                        "│  ├─ トークン数: 90%が400-600",
+                        "│  ├─ 箇条書き: 各セクション1箇所以上",
+                        "│  └─ セクション独立性: 全セクション確保",
+                        "└─ KGI: ✓",
+                        "   ├─ CTA周辺のデータ: 全て検証",
+                        "   ├─ 3段階CTA配置: 全て維持",
+                        "   └─ 内部リンク: 全FAQ + 2箇所提案"
+                    ]
+                },
+                "quality_scores": {
+                    "title": "品質スコア:",
+                    "items": [
+                        "├─ 正確性: ○.○○",
+                        "├─ 読みやすさ: ○.○○",
+                        "├─ 説得力: ○.○○",
+                        "├─ 網羅性: ○.○○",
+                        "├─ 差別化: ○.○○",
+                        "├─ 実用性: ○.○○",
+                        "├─ SEO最適化: ○.○○",
+                        "├─ CTA効果: ○.○○",
+                        "└─ 総合: ○.○○（目標: 0.90以上）"
+                    ]
+                },
+                "publication_readiness": {
+                    "title": "公開準備状況:",
+                    "items": [
+                        "├─ 公開準備完了: ✓ / 未完了",
+                        "├─ 残り課題: ○個",
+                        "├─ 推奨事項: ○個",
+                        "└─ 次のステップ: 工程10へ進む"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程10（最終出力・公開用パッケージ作成）",
+                    "description": "最終リライトが完了しました。工程10で公開用パッケージを作成します。",
+                    "notes": [
+                        "・Part 1（修正版記事）を保存",
+                        "・Part 2（修正レポート）を保存",
+                        "・工程10へ進む"
+                    ]
+                }
+            }
+        },
+        "note": "出力構造のテンプレート",
+        "legacy_templates": {
+            "output_part1_revised_article": {
+                "description": "Part 1: 修正版記事本文のMarkdown形式テンプレート",
+                "template": "# タイトル（変更なし）\n\n（導入部 - 修正・調整済み）\n\n---\n【Early CTA】（変更なし）\n---\n\n## H2-1（変更なし）\n\n（本文 - 修正・調整済み）\n\n### H3-1-1（変更なし）\n\n（本文 - 修正・調整済み）\n\n（以下、全セクション同様）\n\n---\n【Mid CTA】（変更なし）\n---\n\n（中略）\n\n## Final CTAセクション（変更なし）\n\n（本文 - 修正・調整済み）\n\n---\n\n## よくある質問（FAQ）（変更なし）\n\n（FAQ - 変更なし）\n\n---\n\n## まとめ（変更なし）\n\n（本文 - 修正・調整済み）\n\n---\n\n## 参考文献（変更なし）\n\n1. ...（URLを修正済み）\n2. ..."
+            },
+            "output_part2_revision_report": {
+                "description": "Part 2: 修正レポートのJSON形式テンプレート",
+                "template": {
+                    "revision_date": "{{current_year}}-10-21T10:00:00Z",
+                    "article_title": "記事タイトル",
+                    "corrections_made": [
+                        {
+                            "correction_id": "COR001",
+                            "location": "H2-1",
+                            "issue": "離職コストが55万円と誤記",
+                            "correction": "52万円に修正",
+                            "source": "経済産業省「企業の人材育成投資調査」2024年9月",
+                            "severity": "high"
+                        }
+                    ],
+                    "improvements_made": [
+                        {
+                            "improvement_id": "IMP001",
+                            "location": "導入部",
+                            "improvement_type": "readability",
+                            "description": "長文を2文に分割、読みやすさ向上",
+                            "before_character_count": 78,
+                            "after_character_count": "36 + 19"
+                        }
+                    ],
+                    "seo_checks": {
+                        "keyword_density": {
+                            "main_keyword": "1.8%",
+                            "status": "optimal",
+                            "target_range": "1.5-2.0%"
+                        },
+                        "heading_structure": {
+                            "h2_count": 12,
+                            "h3_count": 28,
+                            "status": "good",
+                            "target_h2_range": "10-13",
+                            "target_h3_per_h2": "2-3"
+                        },
+                        "word_count": 4850,
+                        "target_range": "4500-5000",
+                        "readability": "medium"
+                    },
+                    "four_pillars_final_check": {
+                        "neuroscience": {
+                            "shocking_data_accuracy": "all_verified",
+                            "concept_count_per_section": "3以内（全セクション）",
+                            "sentence_length": "80%が20-35文字",
+                            "phase_distribution": "Phase1: 750字、Phase2: 3200字、Phase3: 900字"
+                        },
+                        "behavioral_economics": {
+                            "social_proof_data_verification": "all_verified",
+                            "six_principles_placement": "全て配置済み",
+                            "specific_numbers": "全て正確"
+                        },
+                        "llmo": {
+                            "citation_format_check": "統一率100%",
+                            "token_count_range": "90%が400-600 tokens",
+                            "bullet_points": "各セクション1箇所以上",
+                            "section_independence": "全セクション確保"
+                        },
+                        "kgi": {
+                            "cta_surrounding_data_verification": "all_verified",
+                            "three_stage_cta_placement": "Early: 650字、Mid: 2800字、Final: 4500字",
+                            "internal_links": "全FAQ + 2箇所追加提案"
+                        }
+                    },
+                    "cta_effectiveness": {
+                        "early_cta": {
+                            "location": "650字",
+                            "effectiveness": "high",
+                            "notes": "心理的ハードル最低、データ正確"
+                        },
+                        "mid_cta": {
+                            "location": "2800字",
+                            "effectiveness": "high",
+                            "notes": "提供価値明確、データ修正済み"
+                        },
+                        "final_cta": {
+                            "location": "4500字+専用セクション",
+                            "effectiveness": "high",
+                            "notes": "最強の訴求、データ修正済み、希少性明示"
+                        }
+                    },
+                    "differentiation_elements": [
+                        "2024〜{{current_year}}年最新データ使用（競合の0%）",
+                        "2024年新設助成金制度の詳解（競合が誰も触れていない）",
+                        "リモート・ハイブリッド対応教育方法（競合の20%のみ）",
+                        "中小企業向け低予算プラン（競合の30%のみ）"
+                    ],
+                    "quality_scores": {
+                        "accuracy": 0.98,
+                        "readability": 0.92,
+                        "persuasiveness": 0.9,
+                        "comprehensiveness": 0.95,
+                        "differentiation": 0.93,
+                        "practicality": 0.91,
+                        "seo_optimization": 0.94,
+                        "cta_effectiveness": 0.92,
+                        "overall_quality_score": 0.93
+                    },
+                    "internal_link_suggestions": [
+                        {
+                            "anchor_text": "派遣社員のメンター制度",
+                            "target_article": "派遣社員のメンター制度導入ガイド",
+                            "location": "H2-3",
+                            "reason": "メンター制度について詳細に言及"
+                        },
+                        {
+                            "anchor_text": "助成金申請方法",
+                            "target_article": "人材開発支援助成金の申請手順",
+                            "location": "H2-6",
+                            "reason": "助成金について詳細に言及"
+                        }
+                    ],
+                    "publication_readiness": {
+                        "ready_for_publication": true,
+                        "remaining_issues": 0,
+                        "recommendations": [
+                            "全ての修正完了",
+                            "品質スコア0.93、公開準備完了",
+                            "内部リンクを2箇所追加推奨",
+                            "公開後1ヶ月でデータ更新を推奨"
+                        ],
+                        "next_steps": "工程10（最終出力・公開用パッケージ作成）へ進む"
+                    }
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程9完了（最終リライト版）",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "revision_result": {
+                    "title": "修正結果:",
+                    "items": [
+                        "├─ 修正した問題: ○個",
+                        "├─ 実施した改善: ○個",
+                        "├─ 総文字数: ○○字",
+                        "└─ 総合品質スコア: ○.○○"
+                    ]
+                },
+                "four_pillars_final_check": {
+                    "title": "4本柱最終チェック: 全て確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓",
+                        "│  ├─ 衝撃的データの正確性: 全て確認",
+                        "│  ├─ 3概念以内: 全セクション維持",
+                        "│  ├─ 文の長さ: 80%が20-35文字",
+                        "│  └─ 3フェーズ配分: 維持",
+                        "├─ 行動経済学: ✓",
+                        "│  ├─ 社会的証明のデータ: 全て検証",
+                        "│  ├─ 6原則の配置: 全て維持",
+                        "│  └─ 具体的な数値: 全て正確",
+                        "├─ LLMO: ✓",
+                        "│  ├─ 引用形式: 統一率100%",
+                        "│  ├─ トークン数: 90%が400-600",
+                        "│  ├─ 箇条書き: 各セクション1箇所以上",
+                        "│  └─ セクション独立性: 全セクション確保",
+                        "└─ KGI: ✓",
+                        "   ├─ CTA周辺のデータ: 全て検証",
+                        "   ├─ 3段階CTA配置: 全て維持",
+                        "   └─ 内部リンク: 全FAQ + 2箇所提案"
+                    ]
+                },
+                "quality_scores": {
+                    "title": "品質スコア:",
+                    "items": [
+                        "├─ 正確性: ○.○○",
+                        "├─ 読みやすさ: ○.○○",
+                        "├─ 説得力: ○.○○",
+                        "├─ 網羅性: ○.○○",
+                        "├─ 差別化: ○.○○",
+                        "├─ 実用性: ○.○○",
+                        "├─ SEO最適化: ○.○○",
+                        "├─ CTA効果: ○.○○",
+                        "└─ 総合: ○.○○（目標: 0.90以上）"
+                    ]
+                },
+                "publication_readiness": {
+                    "title": "公開準備状況:",
+                    "items": [
+                        "├─ 公開準備完了: ✓ / 未完了",
+                        "├─ 残り課題: ○個",
+                        "├─ 推奨事項: ○個",
+                        "└─ 次のステップ: 工程10へ進む"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": {
+                    "title": "次の工程: 工程10（最終出力・公開用パッケージ作成）",
+                    "description": "最終リライトが完了しました。工程10で公開用パッケージを作成します。",
+                    "notes": [
+                        "・Part 1（修正版記事）を保存",
+                        "・Part 2（修正レポート）を保存",
+                        "・工程10へ進む"
+                    ]
+                }
+            }
+        },
+        "legacy_templates_source": "templates.json (structured)",
+        "legacy_templates_raw": "{\n    \"output_part1_revised_article\": {\n        \"description\": \"Part 1: 修正版記事本文のMarkdown形式テンプレート\",\n        \"template\": \"# タイトル（変更なし）\\n\\n（導入部 - 修正・調整済み）\\n\\n---\\n【Early CTA】（変更なし）\\n---\\n\\n## H2-1（変更なし）\\n\\n（本文 - 修正・調整済み）\\n\\n### H3-1-1（変更なし）\\n\\n（本文 - 修正・調整済み）\\n\\n（以下、全セクション同様）\\n\\n---\\n【Mid CTA】（変更なし）\\n---\\n\\n（中略）\\n\\n## Final CTAセクション（変更なし）\\n\\n（本文 - 修正・調整済み）\\n\\n---\\n\\n## よくある質問（FAQ）（変更なし）\\n\\n（FAQ - 変更なし）\\n\\n---\\n\\n## まとめ（変更なし）\\n\\n（本文 - 修正・調整済み）\\n\\n---\\n\\n## 参考文献（変更なし）\\n\\n1. ...（URLを修正済み）\\n2. ...\"\n    },\n    \"output_part2_revision_report\": {\n        \"description\": \"Part 2: 修正レポートのJSON形式テンプレート\",\n        \"template\": {\n            \"revision_date\": \"{{current_year}}-10-21T10:00:00Z\",\n            \"article_title\": \"記事タイトル\",\n            \"corrections_made\": [\n                {\n                    \"correction_id\": \"COR001\",\n                    \"location\": \"H2-1\",\n                    \"issue\": \"離職コストが55万円と誤記\",\n                    \"correction\": \"52万円に修正\",\n                    \"source\": \"経済産業省「企業の人材育成投資調査」2024年9月\",\n                    \"severity\": \"high\"\n                }\n            ],\n            \"improvements_made\": [\n                {\n                    \"improvement_id\": \"IMP001\",\n                    \"location\": \"導入部\",\n                    \"improvement_type\": \"readability\",\n                    \"description\": \"長文を2文に分割、読みやすさ向上\",\n                    \"before_character_count\": 78,\n                    \"after_character_count\": \"36 + 19\"\n                }\n            ],\n            \"seo_checks\": {\n                \"keyword_density\": {\n                    \"main_keyword\": \"1.8%\",\n                    \"status\": \"optimal\",\n                    \"target_range\": \"1.5-2.0%\"\n                },\n                \"heading_structure\": {\n                    \"h2_count\": 12,\n                    \"h3_count\": 28,\n                    \"status\": \"good\",\n                    \"target_h2_range\": \"10-13\",\n                    \"target_h3_per_h2\": \"2-3\"\n                },\n                \"word_count\": 4850,\n                \"target_range\": \"4500-5000\",\n                \"readability\": \"medium\"\n            },\n            \"four_pillars_final_check\": {\n                \"neuroscience\": {\n                    \"shocking_data_accuracy\": \"all_verified\",\n                    \"concept_count_per_section\": \"3以内（全セクション）\",\n                    \"sentence_length\": \"80%が20-35文字\",\n                    \"phase_distribution\": \"Phase1: 750字、Phase2: 3200字、Phase3: 900字\"\n                },\n                \"behavioral_economics\": {\n                    \"social_proof_data_verification\": \"all_verified\",\n                    \"six_principles_placement\": \"全て配置済み\",\n                    \"specific_numbers\": \"全て正確\"\n                },\n                \"llmo\": {\n                    \"citation_format_check\": \"統一率100%\",\n                    \"token_count_range\": \"90%が400-600 tokens\",\n                    \"bullet_points\": \"各セクション1箇所以上\",\n                    \"section_independence\": \"全セクション確保\"\n                },\n                \"kgi\": {\n                    \"cta_surrounding_data_verification\": \"all_verified\",\n                    \"three_stage_cta_placement\": \"Early: 650字、Mid: 2800字、Final: 4500字\",\n                    \"internal_links\": \"全FAQ + 2箇所追加提案\"\n                }\n            },\n            \"cta_effectiveness\": {\n                \"early_cta\": {\n                    \"location\": \"650字\",\n                    \"effectiveness\": \"high\",\n                    \"notes\": \"心理的ハードル最低、データ正確\"\n                },\n                \"mid_cta\": {\n                    \"location\": \"2800字\",\n                    \"effectiveness\": \"high\",\n                    \"notes\": \"提供価値明確、データ修正済み\"\n                },\n                \"final_cta\": {\n                    \"location\": \"4500字+専用セクション\",\n                    \"effectiveness\": \"high\",\n                    \"notes\": \"最強の訴求、データ修正済み、希少性明示\"\n                }\n            },\n            \"differentiation_elements\": [\n                \"2024〜{{current_year}}年最新データ使用（競合の0%）\",\n                \"2024年新設助成金制度の詳解（競合が誰も触れていない）\",\n                \"リモート・ハイブリッド対応教育方法（競合の20%のみ）\",\n                \"中小企業向け低予算プラン（競合の30%のみ）\"\n            ],\n            \"quality_scores\": {\n                \"accuracy\": 0.98,\n                \"readability\": 0.92,\n                \"persuasiveness\": 0.90,\n                \"comprehensiveness\": 0.95,\n                \"differentiation\": 0.93,\n                \"practicality\": 0.91,\n                \"seo_optimization\": 0.94,\n                \"cta_effectiveness\": 0.92,\n                \"overall_quality_score\": 0.93\n            },\n            \"internal_link_suggestions\": [\n                {\n                    \"anchor_text\": \"派遣社員のメンター制度\",\n                    \"target_article\": \"派遣社員のメンター制度導入ガイド\",\n                    \"location\": \"H2-3\",\n                    \"reason\": \"メンター制度について詳細に言及\"\n                },\n                {\n                    \"anchor_text\": \"助成金申請方法\",\n                    \"target_article\": \"人材開発支援助成金の申請手順\",\n                    \"location\": \"H2-6\",\n                    \"reason\": \"助成金について詳細に言及\"\n                }\n            ],\n            \"publication_readiness\": {\n                \"ready_for_publication\": true,\n                \"remaining_issues\": 0,\n                \"recommendations\": [\n                    \"全ての修正完了\",\n                    \"品質スコア0.93、公開準備完了\",\n                    \"内部リンクを2箇所追加推奨\",\n                    \"公開後1ヶ月でデータ更新を推奨\"\n                ],\n                \"next_steps\": \"工程10（最終出力・公開用パッケージ作成）へ進む\"\n            }\n        }\n    },\n    \"completion_message_template\": {\n        \"header\": \"✅ 工程9完了（最終リライト版）\",\n        \"separator\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"revision_result\": {\n            \"title\": \"修正結果:\",\n            \"items\": [\n                \"├─ 修正した問題: ○個\",\n                \"├─ 実施した改善: ○個\",\n                \"├─ 総文字数: ○○字\",\n                \"└─ 総合品質スコア: ○.○○\"\n            ]\n        },\n        \"four_pillars_final_check\": {\n            \"title\": \"4本柱最終チェック: 全て確認済み\",\n            \"items\": [\n                \"├─ 神経科学: ✓\",\n                \"│  ├─ 衝撃的データの正確性: 全て確認\",\n                \"│  ├─ 3概念以内: 全セクション維持\",\n                \"│  ├─ 文の長さ: 80%が20-35文字\",\n                \"│  └─ 3フェーズ配分: 維持\",\n                \"├─ 行動経済学: ✓\",\n                \"│  ├─ 社会的証明のデータ: 全て検証\",\n                \"│  ├─ 6原則の配置: 全て維持\",\n                \"│  └─ 具体的な数値: 全て正確\",\n                \"├─ LLMO: ✓\",\n                \"│  ├─ 引用形式: 統一率100%\",\n                \"│  ├─ トークン数: 90%が400-600\",\n                \"│  ├─ 箇条書き: 各セクション1箇所以上\",\n                \"│  └─ セクション独立性: 全セクション確保\",\n                \"└─ KGI: ✓\",\n                \"   ├─ CTA周辺のデータ: 全て検証\",\n                \"   ├─ 3段階CTA配置: 全て維持\",\n                \"   └─ 内部リンク: 全FAQ + 2箇所提案\"\n            ]\n        },\n        \"quality_scores\": {\n            \"title\": \"品質スコア:\",\n            \"items\": [\n                \"├─ 正確性: ○.○○\",\n                \"├─ 読みやすさ: ○.○○\",\n                \"├─ 説得力: ○.○○\",\n                \"├─ 網羅性: ○.○○\",\n                \"├─ 差別化: ○.○○\",\n                \"├─ 実用性: ○.○○\",\n                \"├─ SEO最適化: ○.○○\",\n                \"├─ CTA効果: ○.○○\",\n                \"└─ 総合: ○.○○（目標: 0.90以上）\"\n            ]\n        },\n        \"publication_readiness\": {\n            \"title\": \"公開準備状況:\",\n            \"items\": [\n                \"├─ 公開準備完了: ✓ / 未完了\",\n                \"├─ 残り課題: ○個\",\n                \"├─ 推奨事項: ○個\",\n                \"└─ 次のステップ: 工程10へ進む\"\n            ]\n        },\n        \"footer\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"next_step\": {\n            \"title\": \"次の工程: 工程10（最終出力・公開用パッケージ作成）\",\n            \"description\": \"最終リライトが完了しました。工程10で公開用パッケージを作成します。\",\n            \"notes\": [\n                \"・Part 1（修正版記事）を保存\",\n                \"・Part 2（修正レポート）を保存\",\n                \"・工程10へ進む\"\n            ]\n        }\n    }\n}\n"
+    },
+    "examples": {
+        "source": "examples.json",
+        "content": {
+            "example_1_data_correction": {
+                "scenario": "データの誤りの修正例",
+                "before": {
+                    "text": "1人の派遣社員が離職すると、採用コスト35万円 + 教育コスト20万円 = 計55万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。",
+                    "problem": "損失額が55万円と記載されているが、正しくは52万円"
+                },
+                "after": {
+                    "text": "1人の派遣社員が離職すると、採用コスト32万円 + 教育コスト20万円 = 計52万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。",
+                    "correction": "55万円 → 52万円、内訳も修正（35万円 → 32万円）"
+                },
+                "fact_check_issue": {
+                    "issue_id": "ISS001",
+                    "severity": "high",
+                    "issue_type": "data_inaccuracy",
+                    "correction_required": "55万円 → 52万円"
+                }
+            },
+            "example_2_url_correction": {
+                "scenario": "URLの無効の修正例",
+                "before": {
+                    "text": "2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/old_path/... （参照: {{current_year}}-10-21）"
+                },
+                "after": {
+                    "text": "2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/correct_path/... （参照: {{current_year}}-10-21）"
+                },
+                "fact_check_issue": {
+                    "issue_id": "ISS002",
+                    "severity": "medium",
+                    "issue_type": "broken_link",
+                    "corrected_url": "https://www.meti.go.jp/correct_path/..."
+                }
+            },
+            "example_3_readability_improvement": {
+                "scenario": "読みやすさの改善例",
+                "before": {
+                    "text": "派遣社員の教育は企業にとって非常に重要であり、適切に実施することで定着率が向上し、採用コストを削減でき、生産性も向上するため、積極的に取り組むべきである。",
+                    "problem": "1文が長すぎる（78文字）、読みにくい"
+                },
+                "after": {
+                    "text": "派遣社員の教育は、企業にとって非常に重要です。適切に実施することで、定着率が向上し、採用コストを削減できます。さらに、生産性も向上するため、積極的に取り組むべきです。",
+                    "improvement": "1文を3文に分割、読みやすさ向上"
+                }
+            },
+            "example_4_persuasiveness_strengthening": {
+                "scenario": "説得力の強化例",
+                "phase1_before": {
+                    "text": "派遣社員の離職率が高いという問題があります。",
+                    "problem": "説得力が弱い"
+                },
+                "phase1_after": {
+                    "text": "派遣社員の3ヶ月以内離職率は29.3%に達し、1人の離職で52万円の損失が発生します（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。年間4人が離職すれば、208万円もの損失になります。",
+                    "improvement": "具体的なデータで危機感を醸成、説得力を強化"
+                }
+            },
+            "example_5_four_pillars_neuroscience_check": {
+                "scenario": "神経科学: 衝撃的データの正確性確認",
+                "check_items": [
+                    {
+                        "data_type": "Phase 1の衝撃的データ",
+                        "data": "離職率29.3%、損失52万円",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の不安喚起に最も重要"
+                    },
+                    {
+                        "data_type": "Phase 2の信頼性データ",
+                        "data": "満足度85%、導入企業300社",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の信頼獲得に重要"
+                    },
+                    {
+                        "data_type": "Phase 3の成功データ",
+                        "data": "離職率35%低下、3ヶ月で効果",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の行動決定に重要"
+                    }
+                ]
+            },
+            "example_6_four_pillars_behavioral_economics_check": {
+                "scenario": "行動経済学: 社会的証明のデータ検証",
+                "check_items": [
+                    {
+                        "principle": "社会的証明",
+                        "data": "導入企業300社のうち、85%が「効果を実感」",
+                        "verification_before": "修正前: 300社、85%",
+                        "verification_after": "修正後: 280社、82%（工程8Aで修正）",
+                        "importance": "読者の行動を促す最重要データ"
+                    },
+                    {
+                        "principle": "権威性",
+                        "data": "厚生労働省の調査によれば、定着率が18.5ポイント高い",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "公的機関のデータは信頼性の要"
+                    }
+                ]
+            },
+            "example_7_four_pillars_llmo_check": {
+                "scenario": "LLMO: 引用形式の確認",
+                "check_items": [
+                    {
+                        "correct_format": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                        "verification": "形式統一、正確",
+                        "importance": "AI検索エンジンの正確な情報抽出に必須"
+                    },
+                    {
+                        "incorrect_format_1": "（厚労省 2024年）",
+                        "problem": "省略形は不可",
+                        "correction": "完全な組織名と文献タイトルを記載"
+                    },
+                    {
+                        "incorrect_format_2": "（出典: 厚生労働省）",
+                        "problem": "文献タイトルと発表年月が欠如",
+                        "correction": "完全な引用形式に修正"
+                    }
+                ]
+            },
+            "example_8_four_pillars_kgi_check": {
+                "scenario": "KGI: CTA周辺のデータ検証",
+                "check_items": [
+                    {
+                        "cta_type": "Early CTA",
+                        "surrounding_data": "損失52万円、離職率29.3%",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の初期行動決定に影響"
+                    },
+                    {
+                        "cta_type": "Mid CTA",
+                        "surrounding_data": "成功事例280社、満足度82%",
+                        "verification": "工程8Aで修正済み（300社→280社、85%→82%）",
+                        "importance": "読者の中間行動決定に影響"
+                    },
+                    {
+                        "cta_type": "Final CTA",
+                        "surrounding_data": "支援企業280社、満足度94.5%、離職率35%低下",
+                        "verification": "工程8Aで修正済み（300社→280社、96.8%→94.5%）",
+                        "importance": "読者の最終行動決定に最も影響"
+                    }
+                ]
+            },
+            "example_9_quality_score_calculation": {
+                "scenario": "品質スコアの算出例",
+                "scores": {
+                    "accuracy": {
+                        "score": 0.98,
+                        "evaluation": "全てのデータ・引用が正確、1個の軽微な誤り修正済み"
+                    },
+                    "readability": {
+                        "score": 0.92,
+                        "evaluation": "非常に読みやすい、リズムが良い"
+                    },
+                    "persuasiveness": {
+                        "score": 0.9,
+                        "evaluation": "説得力がある、データと論理が強固"
+                    },
+                    "comprehensiveness": {
+                        "score": 0.95,
+                        "evaluation": "必要な情報が全て含まれている"
+                    },
+                    "differentiation": {
+                        "score": 0.93,
+                        "evaluation": "競合との差別化が明確"
+                    },
+                    "practicality": {
+                        "score": 0.91,
+                        "evaluation": "実用的、読者がすぐに行動できる"
+                    },
+                    "seo_optimization": {
+                        "score": 0.94,
+                        "evaluation": "よく最適化されている"
+                    },
+                    "cta_effectiveness": {
+                        "score": 0.92,
+                        "evaluation": "効果的、CVR最大化"
+                    }
+                },
+                "overall_quality_score": 0.93,
+                "calculation": "(0.98 + 0.92 + 0.90 + 0.95 + 0.93 + 0.91 + 0.94 + 0.92) ÷ 8 = 0.93",
+                "evaluation": "目標（0.90以上）達成、公開準備完了"
+            }
+        },
+        "note": "実際の使用例",
+        "legacy_examples": {
+            "example_1_data_correction": {
+                "scenario": "データの誤りの修正例",
+                "before": {
+                    "text": "1人の派遣社員が離職すると、採用コスト35万円 + 教育コスト20万円 = 計55万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。",
+                    "problem": "損失額が55万円と記載されているが、正しくは52万円"
+                },
+                "after": {
+                    "text": "1人の派遣社員が離職すると、採用コスト32万円 + 教育コスト20万円 = 計52万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。",
+                    "correction": "55万円 → 52万円、内訳も修正（35万円 → 32万円）"
+                },
+                "fact_check_issue": {
+                    "issue_id": "ISS001",
+                    "severity": "high",
+                    "issue_type": "data_inaccuracy",
+                    "correction_required": "55万円 → 52万円"
+                }
+            },
+            "example_2_url_correction": {
+                "scenario": "URLの無効の修正例",
+                "before": {
+                    "text": "2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/old_path/... （参照: {{current_year}}-10-21）"
+                },
+                "after": {
+                    "text": "2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\n   https://www.meti.go.jp/correct_path/... （参照: {{current_year}}-10-21）"
+                },
+                "fact_check_issue": {
+                    "issue_id": "ISS002",
+                    "severity": "medium",
+                    "issue_type": "broken_link",
+                    "corrected_url": "https://www.meti.go.jp/correct_path/..."
+                }
+            },
+            "example_3_readability_improvement": {
+                "scenario": "読みやすさの改善例",
+                "before": {
+                    "text": "派遣社員の教育は企業にとって非常に重要であり、適切に実施することで定着率が向上し、採用コストを削減でき、生産性も向上するため、積極的に取り組むべきである。",
+                    "problem": "1文が長すぎる（78文字）、読みにくい"
+                },
+                "after": {
+                    "text": "派遣社員の教育は、企業にとって非常に重要です。適切に実施することで、定着率が向上し、採用コストを削減できます。さらに、生産性も向上するため、積極的に取り組むべきです。",
+                    "improvement": "1文を3文に分割、読みやすさ向上"
+                }
+            },
+            "example_4_persuasiveness_strengthening": {
+                "scenario": "説得力の強化例",
+                "phase1_before": {
+                    "text": "派遣社員の離職率が高いという問題があります。",
+                    "problem": "説得力が弱い"
+                },
+                "phase1_after": {
+                    "text": "派遣社員の3ヶ月以内離職率は29.3%に達し、1人の離職で52万円の損失が発生します（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。年間4人が離職すれば、208万円もの損失になります。",
+                    "improvement": "具体的なデータで危機感を醸成、説得力を強化"
+                }
+            },
+            "example_5_four_pillars_neuroscience_check": {
+                "scenario": "神経科学: 衝撃的データの正確性確認",
+                "check_items": [
+                    {
+                        "data_type": "Phase 1の衝撃的データ",
+                        "data": "離職率29.3%、損失52万円",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の不安喚起に最も重要"
+                    },
+                    {
+                        "data_type": "Phase 2の信頼性データ",
+                        "data": "満足度85%、導入企業300社",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の信頼獲得に重要"
+                    },
+                    {
+                        "data_type": "Phase 3の成功データ",
+                        "data": "離職率35%低下、3ヶ月で効果",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の行動決定に重要"
+                    }
+                ]
+            },
+            "example_6_four_pillars_behavioral_economics_check": {
+                "scenario": "行動経済学: 社会的証明のデータ検証",
+                "check_items": [
+                    {
+                        "principle": "社会的証明",
+                        "data": "導入企業300社のうち、85%が「効果を実感」",
+                        "verification_before": "修正前: 300社、85%",
+                        "verification_after": "修正後: 280社、82%（工程8Aで修正）",
+                        "importance": "読者の行動を促す最重要データ"
+                    },
+                    {
+                        "principle": "権威性",
+                        "data": "厚生労働省の調査によれば、定着率が18.5ポイント高い",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "公的機関のデータは信頼性の要"
+                    }
+                ]
+            },
+            "example_7_four_pillars_llmo_check": {
+                "scenario": "LLMO: 引用形式の確認",
+                "check_items": [
+                    {
+                        "correct_format": "（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）",
+                        "verification": "形式統一、正確",
+                        "importance": "AI検索エンジンの正確な情報抽出に必須"
+                    },
+                    {
+                        "incorrect_format_1": "（厚労省 2024年）",
+                        "problem": "省略形は不可",
+                        "correction": "完全な組織名と文献タイトルを記載"
+                    },
+                    {
+                        "incorrect_format_2": "（出典: 厚生労働省）",
+                        "problem": "文献タイトルと発表年月が欠如",
+                        "correction": "完全な引用形式に修正"
+                    }
+                ]
+            },
+            "example_8_four_pillars_kgi_check": {
+                "scenario": "KGI: CTA周辺のデータ検証",
+                "check_items": [
+                    {
+                        "cta_type": "Early CTA",
+                        "surrounding_data": "損失52万円、離職率29.3%",
+                        "verification": "工程8Aで確認済み、正確",
+                        "importance": "読者の初期行動決定に影響"
+                    },
+                    {
+                        "cta_type": "Mid CTA",
+                        "surrounding_data": "成功事例280社、満足度82%",
+                        "verification": "工程8Aで修正済み（300社→280社、85%→82%）",
+                        "importance": "読者の中間行動決定に影響"
+                    },
+                    {
+                        "cta_type": "Final CTA",
+                        "surrounding_data": "支援企業280社、満足度94.5%、離職率35%低下",
+                        "verification": "工程8Aで修正済み（300社→280社、96.8%→94.5%）",
+                        "importance": "読者の最終行動決定に最も影響"
+                    }
+                ]
+            },
+            "example_9_quality_score_calculation": {
+                "scenario": "品質スコアの算出例",
+                "scores": {
+                    "accuracy": {
+                        "score": 0.98,
+                        "evaluation": "全てのデータ・引用が正確、1個の軽微な誤り修正済み"
+                    },
+                    "readability": {
+                        "score": 0.92,
+                        "evaluation": "非常に読みやすい、リズムが良い"
+                    },
+                    "persuasiveness": {
+                        "score": 0.9,
+                        "evaluation": "説得力がある、データと論理が強固"
+                    },
+                    "comprehensiveness": {
+                        "score": 0.95,
+                        "evaluation": "必要な情報が全て含まれている"
+                    },
+                    "differentiation": {
+                        "score": 0.93,
+                        "evaluation": "競合との差別化が明確"
+                    },
+                    "practicality": {
+                        "score": 0.91,
+                        "evaluation": "実用的、読者がすぐに行動できる"
+                    },
+                    "seo_optimization": {
+                        "score": 0.94,
+                        "evaluation": "よく最適化されている"
+                    },
+                    "cta_effectiveness": {
+                        "score": 0.92,
+                        "evaluation": "効果的、CVR最大化"
+                    }
+                },
+                "overall_quality_score": 0.93,
+                "calculation": "(0.98 + 0.92 + 0.90 + 0.95 + 0.93 + 0.91 + 0.94 + 0.92) ÷ 8 = 0.93",
+                "evaluation": "目標（0.90以上）達成、公開準備完了"
+            }
+        },
+        "legacy_examples_source": "examples.json (structured)",
+        "legacy_examples_raw": "{\n    \"example_1_data_correction\": {\n        \"scenario\": \"データの誤りの修正例\",\n        \"before\": {\n            \"text\": \"1人の派遣社員が離職すると、採用コスト35万円 + 教育コスト20万円 = 計55万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。\",\n            \"problem\": \"損失額が55万円と記載されているが、正しくは52万円\"\n        },\n        \"after\": {\n            \"text\": \"1人の派遣社員が離職すると、採用コスト32万円 + 教育コスト20万円 = 計52万円の損失が発生します（出典: 経済産業省「企業の人材育成投資調査」2024年9月）。\",\n            \"correction\": \"55万円 → 52万円、内訳も修正（35万円 → 32万円）\"\n        },\n        \"fact_check_issue\": {\n            \"issue_id\": \"ISS001\",\n            \"severity\": \"high\",\n            \"issue_type\": \"data_inaccuracy\",\n            \"correction_required\": \"55万円 → 52万円\"\n        }\n    },\n    \"example_2_url_correction\": {\n        \"scenario\": \"URLの無効の修正例\",\n        \"before\": {\n            \"text\": \"2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\\n   https://www.meti.go.jp/old_path/... （参照: {{current_year}}-10-21）\"\n        },\n        \"after\": {\n            \"text\": \"2. 経済産業省「企業の人材育成投資調査」2024年9月20日発表\\n   https://www.meti.go.jp/correct_path/... （参照: {{current_year}}-10-21）\"\n        },\n        \"fact_check_issue\": {\n            \"issue_id\": \"ISS002\",\n            \"severity\": \"medium\",\n            \"issue_type\": \"broken_link\",\n            \"corrected_url\": \"https://www.meti.go.jp/correct_path/...\"\n        }\n    },\n    \"example_3_readability_improvement\": {\n        \"scenario\": \"読みやすさの改善例\",\n        \"before\": {\n            \"text\": \"派遣社員の教育は企業にとって非常に重要であり、適切に実施することで定着率が向上し、採用コストを削減でき、生産性も向上するため、積極的に取り組むべきである。\",\n            \"problem\": \"1文が長すぎる（78文字）、読みにくい\"\n        },\n        \"after\": {\n            \"text\": \"派遣社員の教育は、企業にとって非常に重要です。適切に実施することで、定着率が向上し、採用コストを削減できます。さらに、生産性も向上するため、積極的に取り組むべきです。\",\n            \"improvement\": \"1文を3文に分割、読みやすさ向上\"\n        }\n    },\n    \"example_4_persuasiveness_strengthening\": {\n        \"scenario\": \"説得力の強化例\",\n        \"phase1_before\": {\n            \"text\": \"派遣社員の離職率が高いという問題があります。\",\n            \"problem\": \"説得力が弱い\"\n        },\n        \"phase1_after\": {\n            \"text\": \"派遣社員の3ヶ月以内離職率は29.3%に達し、1人の離職で52万円の損失が発生します（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）。年間4人が離職すれば、208万円もの損失になります。\",\n            \"improvement\": \"具体的なデータで危機感を醸成、説得力を強化\"\n        }\n    },\n    \"example_5_four_pillars_neuroscience_check\": {\n        \"scenario\": \"神経科学: 衝撃的データの正確性確認\",\n        \"check_items\": [\n            {\n                \"data_type\": \"Phase 1の衝撃的データ\",\n                \"data\": \"離職率29.3%、損失52万円\",\n                \"verification\": \"工程8Aで確認済み、正確\",\n                \"importance\": \"読者の不安喚起に最も重要\"\n            },\n            {\n                \"data_type\": \"Phase 2の信頼性データ\",\n                \"data\": \"満足度85%、導入企業300社\",\n                \"verification\": \"工程8Aで確認済み、正確\",\n                \"importance\": \"読者の信頼獲得に重要\"\n            },\n            {\n                \"data_type\": \"Phase 3の成功データ\",\n                \"data\": \"離職率35%低下、3ヶ月で効果\",\n                \"verification\": \"工程8Aで確認済み、正確\",\n                \"importance\": \"読者の行動決定に重要\"\n            }\n        ]\n    },\n    \"example_6_four_pillars_behavioral_economics_check\": {\n        \"scenario\": \"行動経済学: 社会的証明のデータ検証\",\n        \"check_items\": [\n            {\n                \"principle\": \"社会的証明\",\n                \"data\": \"導入企業300社のうち、85%が「効果を実感」\",\n                \"verification_before\": \"修正前: 300社、85%\",\n                \"verification_after\": \"修正後: 280社、82%（工程8Aで修正）\",\n                \"importance\": \"読者の行動を促す最重要データ\"\n            },\n            {\n                \"principle\": \"権威性\",\n                \"data\": \"厚生労働省の調査によれば、定着率が18.5ポイント高い\",\n                \"verification\": \"工程8Aで確認済み、正確\",\n                \"importance\": \"公的機関のデータは信頼性の要\"\n            }\n        ]\n    },\n    \"example_7_four_pillars_llmo_check\": {\n        \"scenario\": \"LLMO: 引用形式の確認\",\n        \"check_items\": [\n            {\n                \"correct_format\": \"（出典: 厚生労働省「令和6年派遣労働者実態調査」2024年12月）\",\n                \"verification\": \"形式統一、正確\",\n                \"importance\": \"AI検索エンジンの正確な情報抽出に必須\"\n            },\n            {\n                \"incorrect_format_1\": \"（厚労省 2024年）\",\n                \"problem\": \"省略形は不可\",\n                \"correction\": \"完全な組織名と文献タイトルを記載\"\n            },\n            {\n                \"incorrect_format_2\": \"（出典: 厚生労働省）\",\n                \"problem\": \"文献タイトルと発表年月が欠如\",\n                \"correction\": \"完全な引用形式に修正\"\n            }\n        ]\n    },\n    \"example_8_four_pillars_kgi_check\": {\n        \"scenario\": \"KGI: CTA周辺のデータ検証\",\n        \"check_items\": [\n            {\n                \"cta_type\": \"Early CTA\",\n                \"surrounding_data\": \"損失52万円、離職率29.3%\",\n                \"verification\": \"工程8Aで確認済み、正確\",\n                \"importance\": \"読者の初期行動決定に影響\"\n            },\n            {\n                \"cta_type\": \"Mid CTA\",\n                \"surrounding_data\": \"成功事例280社、満足度82%\",\n                \"verification\": \"工程8Aで修正済み（300社→280社、85%→82%）\",\n                \"importance\": \"読者の中間行動決定に影響\"\n            },\n            {\n                \"cta_type\": \"Final CTA\",\n                \"surrounding_data\": \"支援企業280社、満足度94.5%、離職率35%低下\",\n                \"verification\": \"工程8Aで修正済み（300社→280社、96.8%→94.5%）\",\n                \"importance\": \"読者の最終行動決定に最も影響\"\n            }\n        ]\n    },\n    \"example_9_quality_score_calculation\": {\n        \"scenario\": \"品質スコアの算出例\",\n        \"scores\": {\n            \"accuracy\": {\n                \"score\": 0.98,\n                \"evaluation\": \"全てのデータ・引用が正確、1個の軽微な誤り修正済み\"\n            },\n            \"readability\": {\n                \"score\": 0.92,\n                \"evaluation\": \"非常に読みやすい、リズムが良い\"\n            },\n            \"persuasiveness\": {\n                \"score\": 0.90,\n                \"evaluation\": \"説得力がある、データと論理が強固\"\n            },\n            \"comprehensiveness\": {\n                \"score\": 0.95,\n                \"evaluation\": \"必要な情報が全て含まれている\"\n            },\n            \"differentiation\": {\n                \"score\": 0.93,\n                \"evaluation\": \"競合との差別化が明確\"\n            },\n            \"practicality\": {\n                \"score\": 0.91,\n                \"evaluation\": \"実用的、読者がすぐに行動できる\"\n            },\n            \"seo_optimization\": {\n                \"score\": 0.94,\n                \"evaluation\": \"よく最適化されている\"\n            },\n            \"cta_effectiveness\": {\n                \"score\": 0.92,\n                \"evaluation\": \"効果的、CVR最大化\"\n            }\n        },\n        \"overall_quality_score\": 0.93,\n        \"calculation\": \"(0.98 + 0.92 + 0.90 + 0.95 + 0.93 + 0.91 + 0.94 + 0.92) ÷ 8 = 0.93\",\n        \"evaluation\": \"目標（0.90以上）達成、公開準備完了\"\n    }\n}\n"
+    },
+    "checklist": {
+        "source": "four_pillars_checklist.md",
+        "content": "# 4本柱最終チェックリスト（工程9: 最終リライト・品質向上）\n\n**重要**: 出力前に、以下の全項目を確認してください。\n\n---\n\n## ✅ ファクトチェック結果の反映確認\n\n### 1. 全ての問題を修正したか\n\n- [ ] **工程8Aで発見された全ての問題を修正した**\n  - 発見された問題数: ○個\n  - 修正した問題数: ○個\n  - 修正率: 100%（必須）\n\n- [ ] **問題の種類別に確認した**\n  - data_inaccuracy（データの誤り）: ○個 / ○個修正 ✓\n  - broken_link（URLの無効）: ○個 / ○個修正 ✓\n  - outdated_info（古い情報）: ○個 / ○個修正 ✓\n  - missing_source（引用元の欠如）: ○個 / ○個修正 ✓\n  - context_error（文脈の誤り）: ○個 / ○個修正 ✓\n\n---\n\n### 2. 修正の正確性を確認したか\n\n- [ ] **各修正が正確に実施されているか**\n  - 工程8Aの correction_required を正確に反映: 全て ✓\n  - 代替情報源を正確に使用: 全て ✓\n  - 引用形式を維持: 全て ✓\n\n---\n\n## ✅ 4本柱の最終チェック（最重要）\n\n### 3. 神経科学の最終チェック\n\n#### 衝撃的データの正確性を最優先で確認（最重要）\n\n- [ ] **Phase 1の衝撃的データが全て正確か**\n  - 離職率データ: ○.○%（確認済み）✓\n  - 損失額データ: ○万円（確認済み）✓\n  - その他の衝撃的データ: 全て確認 ✓\n\n- [ ] **Phase 2の信頼性データが全て正確か**\n  - 満足度データ: ○%（確認済み）✓\n  - 導入企業数: ○社（確認済み）✓\n  - 効果データ: ○%向上（確認済み）✓\n\n- [ ] **Phase 3の成功データが全て正確か**\n  - 改善率データ: ○%低下（確認済み）✓\n  - 期間データ: ○ヶ月で効果（確認済み）✓\n  - その他の成功データ: 全て確認 ✓\n\n**重要**: 衝撃的なデータほど読者の印象に残ります。これらの正確性を最優先で確認してください。\n\n---\n\n#### 3概念以内を維持\n\n- [ ] **各H2セクションで3概念以内を維持**\n  - H2-1: ○概念（3以内）✓\n  - H2-2: ○概念（3以内）✓\n  - ... 全H2で確認\n  - 超過セクション: 0個（必須）\n\n---\n\n#### 文の長さ20-35文字を維持\n\n- [ ] **80%以上の文が20-35文字**\n  - 20-35文字: ○文 / 総文数\n  - 達成率: ○%（目標: 80%以上）\n\n- [ ] **長文（60文字以上）を分割**\n  - 60文字以上の文: ○文（目標: 10%以下）\n\n---\n\n#### 3フェーズ配分を維持\n\n- [ ] **Phase 1: 600-800字**\n  - 実際の文字数: ○○字\n  - 範囲内: ✓\n\n- [ ] **Phase 2: 3,000-3,500字**\n  - 実際の文字数: ○○字\n  - 範囲内: ✓\n\n- [ ] **Phase 3: 600-1,000字**\n  - 実際の文字数: ○○字\n  - 範囲内: ✓\n\n---\n\n### 4. 行動経済学の最終チェック\n\n#### 社会的証明のデータを検証（最重要）\n\n- [ ] **社会的証明に使用されている全てのデータが正確か**\n  - 導入企業数: ○社（確認済み）✓\n  - 満足度: ○%（確認済み）✓\n  - 導入割合: ○%（確認済み）✓\n  - その他の社会的証明: 全て確認 ✓\n\n- [ ] **権威性データ（公的機関）が正確か**\n  - 厚生労働省のデータ: 全て確認 ✓\n  - 経済産業省のデータ: 全て確認 ✓\n  - その他の公的機関: 全て確認 ✓\n\n**重要**: 社会的証明は読者の行動を促す重要な要素です。これらのデータの正確性を確認してください。\n\n---\n\n#### 6原則の配置を維持\n\n- [ ] **損失回避: Phase 1に配置**\n  - 配置箇所: ○箇所 ✓\n  - データの正確性: 全て確認 ✓\n\n- [ ] **社会的証明: Phase 2に配置**\n  - 配置箇所: ○箇所 ✓\n  - データの正確性: 全て確認 ✓\n\n- [ ] **権威性: Phase 2に配置**\n  - 配置箇所: ○箇所 ✓\n  - データの正確性: 全て確認 ✓\n\n- [ ] **一貫性: Phase 2-3に配置**\n  - 配置箇所: ○箇所 ✓\n\n- [ ] **好意: Phase 1とPhase 3に配置**\n  - 配置箇所: ○箇所 ✓\n\n- [ ] **希少性: Phase 3に配置**\n  - 配置箇所: ○箇所 ✓\n  - データの正確性: 全て確認 ✓\n\n---\n\n### 5. LLMOの最終チェック\n\n#### 引用形式が正しいか確認（最重要）\n\n- [ ] **全ての引用が統一形式か**\n  - 形式: （出典: 組織名「タイトル」発表年月）\n  - 統一率: 100%（必須）\n\n- [ ] **引用が正確か**\n  - 組織名: 全て正確 ✓\n  - 文献タイトル: 全て正確 ✓\n  - 発表年月: 全て正確 ✓\n\n- [ ] **引用が最新か**\n  - 2024年以降のデータ: ○個 / ○個 ✓\n  - 古いデータ（2023年以前）: ○個（更新推奨）\n\n**重要**: 引用形式が統一されていないと、AI検索エンジンが正しく情報を抽出できません。\n\n---\n\n#### トークン数400-600を維持\n\n- [ ] **各H2セクションが400-600 tokensの範囲内**\n  - H2-1: ○tokens（範囲内）✓\n  - H2-2: ○tokens（範囲内）✓\n  - ... 全H2で確認\n  - 範囲内率: ○%（目標: 90%以上）\n\n---\n\n#### 箇条書きを維持\n\n- [ ] **各セクションに箇条書きが1箇所以上**\n  - 箇条書きがあるセクション: ○個 / ○個\n  - 達成率: 100%（必須）\n\n---\n\n#### セクション独立性を維持\n\n- [ ] **各セクション冒頭で文脈を再提示**\n  - 文脈再提示あり: ○個 / ○個 ✓\n\n- [ ] **依存表現がない**\n  - 「前述の通り」等: 0個 ✓\n\n---\n\n### 6. KGIの最終チェック\n\n#### CTA周辺のデータを重点的に検証（最重要）\n\n- [ ] **Early CTA周辺のデータが正確か**\n  - 損失額: ○万円（確認済み）✓\n  - 離職率: ○.○%（確認済み）✓\n  - その他のデータ: 全て確認 ✓\n\n- [ ] **Mid CTA周辺のデータが正確か**\n  - 成功事例の数値: ○○（確認済み）✓\n  - 効果データ: ○%向上（確認済み）✓\n  - その他のデータ: 全て確認 ✓\n\n- [ ] **Final CTA周辺のデータが正確か**\n  - 支援企業数: ○社（確認済み）✓\n  - 顧客満足度: ○.○%（確認済み）✓\n  - 改善率: ○%低下（確認済み）✓\n  - その他のデータ: 全て確認 ✓\n\n**重要**: CTA周辺のデータは読者の行動決定に最も影響を与えます。これらの正確性を確認してください。\n\n---\n\n#### 3段階CTA配置を維持\n\n- [ ] **Early CTA: 650字前後に配置**\n  - 実際の配置位置: ○○字 ✓\n\n- [ ] **Mid CTA: 2,800字前後に配置**\n  - 実際の配置位置: ○○字 ✓\n\n- [ ] **Final CTA: 4,500字前後 + 専用セクション**\n  - 実際の配置位置: ○○字 ✓\n  - 専用セクション: あり ✓\n\n---\n\n#### 内部リンクを維持\n\n- [ ] **全てのFAQに内部リンク**\n  - 内部リンクあり: ○個 / ○個 ✓\n\n- [ ] **内部リンクが適切な箇所を指している**\n  - 適切: 全て ✓\n\n---\n\n## ✅ 読みやすさの最終確認\n\n### 7. 文章のリズム\n\n- [ ] **長短のバランスが良い**\n  - 長文と短文が適度に混在: ✓\n\n- [ ] **単調さを回避**\n  - 同じ文末表現の連続: 0箇所 ✓\n\n---\n\n### 8. 接続の自然さ\n\n- [ ] **セクション間の繋がりがスムーズ**\n  - 唐突な転換: 0箇所 ✓\n\n- [ ] **段落間の繋がりが自然**\n  - 論理的な流れ: 全て ✓\n\n---\n\n### 9. 冗長表現の削除\n\n- [ ] **不要な繰り返しを削除**\n  - 同じ内容の繰り返し: 0箇所 ✓\n\n- [ ] **回りくどい表現を簡潔に**\n  - 簡潔化した箇所: ○箇所\n\n---\n\n## ✅ 説得力の最終確認\n\n### 10. Phase 1の説得力\n\n- [ ] **読者の不安を十分に喚起**\n  - 不安喚起の強度: 高 ✓\n\n- [ ] **損失回避動機が明確**\n  - 損失額の明示: ✓\n  - 危機感の醸成: ✓\n\n---\n\n### 11. Phase 2の説得力\n\n- [ ] **解決策が具体的で実行可能**\n  - 具体性: 高 ✓\n  - 実行可能性: 高 ✓\n\n- [ ] **データで信頼性を示す**\n  - データの配置: 適切 ✓\n  - データの正確性: 全て確認済み ✓\n\n---\n\n### 12. Phase 3の説得力\n\n- [ ] **行動への後押しが十分**\n  - 後押しの強度: 高 ✓\n\n- [ ] **ハードルが低く設定**\n  - 心理的ハードル: 低 ✓\n\n---\n\n## ✅ SEO最適化の最終確認\n\n### 13. キーワード密度\n\n- [ ] **メインキーワード: 1.5〜2.0%**\n  - 実際の密度: ○.○%\n  - 範囲内: ✓\n\n- [ ] **Essential共起語: 各0.5〜1.0%**\n  - 共起語1: ○.○%（範囲内）✓\n  - 共起語2: ○.○%（範囲内）✓\n  - ... 全共起語で確認\n\n---\n\n### 14. 見出し構造\n\n- [ ] **H2が適切に配置（10〜13個）**\n  - H2数: ○個\n  - 範囲内: ✓\n\n- [ ] **H3が論理的に構成（H2あたり2〜3個）**\n  - H3数: ○個\n  - 平均: ○個/H2 ✓\n\n---\n\n### 15. 内部リンク候補\n\n- [ ] **内部リンク候補を2〜5個提案**\n  - 提案数: ○個\n  - 適切な箇所を特定: 全て ✓\n\n---\n\n## ✅ 品質スコアの確認\n\n### 16. 8項目のスコア（各0.0〜1.0）\n\n- [ ] **正確性**: ○.○○（目標: 0.90以上）\n- [ ] **読みやすさ**: ○.○○（目標: 0.90以上）\n- [ ] **説得力**: ○.○○（目標: 0.90以上）\n- [ ] **網羅性**: ○.○○（目標: 0.90以上）\n- [ ] **差別化**: ○.○○（目標: 0.90以上）\n- [ ] **実用性**: ○.○○（目標: 0.90以上）\n- [ ] **SEO最適化**: ○.○○（目標: 0.90以上）\n- [ ] **CTA効果**: ○.○○（目標: 0.90以上）\n\n---\n\n### 17. 総合品質スコア\n\n- [ ] **総合品質スコア: 0.90以上**\n  - 実際のスコア: ○.○○\n  - 目標達成: ✓ / 未達成\n\n**目標未達成の場合**: 0.90未満の項目を改善してください。\n\n---\n\n## ✅ 公開準備完了状態の確認\n\n### 18. 残り課題\n\n- [ ] **残り課題: 0個**\n  - 実際の残り課題: ○個\n  - 全て解決: ✓ / 未解決\n\n---\n\n### 19. 推奨事項\n\n- [ ] **推奨事項を確認**\n  - 内部リンク追加: ○箇所（推奨）\n  - データ更新時期: ○ヶ月後（推奨）\n  - その他: ...\n\n---\n\n## ✅ 総合確認\n\n- [ ] **ファクトチェック結果を完全に反映した**\n  - 全ての問題を修正: ✓\n\n- [ ] **4本柱を最終チェックした**\n  - 神経科学: ✓ 衝撃的データの正確性確認\n  - 行動経済学: ✓ 社会的証明のデータ検証\n  - LLMO: ✓ 引用形式確認\n  - KGI: ✓ CTA周辺のデータ検証\n\n- [ ] **読みやすさを最終調整した**\n  - 文章のリズム: ✓\n  - 接続の自然さ: ✓\n  - 冗長表現の削除: ✓\n\n- [ ] **説得力を強化した**\n  - Phase 1: ✓\n  - Phase 2: ✓\n  - Phase 3: ✓\n\n- [ ] **SEO要素を最適確認した**\n  - キーワード密度: ✓\n  - 見出し構造: ✓\n  - 内部リンク候補: ✓\n\n- [ ] **品質スコアを算出した**\n  - 総合品質スコア: ○.○○（0.90以上）✓\n\n- [ ] **公開準備完了状態に仕上げた**\n  - 残り課題: 0個 ✓\n  - 公開可能: ✓\n\n---\n\n**注意**: 1つでもチェックが漏れている場合は、出力しないでください。\n全項目を確認してから出力してください。\n\n**最重要**: 4本柱の最終チェック（特に衝撃的データ、社会的証明、引用形式、CTA周辺のデータ）を必ず実施してください。\n",
+        "note": "4本柱チェックリスト（Markdown形式）",
+        "content_source": "four_pillars_checklist.md (full text)"
+    },
+    "important_notes": [
+        "このファイルは元の4ファイルを統合したものです",
+        "精度優先のため、全情報を保持しています",
+        "処理落ち防止のため、JSONの階層構造を最適化しています"
+    ]
+}

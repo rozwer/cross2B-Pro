@@ -1,0 +1,330 @@
+# 工程13: WordPress自動投稿（オプション）
+
+この工程では、工程12で生成したWordPress用HTMLを、WordPress REST APIを使って自動的に投稿します。
+
+---
+
+## 概要
+
+### 目的
+- 工程12のHTMLをWordPressに**自動で下書き投稿**
+- アイキャッチ画像の**自動アップロード・設定**
+- カテゴリ・タグの**自動設定**
+- 手動作業を最小限に
+
+### 投稿フロー
+
+```
+工程12のHTML
+    ↓
+工程13: WordPress自動投稿
+    ↓
+① 画像をメディアライブラリにアップロード
+    ↓
+② 記事を下書きとして投稿
+    ↓
+③ アイキャッチ画像を設定
+    ↓
+④ カテゴリ・タグを設定
+    ↓
+WordPress管理画面で最終確認 → 公開
+
+```
+
+---
+
+## 事前準備
+
+### 1. WordPress側の設定
+
+#### Application Passwords の有効化（推奨）
+
+WordPress 5.6以降で標準搭載されています。
+
+1. WordPress管理画面 → ユーザー → プロフィール
+2. 「アプリケーションパスワード」セクションまでスクロール
+3. 新しいアプリケーション名を入力（例: `SEO自動投稿`）
+4. 「新しいアプリケーションパスワードを追加」をクリック
+5. 生成されたパスワードを**安全な場所に保存**（一度しか表示されません）
+
+#### REST API の確認
+
+以下のURLにアクセスして、REST APIが有効か確認：
+```
+https://あなたのサイト.com/wp-json/wp/v2/
+
+```
+
+JSONが返ってくればOKです。
+
+### 2. 設定ファイルの作成
+
+`config.json` を作成し、以下の情報を設定します：
+
+```json
+{
+    "wordpress": {
+        "site_url": "https://あなたのサイト.com",
+        "username": "ユーザー名",
+        "app_password": "xxxx xxxx xxxx xxxx xxxx xxxx"
+    },
+    "default_settings": {
+        "post_status": "draft",
+        "category_ids": [1],
+        "tag_ids": []
+    }
+}
+
+```
+
+**重要**: `config.json`はGitにコミットしないでください（`.gitignore`に追加）
+
+---
+
+## 使用方法
+
+### 方法1: Pythonスクリプト（推奨）
+
+#### 必要なライブラリ
+```bash
+pip install requests
+
+```
+
+#### 実行
+```bash
+python wp_auto_post.py --html "工程12_WordPress用HTML.html" --title "記事タイトル"
+
+```
+
+#### オプション
+```bash
+python wp_auto_post.py \
+    --html "工程12_WordPress用HTML.html" \
+    --title "記事タイトル" \
+    --eyecatch "eyecatch.jpg" \
+    --category 5 \
+    --tags "派遣,教育,人材" \
+    --status draft
+
+```
+
+| オプション | 説明 | デフォルト |
+|-----------|------|-----------|
+| `--html` | HTMLファイルパス | 必須 |
+| `--title` | 記事タイトル | 必須 |
+| `--eyecatch` | アイキャッチ画像パス | なし |
+| `--category` | カテゴリID | config.jsonの値 |
+| `--tags` | タグ（カンマ区切り） | なし |
+| `--status` | draft / publish / pending | draft |
+
+---
+
+### 方法2: Node.jsスクリプト
+
+#### 必要なライブラリ
+```bash
+npm install axios form-data
+
+```
+
+#### 実行
+```bash
+node wp_auto_post.js --html "工程12_WordPress用HTML.html" --title "記事タイトル"
+
+```
+
+---
+
+### 方法3: cURLコマンド（シンプル）
+
+#### 記事投稿のみ
+```bash
+curl -X POST "https://あなたのサイト.com/wp-json/wp/v2/posts" \
+    -u "ユーザー名:アプリパスワード" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "title": "記事タイトル",
+        "content": "<p>HTMLコンテンツ</p>",
+        "status": "draft"
+    }'
+
+```
+
+#### 画像アップロード
+```bash
+curl -X POST "https://あなたのサイト.com/wp-json/wp/v2/media" \
+    -u "ユーザー名:アプリパスワード" \
+    -H "Content-Disposition: attachment; filename=eyecatch.jpg" \
+    --data-binary @eyecatch.jpg
+
+```
+
+---
+
+## API仕様
+
+### 投稿エンドポイント
+
+#### POST /wp-json/wp/v2/posts
+
+**リクエストボディ**:
+```json
+{
+    "title": "記事タイトル",
+    "content": "<h2>見出し</h2><p>本文</p>...",
+    "status": "draft",
+    "categories": [5],
+    "tags": [10, 11],
+    "featured_media": 123,
+    "meta": {
+        "_yoast_wpseo_metadesc": "メタディスクリプション"
+    }
+}
+
+```
+
+**レスポンス**:
+```json
+{
+    "id": 456,
+    "link": "https://あなたのサイト.com/?p=456",
+    "status": "draft",
+    ...
+}
+
+```
+
+### メディアエンドポイント
+
+#### POST /wp-json/wp/v2/media
+
+**ヘッダー**:
+```
+Content-Type: image/jpeg
+Content-Disposition: attachment; filename="eyecatch.jpg"
+
+```
+
+**レスポンス**:
+```json
+{
+    "id": 123,
+    "source_url": "https://あなたのサイト.com/wp-content/uploads/{{current_year}}/01/eyecatch.jpg",
+    ...
+}
+
+```
+
+### アイキャッチ設定
+
+投稿作成後、`featured_media`に画像IDを設定：
+
+#### POST /wp-json/wp/v2/posts/{post_id}
+```json
+{
+    "featured_media": 123
+}
+
+```
+
+---
+
+## エラー対応
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|--------|------|--------|
+| 401 Unauthorized | 認証失敗 | ユーザー名・パスワードを確認 |
+| 403 Forbidden | 権限不足 | ユーザーに投稿権限があるか確認 |
+| 404 Not Found | URLが間違い | site_urlを確認 |
+| 500 Internal Server Error | サーバーエラー | WordPressのエラーログを確認 |
+
+### Application Passwordsが表示されない場合
+
+1. WordPress 5.6以上か確認
+2. HTTPS（SSL）が有効か確認
+3. プラグインの競合を確認（一時的に無効化）
+4. `wp-config.php`に以下がないか確認：
+   ```php
+   define( 'DISALLOW_APPLICATION_PASSWORDS', true );
+
+   ```
+
+---
+
+## セキュリティ注意事項
+
+### 絶対に守ること
+
+1. **config.jsonを公開しない**
+   - `.gitignore`に追加
+   - 公開リポジトリにコミットしない
+2. **HTTPSを使用**
+   - 認証情報が平文で送信されるのを防ぐ
+3. **最小権限の原則**
+   - 投稿専用のユーザーを作成
+   - 必要な権限のみ付与（投稿者/編集者）
+4. **アプリパスワードの管理**
+   - 定期的にローテーション
+   - 不要になったら削除
+
+---
+
+## 出力・結果
+
+### 成功時の出力
+
+```
+✅ WordPress自動投稿完了
+━━━━━━━━━━━━━━━━━━━━━━
+投稿結果:
+├─ 投稿ID: 456
+├─ ステータス: draft（下書き）
+├─ 編集URL: https://example.com/wp-admin/post.php?post=456&action=edit
+├─ プレビューURL: https://example.com/?p=456&preview=true
+│
+├─ アイキャッチ画像:
+│   ├─ メディアID: 123
+│   └─ URL: https://example.com/wp-content/uploads/{{current_year}}/01/eyecatch.jpg
+│
+└─ カテゴリ・タグ:
+    ├─ カテゴリ: [5]
+    └─ タグ: [10, 11, 12]
+━━━━━━━━━━━━━━━━━━━━━━
+
+次のステップ:
+1. 編集URLを開いて内容を確認
+2. 画像プレースホルダーを実際の画像に置換
+3. プレビューで最終確認
+4. 公開
+
+```
+
+---
+
+## ファイル構成
+
+```
+工程13_WordPress自動投稿/
+├── instructions.txt          # この説明ファイル
+├── conversation_starter.txt  # 会話開始用プロンプト
+├── unified_knowledge.json    # 統合知識ベース
+├── wp_auto_post.py          # Python投稿スクリプト
+├── wp_auto_post.js          # Node.js投稿スクリプト（代替）
+├── config.example.json       # 設定ファイルのサンプル
+└── config.json              # 実際の設定（※.gitignore推奨）
+
+```
+
+---
+
+## 今後の拡張案
+
+- [ ] 複数記事の一括投稿
+- [ ] 画像プレースホルダーの自動置換
+- [ ] 投稿スケジュール設定
+- [ ] Yoast SEO / All in One SEO のメタ情報設定
+- [ ] カテゴリ・タグの自動作成
+- [ ] 投稿履歴のログ管理

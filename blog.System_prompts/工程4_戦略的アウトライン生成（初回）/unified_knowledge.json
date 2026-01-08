@@ -1,0 +1,1485 @@
+{
+    "process_info": {
+        "name": "工程4:戦略的アウトライン生成（初回）",
+        "version": "5.5",
+        "purpose": "工程4:戦略的アウトライン生成（初回）の全知識を統合したファイル",
+        "note": "このJSONにはガイドライン・テンプレート・実例・チェックリストの全てが含まれています"
+    },
+    "guidelines": {
+        "source": "detailed_guidelines.md",
+        "content": "# 工程4: 戦略的アウトライン生成 - 詳細ガイドライン\n\n## 1. 工程の目的\n\n工程3（3A/3B/3C）の全分析結果を統合し、記事の詳細設計図（アウトライン）を作成する工程です。\n\n### なぜ重要なのか？\n- **工程3の全データを統合**: 検索意図・キーワード・差別化戦略を1つのアウトラインに\n- **4本柱を全セクションに実装**: 神経科学・行動経済学・LLMO・KGIを漏れなく反映\n- **執筆の設計図**: 後続の工程6（執筆）で、このアウトラインに沿って執筆\n- **CVR最大化**: 3段階CTA戦略により、総CVR 7〜11%を実現\n\n**このアウトラインの品質が、記事の成果を決定づけます。**\n\n---\n\n## 2. 入力データ構造\n\n### 必須入力（3つ）\n\n**工程3A: クエリ分析・ペルソナ深掘りの結果**\n```json\n{\n  \"search_intent\": {...},\n  \"persona\": {...},\n  \"three_phase_journey\": {...}\n}\n```\n\n**工程3B: 共起語・関連キーワード抽出の結果**\n```json\n{\n  \"cooccurrence_words\": [...], // 100〜150個\n  \"related_keywords\": [...], // 30〜50個\n  \"phase_mapping\": {...},\n  \"behavioral_economics_triggers\": {...}\n}\n```\n\n**工程3C: 競合分析・差別化戦略の結果**\n```json\n{\n  \"competitor_analysis_summary\": [...],\n  \"differentiation_strategy\": {...},\n  \"four_pillars_differentiation\": {...}\n}\n```\n\n---\n\n## 3. 出力データ構造\n\n### JSON形式（完全版）\ntemplates.jsonの完全な構造を参照してください。\n\n主要なセクション：\n1. **title_candidates**: タイトル案（3パターン）\n2. **recommended_title**: 推奨タイトル\n3. **meta_description**: メタディスクリプション\n4. **article_structure_overview**: 記事全体の構造概要\n5. **introduction**: 導入部の詳細設計\n6. **sections**: 各H2セクションの詳細設計（10〜13個）\n7. **cta_strategy**: 3段階CTA戦略\n8. **keyword_distribution_summary**: キーワード配置のサマリー\n9. **visual_content_plan**: 視覚要素の配置計画\n10. **differentiation_implementation**: 差別化の実装計画\n11. **quality_targets**: 品質目標\n\n---\n\n## 4. タイトル案の作成方法\n\n### 4.1 必須要素\n- メインキーワードを含む\n- 文字数30〜40文字\n- 差別化要素を1つ以上含む（例: 「{{current_year}}年最新」「中小企業向け」「低予算」等）\n- 数字を含む（例: 「5ステップ」「3つの方法」）\n\n### 4.2 タイトルパターン\n\n**パターン1: 年度 + 網羅性**\n```\n【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ\n```\n\n**パターン2: ターゲット明確化 + ベネフィット**\n```\n中小派遣会社向け｜予算50万円以下で実現する派遣社員教育の5つの方法\n```\n\n**パターン3: 課題解決 + 数字**\n```\n離職率42%を18%に改善｜派遣社員が定着する教育方法5ステップ【{{current_year}}年版】\n```\n\n### 4.3 評価基準\n\n**SEOスコア（0.0〜1.0）の算出**:\n```\nSEOスコア = (キーワード適合度 × 0.3) + (クリック誘引度 × 0.3) + (差別化度 × 0.2) + (文字数適正度 × 0.2)\n```\n\n**各タイトル案について記載**:\n- title: タイトル文字列\n- character_count: 文字数\n- seo_score: SEOスコア（0.0〜1.0）\n- reasons: このタイトルを提案する理由（3〜4個の配列）\n- target_audience: 想定読者\n- differentiation: 差別化ポイント\n\n**推奨タイトルの選定**:\n最もSEOスコアが高く、かつペルソナに最適なタイトルを1つ選定します。\n\n---\n\n## 5. メタディスクリプションの作成方法\n\n### 5.1 必須要素\n- 文字数120〜150文字\n- メインキーワードを含む\n- 記事の価値提案を明確に記述\n- 数字・データを1つ以上含む\n- CTAまたは行動喚起を含む\n\n### 5.2 構成テンプレート\n```\n[課題提起 + 最新データ]。[解決策の提示]。[ベネフィット + 差別化ポイント]を、[具体的内容]で紹介します。\n```\n\n**例**:\n```\n派遣社員の離職率29.3%（{{current_year}}年厚労省調査）を改善する教育方法を完全解説。中小企業でも年間50万円以下で実践できる5ステップと、OJT・Off-JT・オンライン研修の最適な組み合わせ方を、最新データと事例で紹介します。\n```\n\n---\n\n## 6. 記事全体の構造設計\n\n### 6.1 総文字数目標\n4,500〜5,000文字\n\n**理由**:\n- 競合平均: 3,850字\n- 自社目標: 4,800字（+25%、競合より詳しい）\n- 読了時間: 12〜15分（適切な長さ）\n\n### 6.2 総セクション数\n10〜13セクション（H2）\n\n**内訳**:\n- 導入部: 1セクション（独立）\n- Phase 1: 2〜3セクション\n- Phase 2: 7〜9セクション\n- Phase 3: 1〜2セクション\n- まとめ: 1セクション（独立）\n\n### 6.3 3フェーズの文字数配分\n\n**Phase 1（不安・課題認識）: 600〜800文字**\n- 導入部: 400〜500字\n- H2-1: 200〜300字\n\n**Phase 2（理解・納得）: 3,000〜3,500文字**\n- H2-2〜H2-10: 各300〜500字\n\n**Phase 3（行動決定）: 600〜1,000文字**\n- H2-11〜H2-12: 各300〜500字\n- まとめ: 200〜300字\n\n### 6.4 CTA配置計画\n\n**Early CTA: Phase 1終了時（650字前後）**\n- 目的: 早期の関心獲得\n- 提供: 無料診断ツール / チェックリスト\n- CVR目標: 3〜5%\n\n**Mid CTA: Phase 2中盤（2,800字前後）**\n- 目的: 納得した層の獲得\n- 提供: 事例集PDF / 導入ガイド\n- CVR目標: 2〜3%\n\n**Final CTA: Phase 3（4,500字前後 + 専用セクション）**\n- 目的: 全て読んだ層の獲得\n- 提供: 無料コンサルティング / 個別相談\n- CVR目標: 2〜3%\n\n**総CVR目標: 7〜11%**\n\n### 6.5 視覚要素の配置計画\n8〜12個の視覚要素（図表・チャート・インフォグラフィック）を配置\n\n---\n\n## 7. 4本柱統合の必須要件（最重要）\n\n**すべてのH2セクション**に以下の4本柱を必ず含めてください。これは最重要要件です。\n\n### 7.1 神経科学的設計\n\n#### 認知負荷の最適化\n```\n1セクション = 3概念以内\n```\n\n**理由**: 作業記憶の容量制限（マジカルナンバー7±2）を考慮。1セクションで3概念以内にすることで、読者の認知負荷を最適化。\n\n**実装方法**:\n- 各H2セクションで扱う主要概念を3個以内に制限\n- H3サブセクションで各概念を展開\n- 例: 「OJT」「Off-JT」「メンター制度」の3概念\n\n#### 文の長さ\n```\n20〜35文字/文\n```\n\n**理由**: 日本語の可読性研究により、20〜35文字が最も理解しやすい。\n\n**実装方法**:\n- 長い文は2文に分割\n- 1文1メッセージの原則\n\n#### 3フェーズ対応\n```\nこのセクションがPhase 1/2/3のどれかを明示\n```\n\n**Phase 1セクションの神経科学的要件**:\n- 扁桃体活性化: 損失・リスクの明示\n- 感情的訴求: 共感的トーン\n- データアンカー: 具体的数値\n\n**Phase 2セクションの神経科学的要件**:\n- 前頭前野処理: 論理的説明、ステップ提示\n- データ裏付け: 統計・研究結果\n- 比較検討: 選択肢の提示\n\n**Phase 3セクションの神経科学的要件**:\n- 線条体活性化: 報酬予測、成功イメージ\n- 行動喚起: 具体的アクション\n- ハードル低減: 容易性の強調\n\n---\n\n### 7.2 行動経済学的設計\n\n#### 6原則の配置\n```\n各セクションに最低1つの原則を配置\n```\n\n**Phase 1セクション**: 損失回避 or 社会的証明\n**Phase 2セクション**: 権威性 or 一貫性\n**Phase 3セクション**: 希少性 or 好意\n\n#### 損失回避（Loss Aversion）\n**使用箇所**: Phase 1セクション\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"損失回避トリガー\",\n  \"implementation\": \"1人離職で55万円の損失を明示\"\n}\n```\n\n#### 社会的証明（Social Proof）\n**使用箇所**: Phase 2セクション\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"社会的証明\",\n  \"implementation\": \"300社が導入、顧客満足度96.8%を明示\"\n}\n```\n\n#### 権威性（Authority）\n**使用箇所**: Phase 2セクション\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"権威性\",\n  \"implementation\": \"厚生労働省{{current_year}}年データ、専門家引用\"\n}\n```\n\n#### 一貫性（Consistency）\n**使用箇所**: Phase 2〜Phase 3セクション\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"一貫性（段階的コミットメント）\",\n  \"implementation\": \"ステップ1→2→3の順序提示\"\n}\n```\n\n#### 好意（Liking）\n**使用箇所**: Phase 1とPhase 3セクション\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"好意（共感的トーン）\",\n  \"implementation\": \"その悩み、よく分かります\"\n}\n```\n\n#### 希少性（Scarcity）\n**使用箇所**: Phase 3セクション（CTA周辺）\n**実装方法**:\n```json\n{\n  \"behavioral_element\": \"希少性\",\n  \"implementation\": \"月10社限定、残り3枠\"\n}\n```\n\n---\n\n### 7.3 LLMO設計\n\n#### トークン数\n```\n400〜600 tokens/section\n```\n\n**理由**: AI検索エンジン（ChatGPT、Perplexity等）の最適処理単位。RAG（Retrieval-Augmented Generation）検索で引用されやすい。\n\n**計算方法**:\n```\nトークン数 ≒ 文字数 × 0.59（日本語の平均）\n400〜600トークン ≒ 680〜1,020文字\n```\n\n**実装方法**:\n- 各H2セクション: 600〜800文字を目標\n- トークン数を意識して設計\n\n#### セクション独立性\n```\n前セクションへの依存を最小化\n```\n\n**理由**: AI検索エンジンは1セクションのみを引用することが多い。前のセクションを読まなくても理解可能にすることで、引用率が向上。\n\n**実装方法**:\n- 各セクションの冒頭で簡潔に文脈を再提示\n- 「前述の通り」等の表現を避ける\n- 各セクションが独立して意味をなす\n\n**例**:\n```\n悪い例: 「次に、このステップを実施します」（前提不明）\n良い例: 「ステップ2: OJTの実施方法を解説します」（独立して理解可能）\n```\n\n#### 質問形式見出し\n```\nH2の30%以上を質問形式に\n```\n\n**理由**: 音声検索とAI検索エンジンは質問形式に最適化されている。\n\n**実装方法**:\n- 10個のH2セクションのうち、3個以上を質問形式に\n- 例: 「派遣社員の教育にはどのくらいの期間が必要か？」\n- 例: 「OJTとOff-JTの違いは何か？」\n\n#### 箇条書き活用\n```\n各セクションに1箇所以上\n```\n\n**理由**: AI検索エンジンは箇条書きを構造化データとして処理しやすく、引用率が向上。\n\n**実装方法**:\n- 各H2セクションに必ず1つ以上の箇条書き\n- 3〜5項目が最適\n- 各項目: 15〜30文字\n\n---\n\n### 7.4 KGI設計\n\n#### CTA配置\n```\nEarly（650字）/ Mid（2,800字）/ Final（4,500字）\n```\n\n**Early CTA（650字前後）**:\n```json\n{\n  \"type\": \"early\",\n  \"position\": \"650字前後（Phase 1終了時）\",\n  \"offer\": \"無料診断ツール\",\n  \"text\": \"あなたの会社の教育体制を3分で診断→\",\n  \"psychological_barrier\": \"最低（30秒で完了）\",\n  \"expected_cvr\": \"3〜5%\"\n}\n```\n\n**Mid CTA（2,800字前後）**:\n```json\n{\n  \"type\": \"mid\",\n  \"position\": \"2,800字前後（Phase 2中盤）\",\n  \"offer\": \"成功事例集PDF\",\n  \"text\": \"中小企業3社の成功事例を無料ダウンロード→\",\n  \"psychological_barrier\": \"低（メールアドレスのみ）\",\n  \"expected_cvr\": \"2〜3%\"\n}\n```\n\n**Final CTA（4,500字前後）**:\n```json\n{\n  \"type\": \"final\",\n  \"position\": \"4,500字前後 + 専用セクション\",\n  \"offer\": \"無料コンサルティング\",\n  \"text\": \"あなたの会社に最適な教育プランを専門家が提案します（無料・30分）\",\n  \"psychological_barrier\": \"中（フォーム入力）\",\n  \"expected_cvr\": \"2〜3%\"\n}\n```\n\n#### CVR目標\n```\n総CVR目標: 7〜11%\n```\n\n**内訳**:\n- Early CTA: 3〜5%\n- Mid CTA: 2〜3%\n- Final CTA: 2〜3%\n\n**重複を考慮**: 総CVRは単純合計ではなく、7〜11%を目標とする。\n\n---\n\n## 8. セクション設計テンプレート\n\nすべてのH2セクションは、以下のテンプレートに従って設計してください。\n```json\n{\n  \"h2\": \"見出し（質問形式推奨）\",\n  \"section_number\": 1,\n  \"word_count_target\": 600,\n  \"token_target\": \"400-600\",\n  \"psychological_phase\": \"phase1_anxiety / phase2_understanding / phase3_action\",\n  \"psychological_goal\": \"このセクションで達成すべき心理的目標\",\n  \"neuroscience_element\": \"神経科学的要素（例: 損失データの提示、認知負荷3概念以内）\",\n  \"behavioral_element\": \"行動経済学的要素（例: 損失回避トリガー）\",\n  \"llmo_element\": \"LLMO要素（例: 箇条書き3〜5項目、セクション独立性確保）\",\n  \"kgi_element\": \"KGI要素（例: Early CTA配置、CVR 3〜5%目標）\",\n  \"subsections\": [\n    {\n      \"h3\": \"H3見出し\",\n      \"key_points\": [\"ポイント1\", \"ポイント2\", \"ポイント3\"],\n      \"keywords_to_include\": {\n        \"essential\": [\"必須キーワード1\", \"必須キーワード2\"],\n        \"standard\": [\"標準キーワード1\"],\n        \"unique\": [\"独自キーワード1\"]\n      },\n      \"word_count_target\": 200,\n      \"differentiation_element\": \"競合との差別化要素\"\n    }\n  ],\n  \"visual_content\": {\n    \"type\": \"chart / table / infographic / image\",\n    \"description\": \"図表の内容説明\"\n  },\n  \"cta_placement\": true/false,\n  \"cta_details\": {\n    \"type\": \"early/mid/final\",\n    \"text\": \"CTA文言\"\n  }\n}\n```\n\n### 必須フィールドの説明\n\n**neuroscience_element**:\nこのセクションでどのような神経科学的要素を実装するかを明記。\n- 例: 「扁桃体活性化: 損失データ55万円を明示」\n- 例: 「前頭前野処理: 5ステップを論理的に提示」\n- 例: 「線条体活性化: 成功イメージを提示」\n\n**behavioral_element**:\nこのセクションでどの行動経済学の原則を使用するかを明記。\n- 例: 「損失回避トリガー」\n- 例: 「社会的証明: 300社導入実績」\n- 例: 「権威性: 厚生労働省データ引用」\n\n**llmo_element**:\nこのセクションでどのようなLLMO最適化を行うかを明記。\n- 例: 「箇条書き5項目、トークン数450」\n- 例: 「セクション独立性: 冒頭で文脈再提示」\n- 例: 「質問形式見出し」\n\n**kgi_element**:\nこのセクションでCTAを配置する場合、その詳細を明記。\n- 例: 「Early CTA配置、無料診断ツール、CVR 3〜5%」\n- 例: 「CTA配置なし」\n\n---\n\n## 9. 導入部の詳細設計\n\n### 9.1 導入部の構成（400〜500字）\n\n**1. オープニングフック（100字）**\n読者の注意を引く一文。衝撃的なデータや質問。\n\n**例**:\n```\n派遣社員の3ヶ月以内離職率が42%に達している現実をご存知ですか？\n```\n\n**2. データアンカー（100字）**\n最新データで問題の深刻さを示す。\n\n**例**:\n```\n{{current_year}}年厚生労働省の最新調査によれば、派遣社員の離職率は29.3%（前年比+3.2pt）。1人の離職で採用コスト35万円 + 教育コスト20万円 = 55万円の損失が発生しています。\n```\n\n**3. 共感・課題提起（150字）**\nペルソナの悩みに共感し、課題を明確化。\n\n**例**:\n```\n「教育に時間をかけても、すぐに辞めてしまう」「何から始めればいいか分からない」──多くの教育担当者が同じ悩みを抱えています。特に中小派遣会社では、予算や人員の制約があり、大企業のような体系的な教育プログラムを導入するのは難しいのが現実です。\n```\n\n**4. 記事の価値提案（100字）**\nこの記事で得られるものと、差別化ポイントの提示。\n\n**例**:\n```\n本記事では、中小企業でも年間50万円以下で実践できる派遣社員教育の5ステップを、{{current_year}}年最新データと実際の成功事例とともに完全解説します。\n```\n\n**5. 主要ポイントの箇条書き（50字）**\n記事で学べる内容を3〜5個列挙。\n\n**例**:\n```\nこの記事で分かること:\n・{{current_year}}年最新データに基づく効果的な教育方法\n・予算別プラン（20万円/50万円/100万円）\n・リモート・ハイブリッド対応の教育手法\n・中小派遣会社3社の成功事例\n```\n\n**6. Early CTA（50字）**\n軽いコミットメントへの誘導。\n\n**例**:\n```\nまずは無料診断ツールで、あなたの会社の教育体制をチェックしてみませんか？（3分で完了）→\n```\n\n### 9.2 導入部の4本柱実装\n```json\n{\n  \"introduction\": {\n    \"word_count_target\": 450,\n    \"neuroscience_element\": \"扁桃体活性化: 離職率42%、損失55万円の衝撃データ\",\n    \"behavioral_element\": \"損失回避 + 好意（共感的トーン）\",\n    \"llmo_element\": \"箇条書き（主要ポイント5項目）、質問形式オープニング\",\n    \"kgi_element\": \"Early CTA配置、無料診断ツール誘導\",\n    \"structure\": {...}\n  }\n}\n```\n\n---\n\n## 10. 各H2セクションの詳細設計\n\n### 10.1 Phase 1セクションの設計（2〜3個）\n\n**目的**: 課題認識と損失回避動機の喚起\n\n**H2-1の例: 派遣社員の教育が失敗する3つの理由**\n```json\n{\n  \"h2\": \"派遣社員の教育が失敗する3つの理由\",\n  \"section_number\": 1,\n  \"word_count_target\": 600,\n  \"token_target\": \"400-600\",\n  \"psychological_phase\": \"phase1_anxiety\",\n  \"psychological_goal\": \"課題の明確化と損失回避動機の喚起\",\n  \"neuroscience_element\": \"扁桃体活性化: 3つの失敗理由で危機感を醸成、認知負荷3概念（失敗理由3つ）\",\n  \"behavioral_element\": \"損失回避: 各失敗による損失額を明示\",\n  \"llmo_element\": \"箇条書き（3つの理由）、トークン数500、セクション独立性確保\",\n  \"kgi_element\": \"CTA配置なし（Phase 1は課題認識に集中）\",\n  \"subsections\": [\n    {\n      \"h3\": \"理由1: 体系的な教育プログラムの欠如\",\n      \"key_points\": [\n        \"多くの企業が場当たり的な教育\",\n        \"結果: 教育効果が30%低下（データ引用）\",\n        \"損失額: 教育時間40時間 × 人件費2,500円 = 10万円が無駄\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"教育プログラム\", \"体系的\"],\n        \"standard\": [\"計画\", \"設計\"]\n      },\n      \"word_count_target\": 180,\n      \"differentiation_element\": \"具体的な損失額を数値化（競合はしていない）\"\n    },\n    {\n      \"h3\": \"理由2: OJTとOff-JTのバランス不足\",\n      \"key_points\": [\n        \"OJTのみ or Off-JTのみの企業が多い\",\n        \"最適比率はOJT:Off-JT = 7:3（厚生労働省調査）\",\n        \"バランス不足により定着率が35%低下\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"OJT\", \"Off-JT\"],\n        \"standard\": [\"バランス\", \"組み合わせ\"]\n      },\n      \"word_count_target\": 180,\n      \"differentiation_element\": \"最適比率の提示（競合は曖昧）\"\n    },\n    {\n      \"h3\": \"理由3: フィードバックの不足\",\n      \"key_points\": [\n        \"定期的なフィードバックがない企業が60%\",\n        \"フィードバックなしでは改善点が分からず、離職率が2倍\",\n        \"損失: 1人離職で55万円\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"フィードバック\"],\n        \"standard\": [\"評価\", \"改善\"]\n      },\n      \"word_count_target\": 180,\n      \"differentiation_element\": \"離職率2倍の具体的データ（競合は言及なし）\"\n    }\n  ],\n  \"visual_content\": {\n    \"type\": \"chart\",\n    \"description\": \"教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）\"\n  },\n  \"cta_placement\": false\n}\n```\n\n---\n\n### 10.2 Phase 2セクションの設計（7〜9個）\n\n**目的**: 理解と納得、具体的な方法の提示\n\n**H2-3の例: 【{{current_year}}年最新】効果的な派遣社員教育の5ステップ**\n```json\n{\n  \"h2\": \"【{{current_year}}年最新】効果的な派遣社員教育の5ステップ\",\n  \"section_number\": 3,\n  \"word_count_target\": 700,\n  \"token_target\": \"500-600\",\n  \"psychological_phase\": \"phase2_understanding\",\n  \"psychological_goal\": \"全体像の理解と実践可能性の認識\",\n  \"neuroscience_element\": \"前頭前野処理: 5ステップを論理的に提示、認知負荷3概念（導入・実施・評価の3カテゴリ）\",\n  \"behavioral_element\": \"権威性: 厚生労働省{{current_year}}年データ引用 + 社会的証明: 300社導入実績\",\n  \"llmo_element\": \"箇条書き（5ステップ）、質問形式見出しではないがナンバリングで構造化、トークン数550、セクション独立性確保\",\n  \"kgi_element\": \"Mid CTA配置、5ステップ詳細ガイドPDFダウンロード、CVR 2〜3%\",\n  \"subsections\": [\n    {\n      \"h3\": \"5ステップの全体像\",\n      \"key_points\": [\n        \"ステップ1: ニーズ分析（1週間）\",\n        \"ステップ2: 教育プラン設計（2週間）\",\n        \"ステップ3: 実施（1〜3ヶ月）\",\n        \"ステップ4: 評価（月1回）\",\n        \"ステップ5: 改善（継続的）\",\n        \"全体で3〜6ヶ月、予算20〜100万円\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"ステップ\", \"教育方法\", \"効果的\"],\n        \"standard\": [\"計画\", \"実施\", \"評価\"]\n      },\n      \"word_count_target\": 250,\n      \"differentiation_element\": \"期間と予算を具体的に明示（競合は曖昧）\"\n    },\n    {\n      \"h3\": \"なぜこの5ステップが効果的なのか？\",\n      \"key_points\": [\n        \"厚生労働省{{current_year}}年調査: 体系的教育で離職率が42%→18%に改善\",\n        \"導入企業300社の85%が「効果を実感」\",\n        \"段階的アプローチで教育担当者の負担を軽減\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"効果的\", \"データ\"],\n        \"standard\": [\"実績\", \"成功率\"]\n      },\n      \"word_count_target\": 200,\n      \"differentiation_element\": \"最新{{current_year}}年データ使用（競合は2023年以前）\"\n    }\n  ],\n  \"visual_content\": {\n    \"type\": \"infographic\",\n    \"description\": \"5ステップの全体像を示すインフォグラフィック（各ステップの期間・予算・担当者を視覚化）\"\n  },\n  \"cta_placement\": true,\n  \"cta_details\": {\n    \"type\": \"mid\",\n    \"text\": \"5ステップの詳細ガイド（PDF・30ページ）を無料ダウンロード→\"\n  }\n}\n```\n\n**H2-6の例: 予算別・最適教育プラン**\n```json\n{\n  \"h2\": \"予算別・最適教育プラン【20万円/50万円/100万円】\",\n  \"section_number\": 6,\n  \"word_count_target\": 800,\n  \"token_target\": \"550-600\",\n  \"psychological_phase\": \"phase2_understanding\",\n  \"psychological_goal\": \"予算制約があっても実践可能という確信\",\n  \"neuroscience_element\": \"前頭前野処理: 3つの予算プランを比較、認知負荷3概念（20/50/100万円の3プラン）\",\n  \"behavioral_element\": \"一貫性: 段階的投資プラン（小→中→大） + 社会的証明: 各プランの導入企業数\",\n  \"llmo_element\": \"箇条書き（3プランの詳細）、比較表、トークン数580、セクション独立性確保\",\n  \"kgi_element\": \"CTA配置なし（Phase 2の情報提供に集中）\",\n  \"subsections\": [\n    {\n      \"h3\": \"20万円プラン: OJT中心の基本型\",\n      \"key_points\": [\n        \"内容: OJT実施 + 無料オンラインツール活用\",\n        \"期間: 3ヶ月\",\n        \"対象: 従業員50〜100名の小規模派遣会社\",\n        \"導入企業: 120社、定着率改善+15%\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"予算\", \"OJT\", \"無料\"],\n        \"standard\": [\"ツール\", \"活用\"],\n        \"unique\": [\"小規模\"]\n      },\n      \"word_count_target\": 250,\n      \"differentiation_element\": \"20万円プランの提示（競合の90%が予算に言及せず）\"\n    },\n    {\n      \"h3\": \"50万円プラン: OJT + Off-JTのバランス型\",\n      \"key_points\": [\n        \"内容: OJT + 外部研修2回 + メンター制度\",\n        \"期間: 6ヶ月\",\n        \"対象: 従業員100〜200名の中規模派遣会社\",\n        \"導入企業: 150社、定着率改善+35%\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"予算\", \"OJT\", \"Off-JT\", \"メンター制度\"],\n        \"standard\": [\"研修\", \"バランス\"]\n      },\n      \"word_count_target\": 250,\n      \"differentiation_element\": \"最も費用対効果が高いプラン（データ裏付け）\"\n    },\n    {\n      \"h3\": \"100万円プラン: 体系的教育プログラム\",\n      \"key_points\": [\n        \"内容: カスタマイズOJT + 定期Off-JT + メンター制度 + eラーニング\",\n        \"期間: 12ヶ月\",\n        \"対象: 従業員200名以上の大規模派遣会社\",\n        \"導入企業: 30社、定着率改善+50%\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"予算\", \"体系的\", \"プログラム\"],\n        \"standard\": [\"カスタマイズ\", \"eラーニング\"]\n      },\n      \"word_count_target\": 250,\n      \"differentiation_element\": \"100万円で実現可能な内容を詳細化（競合は曖昧）\"\n    }\n  ],\n  \"visual_content\": {\n    \"type\": \"table\",\n    \"description\": \"3つの予算プランの比較表（内容・期間・対象・定着率改善効果）\"\n  },\n  \"cta_placement\": false\n}\n```\n\n---\n\n### 10.3 Phase 3セクションの設計（1〜2個）\n\n**目的**: 行動決定と問い合わせ誘導\n\n**H2-11の例: 今すぐ始められる3ステップ**\n```json\n{\n  \"h2\": \"今すぐ始められる3ステップ\",\n  \"section_number\": 11,\n  \"word_count_target\": 600,\n  \"token_target\": \"450-550\",\n  \"psychological_phase\": \"phase3_action\",\n  \"psychological_goal\": \"即座の行動決定と問い合わせ\",\n  \"neuroscience_element\": \"線条体活性化: 成功イメージ、容易性の強調、認知負荷3概念（3ステップ）\",\n  \"behavioral_element\": \"希少性: 月10社限定 + 好意: あなたと一緒に解決\",\n  \"llmo_element\": \"箇条書き（3ステップ）、トークン数500、セクション独立性確保\",\n  \"kgi_element\": \"Final CTA配置、無料コンサルティング、CVR 2〜3%\",\n  \"subsections\": [\n    {\n      \"h3\": \"ステップ1: 無料診断で現状を把握（3分）\",\n      \"key_points\": [\n        \"あなたの会社の教育体制を3分で診断\",\n        \"課題と改善ポイントが即座に分かる\",\n        \"すでに500社が利用\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"無料診断\", \"現状把握\"],\n        \"standard\": [\"簡単\", \"すぐに\"]\n      },\n      \"word_count_target\": 150,\n      \"differentiation_element\": \"無料診断ツールの提供（競合にはない）\"\n    },\n    {\n      \"h3\": \"ステップ2: 成功事例を参考にプランを検討（10分）\",\n      \"key_points\": [\n        \"中小企業3社の成功事例PDF（30ページ）を無料ダウンロード\",\n        \"予算別プランを比較検討\",\n        \"自社に最適なアプローチを見つける\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"成功事例\", \"プラン\"],\n        \"standard\": [\"無料\", \"ダウンロード\"]\n      },\n      \"word_count_target\": 150,\n      \"differentiation_element\": \"30ページの詳細事例集（競合は簡易版のみ）\"\n    },\n    {\n      \"h3\": \"ステップ3: 専門家に無料相談（30分）\",\n      \"key_points\": [\n        \"あなたの会社に最適な教育プランを専門家が提案\",\n        \"実績300社、支援実績15年の専門家が対応\",\n        \"月10社限定（残り3枠）、今なら教育計画テンプレート無料進呈\"\n      ],\n      \"keywords_to_include\": {\n        \"essential\": [\"無料相談\", \"専門家\"],\n        \"standard\": [\"提案\", \"サポート\"],\n        \"unique\": [\"限定\"]\n      },\n      \"word_count_target\": 200,\n      \"differentiation_element\": \"専門家の無料相談（競合は有料 or 提供なし）\"\n    }\n  ],\n  \"visual_content\": {\n    \"type\": \"image\",\n    \"description\": \"3ステップのフロー図（診断→事例→相談）\"\n  },\n  \"cta_placement\": true,\n  \"cta_details\": {\n    \"type\": \"final\",\n    \"text\": \"今すぐ無料相談を予約する→（月10社限定・残り3枠）\"\n  }\n}\n```\n\n---\n\n## 11. 3段階CTA戦略の詳細設計\n\n### 11.1 Early CTA（650字前後）\n\n**配置箇所**: 導入部直後 or Phase 1終了時\n\n**目的**: 早期の関心獲得、離脱防止\n\n**提供内容**:\n- 無料診断ツール\n- チェックリスト\n- 簡易ガイド\n\n**訴求**:\n- 「まずは現状を把握しましょう」\n- 「3分で完了」\n- 「無料」\n\n**心理的ハードル**: 最低（30秒〜3分で完了、個人情報不要 or メールアドレスのみ）\n\n**CVR目標**: 3〜5%\n\n**実装例**:\n```json\n{\n  \"type\": \"early\",\n  \"position\": \"650字前後（導入部直後）\",\n  \"offer\": \"無料診断ツール\",\n  \"text\": \"あなたの会社の教育体制を3分で診断→ 課題と改善ポイントが即座に分かります。\",\n  \"psychological_barrier\": \"最低（30秒で完了、個人情報不要）\",\n  \"expected_cvr\": \"3〜5%\",\n  \"keywords\": [\"無料\", \"3分\", \"今すぐ\", \"簡単\"]\n}\n```\n\n---\n\n### 11.2 Mid CTA（2,800字前後）\n\n**配置箇所**: Phase 2中盤（理解が進んだ段階）\n\n**目的**: 納得した層の獲得、さらなる情報提供\n\n**提供内容**:\n- 成功事例集PDF\n- 導入ガイド\n- ノウハウ資料\n\n**訴求**:\n- 「成功事例を見てみましょう」\n- 「他社の実例を参考に」\n- 「無料ダウンロード」\n\n**心理的ハードル**: 低（メールアドレスのみ）\n\n**CVR目標**: 2〜3%\n\n**実装例**:\n```json\n{\n  \"type\": \"mid\",\n  \"position\": \"2,800字前後（Phase 2中盤、H2-6後）\",\n  \"offer\": \"成功事例集PDF（30ページ）\",\n  \"text\": \"中小企業3社の成功事例を無料ダウンロード→ 予算別プランの実例と効果を詳しく解説しています。\",\n  \"psychological_barrier\": \"低（メールアドレスのみ）\",\n  \"expected_cvr\": \"2〜3%\",\n  \"keywords\": [\"無料\", \"ダウンロード\", \"成功事例\", \"実績\"]\n}\n```\n\n---\n\n### 11.3 Final CTA（4,500字前後 + 専用セクション）\n\n**配置箇所**: Phase 3（記事末尾 + 専用H2セクション）\n\n**目的**: 全て読んだ層の獲得、問い合わせ誘導\n\n**提供内容**:\n- 無料コンサルティング\n- 個別相談（30〜60分）\n- カスタマイズ提案\n\n**訴求**:\n- 「あなたの会社に最適なプランを提案します」\n- 「専門家が対応」\n- 「実績300社」\n- 「今なら特典付き」\n\n**心理的ハードル**: 中（フォーム入力: 社名・氏名・メール・電話・相談内容）\n\n**CVR目標**: 2〜3%\n\n**実装例**:\n```json\n{\n  \"type\": \"final\",\n  \"position\": \"4,500字前後 + 専用H2セクション\",\n  \"offer\": \"無料コンサルティング（30分）+ 教育計画テンプレート\",\n  \"text\": \"あなたの会社に最適な教育プランを専門家が無料で提案します（30分）。今なら教育計画テンプレートを無料進呈。月10社限定（残り3枠）→ 今すぐ予約する\",\n  \"psychological_barrier\": \"中（フォーム入力）\",\n  \"expected_cvr\": \"2〜3%\",\n  \"keywords\": [\"無料相談\", \"専門家\", \"実績300社\", \"限定\", \"今なら\"]\n}\n```\n\n---\n\n### 11.4 総CVR目標\n```\n総CVR目標: 7〜11%\n```\n\n**計算**:\n- Early CTA: 3〜5%\n- Mid CTA: 2〜3%\n- Final CTA: 2〜3%\n\n**重複を考慮**: 一部のユーザーは複数のCTAをクリックするため、総CVRは単純合計ではなく、7〜11%を目標とする。\n\n**競合比較**:\n- 競合平均CVR: 2.7%\n- 自社目標CVR: 4.0%+（+48%）\n\n---\n\n## 12. キーワード配置戦略\n\n### 12.1 工程3Bのキーワードを活用\n\n工程3Bで抽出した100〜150個のキーワードを、各セクションに戦略的に配置します。\n\n**キーワードの分類**:\n- **Essential（必須）**: 20〜30個（article_coverage ≥ 7）\n- **Standard（標準）**: 40〜60個（4 ≤ article_coverage ≤ 6）\n- **Unique（独自）**: 20〜30個（article_coverage ≤ 3）\n\n### 12.2 配置の優先順位\n\n**1. Essential（必須）キーワード: 各セクションに1〜2個**\n- 全てのH2セクションに必ず配置\n- タイトル、H2見出し、導入部、まとめにも配置\n\n**2. Standard（標準）キーワード: 適宜配置**\n- Phase 2セクションを中心に配置\n- 各セクションに0〜2個\n\n**3. Unique（独自）キーワード: 差別化セクションに配置**\n- 競合が触れていないトピックのセクションに配置\n- 例: 「リモート教育」「AI活用」「予算別プラン」\n\n### 12.3 密度目標\n\n**メインキーワード**: 1.5〜2.0%\n```\n目標文字数: 4,800字\nメインキーワードの出現回数: 72〜96回\n→ 実際は 1.5% = 72回程度が目標\n```\n\n**Essential共起語**: 各0.5〜1.0%\n```\n例: 「OJT」の出現回数: 24〜48回\n```\n\n### 12.4 配置の具体例\n\n**タイトル**:\n- メインキーワード: 必須\n- Essential 1〜2個\n\n**導入部**:\n- メインキーワード: 1回\n- Essential 3〜5個\n- Standard 2〜3個\n\n**各H2セクション**:\n- Essential 1〜2個\n- Standard 1〜3個\n- Unique 0〜1個（該当セクションのみ）\n\n**まとめ**:\n- メインキーワード: 1回\n- Essential 2〜3個\n\n---\n\n## 13. 視覚コンテンツ配置計画\n\n### 13.1 総数目標\n8〜12個の視覚要素\n\n**理由**:\n- 競合平均: 6.1個\n- 自社目標: 10個（+64%、競合より視覚的に充実）\n\n### 13.2 必須の視覚要素\n\n**1. 教育手法の比較表（Phase 2序盤）**\n```json\n{\n  \"type\": \"table\",\n  \"title\": \"OJT・Off-JT・オンライン研修の比較\",\n  \"section\": \"H2-4\",\n  \"purpose\": \"比較検討、理解促進\",\n  \"description\": \"3つの教育手法を5項目（費用・期間・効果・メリット・デメリット）で比較\"\n}\n```\n\n**2. 予算別プランのチャート（Phase 2中盤）**\n```json\n{\n  \"type\": \"chart\",\n  \"title\": \"予算別プランの内容と効果\",\n  \"section\": \"H2-6\",\n  \"purpose\": \"選択肢の提示、意思決定支援\",\n  \"description\": \"20万円/50万円/100万円の3プランを視覚化、各プランの定着率改善効果を表示\"\n}\n```\n\n**3. 5ステップのインフォグラフィック（Phase 2中核）**\n```json\n{\n  \"type\": \"infographic\",\n  \"title\": \"効果的な派遣社員教育の5ステップ\",\n  \"section\": \"H2-3\",\n  \"purpose\": \"全体像の理解、記憶定着\",\n  \"description\": \"5ステップを視覚的に表現、各ステップの期間・予算・担当者を明示\"\n}\n```\n\n**4. 成功事例のビフォーアフター比較（Phase 2後半）**\n```json\n{\n  \"type\": \"chart\",\n  \"title\": \"導入前後の離職率変化\",\n  \"section\": \"H2-8\",\n  \"purpose\": \"社会的証明、効果の可視化\",\n  \"description\": \"3社の導入前後の離職率をビフォーアフター形式で表示\"\n}\n```\n\n**5. 問い合わせフロー図（Phase 3）**\n```json\n{\n  \"type\": \"image\",\n  \"title\": \"今すぐ始められる3ステップ\",\n  \"section\": \"H2-11\",\n  \"purpose\": \"行動促進、ハードル低減\",\n  \"description\": \"診断→事例→相談の3ステップをフロー図で表示\"\n}\n```\n\n### 13.3 その他の推奨視覚要素\n\n- 離職率の推移グラフ（Phase 1）\n- メンター制度の運用フロー（Phase 2）\n- 教育スケジュールのガントチャート（Phase 2）\n- 評価シートのサンプル画像（Phase 2）\n- 導入企業の分布マップ（Phase 2）\n\n---\n\n## 14. 差別化の実装計画\n\n### 14.1 工程3Cの差別化ポイントを活用\n\n工程3Cで発見した差別化ポイントを、具体的にどのセクションで実装するかを設計します。\n\n**各差別化要素について**:\n- element: 差別化要素の名称\n- sections: 実装するセクション（配列）\n- implementation_details: 具体的な実装方法\n- impact: 期待される効果\n\n### 14.2 差別化要素の実装例\n\n**差別化要素1: {{current_year}}年最新データ**\n```json\n{\n  \"element\": \"{{current_year}}年最新データ\",\n  \"sections\": [\"導入部\", \"H2-1\", \"H2-3\", \"H2-8\"],\n  \"implementation_details\": \"厚生労働省 {{current_year}}年1月発表『令和7年 労働者派遣事業報告書』からデータ引用。離職率29.3%、前年比+3.2ptという最新トレンドを反映。\",\n  \"impact\": \"競合の80%が2023年以前のデータ。最新性で圧倒的優位。検索順位+2〜3位の効果。\"\n}\n```\n\n**差別化要素2: 予算別プラン**\n```json\n{\n  \"element\": \"予算別プラン（20万円/50万円/100万円）\",\n  \"sections\": [\"H2-6\"],\n  \"implementation_details\": \"3つの予算プランを詳細に提示。各プランで何ができるか、期間、対象企業規模、定着率改善効果を明示。比較表を作成。\",\n  \"impact\": \"競合の90%が予算に言及せず。中小企業のニーズに直接応える。CVR +15%の効果。\"\n}\n```\n\n**差別化要素3: リモート・ハイブリッド教育**\n```json\n{\n  \"element\": \"リモート・ハイブリッド対応の教育方法\",\n  \"sections\": [\"H2-7\"],\n  \"implementation_details\": \"H2セクションとして『リモート環境での派遣社員教育の3つのポイント』を展開。Zoom/Teams等のツール活用方法、遠隔コミュニケーションの課題解決策を提示。2024〜{{current_year}}年の導入事例を掲載。\",\n  \"impact\": \"競合の80%が言及なし。{{current_year}}年のリモートワーク普及に対応。ユニークビジター+20%の効果。\"\n}\n```\n\n**差別化要素4: AI活用による教育効率化**\n```json\n{\n  \"element\": \"AI活用による教育効率化\",\n  \"sections\": [\"H2-9\"],\n  \"implementation_details\": \"H2セクションとして『AIを活用した教育効率化の最新手法』を展開。ChatGPTでの教育プラン作成、AIによる自動フィードバック、学習進捗の可視化等を紹介。\",\n  \"impact\": \"競合の90%が言及なし。{{current_year}}年のAIブームに対応。ソーシャルシェア+30%の効果。\"\n}\n```\n\n**差別化要素5: 中小企業特化**\n```json\n{\n  \"element\": \"中小派遣会社特化（従業員50〜300名想定）\",\n  \"sections\": [\"全セクション\"],\n  \"implementation_details\": \"全てのセクションで、中小企業の視点を維持。予算制約、人員制約を考慮した提案。大企業向けの内容は排除。\",\n  \"impact\": \"競合の90%が大企業向け。ペルソナとの完全一致。直帰率-15%の効果。\"\n}\n```\n\n---\n\n## 15. 品質目標の設定\n\n### 15.1 読了時間\n**目標**: 12〜15分\n\n**計算**:\n```\n4,800字 ÷ 400字/分（平均読書速度） = 12分\n```\n\n### 15.2 可読性レベル\n**目標**: 中級（JLPT N3〜N2相当）\n\n**実装方法**:\n- 専門用語は必ず解説\n- 1文20〜35文字\n- 漢字とひらがなのバランス: 3:7\n- 難解な表現を避ける\n\n### 15.3 キーワード密度\n\n**メインキーワード**: 1.5%\n```\n4,800字 × 1.5% = 72回の出現\n```\n\n**Essential共起語**: 各0.5〜1.0%\n```\n例: 「OJT」 → 24〜48回の出現\n```\n\n### 15.4 内部リンク\n**目標**: 3〜5箇所\n\n**配置箇所**:\n- Phase 2セクション内\n- 関連記事への誘導\n\n### 15.5 外部リンク\n**目標**: 5〜7箇所\n\n**リンク先**:\n- 一次情報源（厚生労働省、日本人材派遣協会等）\n- 専門家の記事・論文\n- 統計データの出典\n\n---\n\n## 16. 完了基準\n\n工程4は以下の条件を全て満たした時点で完了:\n- [ ] タイトル案を3パターン作成している\n- [ ] 推奨タイトルを1つ選定している\n- [ ] メタディスクリプションを作成している\n- [ ] 記事全体の構造（H2/H3）を設計している\n- [ ] **全てのH2セクションに4本柱を実装している**（最重要）\n- [ ] 導入部を詳細設計している\n- [ ] 各H2セクション（10〜13個）を詳細設計している\n- [ ] 3段階CTA戦略を設計している\n- [ ] キーワード配置戦略を策定している\n- [ ] 視覚コンテンツ配置計画を作成している\n- [ ] 差別化の実装計画を作成している\n- [ ] 品質目標を設定している\n- [ ] JSON形式で出力している\n- [ ] 4本柱チェックリストの全項目を確認している\n\n---\n\nこれで detailed_guidelines.md は完了です。\n",
+        "note": "完全なガイドラインをMarkdown形式で保持（精度優先）",
+        "content_source": "detailed_guidelines.md (full text)"
+    },
+    "templates": {
+        "source": "templates.json",
+        "content": {
+            "output_template_complete": {
+                "generation_date": "string (ISO 8601形式: {{current_year}}-10-21T17:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "outline_version": "string (v1_initial)",
+                "title_candidates": [
+                    {
+                        "title": "string (タイトル文字列、30〜40文字)",
+                        "character_count": "number (文字数)",
+                        "seo_score": "number (SEOスコア、0.0〜1.0)",
+                        "reasons": [
+                            "string (理由1)",
+                            "string (理由2)",
+                            "string (理由3)",
+                            "string (理由4)"
+                        ],
+                        "target_audience": "string (想定読者)",
+                        "differentiation": "string (差別化ポイント)"
+                    }
+                ],
+                "recommended_title": "string (推奨タイトル)",
+                "meta_description": "string (120〜150文字のメタディスクリプション)",
+                "article_structure_overview": {
+                    "total_word_count_target": "number (総文字数目標、4500〜5000)",
+                    "total_sections": "number (総セクション数、10〜13)",
+                    "three_phase_breakdown": {
+                        "phase1_anxiety": {
+                            "word_count": "number (文字数、600〜800)",
+                            "sections": [
+                                "string (セクション名1)",
+                                "string (セクション名2)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase2_understanding": {
+                            "word_count": "number (文字数、3000〜3500)",
+                            "sections": [
+                                "string (セクション名1〜N)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase3_action": {
+                            "word_count": "number (文字数、600〜1000)",
+                            "sections": [
+                                "string (セクション名1〜N)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        }
+                    },
+                    "reading_time": "string (読了時間、例: 12〜15分)",
+                    "readability_level": "string (可読性レベル、例: 中級（JLPT N3〜N2相当）)"
+                },
+                "introduction": {
+                    "word_count_target": "number (文字数目標、400〜500)",
+                    "neuroscience_element": "string (神経科学的要素)",
+                    "behavioral_element": "string (行動経済学的要素)",
+                    "llmo_element": "string (LLMO要素)",
+                    "kgi_element": "string (KGI要素)",
+                    "structure": {
+                        "opening_hook": "string (オープニングフック、100字)",
+                        "data_anchor": "string (データアンカー、100字)",
+                        "empathy": "string (共感・課題提起、150字)",
+                        "value_proposition": "string (記事の価値提案、100字)",
+                        "key_points": [
+                            "string (主要ポイント1)",
+                            "string (主要ポイント2〜5)"
+                        ]
+                    },
+                    "keywords_to_include": {
+                        "essential": [
+                            "string (必須キーワード1)",
+                            "string (必須キーワード2〜N)"
+                        ],
+                        "standard": [
+                            "string (標準キーワード1)",
+                            "string (標準キーワード2〜N)"
+                        ]
+                    },
+                    "cta": {
+                        "type": "string (early)",
+                        "text": "string (CTA文言)",
+                        "position": "string (配置位置)"
+                    }
+                },
+                "sections": [
+                    {
+                        "h2": "string (H2見出し)",
+                        "section_number": "number (セクション番号)",
+                        "word_count_target": "number (文字数目標)",
+                        "token_target": "string (トークン数目標、400-600)",
+                        "psychological_phase": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_goal": "string (このセクションで達成すべき心理的目標)",
+                        "neuroscience_element": "string (神経科学的要素: 扁桃体活性化/前頭前野処理/線条体活性化、認知負荷3概念以内、文の長さ20〜35文字)",
+                        "behavioral_element": "string (行動経済学的要素: 損失回避/社会的証明/権威性/一貫性/好意/希少性のいずれか)",
+                        "llmo_element": "string (LLMO要素: 箇条書き、トークン数、セクション独立性、質問形式見出しの有無)",
+                        "kgi_element": "string (KGI要素: CTA配置の有無、CVR目標)",
+                        "subsections": [
+                            {
+                                "h3": "string (H3見出し)",
+                                "key_points": [
+                                    "string (ポイント1)",
+                                    "string (ポイント2)",
+                                    "string (ポイント3)"
+                                ],
+                                "keywords_to_include": {
+                                    "essential": [
+                                        "string (必須キーワード1)",
+                                        "string (必須キーワード2)"
+                                    ],
+                                    "standard": [
+                                        "string (標準キーワード1)"
+                                    ],
+                                    "unique": [
+                                        "string (独自キーワード1)"
+                                    ]
+                                },
+                                "word_count_target": "number (文字数目標)",
+                                "differentiation_element": "string (競合との差別化要素)"
+                            }
+                        ],
+                        "visual_content": {
+                            "type": "string (chart / table / infographic / image)",
+                            "title": "string (図表のタイトル)",
+                            "description": "string (図表の内容説明)",
+                            "purpose": "string (図表の目的)"
+                        },
+                        "cta_placement": "boolean (CTAを配置するか)",
+                        "cta_details": {
+                            "type": "string (early/mid/final)",
+                            "text": "string (CTA文言)",
+                            "offer": "string (提供内容)",
+                            "expected_cvr": "string (期待CVR)"
+                        }
+                    }
+                ],
+                "cta_strategy": {
+                    "total_cta_count": "number (総CTA数、3)",
+                    "ctas": [
+                        {
+                            "type": "string (early/mid/final)",
+                            "position": "string (配置位置、例: 650字前後)",
+                            "offer": "string (提供内容)",
+                            "text": "string (CTA文言)",
+                            "psychological_barrier": "string (心理的ハードル: 最低/低/中)",
+                            "expected_cvr": "string (期待CVR、例: 3〜5%)",
+                            "keywords": [
+                                "string (使用キーワード1)",
+                                "string (使用キーワード2〜N)"
+                            ]
+                        }
+                    ],
+                    "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                },
+                "keyword_distribution_summary": {
+                    "main_keyword": {
+                        "keyword": "string (メインキーワード)",
+                        "target_density": "number (目標密度%、1.5)",
+                        "placement_strategy": "string (配置戦略)",
+                        "expected_occurrences": "number (期待出現回数)"
+                    },
+                    "essential_keywords_count": "number (Essential キーワード数)",
+                    "standard_keywords_count": "number (Standard キーワード数)",
+                    "unique_keywords_count": "number (Unique キーワード数)",
+                    "total_keywords_used": "number (総キーワード使用数)"
+                },
+                "visual_content_plan": {
+                    "total_visual_count": "number (総視覚要素数、8〜12)",
+                    "visuals": [
+                        {
+                            "type": "string (chart/table/infographic/image)",
+                            "title": "string (タイトル)",
+                            "section": "string (配置セクション、例: H2-1)",
+                            "purpose": "string (目的: 課題可視化/理解促進/比較検討/行動促進)",
+                            "description": "string (詳細説明)"
+                        }
+                    ]
+                },
+                "differentiation_implementation": {
+                    "差別化要素名1": {
+                        "element": "string (差別化要素の名称)",
+                        "sections": [
+                            "string (実装セクション1)",
+                            "string (実装セクション2〜N)"
+                        ],
+                        "implementation_details": "string (具体的な実装方法)",
+                        "impact": "string (期待される効果)"
+                    },
+                    "差別化要素名2": {
+                        "element": "string",
+                        "sections": [
+                            "string"
+                        ],
+                        "implementation_details": "string",
+                        "impact": "string"
+                    }
+                },
+                "quality_targets": {
+                    "reading_time": "string (読了時間、12〜15分)",
+                    "readability_level": "string (可読性レベル)",
+                    "keyword_density": {
+                        "main_keyword": "string (メインKW密度、1.5%)",
+                        "essential_keywords": "string (Essential共起語密度、各0.5〜1.0%)"
+                    },
+                    "internal_links": "string (内部リンク数、3〜5箇所)",
+                    "external_links": "string (外部リンク数、5〜7箇所（一次情報源）)"
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程4完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "outline_summary": {
+                    "title": "アウトライン設計結果:",
+                    "items": [
+                        "├─ タイトル案: 3パターン作成",
+                        "├─ 推奨タイトル: 選定完了",
+                        "├─ 総セクション数: ○個（H2）",
+                        "├─ 総文字数目標: ○○字",
+                        "└─ 読了時間: 12〜15分"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全セクションで確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 全○セクションで実装",
+                        "├─ 行動経済学: ✓ 6原則を配置",
+                        "├─ LLMO: ✓ 400-600 tokens/section",
+                        "└─ KGI: ✓ 3段階CTA配置"
+                    ]
+                },
+                "phase_distribution": {
+                    "title": "3フェーズ配分:",
+                    "items": [
+                        "├─ Phase 1: ○字（○セクション）",
+                        "├─ Phase 2: ○字（○セクション）",
+                        "└─ Phase 3: ○字（○セクション）"
+                    ]
+                },
+                "cta_strategy_summary": {
+                    "title": "CTA戦略:",
+                    "items": [
+                        "├─ Early CTA: 650字位置、CVR 3〜5%",
+                        "├─ Mid CTA: 2,800字位置、CVR 2〜3%",
+                        "└─ Final CTA: 4,500字位置、CVR 2〜3%",
+                        "└─ 総CVR目標: 7〜11%"
+                    ]
+                },
+                "keyword_distribution": {
+                    "title": "キーワード配置:",
+                    "items": [
+                        "├─ Essential: ○個配置",
+                        "├─ Standard: ○個配置",
+                        "└─ Unique: ○個配置"
+                    ]
+                },
+                "differentiation_summary": {
+                    "title": "差別化実装:",
+                    "items": [
+                        "└─ ○個の差別化ポイントを配置",
+                        "   ├─ {{current_year}}年最新データ: ○セクション",
+                        "   ├─ 予算別プラン: ○セクション",
+                        "   └─ リモート教育: ○セクション"
+                    ]
+                },
+                "expected_effect": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ CVR: 2.7% → 4.0%+（+48%）",
+                        "├─ AI引用率: +35%",
+                        "└─ 読了率: +25%"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": "次の工程: 工程5（一次情報追加・知識ギャップ解消）"
+            }
+        },
+        "note": "出力構造のテンプレート",
+        "legacy_templates": {
+            "output_template_complete": {
+                "generation_date": "string (ISO 8601形式: {{current_year}}-10-21T17:00:00Z)",
+                "keyword": "string (メインキーワード)",
+                "outline_version": "string (v1_initial)",
+                "title_candidates": [
+                    {
+                        "title": "string (タイトル文字列、30〜40文字)",
+                        "character_count": "number (文字数)",
+                        "seo_score": "number (SEOスコア、0.0〜1.0)",
+                        "reasons": [
+                            "string (理由1)",
+                            "string (理由2)",
+                            "string (理由3)",
+                            "string (理由4)"
+                        ],
+                        "target_audience": "string (想定読者)",
+                        "differentiation": "string (差別化ポイント)"
+                    }
+                ],
+                "recommended_title": "string (推奨タイトル)",
+                "meta_description": "string (120〜150文字のメタディスクリプション)",
+                "article_structure_overview": {
+                    "total_word_count_target": "number (総文字数目標、4500〜5000)",
+                    "total_sections": "number (総セクション数、10〜13)",
+                    "three_phase_breakdown": {
+                        "phase1_anxiety": {
+                            "word_count": "number (文字数、600〜800)",
+                            "sections": [
+                                "string (セクション名1)",
+                                "string (セクション名2)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase2_understanding": {
+                            "word_count": "number (文字数、3000〜3500)",
+                            "sections": [
+                                "string (セクション名1〜N)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        },
+                        "phase3_action": {
+                            "word_count": "number (文字数、600〜1000)",
+                            "sections": [
+                                "string (セクション名1〜N)"
+                            ],
+                            "goal": "string (フェーズの目標)"
+                        }
+                    },
+                    "reading_time": "string (読了時間、例: 12〜15分)",
+                    "readability_level": "string (可読性レベル、例: 中級（JLPT N3〜N2相当）)"
+                },
+                "introduction": {
+                    "word_count_target": "number (文字数目標、400〜500)",
+                    "neuroscience_element": "string (神経科学的要素)",
+                    "behavioral_element": "string (行動経済学的要素)",
+                    "llmo_element": "string (LLMO要素)",
+                    "kgi_element": "string (KGI要素)",
+                    "structure": {
+                        "opening_hook": "string (オープニングフック、100字)",
+                        "data_anchor": "string (データアンカー、100字)",
+                        "empathy": "string (共感・課題提起、150字)",
+                        "value_proposition": "string (記事の価値提案、100字)",
+                        "key_points": [
+                            "string (主要ポイント1)",
+                            "string (主要ポイント2〜5)"
+                        ]
+                    },
+                    "keywords_to_include": {
+                        "essential": [
+                            "string (必須キーワード1)",
+                            "string (必須キーワード2〜N)"
+                        ],
+                        "standard": [
+                            "string (標準キーワード1)",
+                            "string (標準キーワード2〜N)"
+                        ]
+                    },
+                    "cta": {
+                        "type": "string (early)",
+                        "text": "string (CTA文言)",
+                        "position": "string (配置位置)"
+                    }
+                },
+                "sections": [
+                    {
+                        "h2": "string (H2見出し)",
+                        "section_number": "number (セクション番号)",
+                        "word_count_target": "number (文字数目標)",
+                        "token_target": "string (トークン数目標、400-600)",
+                        "psychological_phase": "string (phase1_anxiety / phase2_understanding / phase3_action)",
+                        "psychological_goal": "string (このセクションで達成すべき心理的目標)",
+                        "neuroscience_element": "string (神経科学的要素: 扁桃体活性化/前頭前野処理/線条体活性化、認知負荷3概念以内、文の長さ20〜35文字)",
+                        "behavioral_element": "string (行動経済学的要素: 損失回避/社会的証明/権威性/一貫性/好意/希少性のいずれか)",
+                        "llmo_element": "string (LLMO要素: 箇条書き、トークン数、セクション独立性、質問形式見出しの有無)",
+                        "kgi_element": "string (KGI要素: CTA配置の有無、CVR目標)",
+                        "subsections": [
+                            {
+                                "h3": "string (H3見出し)",
+                                "key_points": [
+                                    "string (ポイント1)",
+                                    "string (ポイント2)",
+                                    "string (ポイント3)"
+                                ],
+                                "keywords_to_include": {
+                                    "essential": [
+                                        "string (必須キーワード1)",
+                                        "string (必須キーワード2)"
+                                    ],
+                                    "standard": [
+                                        "string (標準キーワード1)"
+                                    ],
+                                    "unique": [
+                                        "string (独自キーワード1)"
+                                    ]
+                                },
+                                "word_count_target": "number (文字数目標)",
+                                "differentiation_element": "string (競合との差別化要素)"
+                            }
+                        ],
+                        "visual_content": {
+                            "type": "string (chart / table / infographic / image)",
+                            "title": "string (図表のタイトル)",
+                            "description": "string (図表の内容説明)",
+                            "purpose": "string (図表の目的)"
+                        },
+                        "cta_placement": "boolean (CTAを配置するか)",
+                        "cta_details": {
+                            "type": "string (early/mid/final)",
+                            "text": "string (CTA文言)",
+                            "offer": "string (提供内容)",
+                            "expected_cvr": "string (期待CVR)"
+                        }
+                    }
+                ],
+                "cta_strategy": {
+                    "total_cta_count": "number (総CTA数、3)",
+                    "ctas": [
+                        {
+                            "type": "string (early/mid/final)",
+                            "position": "string (配置位置、例: 650字前後)",
+                            "offer": "string (提供内容)",
+                            "text": "string (CTA文言)",
+                            "psychological_barrier": "string (心理的ハードル: 最低/低/中)",
+                            "expected_cvr": "string (期待CVR、例: 3〜5%)",
+                            "keywords": [
+                                "string (使用キーワード1)",
+                                "string (使用キーワード2〜N)"
+                            ]
+                        }
+                    ],
+                    "total_expected_cvr": "string (総CVR目標、7〜11%)"
+                },
+                "keyword_distribution_summary": {
+                    "main_keyword": {
+                        "keyword": "string (メインキーワード)",
+                        "target_density": "number (目標密度%、1.5)",
+                        "placement_strategy": "string (配置戦略)",
+                        "expected_occurrences": "number (期待出現回数)"
+                    },
+                    "essential_keywords_count": "number (Essential キーワード数)",
+                    "standard_keywords_count": "number (Standard キーワード数)",
+                    "unique_keywords_count": "number (Unique キーワード数)",
+                    "total_keywords_used": "number (総キーワード使用数)"
+                },
+                "visual_content_plan": {
+                    "total_visual_count": "number (総視覚要素数、8〜12)",
+                    "visuals": [
+                        {
+                            "type": "string (chart/table/infographic/image)",
+                            "title": "string (タイトル)",
+                            "section": "string (配置セクション、例: H2-1)",
+                            "purpose": "string (目的: 課題可視化/理解促進/比較検討/行動促進)",
+                            "description": "string (詳細説明)"
+                        }
+                    ]
+                },
+                "differentiation_implementation": {
+                    "差別化要素名1": {
+                        "element": "string (差別化要素の名称)",
+                        "sections": [
+                            "string (実装セクション1)",
+                            "string (実装セクション2〜N)"
+                        ],
+                        "implementation_details": "string (具体的な実装方法)",
+                        "impact": "string (期待される効果)"
+                    },
+                    "差別化要素名2": {
+                        "element": "string",
+                        "sections": [
+                            "string"
+                        ],
+                        "implementation_details": "string",
+                        "impact": "string"
+                    }
+                },
+                "quality_targets": {
+                    "reading_time": "string (読了時間、12〜15分)",
+                    "readability_level": "string (可読性レベル)",
+                    "keyword_density": {
+                        "main_keyword": "string (メインKW密度、1.5%)",
+                        "essential_keywords": "string (Essential共起語密度、各0.5〜1.0%)"
+                    },
+                    "internal_links": "string (内部リンク数、3〜5箇所)",
+                    "external_links": "string (外部リンク数、5〜7箇所（一次情報源）)"
+                }
+            },
+            "completion_message_template": {
+                "header": "✅ 工程4完了",
+                "separator": "━━━━━━━━━━━━━━━━━━━━━━",
+                "outline_summary": {
+                    "title": "アウトライン設計結果:",
+                    "items": [
+                        "├─ タイトル案: 3パターン作成",
+                        "├─ 推奨タイトル: 選定完了",
+                        "├─ 総セクション数: ○個（H2）",
+                        "├─ 総文字数目標: ○○字",
+                        "└─ 読了時間: 12〜15分"
+                    ]
+                },
+                "four_pillar_check": {
+                    "title": "4本柱チェック: 全セクションで確認済み",
+                    "items": [
+                        "├─ 神経科学: ✓ 全○セクションで実装",
+                        "├─ 行動経済学: ✓ 6原則を配置",
+                        "├─ LLMO: ✓ 400-600 tokens/section",
+                        "└─ KGI: ✓ 3段階CTA配置"
+                    ]
+                },
+                "phase_distribution": {
+                    "title": "3フェーズ配分:",
+                    "items": [
+                        "├─ Phase 1: ○字（○セクション）",
+                        "├─ Phase 2: ○字（○セクション）",
+                        "└─ Phase 3: ○字（○セクション）"
+                    ]
+                },
+                "cta_strategy_summary": {
+                    "title": "CTA戦略:",
+                    "items": [
+                        "├─ Early CTA: 650字位置、CVR 3〜5%",
+                        "├─ Mid CTA: 2,800字位置、CVR 2〜3%",
+                        "└─ Final CTA: 4,500字位置、CVR 2〜3%",
+                        "└─ 総CVR目標: 7〜11%"
+                    ]
+                },
+                "keyword_distribution": {
+                    "title": "キーワード配置:",
+                    "items": [
+                        "├─ Essential: ○個配置",
+                        "├─ Standard: ○個配置",
+                        "└─ Unique: ○個配置"
+                    ]
+                },
+                "differentiation_summary": {
+                    "title": "差別化実装:",
+                    "items": [
+                        "└─ ○個の差別化ポイントを配置",
+                        "   ├─ {{current_year}}年最新データ: ○セクション",
+                        "   ├─ 予算別プラン: ○セクション",
+                        "   └─ リモート教育: ○セクション"
+                    ]
+                },
+                "expected_effect": {
+                    "title": "期待効果:",
+                    "items": [
+                        "├─ CVR: 2.7% → 4.0%+（+48%）",
+                        "├─ AI引用率: +35%",
+                        "└─ 読了率: +25%"
+                    ]
+                },
+                "footer": "━━━━━━━━━━━━━━━━━━━━━━",
+                "next_step": "次の工程: 工程5（一次情報追加・知識ギャップ解消）"
+            }
+        },
+        "legacy_templates_source": "templates.json (structured)",
+        "legacy_templates_raw": "{\n    \"output_template_complete\": {\n        \"generation_date\": \"string (ISO 8601形式: {{current_year}}-10-21T17:00:00Z)\",\n        \"keyword\": \"string (メインキーワード)\",\n        \"outline_version\": \"string (v1_initial)\",\n        \"title_candidates\": [\n            {\n                \"title\": \"string (タイトル文字列、30〜40文字)\",\n                \"character_count\": \"number (文字数)\",\n                \"seo_score\": \"number (SEOスコア、0.0〜1.0)\",\n                \"reasons\": [\n                    \"string (理由1)\",\n                    \"string (理由2)\",\n                    \"string (理由3)\",\n                    \"string (理由4)\"\n                ],\n                \"target_audience\": \"string (想定読者)\",\n                \"differentiation\": \"string (差別化ポイント)\"\n            }\n        ],\n        \"recommended_title\": \"string (推奨タイトル)\",\n        \"meta_description\": \"string (120〜150文字のメタディスクリプション)\",\n        \"article_structure_overview\": {\n            \"total_word_count_target\": \"number (総文字数目標、4500〜5000)\",\n            \"total_sections\": \"number (総セクション数、10〜13)\",\n            \"three_phase_breakdown\": {\n                \"phase1_anxiety\": {\n                    \"word_count\": \"number (文字数、600〜800)\",\n                    \"sections\": [\n                        \"string (セクション名1)\",\n                        \"string (セクション名2)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                },\n                \"phase2_understanding\": {\n                    \"word_count\": \"number (文字数、3000〜3500)\",\n                    \"sections\": [\n                        \"string (セクション名1〜N)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                },\n                \"phase3_action\": {\n                    \"word_count\": \"number (文字数、600〜1000)\",\n                    \"sections\": [\n                        \"string (セクション名1〜N)\"\n                    ],\n                    \"goal\": \"string (フェーズの目標)\"\n                }\n            },\n            \"reading_time\": \"string (読了時間、例: 12〜15分)\",\n            \"readability_level\": \"string (可読性レベル、例: 中級（JLPT N3〜N2相当）)\"\n        },\n        \"introduction\": {\n            \"word_count_target\": \"number (文字数目標、400〜500)\",\n            \"neuroscience_element\": \"string (神経科学的要素)\",\n            \"behavioral_element\": \"string (行動経済学的要素)\",\n            \"llmo_element\": \"string (LLMO要素)\",\n            \"kgi_element\": \"string (KGI要素)\",\n            \"structure\": {\n                \"opening_hook\": \"string (オープニングフック、100字)\",\n                \"data_anchor\": \"string (データアンカー、100字)\",\n                \"empathy\": \"string (共感・課題提起、150字)\",\n                \"value_proposition\": \"string (記事の価値提案、100字)\",\n                \"key_points\": [\n                    \"string (主要ポイント1)\",\n                    \"string (主要ポイント2〜5)\"\n                ]\n            },\n            \"keywords_to_include\": {\n                \"essential\": [\n                    \"string (必須キーワード1)\",\n                    \"string (必須キーワード2〜N)\"\n                ],\n                \"standard\": [\n                    \"string (標準キーワード1)\",\n                    \"string (標準キーワード2〜N)\"\n                ]\n            },\n            \"cta\": {\n                \"type\": \"string (early)\",\n                \"text\": \"string (CTA文言)\",\n                \"position\": \"string (配置位置)\"\n            }\n        },\n        \"sections\": [\n            {\n                \"h2\": \"string (H2見出し)\",\n                \"section_number\": \"number (セクション番号)\",\n                \"word_count_target\": \"number (文字数目標)\",\n                \"token_target\": \"string (トークン数目標、400-600)\",\n                \"psychological_phase\": \"string (phase1_anxiety / phase2_understanding / phase3_action)\",\n                \"psychological_goal\": \"string (このセクションで達成すべき心理的目標)\",\n                \"neuroscience_element\": \"string (神経科学的要素: 扁桃体活性化/前頭前野処理/線条体活性化、認知負荷3概念以内、文の長さ20〜35文字)\",\n                \"behavioral_element\": \"string (行動経済学的要素: 損失回避/社会的証明/権威性/一貫性/好意/希少性のいずれか)\",\n                \"llmo_element\": \"string (LLMO要素: 箇条書き、トークン数、セクション独立性、質問形式見出しの有無)\",\n                \"kgi_element\": \"string (KGI要素: CTA配置の有無、CVR目標)\",\n                \"subsections\": [\n                    {\n                        \"h3\": \"string (H3見出し)\",\n                        \"key_points\": [\n                            \"string (ポイント1)\",\n                            \"string (ポイント2)\",\n                            \"string (ポイント3)\"\n                        ],\n                        \"keywords_to_include\": {\n                            \"essential\": [\n                                \"string (必須キーワード1)\",\n                                \"string (必須キーワード2)\"\n                            ],\n                            \"standard\": [\n                                \"string (標準キーワード1)\"\n                            ],\n                            \"unique\": [\n                                \"string (独自キーワード1)\"\n                            ]\n                        },\n                        \"word_count_target\": \"number (文字数目標)\",\n                        \"differentiation_element\": \"string (競合との差別化要素)\"\n                    }\n                ],\n                \"visual_content\": {\n                    \"type\": \"string (chart / table / infographic / image)\",\n                    \"title\": \"string (図表のタイトル)\",\n                    \"description\": \"string (図表の内容説明)\",\n                    \"purpose\": \"string (図表の目的)\"\n                },\n                \"cta_placement\": \"boolean (CTAを配置するか)\",\n                \"cta_details\": {\n                    \"type\": \"string (early/mid/final)\",\n                    \"text\": \"string (CTA文言)\",\n                    \"offer\": \"string (提供内容)\",\n                    \"expected_cvr\": \"string (期待CVR)\"\n                }\n            }\n        ],\n        \"cta_strategy\": {\n            \"total_cta_count\": \"number (総CTA数、3)\",\n            \"ctas\": [\n                {\n                    \"type\": \"string (early/mid/final)\",\n                    \"position\": \"string (配置位置、例: 650字前後)\",\n                    \"offer\": \"string (提供内容)\",\n                    \"text\": \"string (CTA文言)\",\n                    \"psychological_barrier\": \"string (心理的ハードル: 最低/低/中)\",\n                    \"expected_cvr\": \"string (期待CVR、例: 3〜5%)\",\n                    \"keywords\": [\n                        \"string (使用キーワード1)\",\n                        \"string (使用キーワード2〜N)\"\n                    ]\n                }\n            ],\n            \"total_expected_cvr\": \"string (総CVR目標、7〜11%)\"\n        },\n        \"keyword_distribution_summary\": {\n            \"main_keyword\": {\n                \"keyword\": \"string (メインキーワード)\",\n                \"target_density\": \"number (目標密度%、1.5)\",\n                \"placement_strategy\": \"string (配置戦略)\",\n                \"expected_occurrences\": \"number (期待出現回数)\"\n            },\n            \"essential_keywords_count\": \"number (Essential キーワード数)\",\n            \"standard_keywords_count\": \"number (Standard キーワード数)\",\n            \"unique_keywords_count\": \"number (Unique キーワード数)\",\n            \"total_keywords_used\": \"number (総キーワード使用数)\"\n        },\n        \"visual_content_plan\": {\n            \"total_visual_count\": \"number (総視覚要素数、8〜12)\",\n            \"visuals\": [\n                {\n                    \"type\": \"string (chart/table/infographic/image)\",\n                    \"title\": \"string (タイトル)\",\n                    \"section\": \"string (配置セクション、例: H2-1)\",\n                    \"purpose\": \"string (目的: 課題可視化/理解促進/比較検討/行動促進)\",\n                    \"description\": \"string (詳細説明)\"\n                }\n            ]\n        },\n        \"differentiation_implementation\": {\n            \"差別化要素名1\": {\n                \"element\": \"string (差別化要素の名称)\",\n                \"sections\": [\n                    \"string (実装セクション1)\",\n                    \"string (実装セクション2〜N)\"\n                ],\n                \"implementation_details\": \"string (具体的な実装方法)\",\n                \"impact\": \"string (期待される効果)\"\n            },\n            \"差別化要素名2\": {\n                \"element\": \"string\",\n                \"sections\": [\n                    \"string\"\n                ],\n                \"implementation_details\": \"string\",\n                \"impact\": \"string\"\n            }\n        },\n        \"quality_targets\": {\n            \"reading_time\": \"string (読了時間、12〜15分)\",\n            \"readability_level\": \"string (可読性レベル)\",\n            \"keyword_density\": {\n                \"main_keyword\": \"string (メインKW密度、1.5%)\",\n                \"essential_keywords\": \"string (Essential共起語密度、各0.5〜1.0%)\"\n            },\n            \"internal_links\": \"string (内部リンク数、3〜5箇所)\",\n            \"external_links\": \"string (外部リンク数、5〜7箇所（一次情報源）)\"\n        }\n    },\n    \"completion_message_template\": {\n        \"header\": \"✅ 工程4完了\",\n        \"separator\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"outline_summary\": {\n            \"title\": \"アウトライン設計結果:\",\n            \"items\": [\n                \"├─ タイトル案: 3パターン作成\",\n                \"├─ 推奨タイトル: 選定完了\",\n                \"├─ 総セクション数: ○個（H2）\",\n                \"├─ 総文字数目標: ○○字\",\n                \"└─ 読了時間: 12〜15分\"\n            ]\n        },\n        \"four_pillar_check\": {\n            \"title\": \"4本柱チェック: 全セクションで確認済み\",\n            \"items\": [\n                \"├─ 神経科学: ✓ 全○セクションで実装\",\n                \"├─ 行動経済学: ✓ 6原則を配置\",\n                \"├─ LLMO: ✓ 400-600 tokens/section\",\n                \"└─ KGI: ✓ 3段階CTA配置\"\n            ]\n        },\n        \"phase_distribution\": {\n            \"title\": \"3フェーズ配分:\",\n            \"items\": [\n                \"├─ Phase 1: ○字（○セクション）\",\n                \"├─ Phase 2: ○字（○セクション）\",\n                \"└─ Phase 3: ○字（○セクション）\"\n            ]\n        },\n        \"cta_strategy_summary\": {\n            \"title\": \"CTA戦略:\",\n            \"items\": [\n                \"├─ Early CTA: 650字位置、CVR 3〜5%\",\n                \"├─ Mid CTA: 2,800字位置、CVR 2〜3%\",\n                \"└─ Final CTA: 4,500字位置、CVR 2〜3%\",\n                \"└─ 総CVR目標: 7〜11%\"\n            ]\n        },\n        \"keyword_distribution\": {\n            \"title\": \"キーワード配置:\",\n            \"items\": [\n                \"├─ Essential: ○個配置\",\n                \"├─ Standard: ○個配置\",\n                \"└─ Unique: ○個配置\"\n            ]\n        },\n        \"differentiation_summary\": {\n            \"title\": \"差別化実装:\",\n            \"items\": [\n                \"└─ ○個の差別化ポイントを配置\",\n                \"   ├─ {{current_year}}年最新データ: ○セクション\",\n                \"   ├─ 予算別プラン: ○セクション\",\n                \"   └─ リモート教育: ○セクション\"\n            ]\n        },\n        \"expected_effect\": {\n            \"title\": \"期待効果:\",\n            \"items\": [\n                \"├─ CVR: 2.7% → 4.0%+（+48%）\",\n                \"├─ AI引用率: +35%\",\n                \"└─ 読了率: +25%\"\n            ]\n        },\n        \"footer\": \"━━━━━━━━━━━━━━━━━━━━━━\",\n        \"next_step\": \"次の工程: 工程5（一次情報追加・知識ギャップ解消）\"\n    }\n}\n"
+    },
+    "examples": {
+        "source": "examples.json",
+        "content": {
+            "example_1_complete_outline": {
+                "scenario": "完全なアウトライン設計の例（4本柱を全セクションに実装）",
+                "input": {
+                    "keyword": "派遣社員 教育方法"
+                },
+                "output": {
+                    "generation_date": "{{current_year}}-10-21T17:00:00Z",
+                    "keyword": "派遣社員 教育方法",
+                    "outline_version": "v1_initial",
+                    "title_candidates": [
+                        {
+                            "title": "【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ",
+                            "character_count": 42,
+                            "seo_score": 0.92,
+                            "reasons": [
+                                "年度を明記して鮮度をアピール",
+                                "「完全ガイド」で網羅性を訴求",
+                                "「中小企業でも」でターゲット明確化",
+                                "「5ステップ」で具体性を提示"
+                            ],
+                            "target_audience": "中小派遣会社の教育担当者（30代、予算制約あり）",
+                            "differentiation": "年度明記+中小企業特化+ステップ数明示"
+                        },
+                        {
+                            "title": "中小派遣会社向け｜予算50万円以下で実現する派遣社員教育の5つの方法【{{current_year}}年版】",
+                            "character_count": 44,
+                            "seo_score": 0.89,
+                            "reasons": [
+                                "ターゲット（中小派遣会社）を明確化",
+                                "予算制約（50万円以下）を明示",
+                                "「5つの方法」で具体性",
+                                "年度明記"
+                            ],
+                            "target_audience": "予算制約のある中小派遣会社",
+                            "differentiation": "予算明示+中小企業特化"
+                        },
+                        {
+                            "title": "離職率42%を18%に改善｜派遣社員が定着する教育方法5ステップ【{{current_year}}年版】",
+                            "character_count": 42,
+                            "seo_score": 0.88,
+                            "reasons": [
+                                "具体的な改善数値（42%→18%）で効果を訴求",
+                                "「定着する」で課題解決を明示",
+                                "「5ステップ」で実践可能性",
+                                "年度明記"
+                            ],
+                            "target_audience": "離職率に悩む教育担当者",
+                            "differentiation": "具体的改善数値+課題解決"
+                        }
+                    ],
+                    "recommended_title": "【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ",
+                    "meta_description": "派遣社員の離職率29.3%（{{current_year}}年厚労省調査）を改善する教育方法を完全解説。中小企業でも年間50万円以下で実践できる5ステップと、OJT・Off-JT・オンライン研修の最適な組み合わせ方を、最新データと事例で紹介します。",
+                    "article_structure_overview": {
+                        "total_word_count_target": 4800,
+                        "total_sections": 12,
+                        "three_phase_breakdown": {
+                            "phase1_anxiety": {
+                                "word_count": 700,
+                                "sections": [
+                                    "導入部",
+                                    "H2-1",
+                                    "H2-2"
+                                ],
+                                "goal": "課題認識と共感、損失回避動機の喚起"
+                            },
+                            "phase2_understanding": {
+                                "word_count": 3300,
+                                "sections": [
+                                    "H2-3",
+                                    "H2-4",
+                                    "H2-5",
+                                    "H2-6",
+                                    "H2-7",
+                                    "H2-8",
+                                    "H2-9",
+                                    "H2-10"
+                                ],
+                                "goal": "理解と納得、具体的方法の提示"
+                            },
+                            "phase3_action": {
+                                "word_count": 800,
+                                "sections": [
+                                    "H2-11",
+                                    "H2-12",
+                                    "まとめ"
+                                ],
+                                "goal": "行動決定と問い合わせ誘導"
+                            }
+                        },
+                        "reading_time": "12〜15分",
+                        "readability_level": "中級（JLPT N3〜N2相当）"
+                    },
+                    "introduction": {
+                        "word_count_target": 450,
+                        "neuroscience_element": "扁桃体活性化: 離職率42%、損失55万円の衝撃データ",
+                        "behavioral_element": "損失回避 + 好意（共感的トーン）",
+                        "llmo_element": "箇条書き（主要ポイント5項目）、質問形式オープニング",
+                        "kgi_element": "Early CTA配置、無料診断ツール誘導、CVR 3〜5%",
+                        "structure": {
+                            "opening_hook": "派遣社員の3ヶ月以内離職率が42%に達している現実をご存知ですか？",
+                            "data_anchor": "{{current_year}}年厚生労働省の最新調査によれば、派遣社員の離職率は29.3%（前年比+3.2pt）。1人の離職で採用コスト35万円 + 教育コスト20万円 = 55万円の損失が発生しています。",
+                            "empathy": "「教育に時間をかけても、すぐに辞めてしまう」「何から始めればいいか分からない」──多くの教育担当者が同じ悩みを抱えています。特に中小派遣会社では、予算や人員の制約があり、大企業のような体系的な教育プログラムを導入するのは難しいのが現実です。",
+                            "value_proposition": "本記事では、中小企業でも年間50万円以下で実践できる派遣社員教育の5ステップを、{{current_year}}年最新データと実際の成功事例とともに完全解説します。",
+                            "key_points": [
+                                "{{current_year}}年最新データに基づく効果的な教育方法",
+                                "予算別プラン（20万円/50万円/100万円）",
+                                "リモート・ハイブリッド対応の教育手法",
+                                "中小派遣会社3社の成功事例",
+                                "AI活用による教育効率化"
+                            ]
+                        },
+                        "keywords_to_include": {
+                            "essential": [
+                                "派遣社員",
+                                "教育",
+                                "離職率",
+                                "定着率"
+                            ],
+                            "standard": [
+                                "人材育成",
+                                "研修"
+                            ]
+                        },
+                        "cta": {
+                            "type": "early",
+                            "text": "まずは無料診断ツールで、あなたの会社の教育体制をチェックしてみませんか？（3分で完了）→",
+                            "position": "導入部末尾"
+                        }
+                    },
+                    "sections": [
+                        {
+                            "h2": "派遣社員の教育が失敗する3つの理由",
+                            "section_number": 1,
+                            "word_count_target": 600,
+                            "token_target": "400-600",
+                            "psychological_phase": "phase1_anxiety",
+                            "psychological_goal": "課題の明確化と損失回避動機の喚起",
+                            "neuroscience_element": "扁桃体活性化: 3つの失敗理由で危機感を醸成、認知負荷3概念（失敗理由3つ）",
+                            "behavioral_element": "損失回避: 各失敗による損失額を明示",
+                            "llmo_element": "箇条書き（3つの理由）、トークン数500、セクション独立性確保（冒頭で文脈提示）",
+                            "kgi_element": "CTA配置なし（Phase 1は課題認識に集中）",
+                            "subsections": [
+                                {
+                                    "h3": "理由1: 体系的な教育プログラムの欠如",
+                                    "key_points": [
+                                        "多くの企業が場当たり的な教育",
+                                        "結果: 教育効果が30%低下（厚労省データ）",
+                                        "損失額: 教育時間40時間 × 人件費2,500円 = 10万円が無駄"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "教育プログラム",
+                                            "体系的"
+                                        ],
+                                        "standard": [
+                                            "計画",
+                                            "設計"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "具体的な損失額を数値化（競合はしていない）"
+                                },
+                                {
+                                    "h3": "理由2: OJTとOff-JTのバランス不足",
+                                    "key_points": [
+                                        "OJTのみ or Off-JTのみの企業が多い",
+                                        "最適比率はOJT:Off-JT = 7:3（厚生労働省調査）",
+                                        "バランス不足により定着率が35%低下"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "OJT",
+                                            "Off-JT"
+                                        ],
+                                        "standard": [
+                                            "バランス",
+                                            "組み合わせ"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "最適比率7:3の提示（競合は曖昧）"
+                                },
+                                {
+                                    "h3": "理由3: フィードバックの不足",
+                                    "key_points": [
+                                        "定期的なフィードバックがない企業が60%",
+                                        "フィードバックなしでは改善点が分からず、離職率が2倍",
+                                        "損失: 1人離職で55万円"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "フィードバック"
+                                        ],
+                                        "standard": [
+                                            "評価",
+                                            "改善"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "離職率2倍の具体的データ（競合は言及なし）"
+                                }
+                            ],
+                            "visual_content": {
+                                "type": "chart",
+                                "description": "教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）"
+                            },
+                            "cta_placement": false
+                        },
+                        {
+                            "h2": "【{{current_year}}年最新】効果的な派遣社員教育の5ステップ",
+                            "section_number": 3,
+                            "word_count_target": 700,
+                            "token_target": "500-600",
+                            "psychological_phase": "phase2_understanding",
+                            "psychological_goal": "全体像の理解と実践可能性の認識",
+                            "neuroscience_element": "前頭前野処理: 5ステップを論理的に提示、認知負荷3概念（導入・実施・評価の3カテゴリ）",
+                            "behavioral_element": "権威性: 厚生労働省{{current_year}}年データ引用 + 社会的証明: 300社導入実績",
+                            "llmo_element": "箇条書き（5ステップ）、質問形式ではないがナンバリングで構造化、トークン数550、セクション独立性確保",
+                            "kgi_element": "Mid CTA配置、5ステップ詳細ガイドPDFダウンロード、CVR 2〜3%",
+                            "subsections": [
+                                {
+                                    "h3": "5ステップの全体像",
+                                    "key_points": [
+                                        "ステップ1: ニーズ分析（1週間）",
+                                        "ステップ2: 教育プラン設計（2週間）",
+                                        "ステップ3: 実施（1〜3ヶ月）",
+                                        "ステップ4: 評価（月1回）",
+                                        "ステップ5: 改善（継続的）"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "ステップ",
+                                            "教育方法",
+                                            "効果的"
+                                        ],
+                                        "standard": [
+                                            "計画",
+                                            "実施",
+                                            "評価"
+                                        ]
+                                    },
+                                    "word_count_target": 250,
+                                    "differentiation_element": "期間と予算を具体的に明示（競合は曖昧）"
+                                }
+                            ],
+                            "visual_content": {
+                                "type": "infographic",
+                                "description": "5ステップの全体像を示すインフォグラフィック"
+                            },
+                            "cta_placement": true,
+                            "cta_details": {
+                                "type": "mid",
+                                "text": "5ステップの詳細ガイド（PDF・30ページ）を無料ダウンロード→"
+                            }
+                        }
+                    ],
+                    "cta_strategy": {
+                        "total_cta_count": 3,
+                        "ctas": [
+                            {
+                                "type": "early",
+                                "position": "650字前後（導入部直後）",
+                                "offer": "無料診断ツール",
+                                "text": "あなたの会社の教育体制を3分で診断→",
+                                "psychological_barrier": "最低（30秒で完了）",
+                                "expected_cvr": "3〜5%",
+                                "keywords": [
+                                    "無料",
+                                    "3分",
+                                    "今すぐ",
+                                    "簡単"
+                                ]
+                            },
+                            {
+                                "type": "mid",
+                                "position": "2,800字前後（Phase 2中盤）",
+                                "offer": "成功事例集PDF（30ページ）",
+                                "text": "中小企業3社の成功事例を無料ダウンロード→",
+                                "psychological_barrier": "低（メールアドレスのみ）",
+                                "expected_cvr": "2〜3%",
+                                "keywords": [
+                                    "無料",
+                                    "ダウンロード",
+                                    "成功事例",
+                                    "実績"
+                                ]
+                            },
+                            {
+                                "type": "final",
+                                "position": "4,500字前後 + 専用H2セクション",
+                                "offer": "無料コンサルティング（30分）+ 教育計画テンプレート",
+                                "text": "あなたの会社に最適な教育プランを専門家が無料で提案します。今なら教育計画テンプレートを無料進呈。月10社限定（残り3枠）→",
+                                "psychological_barrier": "中（フォーム入力）",
+                                "expected_cvr": "2〜3%",
+                                "keywords": [
+                                    "無料相談",
+                                    "専門家",
+                                    "実績300社",
+                                    "限定",
+                                    "今なら"
+                                ]
+                            }
+                        ],
+                        "total_expected_cvr": "7〜11%"
+                    }
+                },
+                "explanation": "完全なアウトライン設計の例。全H2セクションに4本柱を実装。"
+            },
+            "example_2_section_with_four_pillars": {
+                "scenario": "4本柱を実装したH2セクションの詳細例",
+                "section_example": {
+                    "h2": "予算別・最適教育プラン【20万円/50万円/100万円】",
+                    "section_number": 6,
+                    "word_count_target": 800,
+                    "token_target": "550-600",
+                    "psychological_phase": "phase2_understanding",
+                    "psychological_goal": "予算制約があっても実践可能という確信",
+                    "neuroscience_element": "前頭前野処理: 3つの予算プランを比較検討、認知負荷3概念（20/50/100万円の3プラン）、文の長さ20〜35文字",
+                    "behavioral_element": "一貫性: 段階的投資プラン（小→中→大） + 社会的証明: 各プランの導入企業数（120社/150社/30社）",
+                    "llmo_element": "箇条書き（3プランの詳細、各5項目）、比較表、トークン数580、セクション独立性確保（冒頭: 「派遣社員教育の予算は企業規模によって異なります」）",
+                    "kgi_element": "CTA配置なし（Phase 2の情報提供に集中、次セクション後にMid CTA配置予定）",
+                    "subsections": [
+                        {
+                            "h3": "20万円プラン: OJT中心の基本型",
+                            "key_points": [
+                                "内容: OJT実施 + 無料オンラインツール活用",
+                                "期間: 3ヶ月",
+                                "対象: 従業員50〜100名の小規模派遣会社",
+                                "導入企業: 120社",
+                                "定着率改善: +15%"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "OJT",
+                                    "無料"
+                                ],
+                                "standard": [
+                                    "ツール",
+                                    "活用"
+                                ],
+                                "unique": [
+                                    "小規模"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "20万円プランの提示（競合の90%が予算に言及せず）"
+                        },
+                        {
+                            "h3": "50万円プラン: OJT + Off-JTのバランス型",
+                            "key_points": [
+                                "内容: OJT + 外部研修2回 + メンター制度",
+                                "期間: 6ヶ月",
+                                "対象: 従業員100〜200名の中規模派遣会社",
+                                "導入企業: 150社",
+                                "定着率改善: +35%（最も費用対効果が高い）"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "OJT",
+                                    "Off-JT",
+                                    "メンター制度"
+                                ],
+                                "standard": [
+                                    "研修",
+                                    "バランス"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "最も費用対効果が高いプラン（データ裏付け）"
+                        },
+                        {
+                            "h3": "100万円プラン: 体系的教育プログラム",
+                            "key_points": [
+                                "内容: カスタマイズOJT + 定期Off-JT + メンター制度 + eラーニング",
+                                "期間: 12ヶ月",
+                                "対象: 従業員200名以上の大規模派遣会社",
+                                "導入企業: 30社",
+                                "定着率改善: +50%"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "体系的",
+                                    "プログラム"
+                                ],
+                                "standard": [
+                                    "カスタマイズ",
+                                    "eラーニング"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "100万円で実現可能な内容を詳細化（競合は曖昧）"
+                        }
+                    ],
+                    "visual_content": {
+                        "type": "table",
+                        "description": "3つの予算プランの比較表（内容・期間・対象・導入企業数・定着率改善効果の5項目を比較）"
+                    },
+                    "cta_placement": false
+                },
+                "explanation": "4本柱を全て実装したセクション設計の例。neuroscience_element、behavioral_element、llmo_element、kgi_elementの全てを明記。"
+            },
+            "bad_example_1_missing_four_pillars": {
+                "scenario": "4本柱の実装が不足（悪い例）",
+                "bad_output": {
+                    "h2": "派遣社員の教育方法",
+                    "section_number": 3,
+                    "word_count_target": 600,
+                    "subsections": []
+                },
+                "problems": [
+                    "neuroscience_element が欠落している",
+                    "behavioral_element が欠落している",
+                    "llmo_element が欠落している",
+                    "kgi_element が欠落している",
+                    "psychological_phase が明示されていない",
+                    "psychological_goal が明示されていない",
+                    "token_target が設定されていない"
+                ],
+                "correction": "全てのH2セクションに4本柱（neuroscience_element、behavioral_element、llmo_element、kgi_element）を必ず実装する必要がある。これは最重要要件。",
+                "explanation": "4本柱の実装は絶対要件。1つでも欠けていると不完全。"
+            },
+            "bad_example_2_vague_elements": {
+                "scenario": "4本柱の記述が曖昧（悪い例）",
+                "bad_output": {
+                    "h2": "教育方法の解説",
+                    "neuroscience_element": "分かりやすく説明",
+                    "behavioral_element": "読者に訴求",
+                    "llmo_element": "読みやすく",
+                    "kgi_element": "問い合わせ誘導"
+                },
+                "problems": [
+                    "neuroscience_element が具体性に欠ける（「分かりやすく」では不十分）",
+                    "behavioral_element が具体的な原則を明示していない（6原則のどれか？）",
+                    "llmo_element がトークン数・独立性等を明示していない",
+                    "kgi_element がCTA配置の有無・CVR目標を明示していない"
+                ],
+                "correction": {
+                    "neuroscience_element": "前頭前野処理: 5ステップを論理的に提示、認知負荷3概念",
+                    "behavioral_element": "社会的証明: 300社導入実績を明示",
+                    "llmo_element": "箇条書き5項目、トークン数500、セクション独立性確保",
+                    "kgi_element": "Mid CTA配置、PDF誘導、CVR 2〜3%"
+                },
+                "explanation": "4本柱の各要素は具体的に記述する必要がある。曖昧な記述は不可。"
+            }
+        },
+        "note": "実際の使用例",
+        "legacy_examples": {
+            "example_1_complete_outline": {
+                "scenario": "完全なアウトライン設計の例（4本柱を全セクションに実装）",
+                "input": {
+                    "keyword": "派遣社員 教育方法"
+                },
+                "output": {
+                    "generation_date": "{{current_year}}-10-21T17:00:00Z",
+                    "keyword": "派遣社員 教育方法",
+                    "outline_version": "v1_initial",
+                    "title_candidates": [
+                        {
+                            "title": "【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ",
+                            "character_count": 42,
+                            "seo_score": 0.92,
+                            "reasons": [
+                                "年度を明記して鮮度をアピール",
+                                "「完全ガイド」で網羅性を訴求",
+                                "「中小企業でも」でターゲット明確化",
+                                "「5ステップ」で具体性を提示"
+                            ],
+                            "target_audience": "中小派遣会社の教育担当者（30代、予算制約あり）",
+                            "differentiation": "年度明記+中小企業特化+ステップ数明示"
+                        },
+                        {
+                            "title": "中小派遣会社向け｜予算50万円以下で実現する派遣社員教育の5つの方法【{{current_year}}年版】",
+                            "character_count": 44,
+                            "seo_score": 0.89,
+                            "reasons": [
+                                "ターゲット（中小派遣会社）を明確化",
+                                "予算制約（50万円以下）を明示",
+                                "「5つの方法」で具体性",
+                                "年度明記"
+                            ],
+                            "target_audience": "予算制約のある中小派遣会社",
+                            "differentiation": "予算明示+中小企業特化"
+                        },
+                        {
+                            "title": "離職率42%を18%に改善｜派遣社員が定着する教育方法5ステップ【{{current_year}}年版】",
+                            "character_count": 42,
+                            "seo_score": 0.88,
+                            "reasons": [
+                                "具体的な改善数値（42%→18%）で効果を訴求",
+                                "「定着する」で課題解決を明示",
+                                "「5ステップ」で実践可能性",
+                                "年度明記"
+                            ],
+                            "target_audience": "離職率に悩む教育担当者",
+                            "differentiation": "具体的改善数値+課題解決"
+                        }
+                    ],
+                    "recommended_title": "【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ",
+                    "meta_description": "派遣社員の離職率29.3%（{{current_year}}年厚労省調査）を改善する教育方法を完全解説。中小企業でも年間50万円以下で実践できる5ステップと、OJT・Off-JT・オンライン研修の最適な組み合わせ方を、最新データと事例で紹介します。",
+                    "article_structure_overview": {
+                        "total_word_count_target": 4800,
+                        "total_sections": 12,
+                        "three_phase_breakdown": {
+                            "phase1_anxiety": {
+                                "word_count": 700,
+                                "sections": [
+                                    "導入部",
+                                    "H2-1",
+                                    "H2-2"
+                                ],
+                                "goal": "課題認識と共感、損失回避動機の喚起"
+                            },
+                            "phase2_understanding": {
+                                "word_count": 3300,
+                                "sections": [
+                                    "H2-3",
+                                    "H2-4",
+                                    "H2-5",
+                                    "H2-6",
+                                    "H2-7",
+                                    "H2-8",
+                                    "H2-9",
+                                    "H2-10"
+                                ],
+                                "goal": "理解と納得、具体的方法の提示"
+                            },
+                            "phase3_action": {
+                                "word_count": 800,
+                                "sections": [
+                                    "H2-11",
+                                    "H2-12",
+                                    "まとめ"
+                                ],
+                                "goal": "行動決定と問い合わせ誘導"
+                            }
+                        },
+                        "reading_time": "12〜15分",
+                        "readability_level": "中級（JLPT N3〜N2相当）"
+                    },
+                    "introduction": {
+                        "word_count_target": 450,
+                        "neuroscience_element": "扁桃体活性化: 離職率42%、損失55万円の衝撃データ",
+                        "behavioral_element": "損失回避 + 好意（共感的トーン）",
+                        "llmo_element": "箇条書き（主要ポイント5項目）、質問形式オープニング",
+                        "kgi_element": "Early CTA配置、無料診断ツール誘導、CVR 3〜5%",
+                        "structure": {
+                            "opening_hook": "派遣社員の3ヶ月以内離職率が42%に達している現実をご存知ですか？",
+                            "data_anchor": "{{current_year}}年厚生労働省の最新調査によれば、派遣社員の離職率は29.3%（前年比+3.2pt）。1人の離職で採用コスト35万円 + 教育コスト20万円 = 55万円の損失が発生しています。",
+                            "empathy": "「教育に時間をかけても、すぐに辞めてしまう」「何から始めればいいか分からない」──多くの教育担当者が同じ悩みを抱えています。特に中小派遣会社では、予算や人員の制約があり、大企業のような体系的な教育プログラムを導入するのは難しいのが現実です。",
+                            "value_proposition": "本記事では、中小企業でも年間50万円以下で実践できる派遣社員教育の5ステップを、{{current_year}}年最新データと実際の成功事例とともに完全解説します。",
+                            "key_points": [
+                                "{{current_year}}年最新データに基づく効果的な教育方法",
+                                "予算別プラン（20万円/50万円/100万円）",
+                                "リモート・ハイブリッド対応の教育手法",
+                                "中小派遣会社3社の成功事例",
+                                "AI活用による教育効率化"
+                            ]
+                        },
+                        "keywords_to_include": {
+                            "essential": [
+                                "派遣社員",
+                                "教育",
+                                "離職率",
+                                "定着率"
+                            ],
+                            "standard": [
+                                "人材育成",
+                                "研修"
+                            ]
+                        },
+                        "cta": {
+                            "type": "early",
+                            "text": "まずは無料診断ツールで、あなたの会社の教育体制をチェックしてみませんか？（3分で完了）→",
+                            "position": "導入部末尾"
+                        }
+                    },
+                    "sections": [
+                        {
+                            "h2": "派遣社員の教育が失敗する3つの理由",
+                            "section_number": 1,
+                            "word_count_target": 600,
+                            "token_target": "400-600",
+                            "psychological_phase": "phase1_anxiety",
+                            "psychological_goal": "課題の明確化と損失回避動機の喚起",
+                            "neuroscience_element": "扁桃体活性化: 3つの失敗理由で危機感を醸成、認知負荷3概念（失敗理由3つ）",
+                            "behavioral_element": "損失回避: 各失敗による損失額を明示",
+                            "llmo_element": "箇条書き（3つの理由）、トークン数500、セクション独立性確保（冒頭で文脈提示）",
+                            "kgi_element": "CTA配置なし（Phase 1は課題認識に集中）",
+                            "subsections": [
+                                {
+                                    "h3": "理由1: 体系的な教育プログラムの欠如",
+                                    "key_points": [
+                                        "多くの企業が場当たり的な教育",
+                                        "結果: 教育効果が30%低下（厚労省データ）",
+                                        "損失額: 教育時間40時間 × 人件費2,500円 = 10万円が無駄"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "教育プログラム",
+                                            "体系的"
+                                        ],
+                                        "standard": [
+                                            "計画",
+                                            "設計"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "具体的な損失額を数値化（競合はしていない）"
+                                },
+                                {
+                                    "h3": "理由2: OJTとOff-JTのバランス不足",
+                                    "key_points": [
+                                        "OJTのみ or Off-JTのみの企業が多い",
+                                        "最適比率はOJT:Off-JT = 7:3（厚生労働省調査）",
+                                        "バランス不足により定着率が35%低下"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "OJT",
+                                            "Off-JT"
+                                        ],
+                                        "standard": [
+                                            "バランス",
+                                            "組み合わせ"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "最適比率7:3の提示（競合は曖昧）"
+                                },
+                                {
+                                    "h3": "理由3: フィードバックの不足",
+                                    "key_points": [
+                                        "定期的なフィードバックがない企業が60%",
+                                        "フィードバックなしでは改善点が分からず、離職率が2倍",
+                                        "損失: 1人離職で55万円"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "フィードバック"
+                                        ],
+                                        "standard": [
+                                            "評価",
+                                            "改善"
+                                        ]
+                                    },
+                                    "word_count_target": 180,
+                                    "differentiation_element": "離職率2倍の具体的データ（競合は言及なし）"
+                                }
+                            ],
+                            "visual_content": {
+                                "type": "chart",
+                                "description": "教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）"
+                            },
+                            "cta_placement": false
+                        },
+                        {
+                            "h2": "【{{current_year}}年最新】効果的な派遣社員教育の5ステップ",
+                            "section_number": 3,
+                            "word_count_target": 700,
+                            "token_target": "500-600",
+                            "psychological_phase": "phase2_understanding",
+                            "psychological_goal": "全体像の理解と実践可能性の認識",
+                            "neuroscience_element": "前頭前野処理: 5ステップを論理的に提示、認知負荷3概念（導入・実施・評価の3カテゴリ）",
+                            "behavioral_element": "権威性: 厚生労働省{{current_year}}年データ引用 + 社会的証明: 300社導入実績",
+                            "llmo_element": "箇条書き（5ステップ）、質問形式ではないがナンバリングで構造化、トークン数550、セクション独立性確保",
+                            "kgi_element": "Mid CTA配置、5ステップ詳細ガイドPDFダウンロード、CVR 2〜3%",
+                            "subsections": [
+                                {
+                                    "h3": "5ステップの全体像",
+                                    "key_points": [
+                                        "ステップ1: ニーズ分析（1週間）",
+                                        "ステップ2: 教育プラン設計（2週間）",
+                                        "ステップ3: 実施（1〜3ヶ月）",
+                                        "ステップ4: 評価（月1回）",
+                                        "ステップ5: 改善（継続的）"
+                                    ],
+                                    "keywords_to_include": {
+                                        "essential": [
+                                            "ステップ",
+                                            "教育方法",
+                                            "効果的"
+                                        ],
+                                        "standard": [
+                                            "計画",
+                                            "実施",
+                                            "評価"
+                                        ]
+                                    },
+                                    "word_count_target": 250,
+                                    "differentiation_element": "期間と予算を具体的に明示（競合は曖昧）"
+                                }
+                            ],
+                            "visual_content": {
+                                "type": "infographic",
+                                "description": "5ステップの全体像を示すインフォグラフィック"
+                            },
+                            "cta_placement": true,
+                            "cta_details": {
+                                "type": "mid",
+                                "text": "5ステップの詳細ガイド（PDF・30ページ）を無料ダウンロード→"
+                            }
+                        }
+                    ],
+                    "cta_strategy": {
+                        "total_cta_count": 3,
+                        "ctas": [
+                            {
+                                "type": "early",
+                                "position": "650字前後（導入部直後）",
+                                "offer": "無料診断ツール",
+                                "text": "あなたの会社の教育体制を3分で診断→",
+                                "psychological_barrier": "最低（30秒で完了）",
+                                "expected_cvr": "3〜5%",
+                                "keywords": [
+                                    "無料",
+                                    "3分",
+                                    "今すぐ",
+                                    "簡単"
+                                ]
+                            },
+                            {
+                                "type": "mid",
+                                "position": "2,800字前後（Phase 2中盤）",
+                                "offer": "成功事例集PDF（30ページ）",
+                                "text": "中小企業3社の成功事例を無料ダウンロード→",
+                                "psychological_barrier": "低（メールアドレスのみ）",
+                                "expected_cvr": "2〜3%",
+                                "keywords": [
+                                    "無料",
+                                    "ダウンロード",
+                                    "成功事例",
+                                    "実績"
+                                ]
+                            },
+                            {
+                                "type": "final",
+                                "position": "4,500字前後 + 専用H2セクション",
+                                "offer": "無料コンサルティング（30分）+ 教育計画テンプレート",
+                                "text": "あなたの会社に最適な教育プランを専門家が無料で提案します。今なら教育計画テンプレートを無料進呈。月10社限定（残り3枠）→",
+                                "psychological_barrier": "中（フォーム入力）",
+                                "expected_cvr": "2〜3%",
+                                "keywords": [
+                                    "無料相談",
+                                    "専門家",
+                                    "実績300社",
+                                    "限定",
+                                    "今なら"
+                                ]
+                            }
+                        ],
+                        "total_expected_cvr": "7〜11%"
+                    }
+                },
+                "explanation": "完全なアウトライン設計の例。全H2セクションに4本柱を実装。"
+            },
+            "example_2_section_with_four_pillars": {
+                "scenario": "4本柱を実装したH2セクションの詳細例",
+                "section_example": {
+                    "h2": "予算別・最適教育プラン【20万円/50万円/100万円】",
+                    "section_number": 6,
+                    "word_count_target": 800,
+                    "token_target": "550-600",
+                    "psychological_phase": "phase2_understanding",
+                    "psychological_goal": "予算制約があっても実践可能という確信",
+                    "neuroscience_element": "前頭前野処理: 3つの予算プランを比較検討、認知負荷3概念（20/50/100万円の3プラン）、文の長さ20〜35文字",
+                    "behavioral_element": "一貫性: 段階的投資プラン（小→中→大） + 社会的証明: 各プランの導入企業数（120社/150社/30社）",
+                    "llmo_element": "箇条書き（3プランの詳細、各5項目）、比較表、トークン数580、セクション独立性確保（冒頭: 「派遣社員教育の予算は企業規模によって異なります」）",
+                    "kgi_element": "CTA配置なし（Phase 2の情報提供に集中、次セクション後にMid CTA配置予定）",
+                    "subsections": [
+                        {
+                            "h3": "20万円プラン: OJT中心の基本型",
+                            "key_points": [
+                                "内容: OJT実施 + 無料オンラインツール活用",
+                                "期間: 3ヶ月",
+                                "対象: 従業員50〜100名の小規模派遣会社",
+                                "導入企業: 120社",
+                                "定着率改善: +15%"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "OJT",
+                                    "無料"
+                                ],
+                                "standard": [
+                                    "ツール",
+                                    "活用"
+                                ],
+                                "unique": [
+                                    "小規模"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "20万円プランの提示（競合の90%が予算に言及せず）"
+                        },
+                        {
+                            "h3": "50万円プラン: OJT + Off-JTのバランス型",
+                            "key_points": [
+                                "内容: OJT + 外部研修2回 + メンター制度",
+                                "期間: 6ヶ月",
+                                "対象: 従業員100〜200名の中規模派遣会社",
+                                "導入企業: 150社",
+                                "定着率改善: +35%（最も費用対効果が高い）"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "OJT",
+                                    "Off-JT",
+                                    "メンター制度"
+                                ],
+                                "standard": [
+                                    "研修",
+                                    "バランス"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "最も費用対効果が高いプラン（データ裏付け）"
+                        },
+                        {
+                            "h3": "100万円プラン: 体系的教育プログラム",
+                            "key_points": [
+                                "内容: カスタマイズOJT + 定期Off-JT + メンター制度 + eラーニング",
+                                "期間: 12ヶ月",
+                                "対象: 従業員200名以上の大規模派遣会社",
+                                "導入企業: 30社",
+                                "定着率改善: +50%"
+                            ],
+                            "keywords_to_include": {
+                                "essential": [
+                                    "予算",
+                                    "体系的",
+                                    "プログラム"
+                                ],
+                                "standard": [
+                                    "カスタマイズ",
+                                    "eラーニング"
+                                ]
+                            },
+                            "word_count_target": 250,
+                            "differentiation_element": "100万円で実現可能な内容を詳細化（競合は曖昧）"
+                        }
+                    ],
+                    "visual_content": {
+                        "type": "table",
+                        "description": "3つの予算プランの比較表（内容・期間・対象・導入企業数・定着率改善効果の5項目を比較）"
+                    },
+                    "cta_placement": false
+                },
+                "explanation": "4本柱を全て実装したセクション設計の例。neuroscience_element、behavioral_element、llmo_element、kgi_elementの全てを明記。"
+            },
+            "bad_example_1_missing_four_pillars": {
+                "scenario": "4本柱の実装が不足（悪い例）",
+                "bad_output": {
+                    "h2": "派遣社員の教育方法",
+                    "section_number": 3,
+                    "word_count_target": 600,
+                    "subsections": []
+                },
+                "problems": [
+                    "neuroscience_element が欠落している",
+                    "behavioral_element が欠落している",
+                    "llmo_element が欠落している",
+                    "kgi_element が欠落している",
+                    "psychological_phase が明示されていない",
+                    "psychological_goal が明示されていない",
+                    "token_target が設定されていない"
+                ],
+                "correction": "全てのH2セクションに4本柱（neuroscience_element、behavioral_element、llmo_element、kgi_element）を必ず実装する必要がある。これは最重要要件。",
+                "explanation": "4本柱の実装は絶対要件。1つでも欠けていると不完全。"
+            },
+            "bad_example_2_vague_elements": {
+                "scenario": "4本柱の記述が曖昧（悪い例）",
+                "bad_output": {
+                    "h2": "教育方法の解説",
+                    "neuroscience_element": "分かりやすく説明",
+                    "behavioral_element": "読者に訴求",
+                    "llmo_element": "読みやすく",
+                    "kgi_element": "問い合わせ誘導"
+                },
+                "problems": [
+                    "neuroscience_element が具体性に欠ける（「分かりやすく」では不十分）",
+                    "behavioral_element が具体的な原則を明示していない（6原則のどれか？）",
+                    "llmo_element がトークン数・独立性等を明示していない",
+                    "kgi_element がCTA配置の有無・CVR目標を明示していない"
+                ],
+                "correction": {
+                    "neuroscience_element": "前頭前野処理: 5ステップを論理的に提示、認知負荷3概念",
+                    "behavioral_element": "社会的証明: 300社導入実績を明示",
+                    "llmo_element": "箇条書き5項目、トークン数500、セクション独立性確保",
+                    "kgi_element": "Mid CTA配置、PDF誘導、CVR 2〜3%"
+                },
+                "explanation": "4本柱の各要素は具体的に記述する必要がある。曖昧な記述は不可。"
+            }
+        },
+        "legacy_examples_source": "examples.json (structured)",
+        "legacy_examples_raw": "{\n    \"example_1_complete_outline\": {\n        \"scenario\": \"完全なアウトライン設計の例（4本柱を全セクションに実装）\",\n        \"input\": {\n            \"keyword\": \"派遣社員 教育方法\"\n        },\n        \"output\": {\n            \"generation_date\": \"{{current_year}}-10-21T17:00:00Z\",\n            \"keyword\": \"派遣社員 教育方法\",\n            \"outline_version\": \"v1_initial\",\n            \"title_candidates\": [\n                {\n                    \"title\": \"【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ\",\n                    \"character_count\": 42,\n                    \"seo_score\": 0.92,\n                    \"reasons\": [\n                        \"年度を明記して鮮度をアピール\",\n                        \"「完全ガイド」で網羅性を訴求\",\n                        \"「中小企業でも」でターゲット明確化\",\n                        \"「5ステップ」で具体性を提示\"\n                    ],\n                    \"target_audience\": \"中小派遣会社の教育担当者（30代、予算制約あり）\",\n                    \"differentiation\": \"年度明記+中小企業特化+ステップ数明示\"\n                },\n                {\n                    \"title\": \"中小派遣会社向け｜予算50万円以下で実現する派遣社員教育の5つの方法【{{current_year}}年版】\",\n                    \"character_count\": 44,\n                    \"seo_score\": 0.89,\n                    \"reasons\": [\n                        \"ターゲット（中小派遣会社）を明確化\",\n                        \"予算制約（50万円以下）を明示\",\n                        \"「5つの方法」で具体性\",\n                        \"年度明記\"\n                    ],\n                    \"target_audience\": \"予算制約のある中小派遣会社\",\n                    \"differentiation\": \"予算明示+中小企業特化\"\n                },\n                {\n                    \"title\": \"離職率42%を18%に改善｜派遣社員が定着する教育方法5ステップ【{{current_year}}年版】\",\n                    \"character_count\": 42,\n                    \"seo_score\": 0.88,\n                    \"reasons\": [\n                        \"具体的な改善数値（42%→18%）で効果を訴求\",\n                        \"「定着する」で課題解決を明示\",\n                        \"「5ステップ」で実践可能性\",\n                        \"年度明記\"\n                    ],\n                    \"target_audience\": \"離職率に悩む教育担当者\",\n                    \"differentiation\": \"具体的改善数値+課題解決\"\n                }\n            ],\n            \"recommended_title\": \"【{{current_year}}年最新】派遣社員の教育方法完全ガイド｜中小企業でも実践できる5ステップ\",\n            \"meta_description\": \"派遣社員の離職率29.3%（{{current_year}}年厚労省調査）を改善する教育方法を完全解説。中小企業でも年間50万円以下で実践できる5ステップと、OJT・Off-JT・オンライン研修の最適な組み合わせ方を、最新データと事例で紹介します。\",\n            \"article_structure_overview\": {\n                \"total_word_count_target\": 4800,\n                \"total_sections\": 12,\n                \"three_phase_breakdown\": {\n                    \"phase1_anxiety\": {\n                        \"word_count\": 700,\n                        \"sections\": [\n                            \"導入部\",\n                            \"H2-1\",\n                            \"H2-2\"\n                        ],\n                        \"goal\": \"課題認識と共感、損失回避動機の喚起\"\n                    },\n                    \"phase2_understanding\": {\n                        \"word_count\": 3300,\n                        \"sections\": [\n                            \"H2-3\",\n                            \"H2-4\",\n                            \"H2-5\",\n                            \"H2-6\",\n                            \"H2-7\",\n                            \"H2-8\",\n                            \"H2-9\",\n                            \"H2-10\"\n                        ],\n                        \"goal\": \"理解と納得、具体的方法の提示\"\n                    },\n                    \"phase3_action\": {\n                        \"word_count\": 800,\n                        \"sections\": [\n                            \"H2-11\",\n                            \"H2-12\",\n                            \"まとめ\"\n                        ],\n                        \"goal\": \"行動決定と問い合わせ誘導\"\n                    }\n                },\n                \"reading_time\": \"12〜15分\",\n                \"readability_level\": \"中級（JLPT N3〜N2相当）\"\n            },\n            \"introduction\": {\n                \"word_count_target\": 450,\n                \"neuroscience_element\": \"扁桃体活性化: 離職率42%、損失55万円の衝撃データ\",\n                \"behavioral_element\": \"損失回避 + 好意（共感的トーン）\",\n                \"llmo_element\": \"箇条書き（主要ポイント5項目）、質問形式オープニング\",\n                \"kgi_element\": \"Early CTA配置、無料診断ツール誘導、CVR 3〜5%\",\n                \"structure\": {\n                    \"opening_hook\": \"派遣社員の3ヶ月以内離職率が42%に達している現実をご存知ですか？\",\n                    \"data_anchor\": \"{{current_year}}年厚生労働省の最新調査によれば、派遣社員の離職率は29.3%（前年比+3.2pt）。1人の離職で採用コスト35万円 + 教育コスト20万円 = 55万円の損失が発生しています。\",\n                    \"empathy\": \"「教育に時間をかけても、すぐに辞めてしまう」「何から始めればいいか分からない」──多くの教育担当者が同じ悩みを抱えています。特に中小派遣会社では、予算や人員の制約があり、大企業のような体系的な教育プログラムを導入するのは難しいのが現実です。\",\n                    \"value_proposition\": \"本記事では、中小企業でも年間50万円以下で実践できる派遣社員教育の5ステップを、{{current_year}}年最新データと実際の成功事例とともに完全解説します。\",\n                    \"key_points\": [\n                        \"{{current_year}}年最新データに基づく効果的な教育方法\",\n                        \"予算別プラン（20万円/50万円/100万円）\",\n                        \"リモート・ハイブリッド対応の教育手法\",\n                        \"中小派遣会社3社の成功事例\",\n                        \"AI活用による教育効率化\"\n                    ]\n                },\n                \"keywords_to_include\": {\n                    \"essential\": [\n                        \"派遣社員\",\n                        \"教育\",\n                        \"離職率\",\n                        \"定着率\"\n                    ],\n                    \"standard\": [\n                        \"人材育成\",\n                        \"研修\"\n                    ]\n                },\n                \"cta\": {\n                    \"type\": \"early\",\n                    \"text\": \"まずは無料診断ツールで、あなたの会社の教育体制をチェックしてみませんか？（3分で完了）→\",\n                    \"position\": \"導入部末尾\"\n                }\n            },\n            \"sections\": [\n                {\n                    \"h2\": \"派遣社員の教育が失敗する3つの理由\",\n                    \"section_number\": 1,\n                    \"word_count_target\": 600,\n                    \"token_target\": \"400-600\",\n                    \"psychological_phase\": \"phase1_anxiety\",\n                    \"psychological_goal\": \"課題の明確化と損失回避動機の喚起\",\n                    \"neuroscience_element\": \"扁桃体活性化: 3つの失敗理由で危機感を醸成、認知負荷3概念（失敗理由3つ）\",\n                    \"behavioral_element\": \"損失回避: 各失敗による損失額を明示\",\n                    \"llmo_element\": \"箇条書き（3つの理由）、トークン数500、セクション独立性確保（冒頭で文脈提示）\",\n                    \"kgi_element\": \"CTA配置なし（Phase 1は課題認識に集中）\",\n                    \"subsections\": [\n                        {\n                            \"h3\": \"理由1: 体系的な教育プログラムの欠如\",\n                            \"key_points\": [\n                                \"多くの企業が場当たり的な教育\",\n                                \"結果: 教育効果が30%低下（厚労省データ）\",\n                                \"損失額: 教育時間40時間 × 人件費2,500円 = 10万円が無駄\"\n                            ],\n                            \"keywords_to_include\": {\n                                \"essential\": [\n                                    \"教育プログラム\",\n                                    \"体系的\"\n                                ],\n                                \"standard\": [\n                                    \"計画\",\n                                    \"設計\"\n                                ]\n                            },\n                            \"word_count_target\": 180,\n                            \"differentiation_element\": \"具体的な損失額を数値化（競合はしていない）\"\n                        },\n                        {\n                            \"h3\": \"理由2: OJTとOff-JTのバランス不足\",\n                            \"key_points\": [\n                                \"OJTのみ or Off-JTのみの企業が多い\",\n                                \"最適比率はOJT:Off-JT = 7:3（厚生労働省調査）\",\n                                \"バランス不足により定着率が35%低下\"\n                            ],\n                            \"keywords_to_include\": {\n                                \"essential\": [\n                                    \"OJT\",\n                                    \"Off-JT\"\n                                ],\n                                \"standard\": [\n                                    \"バランス\",\n                                    \"組み合わせ\"\n                                ]\n                            },\n                            \"word_count_target\": 180,\n                            \"differentiation_element\": \"最適比率7:3の提示（競合は曖昧）\"\n                        },\n                        {\n                            \"h3\": \"理由3: フィードバックの不足\",\n                            \"key_points\": [\n                                \"定期的なフィードバックがない企業が60%\",\n                                \"フィードバックなしでは改善点が分からず、離職率が2倍\",\n                                \"損失: 1人離職で55万円\"\n                            ],\n                            \"keywords_to_include\": {\n                                \"essential\": [\n                                    \"フィードバック\"\n                                ],\n                                \"standard\": [\n                                    \"評価\",\n                                    \"改善\"\n                                ]\n                            },\n                            \"word_count_target\": 180,\n                            \"differentiation_element\": \"離職率2倍の具体的データ（競合は言及なし）\"\n                        }\n                    ],\n                    \"visual_content\": {\n                        \"type\": \"chart\",\n                        \"description\": \"教育の有無による離職率の比較グラフ（教育なし42% vs 体系的教育18%）\"\n                    },\n                    \"cta_placement\": false\n                },\n                {\n                    \"h2\": \"【{{current_year}}年最新】効果的な派遣社員教育の5ステップ\",\n                    \"section_number\": 3,\n                    \"word_count_target\": 700,\n                    \"token_target\": \"500-600\",\n                    \"psychological_phase\": \"phase2_understanding\",\n                    \"psychological_goal\": \"全体像の理解と実践可能性の認識\",\n                    \"neuroscience_element\": \"前頭前野処理: 5ステップを論理的に提示、認知負荷3概念（導入・実施・評価の3カテゴリ）\",\n                    \"behavioral_element\": \"権威性: 厚生労働省{{current_year}}年データ引用 + 社会的証明: 300社導入実績\",\n                    \"llmo_element\": \"箇条書き（5ステップ）、質問形式ではないがナンバリングで構造化、トークン数550、セクション独立性確保\",\n                    \"kgi_element\": \"Mid CTA配置、5ステップ詳細ガイドPDFダウンロード、CVR 2〜3%\",\n                    \"subsections\": [\n                        {\n                            \"h3\": \"5ステップの全体像\",\n                            \"key_points\": [\n                                \"ステップ1: ニーズ分析（1週間）\",\n                                \"ステップ2: 教育プラン設計（2週間）\",\n                                \"ステップ3: 実施（1〜3ヶ月）\",\n                                \"ステップ4: 評価（月1回）\",\n                                \"ステップ5: 改善（継続的）\"\n                            ],\n                            \"keywords_to_include\": {\n                                \"essential\": [\n                                    \"ステップ\",\n                                    \"教育方法\",\n                                    \"効果的\"\n                                ],\n                                \"standard\": [\n                                    \"計画\",\n                                    \"実施\",\n                                    \"評価\"\n                                ]\n                            },\n                            \"word_count_target\": 250,\n                            \"differentiation_element\": \"期間と予算を具体的に明示（競合は曖昧）\"\n                        }\n                    ],\n                    \"visual_content\": {\n                        \"type\": \"infographic\",\n                        \"description\": \"5ステップの全体像を示すインフォグラフィック\"\n                    },\n                    \"cta_placement\": true,\n                    \"cta_details\": {\n                        \"type\": \"mid\",\n                        \"text\": \"5ステップの詳細ガイド（PDF・30ページ）を無料ダウンロード→\"\n                    }\n                }\n            ],\n            \"cta_strategy\": {\n                \"total_cta_count\": 3,\n                \"ctas\": [\n                    {\n                        \"type\": \"early\",\n                        \"position\": \"650字前後（導入部直後）\",\n                        \"offer\": \"無料診断ツール\",\n                        \"text\": \"あなたの会社の教育体制を3分で診断→\",\n                        \"psychological_barrier\": \"最低（30秒で完了）\",\n                        \"expected_cvr\": \"3〜5%\",\n                        \"keywords\": [\n                            \"無料\",\n                            \"3分\",\n                            \"今すぐ\",\n                            \"簡単\"\n                        ]\n                    },\n                    {\n                        \"type\": \"mid\",\n                        \"position\": \"2,800字前後（Phase 2中盤）\",\n                        \"offer\": \"成功事例集PDF（30ページ）\",\n                        \"text\": \"中小企業3社の成功事例を無料ダウンロード→\",\n                        \"psychological_barrier\": \"低（メールアドレスのみ）\",\n                        \"expected_cvr\": \"2〜3%\",\n                        \"keywords\": [\n                            \"無料\",\n                            \"ダウンロード\",\n                            \"成功事例\",\n                            \"実績\"\n                        ]\n                    },\n                    {\n                        \"type\": \"final\",\n                        \"position\": \"4,500字前後 + 専用H2セクション\",\n                        \"offer\": \"無料コンサルティング（30分）+ 教育計画テンプレート\",\n                        \"text\": \"あなたの会社に最適な教育プランを専門家が無料で提案します。今なら教育計画テンプレートを無料進呈。月10社限定（残り3枠）→\",\n                        \"psychological_barrier\": \"中（フォーム入力）\",\n                        \"expected_cvr\": \"2〜3%\",\n                        \"keywords\": [\n                            \"無料相談\",\n                            \"専門家\",\n                            \"実績300社\",\n                            \"限定\",\n                            \"今なら\"\n                        ]\n                    }\n                ],\n                \"total_expected_cvr\": \"7〜11%\"\n            }\n        },\n        \"explanation\": \"完全なアウトライン設計の例。全H2セクションに4本柱を実装。\"\n    },\n    \"example_2_section_with_four_pillars\": {\n        \"scenario\": \"4本柱を実装したH2セクションの詳細例\",\n        \"section_example\": {\n            \"h2\": \"予算別・最適教育プラン【20万円/50万円/100万円】\",\n            \"section_number\": 6,\n            \"word_count_target\": 800,\n            \"token_target\": \"550-600\",\n            \"psychological_phase\": \"phase2_understanding\",\n            \"psychological_goal\": \"予算制約があっても実践可能という確信\",\n            \"neuroscience_element\": \"前頭前野処理: 3つの予算プランを比較検討、認知負荷3概念（20/50/100万円の3プラン）、文の長さ20〜35文字\",\n            \"behavioral_element\": \"一貫性: 段階的投資プラン（小→中→大） + 社会的証明: 各プランの導入企業数（120社/150社/30社）\",\n            \"llmo_element\": \"箇条書き（3プランの詳細、各5項目）、比較表、トークン数580、セクション独立性確保（冒頭: 「派遣社員教育の予算は企業規模によって異なります」）\",\n            \"kgi_element\": \"CTA配置なし（Phase 2の情報提供に集中、次セクション後にMid CTA配置予定）\",\n            \"subsections\": [\n                {\n                    \"h3\": \"20万円プラン: OJT中心の基本型\",\n                    \"key_points\": [\n                        \"内容: OJT実施 + 無料オンラインツール活用\",\n                        \"期間: 3ヶ月\",\n                        \"対象: 従業員50〜100名の小規模派遣会社\",\n                        \"導入企業: 120社\",\n                        \"定着率改善: +15%\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"予算\",\n                            \"OJT\",\n                            \"無料\"\n                        ],\n                        \"standard\": [\n                            \"ツール\",\n                            \"活用\"\n                        ],\n                        \"unique\": [\n                            \"小規模\"\n                        ]\n                    },\n                    \"word_count_target\": 250,\n                    \"differentiation_element\": \"20万円プランの提示（競合の90%が予算に言及せず）\"\n                },\n                {\n                    \"h3\": \"50万円プラン: OJT + Off-JTのバランス型\",\n                    \"key_points\": [\n                        \"内容: OJT + 外部研修2回 + メンター制度\",\n                        \"期間: 6ヶ月\",\n                        \"対象: 従業員100〜200名の中規模派遣会社\",\n                        \"導入企業: 150社\",\n                        \"定着率改善: +35%（最も費用対効果が高い）\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"予算\",\n                            \"OJT\",\n                            \"Off-JT\",\n                            \"メンター制度\"\n                        ],\n                        \"standard\": [\n                            \"研修\",\n                            \"バランス\"\n                        ]\n                    },\n                    \"word_count_target\": 250,\n                    \"differentiation_element\": \"最も費用対効果が高いプラン（データ裏付け）\"\n                },\n                {\n                    \"h3\": \"100万円プラン: 体系的教育プログラム\",\n                    \"key_points\": [\n                        \"内容: カスタマイズOJT + 定期Off-JT + メンター制度 + eラーニング\",\n                        \"期間: 12ヶ月\",\n                        \"対象: 従業員200名以上の大規模派遣会社\",\n                        \"導入企業: 30社\",\n                        \"定着率改善: +50%\"\n                    ],\n                    \"keywords_to_include\": {\n                        \"essential\": [\n                            \"予算\",\n                            \"体系的\",\n                            \"プログラム\"\n                        ],\n                        \"standard\": [\n                            \"カスタマイズ\",\n                            \"eラーニング\"\n                        ]\n                    },\n                    \"word_count_target\": 250,\n                    \"differentiation_element\": \"100万円で実現可能な内容を詳細化（競合は曖昧）\"\n                }\n            ],\n            \"visual_content\": {\n                \"type\": \"table\",\n                \"description\": \"3つの予算プランの比較表（内容・期間・対象・導入企業数・定着率改善効果の5項目を比較）\"\n            },\n            \"cta_placement\": false\n        },\n        \"explanation\": \"4本柱を全て実装したセクション設計の例。neuroscience_element、behavioral_element、llmo_element、kgi_elementの全てを明記。\"\n    },\n    \"bad_example_1_missing_four_pillars\": {\n        \"scenario\": \"4本柱の実装が不足（悪い例）\",\n        \"bad_output\": {\n            \"h2\": \"派遣社員の教育方法\",\n            \"section_number\": 3,\n            \"word_count_target\": 600,\n            \"subsections\": []\n        },\n        \"problems\": [\n            \"neuroscience_element が欠落している\",\n            \"behavioral_element が欠落している\",\n            \"llmo_element が欠落している\",\n            \"kgi_element が欠落している\",\n            \"psychological_phase が明示されていない\",\n            \"psychological_goal が明示されていない\",\n            \"token_target が設定されていない\"\n        ],\n        \"correction\": \"全てのH2セクションに4本柱（neuroscience_element、behavioral_element、llmo_element、kgi_element）を必ず実装する必要がある。これは最重要要件。\",\n        \"explanation\": \"4本柱の実装は絶対要件。1つでも欠けていると不完全。\"\n    },\n    \"bad_example_2_vague_elements\": {\n        \"scenario\": \"4本柱の記述が曖昧（悪い例）\",\n        \"bad_output\": {\n            \"h2\": \"教育方法の解説\",\n            \"neuroscience_element\": \"分かりやすく説明\",\n            \"behavioral_element\": \"読者に訴求\",\n            \"llmo_element\": \"読みやすく\",\n            \"kgi_element\": \"問い合わせ誘導\"\n        },\n        \"problems\": [\n            \"neuroscience_element が具体性に欠ける（「分かりやすく」では不十分）\",\n            \"behavioral_element が具体的な原則を明示していない（6原則のどれか？）\",\n            \"llmo_element がトークン数・独立性等を明示していない\",\n            \"kgi_element がCTA配置の有無・CVR目標を明示していない\"\n        ],\n        \"correction\": {\n            \"neuroscience_element\": \"前頭前野処理: 5ステップを論理的に提示、認知負荷3概念\",\n            \"behavioral_element\": \"社会的証明: 300社導入実績を明示\",\n            \"llmo_element\": \"箇条書き5項目、トークン数500、セクション独立性確保\",\n            \"kgi_element\": \"Mid CTA配置、PDF誘導、CVR 2〜3%\"\n        },\n        \"explanation\": \"4本柱の各要素は具体的に記述する必要がある。曖昧な記述は不可。\"\n    }\n}\n"
+    },
+    "checklist": {
+        "source": "four_pillars_checklist.md",
+        "content": "# 4本柱チェックリスト（工程4: 戦略的アウトライン生成）\n\n**重要**: 出力前に、以下の全項目を確認してください。\n\n---\n\n## ✅ 基本設計チェック\n\n- [ ] **タイトル案を3パターン作成した**\n  - 各タイトルの文字数: 30〜40文字\n  - メインキーワードを含む\n  - 差別化要素を含む\n  - 数字を含む\n\n- [ ] **推奨タイトルを1つ選定した**\n  - 選定理由を明記\n  - SEOスコアが最も高い\n\n- [ ] **メタディスクリプションを作成した**\n  - 文字数: 120〜150文字\n  - メインキーワードを含む\n  - 数字・データを含む\n  - CTA/行動喚起を含む\n\n- [ ] **記事全体の構造を設計した**\n  - 総文字数: 4,500〜5,000字\n  - 総セクション数: 10〜13個（H2）\n  - 3フェーズの配分を明確化\n\n---\n\n## ✅ 神経科学チェック（全セクション）\n\n- [ ] **全H2セクションで認知負荷を最適化した**\n  - 1セクション = 3概念以内\n  - 各セクションで扱う概念数を確認: ○個/セクション\n\n- [ ] **文の長さを最適化した**\n  - 目標: 20〜35文字/文\n  - 長文は2文に分割\n\n- [ ] **全H2セクションにフェーズを明示した**\n  - Phase 1セクション: ○個\n  - Phase 2セクション: ○個\n  - Phase 3セクション: ○個\n\n- [ ] **Phase 1セクションの神経科学的要件を満たした**\n  - 扁桃体活性化: 損失・リスクの明示\n  - 感情的訴求: 共感的トーン\n  - データアンカー: 具体的数値\n\n- [ ] **Phase 2セクションの神経科学的要件を満たした**\n  - 前頭前野処理: 論理的説明、ステップ提示\n  - データ裏付け: 統計・研究結果\n  - 比較検討: 選択肢の提示\n\n- [ ] **Phase 3セクションの神経科学的要件を満たした**\n  - 線条体活性化: 報酬予測、成功イメージ\n  - 行動喚起: 具体的アクション\n  - ハードル低減: 容易性の強調\n\n---\n\n## ✅ 行動経済学チェック（6原則）\n\n- [ ] **全H2セクションに行動経済学の原則を配置した**\n  - 各セクションに最低1つの原則\n  - 使用原則のリスト: [...]\n\n- [ ] **損失回避を適切に配置した**\n  - 使用セクション: Phase 1の○個\n  - 具体的な実装: 損失額○○円を明示\n\n- [ ] **社会的証明を適切に配置した**\n  - 使用セクション: Phase 2の○個\n  - 具体的な実装: ○○社導入、満足度○%\n\n- [ ] **権威性を適切に配置した**\n  - 使用セクション: Phase 2の○個\n  - 具体的な実装: 厚労省データ、専門家引用\n\n- [ ] **一貫性を適切に配置した**\n  - 使用セクション: Phase 2〜3の○個\n  - 具体的な実装: 段階的コミットメント設計\n\n- [ ] **好意を適切に配置した**\n  - 使用セクション: Phase 1とPhase 3の○個\n  - 具体的な実装: 共感的トーン\n\n- [ ] **希少性を適切に配置した**\n  - 使用セクション: Phase 3の○個\n  - 具体的な実装: 月○社限定、残り○枠\n\n- [ ] **6原則のバランスを確認した**\n  - Phase 1: 損失回避 + 好意\n  - Phase 2: 社会的証明 + 権威性\n  - Phase 3: 一貫性 + 希少性\n\n---\n\n## ✅ LLMOチェック（全セクション）\n\n- [ ] **全H2セクションのトークン数を最適化した**\n  - 目標: 400〜600 tokens/section\n  - 各セクションのトークン数を確認: ○tokens\n  - 計算式: 文字数 × 0.59\n\n- [ ] **全H2セクションの独立性を確保した**\n  - 各セクションが前セクションなしで理解可能\n  - 冒頭で文脈を再提示\n  - 「前述の通り」等の表現を避けた\n\n- [ ] **質問形式見出しを適切に配置した**\n  - 質問形式H2の数: ○個 / 目標: H2の30%以上\n  - 質問形式のリスト: [...]\n\n- [ ] **全H2セクションに箇条書きを配置した**\n  - 各セクションに1箇所以上\n  - 各箇条書き: 3〜5項目\n\n- [ ] **セクション構造を最適化した**\n  - 各セクションが明確な階層構造（H2→H3）\n  - H3の数: 適切（2〜4個/H2）\n\n---\n\n## ✅ KGIチェック\n\n- [ ] **3段階CTA戦略を設計した**\n  - Early CTA: 650字位置、CVR 3〜5%\n  - Mid CTA: 2,800字位置、CVR 2〜3%\n  - Final CTA: 4,500字位置、CVR 2〜3%\n\n- [ ] **Early CTAの詳細を設計した**\n  - 提供内容: 無料診断ツール / チェックリスト\n  - 訴求キーワード: 「無料」「3分」「今すぐ」\n  - 心理的ハードル: 最低\n\n- [ ] **Mid CTAの詳細を設計した**\n  - 提供内容: 事例集PDF / 導入ガイド\n  - 訴求キーワード: 「無料」「実績」「成功事例」\n  - 心理的ハードル: 低\n\n- [ ] **Final CTAの詳細を設計した**\n  - 提供内容: 無料コンサルティング / 個別相談\n  - 訴求キーワード: 「専門家」「無料」「限定」\n  - 心理的ハードル: 中\n\n- [ ] **総CVR目標を設定した**\n  - 目標: 7〜11%\n  - 競合平均CVR: 2.7%\n  - 期待改善: +48%\n\n---\n\n## ✅ 全セクション4本柱実装チェック\n\n### H2セクションごとのチェック（各セクションで確認）\n\n**セクション1**: [セクション名]\n- [ ] 神経科学: neuroscience_element を明記した\n- [ ] 行動経済学: behavioral_element を明記した\n- [ ] LLMO: llmo_element を明記した（トークン数・独立性・箇条書き）\n- [ ] KGI: kgi_element を明記した（CTA配置 or なし）\n\n**セクション2**: [セクション名]\n- [ ] 神経科学: neuroscience_element を明記した\n- [ ] 行動経済学: behavioral_element を明記した\n- [ ] LLMO: llmo_element を明記した\n- [ ] KGI: kgi_element を明記した\n\n**セクション3〜13**: [同様にチェック]\n- [ ] 全セクションで4本柱を実装した\n\n---\n\n## ✅ キーワード配置チェック\n\n- [ ] **工程3Bのキーワードを配置した**\n  - Essential（必須）: ○個配置 / 目標: 20〜30個\n  - Standard（標準）: ○個配置 / 目標: 40〜60個\n  - Unique（独自）: ○個配置 / 目標: 20〜30個\n  - 総配置数: ○個 / 目標: 70〜100個\n\n- [ ] **メインキーワードの配置を設計した**\n  - 目標密度: 1.5%\n  - 配置箇所: タイトル、H2見出し○箇所、導入部、まとめ\n\n- [ ] **Essential キーワードを全セクションに配置した**\n  - 各H2セクションに1〜2個\n  - タイトル、導入部、まとめにも配置\n\n- [ ] **Unique キーワードを差別化セクションに配置した**\n  - リモート教育、AI活用、予算別プラン等\n\n---\n\n## ✅ 視覚コンテンツチェック\n\n- [ ] **視覚要素の配置計画を作成した**\n  - 総数: ○個 / 目標: 8〜12個\n  - 競合平均: 6.1個、自社は+64%増\n\n- [ ] **必須の視覚要素を配置した**\n  - [ ] 教育手法の比較表（Phase 2序盤）\n  - [ ] 予算別プランのチャート（Phase 2中盤）\n  - [ ] 5ステップのインフォグラフィック（Phase 2中核）\n  - [ ] 成功事例のビフォーアフター比較（Phase 2後半）\n  - [ ] 問い合わせフロー図（Phase 3）\n\n- [ ] **各視覚要素に詳細を記載した**\n  - type: chart/table/infographic/image\n  - title: タイトル\n  - section: 配置セクション\n  - purpose: 目的\n  - description: 内容説明\n\n---\n\n## ✅ 差別化実装チェック\n\n- [ ] **工程3Cの差別化ポイントを実装した**\n  - 差別化要素数: ○個 / 目標: 5個以上\n\n- [ ] **各差別化要素の実装計画を作成した**\n  - [ ] {{current_year}}年最新データ: 実装セクション○個\n  - [ ] 予算別プラン: 実装セクション○個\n  - [ ] リモート・ハイブリッド教育: 実装セクション○個\n  - [ ] AI活用: 実装セクション○個\n  - [ ] 中小企業特化: 全セクション\n\n- [ ] **各差別化要素に詳細を記載した**\n  - element: 要素名\n  - sections: 実装セクション（配列）\n  - implementation_details: 実装方法\n  - impact: 期待効果\n\n---\n\n## ✅ 導入部チェック\n\n- [ ] **導入部を詳細設計した**\n  - 文字数: 400〜500字\n  - 5つの構成要素を全て含む\n\n- [ ] **オープニングフックを作成した**\n  - 100字程度\n  - 衝撃的なデータ or 質問\n\n- [ ] **データアンカーを作成した**\n  - 100字程度\n  - {{current_year}}年最新データ\n\n- [ ] **共感・課題提起を作成した**\n  - 150字程度\n  - ペルソナの悩みに共感\n\n- [ ] **記事の価値提案を作成した**\n  - 100字程度\n  - 差別化ポイントを明示\n\n- [ ] **主要ポイントの箇条書きを作成した**\n  - 3〜5項目\n\n- [ ] **Early CTAを配置した**\n  - 50字程度\n  - 導入部末尾\n\n---\n\n## ✅ 品質目標チェック\n\n- [ ] **読了時間を設定した**\n  - 目標: 12〜15分\n  - 計算: 4,800字 ÷ 400字/分 = 12分\n\n- [ ] **可読性レベルを設定した**\n  - 目標: 中級（JLPT N3〜N2相当）\n  - 専門用語は解説\n  - 1文20〜35文字\n\n- [ ] **キーワード密度を設定した**\n  - メインKW: 1.5%\n  - Essential共起語: 各0.5〜1.0%\n\n- [ ] **リンク数を設定した**\n  - 内部リンク: 3〜5箇所\n  - 外部リンク: 5〜7箇所（一次情報源）\n\n---\n\n## ✅ 出力チェック\n\n- [ ] **JSON形式で出力した**\n  - templates.jsonに従った構造\n  - 全てのフィールドが揃っている\n\n- [ ] **全データを出力した**\n  - タイトル案（3パターン）\n  - 推奨タイトル\n  - メタディスクリプション\n  - 記事全体構造\n  - 導入部\n  - 全H2セクション（10〜13個）\n  - 3段階CTA戦略\n  - キーワード配置サマリー\n  - 視覚コンテンツ計画\n  - 差別化実装計画\n  - 品質目標\n\n- [ ] **完了確認メッセージを表示した**\n  - 「✅ 工程4完了」メッセージ\n  - 4本柱チェック: 全セクションで確認済み\n  - アウトライン設計結果のサマリー\n  - 次の工程への案内\n\n---\n\n## ✅ 総合確認\n\n- [ ] **4本柱を全H2セクションに実装した**\n  - 神経科学・行動経済学・LLMO・KGIの全てを確認済み\n  - これは最重要要件\n\n- [ ] **工程3の全データを統合した**\n  - 工程3A: 検索意図・ペルソナ\n  - 工程3B: キーワード100〜150個\n  - 工程3C: 差別化戦略\n\n- [ ] **3フェーズ設計を徹底した**\n  - Phase 1: 不安・課題認識（600〜800字）\n  - Phase 2: 理解・納得（3,000〜3,500字）\n  - Phase 3: 行動決定（600〜1,000字）\n\n- [ ] **実装可能性を確認した**\n  - 後続工程（工程6: 執筆）で執筆可能なレベルまで具体化\n  - 各セクションの目的・内容・キーワードが明確\n\n- [ ] **CVR最適化を設計した**\n  - 3段階CTA戦略\n  - 総CVR目標: 7〜11%\n\n- [ ] **詳細ガイドラインを参照した**\n  - detailed_guidelines.mdの全セクションを確認\n\n- [ ] **具体例を参照した**\n  - examples.jsonで良い例を確認\n\n- [ ] **テンプレートに従った**\n  - templates.jsonの構造を遵守\n\n---\n\n**注意**: 1つでもチェックが漏れている場合は、出力しないでください。\n全項目を確認してから出力してください。\n\n**最重要**: 全H2セクションに4本柱（神経科学・行動経済学・LLMO・KGI）を実装することは絶対要件です。\n",
+        "note": "4本柱チェックリスト（Markdown形式）",
+        "content_source": "four_pillars_checklist.md (full text)"
+    },
+    "important_notes": [
+        "このファイルは元の4ファイルを統合したものです",
+        "精度優先のため、全情報を保持しています",
+        "処理落ち防止のため、JSONの階層構造を最適化しています"
+    ]
+}
