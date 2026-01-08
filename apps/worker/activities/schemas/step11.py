@@ -9,10 +9,15 @@ Step11は記事への画像挿入を扱う工程で、以下のサブステッ�
 - 11F: 画像生成＆確認
 - 11G: HTML/Markdownへ画像挿入
 - 11H: プレビュー表示
+
+blog.System Ver8.3 対応:
+- PositionAnalysisEnhanced: 拡張位置分析（コンテンツギャップ、視覚的ブレーク、データ可視化）
+- ImagePurposeClassification: 画像目的分類（hero/illustration/data_viz/break/cta_support）
+- Step11OutputV2: 拡張出力スキーマ
 """
 
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -249,4 +254,154 @@ class Step11ImageReviewPayload(BaseModel):
     retry_instruction: str = Field(
         default="",
         description="リトライ時の追加指示",
+    )
+
+
+# =============================================================================
+# 新規スキーマ（blog.System Ver8.3 対応）
+# =============================================================================
+
+
+class ImagePurpose(str, Enum):
+    """画像の目的分類."""
+
+    HERO = "hero"  # 記事冒頭のアイキャッチ
+    ILLUSTRATION = "illustration"  # 概念・コンセプトの図解
+    DATA_VIZ = "data_viz"  # データ可視化（グラフ、チャート）
+    BREAK = "break"  # 視覚的な休憩ポイント
+    CTA_SUPPORT = "cta_support"  # CTA支援（行動促進）
+    PROCESS = "process"  # プロセス・手順の図解
+    COMPARISON = "comparison"  # 比較・対比
+
+
+class EnhancedImageInsertionPosition(BaseModel):
+    """拡張画像挿入位置（blog.System Ver8.3）.
+
+    通常のImageInsertionPositionに加え、分類カテゴリと推奨理由を含む。
+    """
+
+    article_number: int | None = Field(
+        default=None,
+        description="対象記事番号（1-4）。None の場合は全記事共通",
+    )
+    section_title: str = Field(..., description="挿入先のセクションタイトル")
+    section_index: int = Field(..., description="セクションのインデックス（0始まり）")
+    position: str = Field(
+        default="after",
+        pattern="^(before|after)$",
+        description="セクションの前後どちらに挿入するか",
+    )
+    source_text: str = Field(
+        default="",
+        description="画像の元となるテキスト（該当セクションの要約）",
+    )
+    description: str = Field(
+        default="",
+        description="なぜこの位置に画像が必要かの説明",
+    )
+    # V2追加フィールド
+    category: Literal["content_gap", "visual_break", "data_visualization"] = Field(
+        default="content_gap",
+        description="挿入位置のカテゴリ",
+    )
+    priority: int = Field(
+        default=1,
+        ge=1,
+        le=5,
+        description="優先度（1が最高）",
+    )
+    recommendation_reason: str = Field(
+        default="",
+        description="この位置を推奨する理由",
+    )
+
+
+class ImagePurposeClassification(BaseModel):
+    """画像目的分類（blog.System Ver8.3）.
+
+    各画像の目的と配置コンテキストを記録。
+    """
+
+    image_index: int = Field(..., description="画像インデックス")
+    purpose: ImagePurpose = Field(
+        default=ImagePurpose.ILLUSTRATION,
+        description="画像の目的",
+    )
+    section_context: str = Field(
+        default="",
+        description="配置されるセクションのコンテキスト",
+    )
+    target_emotion: str = Field(
+        default="",
+        description="ターゲットとする読者の感情（Phase1-3対応）",
+    )
+    four_pillar_relevance: list[str] = Field(
+        default_factory=list,
+        description="関連する4本柱（neuroscience/behavioral_economics/llmo/kgi）",
+    )
+
+
+class PositionAnalysisEnhanced(BaseModel):
+    """拡張位置分析結果（blog.System Ver8.3）.
+
+    コンテンツギャップ、視覚的ブレーク、データ可視化の3カテゴリで分析。
+    """
+
+    content_gap_positions: list[EnhancedImageInsertionPosition] = Field(
+        default_factory=list,
+        description="コンテンツギャップ分析で特定された位置",
+    )
+    visual_break_positions: list[EnhancedImageInsertionPosition] = Field(
+        default_factory=list,
+        description="視覚的ブレーク推奨位置",
+    )
+    data_visualization_positions: list[EnhancedImageInsertionPosition] = Field(
+        default_factory=list,
+        description="データ可視化推奨位置",
+    )
+    total_recommended: int = Field(
+        default=0,
+        description="推奨位置の総数",
+    )
+    analysis_summary: str = Field(
+        default="",
+        description="分析サマリー",
+    )
+
+
+class Step11OutputV2(BaseModel):
+    """Step11 拡張出力スキーマ（blog.System Ver8.3 対応）.
+
+    既存フィールドを維持しつつ、新規フィールドを追加。
+    新規フィールドはすべてオプショナルで後方互換性を確保。
+    """
+
+    # 既存フィールド（後方互換）
+    step: str = "step11"
+    enabled: bool = Field(..., description="画像生成を行ったか")
+    image_count: int = Field(default=0, description="生成した画像数")
+    images: list[GeneratedImage] = Field(
+        default_factory=list,
+        description="生成した画像リスト",
+    )
+    markdown_with_images: str = Field(
+        default="",
+        description="画像挿入後のMarkdownコンテンツ",
+    )
+    html_with_images: str = Field(
+        default="",
+        description="画像挿入後のHTMLコンテンツ",
+    )
+    model: str = Field(default="", description="使用したモデル")
+    usage: dict[str, Any] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+
+    # 新規フィールド（blog.System Ver8.3 対応）
+    position_analysis_enhanced: PositionAnalysisEnhanced | None = Field(
+        default=None,
+        description="拡張位置分析結果",
+    )
+    image_purpose_classification: list[ImagePurposeClassification] | None = Field(
+        default=None,
+        description="画像目的分類リスト",
     )

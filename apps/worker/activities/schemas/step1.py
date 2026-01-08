@@ -1,10 +1,16 @@
 """Step 1 (Competitor Fetch) output schema."""
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
 class CompetitorPage(BaseModel):
-    """競合ページの情報."""
+    """競合ページの情報.
+
+    blog.System対応: meta_description, structured_data, publish_date を追加。
+    これらは Optional で、取得できない場合は None のまま。
+    """
 
     url: str = Field(..., description="ページURL")
     title: str = Field(default="", description="ページタイトル")
@@ -12,6 +18,11 @@ class CompetitorPage(BaseModel):
     word_count: int = Field(default=0, ge=0, description="単語数")
     headings: list[str] = Field(default_factory=list, description="見出しリスト")
     fetched_at: str = Field(default="", description="取得日時 (ISO format)")
+
+    # blog.System 対応フィールド（後方互換性のため Optional）
+    meta_description: str | None = Field(default=None, description="メタディスクリプション（SEO分析用）")
+    structured_data: dict[str, Any] | None = Field(default=None, description="JSON-LD等の構造化データ")
+    publish_date: str | None = Field(default=None, description="公開日（ISO format、取得可能な場合）")
 
 
 class FetchStats(BaseModel):

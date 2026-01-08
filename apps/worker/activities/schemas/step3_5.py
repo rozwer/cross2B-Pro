@@ -67,6 +67,98 @@ class ExperienceEpisode(BaseModel):
     )
 
 
+class PhaseEmotionalData(BaseModel):
+    """Phase-specific emotional data for blog.System integration.
+
+    Each phase (認知/検討/行動) has distinct emotional characteristics.
+    """
+
+    dominant_emotion: str = Field(
+        default="",
+        description="Dominant emotion for this phase (e.g., 不安/焦り/危機感 for phase1)",
+    )
+    empathy_statements: list[str] = Field(
+        default_factory=list,
+        description="Empathy statements for this phase (target: 3 statements)",
+    )
+    experience_episodes: list[ExperienceEpisode] = Field(
+        default_factory=list,
+        description="Experience episodes for this phase (target: 2-3 episodes)",
+    )
+
+
+class PhaseEmotionalMap(BaseModel):
+    """Three-phase emotional mapping for blog.System integration.
+
+    Maps emotional content to the three user journey phases:
+    - phase1 (認知): Awareness - 不安/焦り/危機感
+    - phase2 (検討): Consideration - 冷静/分析的
+    - phase3 (行動): Action - 期待/決意
+    """
+
+    phase1: PhaseEmotionalData = Field(
+        default_factory=PhaseEmotionalData,
+        description="Phase 1 (認知/Awareness) emotional data",
+    )
+    phase2: PhaseEmotionalData = Field(
+        default_factory=PhaseEmotionalData,
+        description="Phase 2 (検討/Consideration) emotional data",
+    )
+    phase3: PhaseEmotionalData = Field(
+        default_factory=PhaseEmotionalData,
+        description="Phase 3 (行動/Action) emotional data",
+    )
+
+
+class BehavioralEconomicsHooks(BaseModel):
+    """Behavioral economics hooks based on the 6 principles.
+
+    Generates persuasive content hooks using behavioral economics:
+    - Loss aversion (損失回避)
+    - Social proof (社会的証明)
+    - Authority (権威)
+    - Scarcity (希少性)
+    """
+
+    loss_aversion_hook: str = Field(
+        default="",
+        description="Hook leveraging loss aversion principle (損失回避)",
+    )
+    social_proof_hook: str = Field(
+        default="",
+        description="Hook leveraging social proof principle (社会的証明)",
+    )
+    authority_hook: str = Field(
+        default="",
+        description="Hook leveraging authority principle (権威)",
+    )
+    scarcity_hook: str = Field(
+        default="",
+        description="Hook leveraging scarcity principle (希少性)",
+    )
+
+
+class PlacementInstruction(BaseModel):
+    """Content placement instruction for article sections.
+
+    Specifies where to place emotional content (empathy, episode, hook)
+    within the article structure.
+    """
+
+    content_type: Literal["empathy", "episode", "hook"] = Field(
+        ...,
+        description="Type of content to place",
+    )
+    target_section: str = Field(
+        default="",
+        description="Target section (H2 title or position like 'intro', 'conclusion')",
+    )
+    content: str = Field(
+        default="",
+        description="The actual content to place",
+    )
+
+
 class HumanTouchMetadata(BaseModel):
     """Metadata for human touch generation."""
 
@@ -76,7 +168,13 @@ class HumanTouchMetadata(BaseModel):
 
 
 class Step3_5Output(StepOutputBase):
-    """Step 3.5 output schema."""
+    """Step 3.5 output schema.
+
+    Extended for blog.System Ver8.3 integration with:
+    - Phase-specific emotional mapping
+    - Behavioral economics hooks
+    - Content placement instructions
+    """
 
     step: str = "step3_5"
     emotional_analysis: EmotionalAnalysis = Field(default_factory=EmotionalAnalysis)
@@ -85,6 +183,19 @@ class Step3_5Output(StepOutputBase):
     emotional_hooks: list[str] = Field(
         default_factory=list,
         description="Compelling emotional hooks for the content",
+    )
+    # blog.System Ver8.3 extensions
+    phase_emotional_map: PhaseEmotionalMap = Field(
+        default_factory=PhaseEmotionalMap,
+        description="Three-phase emotional mapping (認知/検討/行動)",
+    )
+    behavioral_economics_hooks: BehavioralEconomicsHooks = Field(
+        default_factory=BehavioralEconomicsHooks,
+        description="Behavioral economics-based persuasion hooks",
+    )
+    placement_instructions: list[PlacementInstruction] = Field(
+        default_factory=list,
+        description="Content placement instructions for article sections",
     )
     raw_output: str = Field(default="", description="Raw LLM output for debugging")
     parsed_data: dict[str, Any] | None = Field(

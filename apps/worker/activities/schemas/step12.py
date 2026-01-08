@@ -21,6 +21,29 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class YoastSeoMetadata(BaseModel):
+    """Yoast SEO メタデータ."""
+
+    focus_keyword: str = Field(default="", description="フォーカスキーワード")
+    seo_title: str = Field(default="", description="SEOタイトル")
+    meta_description: str = Field(default="", description="メタディスクリプション")
+    readability_score: str = Field(
+        default="ok",
+        description="可読性スコア（good/ok/needs_improvement）",
+    )
+    seo_score: str = Field(
+        default="ok",
+        description="SEOスコア（good/ok/needs_improvement）",
+    )
+
+
+class StructuredDataBlocks(BaseModel):
+    """構造化データブロック."""
+
+    article_schema: str = Field(default="", description="Article JSON-LDブロック")
+    faq_schema: str | None = Field(default=None, description="FAQ JSON-LDブロック")
+
+
 class ArticleImage(BaseModel):
     """記事内の画像情報."""
 
@@ -57,6 +80,19 @@ class WordPressArticle(BaseModel):
     images: list[ArticleImage] = Field(
         default_factory=list,
         description="記事内の画像リスト",
+    )
+    # blog.System 統合用フィールド（オプショナル）
+    yoast_seo_metadata: YoastSeoMetadata | None = Field(
+        default=None,
+        description="Yoast SEO メタデータ",
+    )
+    gutenberg_block_types_used: list[str] = Field(
+        default_factory=list,
+        description="使用されたGutenbergブロックタイプ一覧",
+    )
+    structured_data_blocks: StructuredDataBlocks | None = Field(
+        default=None,
+        description="構造化データブロック",
     )
 
 

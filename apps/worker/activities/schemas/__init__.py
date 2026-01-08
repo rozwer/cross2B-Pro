@@ -49,10 +49,15 @@ from apps.worker.activities.schemas.step6 import (
     Step6Output,
 )
 from apps.worker.activities.schemas.step6_5 import (
+    ComprehensiveBlueprint,
+    FourPillarsFinalCheck,
     InputSummary,
     PackageQuality,
+    ReferenceData,
     SectionBlueprint,
+    SectionExecutionInstruction,
     Step6_5Output,
+    VisualElementInstruction,
 )
 from apps.worker.activities.schemas.step7a import (
     DraftQuality,
@@ -79,10 +84,21 @@ from apps.worker.activities.schemas.step9 import (
     Step9Output,
 )
 from apps.worker.activities.schemas.step10 import (
+    ARTICLE_WORD_COUNT_TARGETS,
     ArticleStats,
+    ArticleVariation,
+    ArticleVariationType,
+    FourPillarsChecklist,
     HTMLValidationResult,
+    PublicationChecklistDetailed,
     PublicationReadiness,
+    SectionWordCount,
+    SEOChecklist,
+    Step10Metadata,
     Step10Output,
+    StructuredData,
+    TechnicalChecklist,
+    WordCountReport,
 )
 from apps.worker.activities.schemas.step11 import (
     GeneratedImage,
@@ -142,6 +158,11 @@ __all__ = [
     "SectionBlueprint",
     "PackageQuality",
     "Step6_5Output",
+    "ReferenceData",
+    "ComprehensiveBlueprint",
+    "SectionExecutionInstruction",
+    "VisualElementInstruction",
+    "FourPillarsFinalCheck",
     # Step7a
     "DraftSection",
     "DraftQualityMetrics",
@@ -163,10 +184,21 @@ __all__ = [
     "RewriteMetrics",
     "Step9Output",
     # Step10
+    "ARTICLE_WORD_COUNT_TARGETS",
     "ArticleStats",
+    "ArticleVariation",
+    "ArticleVariationType",
+    "FourPillarsChecklist",
     "HTMLValidationResult",
+    "PublicationChecklistDetailed",
     "PublicationReadiness",
+    "SEOChecklist",
+    "SectionWordCount",
+    "Step10Metadata",
     "Step10Output",
+    "StructuredData",
+    "TechnicalChecklist",
+    "WordCountReport",
     # Step11
     "GeneratedImage",
     "ImageGenerationRequest",
