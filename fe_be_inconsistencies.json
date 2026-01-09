@@ -1,0 +1,184 @@
+{
+  "analysis_date": "2026-01-09",
+  "analysis_version": "1.0.1",
+  "summary": {
+    "total_inconsistencies": 10,
+    "high_severity": 0,
+    "medium_severity": 6,
+    "low_severity": 4
+  },
+  "categories": [
+    "api_endpoint",
+    "request_response_type",
+    "authentication",
+    "websocket",
+    "error_handling"
+  ],
+  "inconsistencies": [
+    {
+      "id": "INC-003",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:593-599",
+      "be_location": "apps/api/routers/step12.py:44-50",
+      "description": "ArticleMetadata の metadata フィールドが FE では Optional だが BE では必須の default_factory",
+      "fe_expects": "metadata?: ArticleMetadata",
+      "be_provides": "metadata: ArticleMetadata = Field(default_factory=ArticleMetadata)",
+      "recommendation": "FE の型定義を metadata: ArticleMetadata に変更（BE は常に値を返す）",
+      "impact": "軽微：FE で undefined チェックが不要な場合に余分なコードが発生",
+      "verified": true
+    },
+    {
+      "id": "INC-004",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:272-287",
+      "be_location": "apps/api/schemas/runs.py:183-193",
+      "description": "ArtifactRef の step_name フィールドが BE では空文字列デフォルトだが、FE は string として必須扱い",
+      "fe_expects": "step_name: string (必須として扱う)",
+      "be_provides": "step_name: str = '' (デフォルト空文字列)",
+      "recommendation": "問題なし（互換性あり）。ただし FE で空文字列の場合の表示ロジックを確認",
+      "impact": "軽微：step_name が空の場合の UI 表示が不適切になる可能性",
+      "verified": true
+    },
+    {
+      "id": "INC-005",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:20-30",
+      "be_location": "apps/api/schemas/runs.py:11-17",
+      "description": "ModelConfigOptions の grounding, temperature, max_tokens が FE では optional だが、BE の ModelConfigOptions も同様に optional",
+      "fe_expects": "grounding?: boolean; temperature?: number; max_tokens?: number;",
+      "be_provides": "grounding: bool | None = None; temperature: float | None = None; max_tokens: int | None = None",
+      "recommendation": "整合性あり。問題なし",
+      "impact": "なし",
+      "verified": true
+    },
+    {
+      "id": "INC-006",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:363-369",
+      "be_location": "apps/api/routers/runs.py (レスポンス形式)",
+      "description": "PaginatedResponse の page フィールドが FE にあるが、BE の list_runs は page ではなく offset を使用",
+      "fe_expects": "{ items, total, page, limit, has_more }",
+      "be_provides": "{ items, total, limit, offset }",
+      "recommendation": "FE の PaginatedResponse 型を実際の BE レスポンスに合わせて修正（page → offset, has_more を計算値に）",
+      "impact": "ページネーション UI が正しく動作しない可能性",
+      "verified": true
+    },
+    {
+      "id": "INC-007",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:615-620",
+      "be_location": "apps/api/routers/step12.py:62-68",
+      "description": "Step12StatusResponse の status と phase の値セットが FE と BE で若干異なる",
+      "fe_expects": "status: 'pending' | 'completed' | 'not_ready'; phase: 'ready_to_generate' | 'completed' | 'waiting_for_step10'",
+      "be_provides": "status: str; phase: str (同じ値だが型定義がゆるい)",
+      "recommendation": "BE に Literal 型を追加して明示化するか、FE の型を string に緩和",
+      "impact": "軽微：型安全性が低下",
+      "verified": true
+    },
+    {
+      "id": "INC-008",
+      "category": "request_response_type",
+      "severity": "medium",
+      "fe_location": "apps/ui/src/lib/types.ts:524-540",
+      "be_location": "apps/api/routers/step11.py (Section 型)",
+      "description": "Section.level が FE では number | string だが、実際の BE 実装を確認する必要あり",
+      "fe_expects": "level: number | string",
+      "be_provides": "level: int (BE では number のみ)",
+      "recommendation": "FE の型を level: number に統一。string 対応は不要",
+      "impact": "軽微：型の曖昧さが解消される",
+      "verified": false,
+      "needs_verification": "apps/api/routers/step11.py の Section 型定義を確認"
+    },
+    {
+      "id": "INC-009",
+      "category": "authentication",
+      "severity": "low",
+      "fe_location": "apps/ui/src/lib/api.ts:1-20",
+      "be_location": "apps/api/auth/ (認証モジュール)",
+      "description": "FE の認証ヘッダー形式と BE の期待する形式の整合性",
+      "fe_expects": "Authorization: Bearer {token}",
+      "be_provides": "Authorization: Bearer {token}",
+      "recommendation": "整合性あり。問題なし",
+      "impact": "なし",
+      "verified": true
+    },
+    {
+      "id": "INC-010",
+      "category": "websocket",
+      "severity": "low",
+      "fe_location": "apps/ui/src/lib/types.ts:319-340",
+      "be_location": "apps/api/routers/websocket.py:84-121",
+      "description": "WebSocket イベント形式は整合している。BE の broadcast_step_event は FE ProgressEvent と同じフィールドを送信",
+      "fe_expects": "{ type, run_id, step, status, progress, message, timestamp, attempt?, details? }",
+      "be_provides": "{ type, run_id, step, status, progress, message, timestamp, attempt?, details? }",
+      "recommendation": "整合性あり。ただし event_type の値リスト（step_started, step_completed 等）は BE で明示的に制限されていない",
+      "impact": "軽微：BE 側で無効な event_type を送信可能だが、実際には問題なし",
+      "verified": true
+    },
+    {
+      "id": "INC-011",
+      "category": "error_handling",
+      "severity": "low",
+      "fe_location": "apps/ui/src/lib/types.ts:355-361",
+      "be_location": "apps/api/routers/*.py (HTTPException)",
+      "description": "ApiError の形式が FE では { error: { code, message, details } } だが、BE は FastAPI 標準の { detail: string }",
+      "fe_expects": "{ error: { code: string, message: string, details?: ... } }",
+      "be_provides": "{ detail: string } (FastAPI HTTPException デフォルト)",
+      "recommendation": "BE にカスタム例外ハンドラを追加して FE の期待する形式に統一するか、FE を FastAPI 形式に合わせる",
+      "impact": "エラーメッセージの表示が不適切になる可能性",
+      "verified": true
+    },
+    {
+      "id": "INC-012",
+      "category": "request_response_type",
+      "severity": "low",
+      "fe_location": "apps/ui/src/lib/types.ts:458-462",
+      "be_location": "apps/api/routers/prompts.py:35-40",
+      "description": "PromptListResponse のフィールド名が FE/BE で整合している",
+      "fe_expects": "{ pack_id, prompts, total }",
+      "be_provides": "{ pack_id, prompts, total }",
+      "recommendation": "整合性あり。問題なし",
+      "impact": "なし",
+      "verified": true
+    }
+  ],
+  "recommendations_summary": {
+    "immediate_action_required": [],
+    "should_fix": [
+      "INC-006: PaginatedResponse の page/offset 不整合修正",
+      "INC-011: エラーレスポンス形式の統一"
+    ],
+    "nice_to_have": [
+      "INC-003: ArticleMetadata の Optional 修正",
+      "INC-007: Step12StatusResponse の型明示化",
+      "INC-008: Section.level の型統一"
+    ],
+    "no_action_needed": [
+      "INC-004: step_name 空文字列対応済み",
+      "INC-005: ModelConfigOptions 整合性あり",
+      "INC-009: 認証ヘッダー整合性あり",
+      "INC-012: PromptListResponse 整合性あり"
+    ]
+  },
+  "verification_needed": [
+    {
+      "id": "INC-008",
+      "file": "apps/api/routers/step11.py",
+      "check": "Section 型の level フィールド定義",
+      "result": "BE では level は int (2 または 3)。FE の number | string は過剰。number のみで良い"
+    }
+  ],
+  "verification_completed": [
+    {
+      "id": "INC-010",
+      "file": "apps/api/routers/websocket.py",
+      "check": "WebSocket イベント type 値の一覧",
+      "result": "整合性あり。BE の broadcast_step_event は FE ProgressEvent と同じ構造を送信"
+    }
+  ]
+}

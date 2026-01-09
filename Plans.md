@@ -1,135 +1,153 @@
-# blog.System Ver8.3 対応改修計画
+# ファイル整理・仕様書統合計画
 
-> **作成日**: 2026-01-08
-> **最終更新**: 2026-01-08 11:20
-> **目的**: SEO記事自動生成システムを blog.System Ver8.3 仕様に対応させる
-> **テスト**: 1,152件パス / 9件失敗（JSON validator関連の既存問題）
-> **実データテスト**: ✅ 全工程完了 (run: d0d028f3-7c5f-4543-a025-c50e4f0ba0a4)
+> **作成日**: 2026-01-09
+> **目的**: 散在するJSON/MDファイルを整理し、仕様書に統合
 
 ---
 
-## 実装状況サマリー
+## 現状分析
 
-| 工程 | スキーマ | Activity | プロンプト | テスト | 状態 |
-|------|----------|----------|------------|--------|------|
-| step0 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step1 | ✅ | ✅ | - | ✅ | 完了 |
-| step1.5 | ✅ | ✅ | - | ✅ | 完了 |
-| step2 | ✅ | ✅ | - | ✅ | 完了 |
-| step3a | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step3b | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step3c | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step3.5 | ✅ | ✅ | ✅ | ✅ | 完了 |
-| step4 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step5 | ✅ | ✅ | - | ✅ | 完了 |
-| step6 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step6.5 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step7a | ✅ | ✅ | ✅ | ✅ | 完了 |
-| step7b | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step8 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step9 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step10 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step11 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
-| step12 | ✅ | ✅ | ⏳ | ✅ | プロンプト残 |
+### 問題点
+- ルート直下に `AGENTS.md` が残存（CLAUDE.md と重複）
+- `docs/migration/` に完了済み計画ファイルが残存
+- `docs/analysis/` に工程別計画が二重管理
+- `docs/reports/` に古いレポートが混在
 
-**凡例**: ✅ 完了 | ⏳ 未着手 | - 対象外
+### ファイル構成
 
-### 今回のコミット (2026-01-08)
-
-| コミット | 内容 | 変更量 |
-|----------|------|--------|
-| `8b3f16b` | Schema変更 (step0-12) | 18ファイル, 2,464行 |
-| `f7eaa2b` | Activity変更 (step0-12) | 19ファイル, 4,060行 |
-| `40ecf61` | テスト追加 | 18ファイル, 8,400行 |
-| `efac6fe` | プロンプトパック | 5ファイル, 381行 |
-| `e820dc6` | API/UI修正 | 3ファイル |
-| `61405a1` | 分析ドキュメント | 24ファイル, 4,150行 |
-| `7f2d340` | blog.Systemプロンプト参照 | 66ファイル, 34,952行 |
-| `6b7a164` | Plans.md更新 | 1ファイル |
-| `dacaca5` | step4 Ver8.3対応 | 3ファイル, 863行 |
-| `67ce915` | step6.5 Ver8.3対応 | 1ファイル, 293行 |
+| 場所 | ファイル数 | 状態 |
+|------|----------|------|
+| ルート直下 | 2 JSON + 1 MD | 維持 |
+| docs/migration/ | 10 | 全てアーカイブ対象 |
+| docs/analysis/ | 24 | 全てアーカイブ対象 |
+| docs/reports/ | 12 | 選別してアーカイブ |
+| 仕様書/ | 整理済み | 維持 |
+| docs/guides/ | 4 | 維持 |
+| docs/archive/ | 多数 | 維持 |
 
 ---
 
-## フェーズ 1: 残作業（step4 + step6.5） `cc:DONE`
+## フェーズ 1: docs/migration/ アーカイブ移動 `cc:DONE`
 
-### 1.1 工程4: 戦略的アウトライン生成 ✅
+実装済み移行計画をアーカイブへ移動
 
-- [x] `TitleMetadata` スキーマ追加
-- [x] `ThreePhaseStructure` スキーマ追加
-- [x] `SectionFourPillars` スキーマ追加
-- [x] `CTAPlacements` スキーマ追加
-- [x] `WordCountTracking` スキーマ追加
-- [x] Activity修正（V2モード検出 + 5ビルダーメソッド）
-- [x] ユニットテスト追加（36件パス）
-
-**参照**: `docs/analysis/step-plans/step4.md`
-
-### 1.2 工程6.5: Activity修正 ✅
-
-- [x] `_build_comprehensive_blueprint()` メソッド追加
-- [x] `_build_section_execution_instructions()` メソッド追加
-- [x] `_build_visual_element_instructions()` メソッド追加
-- [x] `_check_four_pillars_compliance()` メソッド追加
-
-**参照**: `docs/analysis/step-plans/step6_5.md`
-
-### 1.3 実データテスト ✅
-
-- [x] キーワード「SEO対策 初心者」で全工程実行
-- [x] step0〜step12 全完了
-- [x] 出力ファイル正常生成確認
+- [x] `docs/archive/migration/` ディレクトリを作成
+- [x] 以下を移動:
+  - `docs/migration/md-to-json-migration.json`
+  - `docs/migration/phase-plan.md`
+  - `docs/migration/phase-rationale.md`
+  - `docs/migration/review-report.md`
+  - `docs/migration/sessions/` (6ファイル)
+- [x] 空になった `docs/migration/` を削除
 
 ---
 
-## フェーズ 2: プロンプト統合 `cc:TODO`
+## フェーズ 2: docs/analysis/ アーカイブ移動 `cc:DONE`
 
-### 2.1 v2_blog_system.json の完成
+工程計画は実装完了済み → アーカイブへ
 
-- [ ] step0 プロンプト追加
-- [ ] step3a プロンプト追加
-- [ ] step3b プロンプト追加
-- [ ] step3c プロンプト追加
-- [ ] step6 プロンプト追加
-- [ ] step7b プロンプト追加
-- [ ] step8 プロンプト追加
-- [ ] step9 プロンプト追加
-- [ ] step10 プロンプト追加
-- [ ] step11 プロンプト追加
-- [ ] step12 プロンプト追加
-
-### 2.2 unified_knowledge.json 対応
-
-- [ ] `loader.py` に `load_unified_knowledge()` メソッド追加
+- [x] `docs/archive/analysis/` ディレクトリを作成
+- [x] 以下を移動:
+  - `docs/analysis/prompt-comparison.md`
+  - `docs/analysis/technical-impact.md`
+  - `docs/analysis/integration-design.md`
+  - `docs/analysis/step-plans/` (24ファイル)
+- [x] 空になった `docs/analysis/` を削除
 
 ---
 
-## フェーズ 3: 統合テスト `cc:TODO`
+## フェーズ 3: docs/reports/ 整理 `cc:DONE`
 
-- [ ] 全工程通しテスト（v2_blog_system パック使用）
-- [ ] 実データテスト（実際のキーワードで全工程実行）
+### 3.1 アーカイブ移動（古いレポート）
+
+- [x] `docs/archive/reports/` ディレクトリを作成（存在しない場合）
+- [x] 以下を移動:
+  - `2025-12-17_workflow_debug_status.json`
+  - `e2e_test_summary_20251217.md`
+  - `e2e_test_summary_20251217_2.md`
+  - `security_review_20251217.md`
+  - `gui_fullflow_test_todo.json`
+  - `phase3_unused_infrastructure.json`
+  - `phase_integration_gaps.json`
+  - `api-test-report-2025-12-25.md`
+  - `api-test-report-2025-12-25-retest.md`
+
+### 3.2 維持するファイル（Codexレビュー差分）
+
+以下は今後の参照用に維持:
+- `codex_review_api.diff`
+- `codex_review_worker.diff`
+- `codex_review_ui.diff`
+
+---
+
+## フェーズ 4: 仕様書への統合確認 `cc:DONE`
+
+### 4.1 仕様書の現状確認
+
+既存の仕様書構成（維持）:
+
+```
+仕様書/
+├── ROADMAP.md          # 実装計画 (Source of Truth)
+├── workflow.md         # ワークフロー仕様 (Source of Truth)
+├── PARALLEL_DEV_GUIDE.md
+├── REVIEW_FIX_SPEC.md  # レビュー修正仕様
+├── backend/
+│   ├── api.md
+│   ├── database.md
+│   ├── llm.md
+│   └── temporal.md
+├── frontend/
+│   └── ui.md
+└── ref/                # 実装参考資料
+    └── 各ステップ出力/
+```
+
+### 4.2 確認事項
+
+- [x] アーカイブ移動したファイルの内容が仕様書に反映済みか確認
+  - `REVIEW_FIX_SPEC.md` に `security_review_20251217.md` の内容が統合済み → OK
+  - `ROADMAP.md` に `step-plans/*.md` の内容が反映済み → OK
+
+---
+
+## フェーズ 5: 最終確認 `cc:DONE`
+
+- [x] ディレクトリ構成の最終確認
+- [x] 不要な空ディレクトリの削除
+- [x] git status で変更内容確認
+- [ ] コミット
 
 ---
 
 ## 完了基準
 
-- [x] 全工程のスキーマが blog.System Ver8.3 対応済み
-- [x] 全工程のActivityが新スキーマに対応済み
-- [x] 全ユニットテストがパス（1,152件）
-- [x] step4 スキーマ + Activity 完了
-- [x] step6.5 Activity 完了
-- [x] 実データテストで品質確認済み
-- [ ] v2_blog_system.json プロンプトパック完成
-- [ ] E2Eテストがパス
+- [x] 現状分析完了
+- [x] `docs/migration/` → `docs/archive/migration/`
+- [x] `docs/analysis/` → `docs/archive/analysis/`
+- [x] `docs/reports/` 古いファイル → `docs/archive/reports/`
+- [x] 仕様書への統合確認
+- [ ] コミット完了
 
 ---
 
-## 既知の問題
+## 維持するファイル（削除・移動しない）
 
-- **JSON validator テスト失敗 (9件)**: 既存の `test_json_validator.py` / `test_repairer.py` の問題。本改修とは無関係。
+| ファイル | 理由 |
+|---------|------|
+| `AGENTS.md` | プロジェクト開発ガイド |
+| `STRUCTURE.json` | テンプレート参考資料 |
+| `langgraph.json` | 設定ファイル |
+| `fe_be_inconsistencies.json` | FE/BE不整合分析レポート |
+| `仕様書/` 配下全て | Source of Truth |
+| `docs/guides/` | 運用ガイド |
+| `docs/archive/` | 歴史記録 |
+| `docs/reports/codex_review_*.diff` | レビュー参照用 |
 
 ---
 
 ## 過去の計画
 
+- **blog.System Ver8.3 対応改修** (2026-01-08 完了)
 - **.claude-making テンプレート改善** (2025-12-29 完了)
