@@ -1,153 +1,121 @@
-# ファイル整理・仕様書統合計画
+# ダッシュボード モデル表示削除計画
 
-> **作成日**: 2026-01-09
-> **目的**: 散在するJSON/MDファイルを整理し、仕様書に統合
-
----
-
-## 現状分析
-
-### 問題点
-- ルート直下に `AGENTS.md` が残存（CLAUDE.md と重複）
-- `docs/migration/` に完了済み計画ファイルが残存
-- `docs/analysis/` に工程別計画が二重管理
-- `docs/reports/` に古いレポートが混在
-
-### ファイル構成
-
-| 場所 | ファイル数 | 状態 |
-|------|----------|------|
-| ルート直下 | 2 JSON + 1 MD | 維持 |
-| docs/migration/ | 10 | 全てアーカイブ対象 |
-| docs/analysis/ | 24 | 全てアーカイブ対象 |
-| docs/reports/ | 12 | 選別してアーカイブ |
-| 仕様書/ | 整理済み | 維持 |
-| docs/guides/ | 4 | 維持 |
-| docs/archive/ | 多数 | 維持 |
+> **作成日**: 2026-01-12
+> **目的**: ワークフロービューからモデル情報（Gemini/Claude/OpenAI）を削除
 
 ---
 
-## フェーズ 1: docs/migration/ アーカイブ移動 `cc:DONE`
+## 背景・理由
 
-実装済み移行計画をアーカイブへ移動
-
-- [x] `docs/archive/migration/` ディレクトリを作成
-- [x] 以下を移動:
-  - `docs/migration/md-to-json-migration.json`
-  - `docs/migration/phase-plan.md`
-  - `docs/migration/phase-rationale.md`
-  - `docs/migration/review-report.md`
-  - `docs/migration/sessions/` (6ファイル)
-- [x] 空になった `docs/migration/` を削除
+- ステップごとに使用するモデルやプラットフォームが異なる
+- モデル表示は視覚的なノイズになり、本質的な情報（進捗・状態）から注意をそらす
+- ノードのデザインをシンプル化し、状態表示に集中させる
 
 ---
 
-## フェーズ 2: docs/analysis/ アーカイブ移動 `cc:DONE`
+## 影響範囲
 
-工程計画は実装完了済み → アーカイブへ
-
-- [x] `docs/archive/analysis/` ディレクトリを作成
-- [x] 以下を移動:
-  - `docs/analysis/prompt-comparison.md`
-  - `docs/analysis/technical-impact.md`
-  - `docs/analysis/integration-design.md`
-  - `docs/analysis/step-plans/` (24ファイル)
-- [x] 空になった `docs/analysis/` を削除
+| ファイル | 変更内容 |
+|---------|---------|
+| `apps/ui/src/components/tabs/GraphViewTab.tsx` | モデル情報表示削除、凡例削除 |
+| `apps/ui/src/components/workflow/WorkflowNode.tsx` | モデルバッジ削除 |
+| `apps/ui/src/lib/types.ts` | `aiModel`, `modelName` 関連の型（維持 or 削除検討） |
 
 ---
 
-## フェーズ 3: docs/reports/ 整理 `cc:DONE`
+## フェーズ 1: GraphViewTab.tsx の修正 `cc:TODO`
 
-### 3.1 アーカイブ移動（古いレポート）
+### 1.1 カスタムノードからモデル情報を削除
 
-- [x] `docs/archive/reports/` ディレクトリを作成（存在しない場合）
-- [x] 以下を移動:
-  - `2025-12-17_workflow_debug_status.json`
-  - `e2e_test_summary_20251217.md`
-  - `e2e_test_summary_20251217_2.md`
-  - `security_review_20251217.md`
-  - `gui_fullflow_test_todo.json`
-  - `phase3_unused_infrastructure.json`
-  - `phase_integration_gaps.json`
-  - `api-test-report-2025-12-25.md`
-  - `api-test-report-2025-12-25-retest.md`
+- [ ] `PLATFORM_COLORS` 定数を削除
+- [ ] `CustomWorkflowNode` の「Model Info」セクション（L134-156）を削除
+- [ ] ノードのスタイルからモデル色に依存した部分を削除
 
-### 3.2 維持するファイル（Codexレビュー差分）
+### 1.2 凡例（Legend）からモデル色を削除
 
-以下は今後の参照用に維持:
-- `codex_review_api.diff`
-- `codex_review_worker.diff`
-- `codex_review_ui.diff`
+- [ ] 凡例の「Gemini/Claude/OpenAI」の色表示（L641-654）を削除
+- [ ] ステータスのみの凡例に変更
+
+### 1.3 データ生成部分の整理
+
+- [ ] `createNodes` 関数から `aiModel`, `modelName` を削除（不要な場合）
+- [ ] `WorkflowNodeData` インターフェースを簡素化
 
 ---
 
-## フェーズ 4: 仕様書への統合確認 `cc:DONE`
+## フェーズ 2: WorkflowNode.tsx の修正 `cc:TODO`
 
-### 4.1 仕様書の現状確認
+### 2.1 モデルバッジの削除
 
-既存の仕様書構成（維持）:
+- [ ] `MODEL_COLORS` 定数を削除
+- [ ] ヘッダー部分のモデル色依存スタイルを削除
+- [ ] 「Model Badge」セクション（L127-144）を削除
+- [ ] ノードの背景色を統一（ステータスのみで色分け）
 
-```
-仕様書/
-├── ROADMAP.md          # 実装計画 (Source of Truth)
-├── workflow.md         # ワークフロー仕様 (Source of Truth)
-├── PARALLEL_DEV_GUIDE.md
-├── REVIEW_FIX_SPEC.md  # レビュー修正仕様
-├── backend/
-│   ├── api.md
-│   ├── database.md
-│   ├── llm.md
-│   └── temporal.md
-├── frontend/
-│   └── ui.md
-└── ref/                # 実装参考資料
-    └── 各ステップ出力/
-```
+### 2.2 型定義の調整
 
-### 4.2 確認事項
-
-- [x] アーカイブ移動したファイルの内容が仕様書に反映済みか確認
-  - `REVIEW_FIX_SPEC.md` に `security_review_20251217.md` の内容が統合済み → OK
-  - `ROADMAP.md` に `step-plans/*.md` の内容が反映済み → OK
+- [ ] `WorkflowNodeData` から `aiModel`, `modelName` を削除（または optional 化）
 
 ---
 
-## フェーズ 5: 最終確認 `cc:DONE`
+## フェーズ 3: 型定義の整理 `cc:TODO`
 
-- [x] ディレクトリ構成の最終確認
-- [x] 不要な空ディレクトリの削除
-- [x] git status で変更内容確認
-- [ ] コミット
+### 3.1 types.ts の確認
+
+- [ ] `LLMPlatform` 型が他で使用されているか確認
+- [ ] `StepConfig` から `aiModel`, `modelName` を削除可能か確認
+- [ ] 必要なら deprecated マークを付けて段階的に移行
+
+---
+
+## フェーズ 4: テスト・確認 `cc:TODO`
+
+- [ ] `npm run lint` でエラーがないことを確認
+- [ ] `npx tsc --noEmit` で型エラーがないことを確認
+- [ ] ブラウザでワークフロービューを確認
+- [ ] ノードが正しく表示されることを確認
+- [ ] ステータスの色分けが機能することを確認
 
 ---
 
 ## 完了基準
 
-- [x] 現状分析完了
-- [x] `docs/migration/` → `docs/archive/migration/`
-- [x] `docs/analysis/` → `docs/archive/analysis/`
-- [x] `docs/reports/` 古いファイル → `docs/archive/reports/`
-- [x] 仕様書への統合確認
-- [ ] コミット完了
+- [ ] ワークフローノードにモデル情報が表示されない
+- [ ] 凡例にモデル色が表示されない
+- [ ] ノードのスタイルが統一され、ステータスのみで色分けされる
+- [ ] TypeScript エラーがない
+- [ ] lint エラーがない
 
 ---
 
-## 維持するファイル（削除・移動しない）
+## デザイン案
 
-| ファイル | 理由 |
-|---------|------|
-| `AGENTS.md` | プロジェクト開発ガイド |
-| `STRUCTURE.json` | テンプレート参考資料 |
-| `langgraph.json` | 設定ファイル |
-| `fe_be_inconsistencies.json` | FE/BE不整合分析レポート |
-| `仕様書/` 配下全て | Source of Truth |
-| `docs/guides/` | 運用ガイド |
-| `docs/archive/` | 歴史記録 |
-| `docs/reports/codex_review_*.diff` | レビュー参照用 |
+変更前:
+```
+┌─────────────────────┐
+│ 🔍 キーワード分析   │
+├─────────────────────┤
+│ キーワード候補を... │
+│ ┌─────────────────┐ │
+│ │ 🔵 Gemini 2.5   │ │ ← 削除対象
+│ └─────────────────┘ │
+│ ● completed         │
+└─────────────────────┘
+```
+
+変更後:
+```
+┌─────────────────────┐
+│ 🔍 キーワード分析   │
+├─────────────────────┤
+│ キーワード候補を... │
+│ ● completed         │
+└─────────────────────┘
+```
 
 ---
 
-## 過去の計画
+## 次のアクション
 
-- **blog.System Ver8.3 対応改修** (2026-01-08 完了)
-- **.claude-making テンプレート改善** (2025-12-29 完了)
+- 「`/work`」で実装を開始
+- または「フェーズ1から始めて」
