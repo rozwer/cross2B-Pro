@@ -28,6 +28,39 @@ export function StepDetailPanel({ step }: StepDetailPanelProps) {
           </span>
         </div>
 
+        {/* エラー情報 */}
+        {step.status === "failed" && step.error_message && (
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+            <h4 className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 flex items-center gap-1">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              エラー情報
+            </h4>
+            {step.error_code && (
+              <div className="mb-2">
+                <span
+                  className={cn(
+                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                    step.error_code === "RETRYABLE"
+                      ? "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200"
+                      : step.error_code === "NON_RETRYABLE"
+                        ? "bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  )}
+                >
+                  {step.error_code === "RETRYABLE"
+                    ? "再試行可能"
+                    : step.error_code === "NON_RETRYABLE"
+                      ? "再試行不可"
+                      : step.error_code}
+                </span>
+              </div>
+            )}
+            <p className="text-sm text-red-600 dark:text-red-400 whitespace-pre-wrap break-words">
+              {step.error_message}
+            </p>
+          </div>
+        )}
+
         {/* 試行履歴 */}
         <div>
           <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">

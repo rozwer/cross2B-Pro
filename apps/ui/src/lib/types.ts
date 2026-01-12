@@ -187,6 +187,23 @@ export function isArticleHearingInput(
   return "business" in input && "keyword" in input && "strategy" in input;
 }
 
+// Helper to get keyword string from either input type
+export function getKeywordFromInput(input: RunInput | ArticleHearingInput): string {
+  if (isArticleHearingInput(input)) {
+    // ArticleHearingInput: keyword is in keyword.main_keyword or keyword.selected_keyword
+    const keywordInput = input.keyword;
+    if (keywordInput.main_keyword) {
+      return keywordInput.main_keyword;
+    }
+    if (keywordInput.selected_keyword?.keyword) {
+      return keywordInput.selected_keyword.keyword;
+    }
+    return keywordInput.theme_topics || "";
+  }
+  // LegacyRunInput: keyword is a direct string
+  return input.keyword;
+}
+
 export interface RunSummary {
   id: string;
   status: RunStatus;
@@ -202,7 +219,7 @@ export interface Run {
   tenant_id: string;
   status: RunStatus;
   current_step: string | null;
-  input: RunInput;
+  input: RunInput | ArticleHearingInput;
   model_config: ModelConfig;
   step_configs?: StepModelConfig[];
   tool_config?: ToolConfig;
@@ -237,6 +254,8 @@ export interface Step {
   attempts: StepAttempt[];
   started_at?: string;
   completed_at?: string;
+  error_code?: string;  // ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
+  error_message?: string;
   artifacts?: ArtifactRef[];
   validation_report?: ValidationReport;
 }
@@ -317,11 +336,20 @@ export interface ValidationWarning {
 // ============================================
 
 export type ProgressEventType =
+  // Step-level events
   | "step_started"
   | "step_completed"
   | "step_failed"
   | "step_retrying"
   | "repair_applied"
+  // Run-level events (from BE broadcast_run_update)
+  | "run.started"
+  | "run.approved"
+  | "run.rejected"
+  | "run.cancelled"
+  | "run.image_generation_started"
+  | "run.add_images_initiated"
+  // Legacy run events (for backward compatibility)
   | "approval_requested"
   | "run_completed"
   | "run_failed"
