@@ -78,30 +78,53 @@ elif finish_reason in ("SAFETY", "RECITATION", "OTHER"):
 
 ---
 
-## フェーズ 3: 古いデータの修復オプション `cc:TODO`
+## フェーズ 3: 古いデータの修復オプション `cc:完了`
 
-### 3.1 手動再実行の手順書
+### 3.1 影響を受けるrunの特定
 
-影響を受けるrunを再実行する方法：
+**検出結果（2026-01-12時点）**:
 
-1. run詳細ページから「工程を再実行」ボタン
-2. step3cを選択して再実行
-3. 工程3（3A/3B/3C）全体の再実行も可能
+| run_id | キーワード | 状態 | step3c サイズ | 対応 |
+|--------|-----------|------|--------------|------|
+| `9a47b511-e12c-46c6-95ef-045231b3f372` | 派遣社員 業務遂行能力 向上 | waiting_approval | 1011 bytes | 要再実行 |
+| `d0d028f3-7c5f-4543-a025-c50e4f0ba0a4` | SEO対策 初心者 | completed | 1053 bytes | 要再実行 |
+| `9bef840c-2ff7-41d3-80a5-cb8d0ee84f04` | コンテンツマーケティング 始め方 | completed | 1175 bytes | 要再実行 |
 
-### 3.2 データクリーンアップスクリプト（オプション）
+**正常なrun（参考）**:
+- `d7f895d1...`: 15828 bytes（正常）
+- `1a2b9f70...`: 3102 bytes（正常）
 
-- [ ] 不完全な出力を持つrunを検出するクエリ
-- [ ] 対象runのstep3cデータを削除してpending状態に戻す
-- [ ] ユーザーが手動で再実行できる状態にする
+### 3.2 手動再実行の手順
 
-```sql
--- 不完全なstep3c出力を持つrunを検出
-SELECT r.id, r.input_data->>'keyword', s.status
-FROM runs r
-JOIN steps s ON s.run_id = r.id
-WHERE s.step_name = 'step3c'
-  AND s.status = 'completed'
-  -- 追加条件: output.jsonのサイズが小さい（要実装）
+**方法1: API経由での工程再実行**
+
+```bash
+# step3cを再実行
+curl -X POST "http://localhost:8000/api/runs/{run_id}/retry/step3c"
+
+# 工程3全体（3A/3B/3C）を再実行
+curl -X POST "http://localhost:8000/api/runs/{run_id}/retry/step3"
+```
+
+**方法2: UI経由**
+
+1. run詳細ページ（`http://localhost:3000/runs/{run_id}`）にアクセス
+2. 「工程を再実行」ボタンをクリック
+3. step3cを選択して再実行
+
+### 3.3 データ検出クエリ（将来用）
+
+```bash
+# 全runのstep3c出力サイズを確認するスクリプト
+for run_id in $(docker exec seo-postgres psql -U seo -d seo_articles -t -c "
+  SELECT r.id FROM runs r
+  JOIN steps s ON s.run_id = r.id
+  WHERE s.step_name = 'step3c' AND s.status = 'completed'
+"); do
+  size=$(curl -s "http://localhost:8000/api/runs/$run_id/files" | \
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(next((i['size_bytes'] for i in d if i['step_name']=='step3c'),0))")
+  [ "$size" -lt 3000 ] && echo "WARN: $run_id has small step3c output: $size bytes"
+done
 ```
 
 ---
