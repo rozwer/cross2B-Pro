@@ -60,26 +60,34 @@ class ConnectionManager:
         status: str,
         current_step: str | None = None,
         error: dict[str, Any] | None = None,
+        progress: int = 0,
+        message: str = "",
     ) -> None:
         """Broadcast a run status update event.
 
         Args:
             run_id: The run ID to broadcast to
-            event_type: Event type (e.g., 'run.status_changed', 'step.started')
+            event_type: Event type (e.g., 'run.started', 'run.approved', 'step_completed')
             status: Current run status
             current_step: Current step name if applicable
             error: Error details if applicable
+            progress: Progress percentage (0-100), default 0
+            message: Human-readable status message, default empty
         """
-        message: dict[str, Any] = {
+        # Match frontend ProgressEvent type for consistency
+        event_message: dict[str, Any] = {
             "type": event_type,
             "run_id": run_id,
+            "step": current_step,  # FE expects 'step' field
             "status": status,
-            "current_step": current_step,
+            "progress": progress,
+            "message": message,
             "timestamp": datetime.now().isoformat(),
         }
         if error:
-            message["error"] = error
-        await self.broadcast(run_id, message)
+            event_message["error"] = error
+            event_message["details"] = error  # FE may also look for 'details'
+        await self.broadcast(run_id, event_message)
 
     async def broadcast_step_event(
         self,
