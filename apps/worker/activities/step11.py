@@ -816,7 +816,8 @@ No text in the image."""
         Returns:
             保存先パス
         """
-        path = f"tenants/{ctx.tenant_id}/runs/{ctx.run_id}/{self.step_id}/images/image_{image_index + 1}.png"
+        # storage/{tenant}/{run}/step11/images/ に統一
+        path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id, f"images/image_{image_index + 1}.png")
 
         await self.store.put(
             content=image_data,
@@ -844,7 +845,10 @@ No text in the image."""
         Returns:
             保存先パス
         """
-        path = f"tenants/{ctx.tenant_id}/runs/{ctx.run_id}/{self.step_id}/images/article_{article_number}/image_{image_index + 1}.png"
+        # storage/{tenant}/{run}/step11/images/article_{n}/ に統一
+        path = self.store.build_path(
+            ctx.tenant_id, ctx.run_id, self.step_id, f"images/article_{article_number}/image_{image_index + 1}.png"
+        )
 
         await self.store.put(
             content=image_data,
@@ -1519,8 +1523,8 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
     final_markdown = step._insert_images_to_markdown(markdown_content, article_images)
     final_html = step._insert_images_to_html(html_content, article_images)
 
-    # Save preview HTML
-    preview_path = f"tenants/{args['tenant_id']}/runs/{args['run_id']}/step11/preview.html"
+    # Save preview HTML（storage/{tenant}/{run}/step11/ に統一）
+    preview_path = step.store.build_path(args["tenant_id"], args["run_id"], "step11", "preview.html")
     if final_html:
         await step.store.put(
             content=final_html.encode("utf-8"),

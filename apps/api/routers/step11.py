@@ -401,8 +401,8 @@ async def generate_image(
         image_base64 = base64.b64encode(image_bytes).decode("utf-8")
         image_digest = hashlib.sha256(image_bytes).hexdigest()
 
-        # MinIO に保存
-        image_path = f"tenants/{tenant_id}/runs/{run_id}/step11/images/image_{index}.png"
+        # MinIO に保存（storage/{tenant}/{run}/step11/images/ に統一）
+        image_path = store.build_path(tenant_id, run_id, "step11", f"images/image_{index}.png")
         await store.put(image_bytes, image_path, "image/png")
 
         logger.info(
@@ -1657,8 +1657,8 @@ async def add_images_to_completed_run(
 
             await session.flush()
 
-            # 設定をMinIOに保存
-            settings_path = f"tenants/{tenant_id}/runs/{run_id}/step11/settings.json"
+            # 設定をMinIOに保存（storage/{tenant}/{run}/step11/ に統一）
+            settings_path = store.build_path(tenant_id, run_id, "step11", "settings.json")
             settings_data = {
                 "image_count": data.image_count,
                 "position_request": data.position_request,
