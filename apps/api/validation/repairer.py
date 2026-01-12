@@ -119,9 +119,7 @@ class Repairer:
                 )
 
             try:
-                before_snippet, after_snippet, repaired_content = handler(
-                    repaired_content, issue
-                )
+                before_snippet, after_snippet, repaired_content = handler(repaired_content, issue)
 
                 action = RepairAction(
                     code=repair_code,
@@ -180,9 +178,7 @@ class Repairer:
 
         return True
 
-    def get_unrepairable_issues(
-        self, issues: list[ValidationIssue]
-    ) -> list[ValidationIssue]:
+    def get_unrepairable_issues(self, issues: list[ValidationIssue]) -> list[ValidationIssue]:
         """Get list of issues that cannot be repaired deterministically.
 
         Args:

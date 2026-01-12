@@ -40,15 +40,9 @@ class ToolResult(BaseModel):
 
     success: bool = Field(..., description="実行成功フラグ")
     data: Any | None = Field(default=None, description="実行結果データ")
-    error_category: str | None = Field(
-        default=None, description="エラー分類（失敗時のみ）"
-    )
-    error_message: str | None = Field(
-        default=None, description="エラーメッセージ（失敗時のみ）"
-    )
-    evidence: list[Evidence] | None = Field(
-        default=None, description="取得結果の証拠リスト"
-    )
+    error_category: str | None = Field(default=None, description="エラー分類（失敗時のみ）")
+    error_message: str | None = Field(default=None, description="エラーメッセージ（失敗時のみ）")
+    evidence: list[Evidence] | None = Field(default=None, description="取得結果の証拠リスト")
     is_mock: bool = Field(default=False, description="モックデータかどうか")
 
     def is_retryable(self) -> bool:

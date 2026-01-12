@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
@@ -109,8 +110,8 @@ async def list_artifacts(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            # Verify run belongs to tenant
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            # Verify run belongs to tenant and prefetch steps to avoid extra queries
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).options(selectinload(Run.steps))
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
@@ -118,10 +119,7 @@ async def list_artifacts(
                 raise HTTPException(status_code=404, detail="Run not found")
 
             # Build step_id -> step_name mapping
-            steps_query = select(Step).where(Step.run_id == run_id)
-            steps_result = await session.execute(steps_query)
-            steps = steps_result.scalars().all()
-            step_id_to_name = {str(s.id): s.step_name for s in steps}
+            step_id_to_name = {str(s.id): s.step_name for s in run.steps}
 
             # Query artifacts from DB with pagination
             artifact_query = (

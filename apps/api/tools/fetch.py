@@ -684,7 +684,9 @@ class PrimaryCollectorTool(ToolInterface):
         results = data.get("results", [])
         if not results:
             return ToolResult(
-                success=True,
+                success=False,
+                error_category=ErrorCategory.VALIDATION_FAIL.value,
+                error_message="No SERP results found",
                 data={"query": query, "sources": [], "total": 0},
                 evidence=[],
             )
@@ -724,6 +726,15 @@ class PrimaryCollectorTool(ToolInterface):
                 logger.warning(f"primary_collector: Failed to fetch {url}: {result.error_message}")
 
         logger.info(f"primary_collector: Collected {len(collected_sources)} sources for '{query}'")
+
+        if not collected_sources:
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.RETRYABLE.value,
+                error_message="No sources collected from SERP results",
+                data={"query": query, "sources": [], "total": 0},
+                evidence=all_evidence,
+            )
 
         return ToolResult(
             success=True,

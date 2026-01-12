@@ -211,9 +211,7 @@ class CsvValidator(ValidatorInterface):
             repaired_hash=None,
         )
 
-    def _check_encoding(
-        self, content: bytes
-    ) -> tuple[list[ValidationIssue], str | None]:
+    def _check_encoding(self, content: bytes) -> tuple[list[ValidationIssue], str | None]:
         """Check if content is valid UTF-8."""
         issues: list[ValidationIssue] = []
 

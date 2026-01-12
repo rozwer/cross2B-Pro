@@ -154,21 +154,21 @@ async def get_run_cost(
                     content = json.loads(content_bytes.decode("utf-8"))
 
                     # Extract usage if present
-                    usage = content.get("usage", {})
+                    usage = content.get("token_usage") or content.get("usage") or {}
                     model = content.get("model", "unknown")
 
+                    # Get step name from pre-fetched step_map
+                    step_name = artifact.artifact_type
+                    if artifact.step_id:
+                        step_name = step_map.get(str(artifact.step_id), step_name)
+
                     if usage:
-                        input_tokens = usage.get("input_tokens", 0)
-                        output_tokens = usage.get("output_tokens", 0)
+                        input_tokens = usage.get("input", usage.get("input_tokens", 0))
+                        output_tokens = usage.get("output", usage.get("output_tokens", 0))
 
                         # Calculate cost
                         rates = DEFAULT_COST_RATES.get(model, {"input": 0.001, "output": 0.002})
                         step_cost = (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"]
-
-                        # Get step name from pre-fetched step_map
-                        step_name = artifact.artifact_type
-                        if artifact.step_id:
-                            step_name = step_map.get(str(artifact.step_id), step_name)
 
                         breakdown.append(
                             CostBreakdown(
@@ -183,6 +183,16 @@ async def get_run_cost(
                         total_input_tokens += input_tokens
                         total_output_tokens += output_tokens
                         total_cost += step_cost
+                    else:
+                        # Log warning when usage data is missing (helps identify tracking gaps)
+                        logger.warning(
+                            f"Missing usage data for step '{step_name}' artifact {artifact.id}",
+                            extra={
+                                "artifact_id": str(artifact.id),
+                                "run_id": run_id,
+                                "step_name": step_name,
+                            },
+                        )
 
                 except Exception as parse_error:
                     # Log and skip artifacts that can't be parsed

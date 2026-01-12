@@ -103,11 +103,7 @@ class NanoBananaClient:
             model: 使用するモデル名
             timeout: タイムアウト（秒）
         """
-        resolved_key = (
-            api_key
-            or os.getenv("NANO_BANANA_API_KEY")
-            or os.getenv("GEMINI_API_KEY")
-        )
+        resolved_key = api_key or os.getenv("NANO_BANANA_API_KEY") or os.getenv("GEMINI_API_KEY")
         if not resolved_key:
             raise LLMConfigurationError(
                 message="NANO_BANANA_API_KEY or GEMINI_API_KEY is not set",
@@ -118,8 +114,7 @@ class NanoBananaClient:
         self._model = model or self.DEFAULT_MODEL
         if self._model not in self.AVAILABLE_MODELS:
             raise LLMConfigurationError(
-                message=f"Model '{self._model}' is not supported. "
-                f"Available: {self.AVAILABLE_MODELS}",
+                message=f"Model '{self._model}' is not supported. Available: {self.AVAILABLE_MODELS}",
                 provider=self.PROVIDER_NAME,
                 missing_config=[],
             )
@@ -184,11 +179,7 @@ class NanoBananaClient:
             images: list[bytes] = []
             text_parts: list[str] = []
 
-            if (
-                response.candidates
-                and response.candidates[0].content
-                and response.candidates[0].content.parts
-            ):
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if part.text:
                         text_parts.append(part.text)
@@ -196,12 +187,8 @@ class NanoBananaClient:
                         images.append(part.inline_data.data)
 
             usage_metadata = response.usage_metadata
-            input_tokens = (
-                usage_metadata.prompt_token_count if usage_metadata else 0
-            ) or 0
-            output_tokens = (
-                usage_metadata.candidates_token_count if usage_metadata else 0
-            ) or 0
+            input_tokens = (usage_metadata.prompt_token_count if usage_metadata else 0) or 0
+            output_tokens = (usage_metadata.candidates_token_count if usage_metadata else 0) or 0
             token_usage = TokenUsage(input=input_tokens, output=output_tokens)
 
             result = ImageGenerationResult(

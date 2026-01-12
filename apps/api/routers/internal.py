@@ -59,6 +59,7 @@ class WSBroadcastRequest(BaseModel):
 
     run_id: str
     step: str
+    tenant_id: str | None = None  # Optional for backward compatibility, recommended for tenant isolation
     event_type: str = "step_progress"
     status: str = "in_progress"
     progress: int = 0
@@ -169,6 +170,7 @@ async def broadcast_ws_event(request: WSBroadcastRequest) -> dict[str, bool]:
             progress=request.progress,
             message=request.message,
             details=request.details,
+            tenant_id=request.tenant_id,
         )
         return {"ok": True}
     except Exception as e:

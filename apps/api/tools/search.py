@@ -115,16 +115,15 @@ class SerpFetchTool(ToolInterface):
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.get(
-                        self.base_url, params=params  # type: ignore[arg-type]
+                        self.base_url,
+                        params=params,  # type: ignore[arg-type]
                     )
 
                 if response.status_code == 200:
                     data = response.json()
                     return self._parse_response(data, query)
                 elif response.status_code == 429:
-                    logger.warning(
-                        f"serp_fetch: Rate limited (attempt {attempt + 1}/{MAX_RETRIES})"
-                    )
+                    logger.warning(f"serp_fetch: Rate limited (attempt {attempt + 1}/{MAX_RETRIES})")
                     if attempt < MAX_RETRIES - 1:
                         import asyncio
 
@@ -142,9 +141,7 @@ class SerpFetchTool(ToolInterface):
                         error_message="Invalid API key",
                     )
                 else:
-                    logger.error(
-                        f"serp_fetch: Unexpected status {response.status_code}"
-                    )
+                    logger.error(f"serp_fetch: Unexpected status {response.status_code}")
                     return ToolResult(
                         success=False,
                         error_category=ErrorCategory.NON_RETRYABLE.value,
@@ -152,9 +149,7 @@ class SerpFetchTool(ToolInterface):
                     )
 
             except httpx.TimeoutException as e:
-                logger.warning(
-                    f"serp_fetch: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"serp_fetch: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
@@ -166,9 +161,7 @@ class SerpFetchTool(ToolInterface):
                     error_message="Request timed out after retries",
                 )
             except httpx.RequestError as e:
-                logger.warning(
-                    f"serp_fetch: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"serp_fetch: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
@@ -262,10 +255,7 @@ class SearchVolumeTool(ToolInterface):
     def __init__(self) -> None:
         self.use_mock = os.getenv("USE_MOCK_GOOGLE_ADS", "true").lower() == "true"
         if self.use_mock:
-            logger.warning(
-                "SearchVolumeTool: Running in MOCK mode. "
-                "Set USE_MOCK_GOOGLE_ADS=false when Google Ads API is available."
-            )
+            logger.warning("SearchVolumeTool: Running in MOCK mode. Set USE_MOCK_GOOGLE_ADS=false when Google Ads API is available.")
 
     async def execute(self, keyword: str) -> ToolResult:  # type: ignore[override]
         """検索ボリュームを取得"""
@@ -303,10 +293,7 @@ class SearchVolumeTool(ToolInterface):
     async def _execute_real(self, keyword: str) -> ToolResult:
         """実API実行: Google Ads API を使用"""
         # TODO: Google Ads API 取得後に実装
-        raise NotImplementedError(
-            "Real Google Ads API not implemented. "
-            "Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()"
-        )
+        raise NotImplementedError("Real Google Ads API not implemented. Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()")
 
 
 @ToolRegistry.register(
@@ -340,10 +327,7 @@ class RelatedKeywordsTool(ToolInterface):
     def __init__(self) -> None:
         self.use_mock = os.getenv("USE_MOCK_GOOGLE_ADS", "true").lower() == "true"
         if self.use_mock:
-            logger.warning(
-                "RelatedKeywordsTool: Running in MOCK mode. "
-                "Set USE_MOCK_GOOGLE_ADS=false when Google Ads API is available."
-            )
+            logger.warning("RelatedKeywordsTool: Running in MOCK mode. Set USE_MOCK_GOOGLE_ADS=false when Google Ads API is available.")
 
     async def execute(  # type: ignore[override]
         self, keyword: str, limit: int = 10
@@ -393,7 +377,4 @@ class RelatedKeywordsTool(ToolInterface):
     async def _execute_real(self, keyword: str, limit: int) -> ToolResult:
         """実API実行: Google Ads API を使用"""
         # TODO: Google Ads API 取得後に実装
-        raise NotImplementedError(
-            "Real Google Ads API not implemented. "
-            "Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()"
-        )
+        raise NotImplementedError("Real Google Ads API not implemented. Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()")

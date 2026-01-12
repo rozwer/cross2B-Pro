@@ -171,9 +171,7 @@ class UrlVerifyTool(ToolInterface):
                 )
 
             except httpx.TimeoutException as e:
-                logger.warning(
-                    f"url_verify: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"url_verify: Timeout (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
@@ -194,9 +192,7 @@ class UrlVerifyTool(ToolInterface):
                 )
 
             except httpx.RequestError as e:
-                logger.warning(
-                    f"url_verify: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
-                )
+                logger.warning(f"url_verify: Network error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
                 if attempt < MAX_RETRIES - 1:
                     import asyncio
 
