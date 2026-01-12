@@ -194,7 +194,7 @@ def _get_workflow_step_defaults() -> list[StepDefaultConfig]:
             label="アウトライン",
             description="戦略的な記事構成の作成",
             ai_model="anthropic",
-            model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
+            model_name=os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-5-20250929"),
             temperature=0.7,
             grounding=False,
             retry_limit=3,
@@ -351,9 +351,9 @@ async def get_models_config() -> ModelsConfigResponse:
     The frontend should use this as the source of truth for model names
     and step configurations.
     """
-    gemini_default = os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.0-flash")
-    openai_default = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4o")
-    anthropic_default = os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514")
+    gemini_default = os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
+    openai_default = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-5.2")
+    anthropic_default = os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-5-20250929")
 
     providers = [
         ProviderConfig(
@@ -361,7 +361,13 @@ async def get_models_config() -> ModelsConfigResponse:
             default_model=gemini_default,
             available_models=[
                 gemini_default,
+                "gemini-2.5-flash",
+                "gemini-2.5-pro",
                 "gemini-2.0-flash",
+                "gemini-3.0-pro",
+                "gemini-3-pro-latest",
+                "gemini-3-pro-preview-11-2025",
+                "gemini-3-flash-preview",
                 "gemini-1.5-pro",
                 "gemini-1.5-flash",
             ],
@@ -372,6 +378,8 @@ async def get_models_config() -> ModelsConfigResponse:
             default_model=openai_default,
             available_models=[
                 openai_default,
+                "gpt-5.2",
+                "gpt-5.2-pro",
                 "gpt-4o",
                 "gpt-4o-mini",
                 "gpt-4-turbo",
@@ -383,9 +391,11 @@ async def get_models_config() -> ModelsConfigResponse:
             default_model=anthropic_default,
             available_models=[
                 anthropic_default,
+                "claude-sonnet-4-5-20250929",
+                "claude-opus-4-5-20251101",
                 "claude-sonnet-4-20250514",
+                "claude-opus-4-20250514",
                 "claude-3-5-sonnet-20241022",
-                "claude-3-5-haiku-20241022",
             ],
             supports_grounding=False,
         ),
