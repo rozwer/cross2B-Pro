@@ -408,9 +408,10 @@ def _compute_rejection_analysis(
         reasons.append("1 contradiction found - requires human verification")
         suggested_actions.append("該当箇所の事実確認をお願いします")
 
-    elif len(unverified) >= len(verification_results) * 0.3:
+    elif verification_results and len(unverified) >= len(verification_results) * 0.3:
         severity = "major"
-        reasons.append(f"{len(unverified)} claims could not be verified ({len(unverified) / len(verification_results) * 100:.0f}%)")
+        pct = len(unverified) / len(verification_results) * 100
+        reasons.append(f"{len(unverified)} claims could not be verified ({pct:.0f}%)")
         suggested_actions.append("未検証の主張についてソース確認をお願いします")
 
     # Minor: Few unverified claims
@@ -547,7 +548,7 @@ class Step8FactCheck(BaseActivity):
             try:
                 claims_prompt = prompt_pack.get_prompt("step8_claims")
                 claims_request = claims_prompt.render(content=polished_content)
-                claims_config = LLMRequestConfig(max_tokens=2000, temperature=0.3)
+                claims_config = LLMRequestConfig(max_tokens=4000, temperature=0.3)
                 claims_response = await llm.generate(
                     messages=[{"role": "user", "content": claims_request}],
                     system_prompt="Extract claims from the provided content.",
@@ -574,7 +575,13 @@ class Step8FactCheck(BaseActivity):
                 ) from e
 
         # Validate claims count
-        if len(extracted_claims) < MIN_CLAIMS_COUNT:
+        if len(extracted_claims) == 0:
+            raise ActivityError(
+                "No claims extracted from content - LLM output parsing failed",
+                category=ErrorCategory.RETRYABLE,
+                details={"min_required": MIN_CLAIMS_COUNT},
+            )
+        elif len(extracted_claims) < MIN_CLAIMS_COUNT:
             logger.warning(f"[STEP8] Only {len(extracted_claims)} claims extracted (min: {MIN_CLAIMS_COUNT})")
 
         # Step 8.2: Verify claims (with checkpoint)
@@ -625,7 +632,7 @@ class Step8FactCheck(BaseActivity):
                 keyword=keyword,
                 verification="\n".join(f"[{r.claim_id}] {r.status}: {r.evidence}" for r in verification_results),
             )
-            faq_config = LLMRequestConfig(max_tokens=2000, temperature=0.6)
+            faq_config = LLMRequestConfig(max_tokens=4000, temperature=0.6)
             faq_response = await llm.generate(
                 messages=[{"role": "user", "content": faq_request}],
                 system_prompt="Generate FAQ based on the verification results.",

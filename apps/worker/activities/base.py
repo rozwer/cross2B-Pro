@@ -321,6 +321,7 @@ class BaseActivity(ABC):
         )
 
         # Update step status in DB via API
+        # Always use "running" status; retry_count indicates if this is a retry
         await self._update_step_status(
             run_id=run_id,
             tenant_id=tenant_id,
