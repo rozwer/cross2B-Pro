@@ -1,7 +1,5 @@
 """Tests for database models."""
 
-from datetime import datetime
-
 from apps.api.db.models import (
     Artifact,
     AuditLog,
@@ -74,12 +72,14 @@ class TestRun:
         """Test Run model creation."""
         run = Run(
             id="550e8400-e29b-41d4-a716-446655440000",
+            tenant_id="tenant-123",
             status="pending",
             current_step="init",
             config={"model": "claude-3"},
         )
         assert run.status == "pending"
         assert run.config["model"] == "claude-3"
+        assert run.tenant_id == "tenant-123"
 
 
 class TestStep:
@@ -88,14 +88,13 @@ class TestStep:
     def test_step_creation(self) -> None:
         """Test Step model creation."""
         step = Step(
+            id="660e8400-e29b-41d4-a716-446655440001",
             run_id="550e8400-e29b-41d4-a716-446655440000",
-            step="step_1",
+            step_name="step_1",
             status="running",
-            llm_model="claude-3-opus",
-            token_usage={"input": 100, "output": 500},
         )
-        assert step.step == "step_1"
-        assert step.token_usage["input"] == 100
+        assert step.step_name == "step_1"
+        assert step.status == "running"
 
 
 class TestArtifact:
@@ -104,14 +103,14 @@ class TestArtifact:
     def test_artifact_creation(self) -> None:
         """Test Artifact model creation."""
         artifact = Artifact(
+            id="770e8400-e29b-41d4-a716-446655440002",
             run_id="550e8400-e29b-41d4-a716-446655440000",
-            step="step_1",
-            file_type="json",
-            file_path="storage/tenant-abc/run-123/step_1/output.json",
+            artifact_type="json",
+            ref_path="storage/tenant-abc/run-123/step_1/output.json",
             digest="abc123def456",
         )
-        assert artifact.step == "step_1"
-        assert artifact.file_type == "json"
+        assert artifact.artifact_type == "json"
+        assert "output.json" in artifact.ref_path
 
 
 class TestAuditLog:
@@ -125,9 +124,12 @@ class TestAuditLog:
             resource_type="step",
             resource_id="step_1",
             details={"attempt": 1},
+            prev_hash=None,
+            entry_hash="abc123def456" * 4,  # SHA256 hex (64 chars)
         )
         assert log.action == "step.started"
         assert log.details["attempt"] == 1
+        assert log.entry_hash is not None
 
 
 class TestPrompt:

@@ -1,18 +1,17 @@
 """Unit tests for BaseActivity."""
 
-import pytest
-import json
-import hashlib
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from apps.api.core.errors import ErrorCategory
+from apps.api.validation.schemas import ValidationReport
 from apps.worker.activities.base import (
-    BaseActivity,
     ActivityError,
+    BaseActivity,
     ValidationError,
 )
-from apps.api.core.errors import ErrorCategory
-from apps.api.validation.schemas import ValidationReport, ValidationSeverity
 
 
 class TestActivityError:
@@ -74,7 +73,8 @@ class TestValidationError:
 class TestBaseActivityInputDigest:
     """Tests for input digest computation."""
 
-    def test_compute_input_digest_deterministic(self):
+    @pytest.mark.asyncio
+    async def test_compute_input_digest_deterministic(self):
         """Test input digest is deterministic for same inputs."""
 
         class TestActivity(BaseActivity):
@@ -87,12 +87,12 @@ class TestBaseActivityInputDigest:
 
         activity = TestActivity()
 
-        digest1 = activity._compute_input_digest(
+        digest1 = await activity._compute_input_digest(
             tenant_id="tenant1",
             run_id="run1",
             config={"key": "value"},
         )
-        digest2 = activity._compute_input_digest(
+        digest2 = await activity._compute_input_digest(
             tenant_id="tenant1",
             run_id="run1",
             config={"key": "value"},
@@ -100,7 +100,8 @@ class TestBaseActivityInputDigest:
 
         assert digest1 == digest2
 
-    def test_compute_input_digest_different_for_different_inputs(self):
+    @pytest.mark.asyncio
+    async def test_compute_input_digest_different_for_different_inputs(self):
         """Test input digest differs for different inputs."""
 
         class TestActivity(BaseActivity):
@@ -113,12 +114,12 @@ class TestBaseActivityInputDigest:
 
         activity = TestActivity()
 
-        digest1 = activity._compute_input_digest(
+        digest1 = await activity._compute_input_digest(
             tenant_id="tenant1",
             run_id="run1",
             config={"key": "value1"},
         )
-        digest2 = activity._compute_input_digest(
+        digest2 = await activity._compute_input_digest(
             tenant_id="tenant1",
             run_id="run1",
             config={"key": "value2"},
@@ -126,7 +127,8 @@ class TestBaseActivityInputDigest:
 
         assert digest1 != digest2
 
-    def test_compute_input_digest_is_sha256(self):
+    @pytest.mark.asyncio
+    async def test_compute_input_digest_is_sha256(self):
         """Test digest is valid SHA256 hex string."""
 
         class TestActivity(BaseActivity):
@@ -139,7 +141,7 @@ class TestBaseActivityInputDigest:
 
         activity = TestActivity()
 
-        digest = activity._compute_input_digest(
+        digest = await activity._compute_input_digest(
             tenant_id="tenant1",
             run_id="run1",
             config={},
@@ -167,7 +169,7 @@ class TestBaseActivityStepError:
         activity = TestActivity()
 
         # Mock activity.info() for attempt number
-        with patch('temporalio.activity.info') as mock_info:
+        with patch("temporalio.activity.info") as mock_info:
             mock_info.return_value = MagicMock(attempt=2)
 
             error = activity.create_step_error(

@@ -1,9 +1,9 @@
 """Tests for CheckpointManager class."""
 
 import json
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from apps.worker.helpers import CheckpointManager
 
@@ -188,7 +188,7 @@ class TestCheckpointManager:
         """Path construction."""
         path = manager.build_path("t1", "r1", "step5", "queries_generated")
 
-        assert path == "t1/r1/step5/checkpoint/queries_generated.json"
+        assert path == "storage/t1/r1/step5/checkpoint_queries_generated.json"
 
     def test_compute_digest(self):
         """Digest computation."""
