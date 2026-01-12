@@ -744,6 +744,24 @@ async def confirm_positions(
         run.updated_at = datetime.now()
         await session.commit()
 
+        # Temporal signalを送信してWorkflowを再開
+        try:
+            temporal_client = await get_temporal_client()
+            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            payload = {
+                "approved": data.approved,
+                "reanalyze": data.reanalyze,
+                "reanalyze_request": data.reanalyze_request,
+                "modified_positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions]
+                if data.modified_positions
+                else None,
+            }
+            await workflow_handle.signal("step11_confirm_positions", payload)
+            logger.info("Temporal step11_confirm_positions signal sent", extra={"run_id": run_id})
+        except Exception as sig_error:
+            logger.error(f"Failed to send step11_confirm_positions signal: {sig_error}", exc_info=True)
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
     return {
         "success": True,
         "phase": state.phase,
@@ -798,6 +816,19 @@ async def submit_instructions(
         run.current_step = "step11_image_review"
         run.updated_at = datetime.now()
         await session.commit()
+
+        # Temporal signalを送信してWorkflowを再開
+        try:
+            temporal_client = await get_temporal_client()
+            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            payload = {
+                "instructions": [instr.model_dump() for instr in data.instructions],
+            }
+            await workflow_handle.signal("step11_submit_instructions", payload)
+            logger.info("Temporal step11_submit_instructions signal sent", extra={"run_id": run_id})
+        except Exception as sig_error:
+            logger.error(f"Failed to send step11_submit_instructions signal: {sig_error}", exc_info=True)
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
 
     return {
         "success": True,
@@ -958,6 +989,19 @@ async def review_images(
         run.updated_at = datetime.now()
         await session.commit()
 
+        # Temporal signalを送信してWorkflowを再開
+        try:
+            temporal_client = await get_temporal_client()
+            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            payload = {
+                "reviews": [r.model_dump() for r in data.reviews],
+            }
+            await workflow_handle.signal("step11_review_images", payload)
+            logger.info("Temporal step11_review_images signal sent", extra={"run_id": run_id})
+        except Exception as sig_error:
+            logger.error(f"Failed to send step11_review_images signal: {sig_error}", exc_info=True)
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
     return {
         "success": True,
         "has_retries": has_retries,
@@ -1094,7 +1138,8 @@ async def finalize_images(
             "positions": [p.model_dump() for p in positions],
         }
 
-        output_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
+        # ArtifactStore.build_path()で標準パスを構築（storage/{tenant}/{run}/step11/output.json）
+        output_path = store.build_path(tenant_id, run_id, "step11", "output.json")
         await store.put(
             json.dumps(output_data, ensure_ascii=False).encode("utf-8"),
             output_path,
@@ -1147,6 +1192,20 @@ async def finalize_images(
 
         await session.commit()
 
+        # Temporal signalを送信してWorkflowを再開
+        try:
+            temporal_client = await get_temporal_client()
+            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            payload = {
+                "confirmed": True,
+                "image_count": len(images),
+            }
+            await workflow_handle.signal("step11_finalize", payload)
+            logger.info("Temporal step11_finalize signal sent", extra={"run_id": run_id})
+        except Exception as sig_error:
+            logger.error(f"Failed to send step11_finalize signal: {sig_error}", exc_info=True)
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
     return {
         "success": True,
         "phase": "completed",
@@ -1189,6 +1248,16 @@ async def skip_image_generation(
         )
 
         await session.commit()
+
+        # Temporal signalを送信してWorkflowを再開
+        try:
+            temporal_client = await get_temporal_client()
+            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            await workflow_handle.signal("step11_skip")
+            logger.info("Temporal step11_skip signal sent", extra={"run_id": run_id})
+        except Exception as sig_error:
+            logger.error(f"Failed to send step11_skip signal: {sig_error}", exc_info=True)
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
 
     return {"success": True, "phase": "skipped"}
 
@@ -1247,7 +1316,8 @@ async def regenerate_output(
             "positions": [p.model_dump() for p in positions],
         }
 
-        output_path = f"tenants/{tenant_id}/runs/{run_id}/step11/output.json"
+        # ArtifactStore.build_path()で標準パスを構築（storage/{tenant}/{run}/step11/output.json）
+        output_path = store.build_path(tenant_id, run_id, "step11", "output.json")
         await store.put(
             json.dumps(output_data, ensure_ascii=False).encode("utf-8"),
             output_path,

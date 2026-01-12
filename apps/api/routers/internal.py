@@ -46,12 +46,12 @@ class StepUpdateRequest(BaseModel):
     """Request to update step status (internal API)."""
 
     run_id: str
+    tenant_id: str  # Required: Worker must always provide tenant_id for multi-tenant isolation
     step_name: str
     status: Literal["running", "completed", "failed"]
     error_code: str | None = None  # ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
     error_message: str | None = None
     retry_count: int = 0
-    tenant_id: str | None = None  # Optional: passed from Worker, or looked up from run
 
 
 class WSBroadcastRequest(BaseModel):
@@ -100,22 +100,8 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
     db_manager = _get_tenant_db_manager()
 
     try:
-        # Get tenant_id from request or look up from run
+        # tenant_id is now required - no fallback to ensure multi-tenant isolation
         tenant_id = request.tenant_id
-        if not tenant_id:
-            # Look up tenant_id from runs table using default tenant for query
-            # Note: This assumes runs table is accessible from default tenant DB
-            async with db_manager.get_session("dev-tenant-001") as lookup_session:
-                result = await lookup_session.execute(
-                    text("SELECT tenant_id FROM runs WHERE id = CAST(:run_id AS UUID)"),
-                    {"run_id": request.run_id},
-                )
-                row = result.fetchone()
-                if row:
-                    tenant_id = row[0]
-                else:
-                    tenant_id = "dev-tenant-001"  # Fallback for missing run
-                    logger.warning(f"Run {request.run_id} not found, using default tenant")
 
         async with db_manager.get_session(tenant_id) as session:
             # UPSERT step record
