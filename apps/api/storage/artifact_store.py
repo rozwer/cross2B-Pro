@@ -189,6 +189,46 @@ class ArtifactStore:
 
         return f"storage/{tenant_id}/{run_id}/{step}/{filename}"
 
+    def build_nested_path(
+        self,
+        tenant_id: str,
+        run_id: str,
+        step: str,
+        *path_parts: str,
+    ) -> str:
+        """Build storage path with nested subdirectories.
+
+        VULN-012: 各パスコンポーネントを個別に検証してパストラバーサルを防止
+        階層的なファイル構造（例: images/article_1/image_1.png）をサポート
+
+        Args:
+            tenant_id: テナントID（必須、検証される）
+            run_id: 実行ID（必須、検証される）
+            step: 工程名（必須、検証される）
+            *path_parts: ネストされたパスコンポーネント（各部分が検証される）
+
+        Returns: storage/{tenant_id}/{run_id}/{step}/{path_parts...}
+
+        Raises:
+            ArtifactStoreError: 不正なパラメータの場合
+        """
+        # VULN-012: 基本コンポーネントを検証
+        _validate_tenant_id(tenant_id)
+        _validate_path_component(run_id, "run_id")
+        _validate_path_component(step, "step")
+
+        # 各パスコンポーネントを個別に検証
+        if not path_parts:
+            raise ArtifactStoreError("At least one path part is required")
+
+        validated_parts = []
+        for i, part in enumerate(path_parts):
+            _validate_path_component(part, f"path_part[{i}]")
+            validated_parts.append(part)
+
+        nested_path = "/".join(validated_parts)
+        return f"storage/{tenant_id}/{run_id}/{step}/{nested_path}"
+
     def _verify_path_ownership(self, path: str, tenant_id: str) -> None:
         """パスがテナントに所属することを検証（VULN-012）
 
