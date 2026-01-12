@@ -493,13 +493,15 @@ class ArticleWorkflow:
         if resume_from is None:
             return self._step_enabled(step)
 
-        # Step order for comparison
+        # Step order for comparison (granular, including 3a/3b/3c)
         step_order = [
             "step0",
             "step1",
             "step1_5",
             "step2",
-            "step3",  # Represents 3a/3b/3c as a group
+            "step3a",
+            "step3b",
+            "step3c",
             "step3_5",
             "step4",
             "step5",
@@ -514,9 +516,13 @@ class ArticleWorkflow:
             "step12",
         ]
 
+        # Normalize step3 to step3a for comparison (step3 group starts at 3a)
+        normalized_step = step if step != "step3" else "step3a"
+        normalized_resume = resume_from if resume_from != "step3" else "step3a"
+
         try:
-            current_idx = step_order.index(step)
-            resume_idx = step_order.index(resume_from)
+            current_idx = step_order.index(normalized_step)
+            resume_idx = step_order.index(normalized_resume)
             return current_idx >= resume_idx and self._step_enabled(step)
         except ValueError:
             # Unknown step, run it
@@ -771,9 +777,16 @@ class ArticleWorkflow:
 
                 await workflow.wait_condition(lambda: self.step11_image_reviews is not None)
 
-                # Process retries
+                # Process retries with index bounds validation
+                num_positions = len(self.step11_positions)
+                num_images = len(self.step11_generated_images)
                 retries_needed = [
-                    r for r in self.step11_image_reviews if r.get("retry") and retry_counts[r["index"]] < max_retries_per_image
+                    r
+                    for r in self.step11_image_reviews
+                    if r.get("retry")
+                    and 0 <= r.get("index", -1) < num_positions
+                    and r.get("index", -1) < len(retry_counts)
+                    and retry_counts[r["index"]] < max_retries_per_image
                 ]
 
                 if not retries_needed:
@@ -785,6 +798,14 @@ class ArticleWorkflow:
 
                 for retry_req in retries_needed:
                     idx = retry_req["index"]
+                    # Double-check bounds before accessing arrays
+                    if idx < 0 or idx >= num_positions:
+                        workflow.logger.warning(f"Step11 retry: index {idx} out of bounds (positions: {num_positions})")
+                        continue
+                    if idx >= num_images:
+                        workflow.logger.warning(f"Step11 retry: index {idx} out of bounds (images: {num_images})")
+                        continue
+
                     retry_counts[idx] += 1
 
                     retry_args = {
@@ -1102,7 +1123,17 @@ class ImageAdditionWorkflow:
                     await update_status("completed", "step11")
                     return {"artifact_ref": {}, "skipped": True}
 
-                retries_requested = [r for r in self.step11_image_reviews if r.get("retry") and retry_counts[r["index"]] < max_retries]
+                # Validate index bounds before processing retries
+                num_positions = len(self.step11_positions)
+                num_images = len(self.step11_generated_images)
+                retries_requested = [
+                    r
+                    for r in self.step11_image_reviews
+                    if r.get("retry")
+                    and 0 <= r.get("index", -1) < num_positions
+                    and r.get("index", -1) < len(retry_counts)
+                    and retry_counts[r["index"]] < max_retries
+                ]
 
                 if not retries_requested:
                     break
@@ -1113,6 +1144,14 @@ class ImageAdditionWorkflow:
 
                 for r in retries_requested:
                     idx = r["index"]
+                    # Double-check bounds before accessing arrays
+                    if idx < 0 or idx >= num_positions:
+                        workflow.logger.warning(f"Step11 retry: index {idx} out of bounds (positions: {num_positions})")
+                        continue
+                    if idx >= num_images:
+                        workflow.logger.warning(f"Step11 retry: index {idx} out of bounds (images: {num_images})")
+                        continue
+
                     retry_counts[idx] += 1
                     retry_result = await execute_activity(
                         "step11_retry_image",

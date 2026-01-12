@@ -421,10 +421,16 @@ def _handle_running_workflow(
     rejection_reason: str | None,
     now: datetime,
 ) -> bool:
-    """Handle status updates for a running workflow."""
+    """Handle status updates for a running workflow.
+
+    Determines run status based on Temporal workflow state:
+    - waiting_approval: Step3 approval pending
+    - waiting_image_input: Step11 user interaction pending
+    - running: Normal execution (including parallel steps)
+    """
     db_updated = False
 
-    # Step11 waiting states
+    # Step11 waiting states (require user input)
     step11_waiting_states = (
         "waiting_image_generation",
         "step11_position_review",
@@ -432,6 +438,8 @@ def _handle_running_workflow(
         "step11_image_review",
         "step11_preview",
     )
+
+    # Note: Parallel steps (step3a/3b/3c) are handled normally as RUNNING
 
     # Check if waiting for approval (Step3)
     if current_step == "waiting_approval":
@@ -456,13 +464,20 @@ def _handle_running_workflow(
             run.updated_at = now
             db_updated = True
 
-    elif run.status not in (
-        RunStatus.RUNNING.value,
-        RunStatus.WAITING_APPROVAL.value,
-        RunStatus.WAITING_IMAGE_INPUT.value,
-    ):
-        run.status = RunStatus.RUNNING.value
-        run.updated_at = now
-        db_updated = True
+    # Only update to RUNNING if workflow is actively executing
+    # (has a valid current_step and not in a waiting state)
+    elif current_step and current_step not in ("", "pre_approval", "post_approval"):
+        if run.status not in (
+            RunStatus.RUNNING.value,
+            RunStatus.WAITING_APPROVAL.value,
+            RunStatus.WAITING_IMAGE_INPUT.value,
+        ):
+            run.status = RunStatus.RUNNING.value
+            run.updated_at = now
+            db_updated = True
+            logger.debug(f"Run {run.id} marked as running (step: {current_step})")
+
+    # If current_step is empty or phase marker, don't change status
+    # (workflow may be transitioning between phases)
 
     return db_updated

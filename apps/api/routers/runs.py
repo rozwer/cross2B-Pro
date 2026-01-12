@@ -3,7 +3,6 @@
 Endpoints for creating, listing, and managing workflow runs.
 """
 
-import json
 import logging
 import uuid
 from datetime import datetime
@@ -161,6 +160,8 @@ async def create_run(
     task_queue = _get_temporal_task_queue()
 
     try:
+        # Phase 1: Create run record and commit to DB
+        run_response: RunResponse | None = None
         async with db_manager.get_session(tenant_id) as session:
             # Create Run ORM instance
             run_orm = Run(
@@ -185,49 +186,60 @@ async def create_run(
                 details={"keyword": effective_keyword, "start_workflow": start_workflow},
             )
 
-            await session.flush()
+            # Commit is done automatically when exiting context manager
+            run_response = run_orm_to_response(run_orm)
 
-            logger.info("Run created", extra={"run_id": run_id, "tenant_id": tenant_id})
+        logger.info("Run created and committed", extra={"run_id": run_id, "tenant_id": tenant_id})
 
-            # Start Temporal workflow if requested and client is available
-            if start_workflow and temporal_client is not None:
-                try:
-                    await temporal_client.start_workflow(
-                        "ArticleWorkflow",
-                        args=[tenant_id, run_id, workflow_config, None],
-                        id=run_id,
-                        task_queue=task_queue,
-                    )
+        # Phase 2: Start Temporal workflow AFTER DB commit
+        if start_workflow and temporal_client is not None:
+            try:
+                await temporal_client.start_workflow(
+                    "ArticleWorkflow",
+                    args=[tenant_id, run_id, workflow_config, None],
+                    id=run_id,
+                    task_queue=task_queue,
+                )
 
+                # Update run status in separate transaction
+                async with db_manager.get_session(tenant_id) as session:
+                    result = await session.execute(select(Run).where(Run.id == run_id))
+                    run_orm = result.scalar_one()
                     run_orm.status = RunStatus.RUNNING.value
                     run_orm.started_at = now
                     run_orm.updated_at = now
+                    run_response = run_orm_to_response(run_orm)
 
-                    logger.info(
-                        "Temporal workflow started",
-                        extra={"run_id": run_id, "tenant_id": tenant_id, "task_queue": task_queue},
-                    )
+                logger.info(
+                    "Temporal workflow started",
+                    extra={"run_id": run_id, "tenant_id": tenant_id, "task_queue": task_queue},
+                )
 
-                    await ws_manager.broadcast_run_update(
-                        run_id=run_id,
-                        event_type="run.started",
-                        status=RunStatus.RUNNING.value,
-                    )
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="run.started",
+                    status=RunStatus.RUNNING.value,
+                )
 
-                except Exception as wf_error:
-                    logger.error(f"Failed to start Temporal workflow: {wf_error}", exc_info=True)
+            except Exception as wf_error:
+                logger.error(f"Failed to start Temporal workflow: {wf_error}", exc_info=True)
+                # Update run status to failed in separate transaction
+                async with db_manager.get_session(tenant_id) as session:
+                    result = await session.execute(select(Run).where(Run.id == run_id))
+                    run_orm = result.scalar_one()
                     run_orm.status = RunStatus.FAILED.value
                     run_orm.error_code = "WORKFLOW_START_FAILED"
                     run_orm.error_message = str(wf_error)
                     run_orm.updated_at = now
+                    run_response = run_orm_to_response(run_orm)
 
-            elif start_workflow and temporal_client is None:
-                logger.warning(
-                    "Temporal client not available, workflow not started",
-                    extra={"run_id": run_id, "tenant_id": tenant_id},
-                )
+        elif start_workflow and temporal_client is None:
+            logger.warning(
+                "Temporal client not available, workflow not started",
+                extra={"run_id": run_id, "tenant_id": tenant_id},
+            )
 
-            return run_orm_to_response(run_orm)
+        return run_response
 
     except TenantIdValidationError as e:
         logger.error(f"Invalid tenant_id: {e}")
@@ -555,9 +567,10 @@ async def retry_step(
             if run.status != RunStatus.FAILED.value:
                 raise HTTPException(status_code=400, detail=f"Run must be in failed status to retry (current status: {run.status})")
 
+            # Use underscore format for step_name (matches Worker step_id format)
             step_query = select(Step).where(
                 Step.run_id == run_id,
-                Step.step_name == normalized_step.replace("_", "."),
+                Step.step_name == normalized_step,
             )
             step_result = await session.execute(step_query)
             step_record = step_result.scalar_one_or_none()
@@ -629,44 +642,60 @@ async def retry_step(
                             },
                         )
 
-                await temporal_client.start_workflow(
-                    "ArticleWorkflow",
-                    args=[tenant_id, run_id, loaded_config, normalized_step],
-                    id=new_workflow_id,
-                    task_queue=task_queue,
-                )
-                logger.info(
-                    "Temporal retry workflow started",
-                    extra={"run_id": run_id, "step": step, "new_workflow_id": new_workflow_id},
-                )
-            except Exception as wf_error:
-                logger.error(f"Failed to start retry workflow: {wf_error}", exc_info=True)
-                raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
+                # First, update DB status and commit
+                run.status = RunStatus.RUNNING.value
+                run.current_step = normalized_step
+                run.error_message = None  # エラーメッセージをクリア
+                run.error_code = None  # エラーコードをクリア
+                run.updated_at = datetime.now()
 
-            run.status = RunStatus.RUNNING.value
-            run.current_step = normalized_step
-            run.error_message = None  # エラーメッセージをクリア
-            run.error_code = None  # エラーコードをクリア
-            run.updated_at = datetime.now()
+                retry_count = 1
+                if step_record:
+                    step_record.status = StepStatus.RUNNING.value
+                    step_record.retry_count = (step_record.retry_count or 0) + 1
+                    step_record.error_message = None  # ステップのエラーメッセージもクリア
+                    retry_count = step_record.retry_count
 
-            if step_record:
-                step_record.status = StepStatus.RUNNING.value
-                step_record.retry_count = (step_record.retry_count or 0) + 1
-                step_record.error_message = None  # ステップのエラーメッセージもクリア
+                # Commit DB changes before starting workflow
+                await session.commit()
+                logger.info("Step retry DB update committed", extra={"run_id": run_id, "step": step})
 
-            await session.flush()
-            logger.info("Step retry initiated", extra={"run_id": run_id, "step": step})
+            except Exception as db_error:
+                logger.error(f"Failed to update DB for retry: {db_error}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"Failed to update DB for retry: {db_error}")
 
-            await ws_manager.broadcast_step_event(
-                run_id=run_id,
-                step=step,
-                event_type="step_retrying",
-                status=StepStatus.RUNNING.value,
-                message=f"Retrying step {step}",
-                attempt=step_record.retry_count if step_record else 1,
+        # Start Temporal workflow AFTER DB commit (outside session context)
+        try:
+            await temporal_client.start_workflow(
+                "ArticleWorkflow",
+                args=[tenant_id, run_id, loaded_config, normalized_step],
+                id=new_workflow_id,
+                task_queue=task_queue,
             )
+            logger.info(
+                "Temporal retry workflow started",
+                extra={"run_id": run_id, "step": step, "new_workflow_id": new_workflow_id},
+            )
+        except Exception as wf_error:
+            logger.error(f"Failed to start retry workflow: {wf_error}", exc_info=True)
+            # Revert status to failed if workflow start fails
+            async with db_manager.get_session(tenant_id) as session:
+                result = await session.execute(select(Run).where(Run.id == run_id))
+                run = result.scalar_one()
+                run.status = RunStatus.FAILED.value
+                run.error_message = f"Retry workflow start failed: {wf_error}"
+            raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
 
-            return {"success": True, "new_attempt_id": new_attempt_id}
+        await ws_manager.broadcast_step_event(
+            run_id=run_id,
+            step=step,
+            event_type="step_retrying",
+            status=StepStatus.RUNNING.value,
+            message=f"Retrying step {step}",
+            attempt=retry_count,
+        )
+
+        return {"success": True, "new_attempt_id": new_attempt_id}
 
     except HTTPException:
         raise
@@ -737,16 +766,29 @@ async def resume_from_step(
 
             loaded_config = dict(original_run.config) if original_run.config else {}
 
+            # Store artifact REFERENCES only, not full data (to avoid gRPC size limits)
+            # Activities should load full data from storage via load_step_data()
+            artifact_refs: dict[str, dict[str, str]] = {}
             for prev_step in steps_to_load:
-                artifact_data = await artifact_store.get_by_path(
-                    tenant_id=tenant_id,
-                    run_id=run_id,
-                    step=prev_step,
-                )
-                if artifact_data:
-                    step_data = json.loads(artifact_data.decode("utf-8"))
-                    loaded_config[f"{prev_step}_data"] = step_data
-                    logger.debug(f"Loaded artifact for {prev_step}")
+                artifact_path = artifact_store.build_path(tenant_id, run_id, prev_step)
+                exists = await artifact_store.exists(artifact_path)
+                if exists:
+                    artifact_refs[prev_step] = {
+                        "path": artifact_path,
+                        "step": prev_step,
+                    }
+                    logger.debug(f"Artifact reference recorded for {prev_step}")
+
+            # Store only references in config (not full step data)
+            loaded_config["resume_artifact_refs"] = artifact_refs
+            logger.info(
+                "Resume artifact references prepared",
+                extra={
+                    "run_id": run_id,
+                    "resume_from": step,
+                    "artifact_refs_count": len(artifact_refs),
+                },
+            )
 
             steps_to_delete = step_order[step_index:]
             steps_to_delete_with_step11 = steps_to_delete + ["step11"]
@@ -814,13 +856,7 @@ async def resume_from_step(
 
             new_workflow_id = f"{run_id}-resume-{uuid.uuid4().hex[:8]}"
 
-            await temporal_client.start_workflow(
-                "ArticleWorkflow",
-                args=[tenant_id, run_id, loaded_config, step],
-                id=new_workflow_id,
-                task_queue=task_queue,
-            )
-
+            # First, update DB and commit BEFORE starting workflow
             now = datetime.now()
             original_run.status = RunStatus.RUNNING.value
             original_run.current_step = step
@@ -844,6 +880,16 @@ async def resume_from_step(
             )
 
             await session.commit()
+            logger.info("Resume DB update committed", extra={"run_id": run_id, "step": step})
+
+        # Start Temporal workflow AFTER DB commit (outside session context)
+        try:
+            await temporal_client.start_workflow(
+                "ArticleWorkflow",
+                args=[tenant_id, run_id, loaded_config, step],
+                id=new_workflow_id,
+                task_queue=task_queue,
+            )
 
             logger.info(
                 "Run resumed",
@@ -854,15 +900,24 @@ async def resume_from_step(
                     "loaded_steps": steps_to_load,
                 },
             )
+        except Exception as wf_error:
+            logger.error(f"Failed to start resume workflow: {wf_error}", exc_info=True)
+            # Revert status to failed if workflow start fails
+            async with db_manager.get_session(tenant_id) as session:
+                result = await session.execute(select(Run).where(Run.id == run_id))
+                run = result.scalar_one()
+                run.status = RunStatus.FAILED.value
+                run.error_message = f"Resume workflow start failed: {wf_error}"
+            raise HTTPException(status_code=503, detail=f"Failed to start resume workflow: {wf_error}")
 
-            return {
-                "success": True,
-                "new_run_id": run_id,
-                "resume_from": step,
-                "workflow_id": new_workflow_id,
-                "loaded_steps": steps_to_load,
-                "deleted_artifacts_count": deleted_artifacts_count,
-            }
+        return {
+            "success": True,
+            "new_run_id": run_id,
+            "resume_from": step,
+            "workflow_id": new_workflow_id,
+            "loaded_steps": steps_to_load,
+            "deleted_artifacts_count": deleted_artifacts_count,
+        }
 
     except HTTPException:
         raise
