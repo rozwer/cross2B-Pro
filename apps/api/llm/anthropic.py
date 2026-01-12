@@ -75,9 +75,7 @@ class AnthropicClient(LLMInterface):
             raise NonRetryableLLMError("ANTHROPIC_API_KEY is not set")
 
         if model not in SUPPORTED_MODELS:
-            raise NonRetryableLLMError(
-                f"Model '{model}' is not supported. Supported models: {SUPPORTED_MODELS}"
-            )
+            raise NonRetryableLLMError(f"Model '{model}' is not supported. Supported models: {SUPPORTED_MODELS}")
 
         self.client = AsyncAnthropic(api_key=resolved_key)
         self._model = model
@@ -99,10 +97,7 @@ class AnthropicClient(LLMInterface):
         self._anthropic_config.extended_thinking.enabled = enabled
         if budget_tokens is not None:
             self._anthropic_config.extended_thinking.budget_tokens = budget_tokens
-        logger.info(
-            f"Extended thinking {'enabled' if enabled else 'disabled'}, "
-            f"budget_tokens={budget_tokens}"
-        )
+        logger.info(f"Extended thinking {'enabled' if enabled else 'disabled'}, budget_tokens={budget_tokens}")
 
     def set_effort(self, effort: str | None = None) -> None:
         """Effort levelを設定（Claude Opus 4.5向け）
@@ -209,41 +204,41 @@ class AnthropicClient(LLMInterface):
                     output=response.usage.output_tokens,
                 )
 
-                logger.info(
-                    f"Anthropic API call succeeded, "
-                    f"input_tokens={token_usage.input}, output_tokens={token_usage.output}"
+                # stop_reason検証とログ出力
+                stop_reason = response.stop_reason
+                self._validate_stop_reason(
+                    stop_reason,
+                    token_usage.output,
+                    config.max_tokens,
                 )
+
+                logger.info(f"Anthropic API call succeeded, input_tokens={token_usage.input}, output_tokens={token_usage.output}")
 
                 return LLMResponse(
                     content=content,
                     token_usage=token_usage,
                     model=response.model,
                     provider="anthropic",
+                    finish_reason=stop_reason,
                 )
 
             except AuthenticationError as e:
                 # Auth errors are non-retryable
                 logger.error(f"Authentication error: {e}")
-                raise NonRetryableLLMError(
-                    f"Authentication failed: {e}"
-                )
+                raise NonRetryableLLMError(f"Authentication failed: {e}")
 
             except RateLimitError as e:
                 # Rate limit is retryable
                 logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
                 if attempt >= self.max_retries:
-                    raise RetryableLLMError(
-                        f"Rate limit exceeded after {self.max_retries} attempts: {e}"
-                    )
+                    raise RetryableLLMError(f"Rate limit exceeded after {self.max_retries} attempts: {e}")
                 # Continue to next attempt
 
             except APIConnectionError as e:
                 # Connection errors are retryable
                 logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
                 if attempt >= self.max_retries:
-                    raise RetryableLLMError(
-                        f"Connection failed after {self.max_retries} attempts: {e}"
-                    )
+                    raise RetryableLLMError(f"Connection failed after {self.max_retries} attempts: {e}")
                 # Continue to next attempt
 
             except APIStatusError as e:
@@ -251,28 +246,20 @@ class AnthropicClient(LLMInterface):
                 if e.status_code >= 500:
                     logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
                     if attempt >= self.max_retries:
-                        raise RetryableLLMError(
-                            f"Server error after {self.max_retries} attempts: {e}"
-                        )
+                        raise RetryableLLMError(f"Server error after {self.max_retries} attempts: {e}")
                     # Continue to next attempt
                 else:
                     # Client errors (4xx except rate limit) are non-retryable
                     logger.error(f"API error: {e}")
-                    raise NonRetryableLLMError(
-                        f"API error: {e}"
-                    )
+                    raise NonRetryableLLMError(f"API error: {e}")
 
             except Exception as e:
                 # Unknown errors are treated as non-retryable
                 logger.error(f"Unexpected error: {e}")
-                raise NonRetryableLLMError(
-                    f"Unexpected error: {e}"
-                )
+                raise NonRetryableLLMError(f"Unexpected error: {e}")
 
         # Should not reach here, but handle edge case
-        raise RetryableLLMError(
-            f"Failed after {self.max_retries} attempts"
-        )
+        raise RetryableLLMError(f"Failed after {self.max_retries} attempts")
 
     async def generate_json(
         self,
@@ -319,10 +306,7 @@ class AnthropicClient(LLMInterface):
         while attempt < self.max_retries:
             attempt += 1
             try:
-                logger.info(
-                    f"Anthropic API JSON call attempt {attempt}/{self.max_retries}, "
-                    f"model={self.model}"
-                )
+                logger.info(f"Anthropic API JSON call attempt {attempt}/{self.max_retries}, model={self.model}")
 
                 # Convert messages to Anthropic format
                 anthropic_messages = self._convert_messages(normalized_messages)
@@ -352,36 +336,26 @@ class AnthropicClient(LLMInterface):
 
             except AuthenticationError as e:
                 logger.error(f"Authentication error: {e}")
-                raise NonRetryableLLMError(
-                    f"Authentication failed: {e}"
-                )
+                raise NonRetryableLLMError(f"Authentication failed: {e}")
 
             except RateLimitError as e:
                 logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
                 if attempt >= self.max_retries:
-                    raise RetryableLLMError(
-                        f"Rate limit exceeded after {self.max_retries} attempts: {e}"
-                    )
+                    raise RetryableLLMError(f"Rate limit exceeded after {self.max_retries} attempts: {e}")
 
             except APIConnectionError as e:
                 logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
                 if attempt >= self.max_retries:
-                    raise RetryableLLMError(
-                        f"Connection failed after {self.max_retries} attempts: {e}"
-                    )
+                    raise RetryableLLMError(f"Connection failed after {self.max_retries} attempts: {e}")
 
             except APIStatusError as e:
                 if e.status_code >= 500:
                     logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
                     if attempt >= self.max_retries:
-                        raise RetryableLLMError(
-                            f"Server error after {self.max_retries} attempts: {e}"
-                        )
+                        raise RetryableLLMError(f"Server error after {self.max_retries} attempts: {e}")
                 else:
                     logger.error(f"API error: {e}")
-                    raise NonRetryableLLMError(
-                        f"API error: {e}"
-                    )
+                    raise NonRetryableLLMError(f"API error: {e}")
 
             except ValidationLLMError:
                 # Re-raise validation errors without retry
@@ -389,19 +363,13 @@ class AnthropicClient(LLMInterface):
 
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error: {e}")
-                raise ValidationLLMError(
-                    f"Failed to parse JSON response: {e}"
-                )
+                raise ValidationLLMError(f"Failed to parse JSON response: {e}")
 
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
-                raise NonRetryableLLMError(
-                    f"Unexpected error: {e}"
-                )
+                raise NonRetryableLLMError(f"Unexpected error: {e}")
 
-        raise RetryableLLMError(
-            f"Failed after {self.max_retries} attempts"
-        )
+        raise RetryableLLMError(f"Failed after {self.max_retries} attempts")
 
     def _convert_messages(self, messages: list[dict[str, Any]]) -> list[MessageParam]:
         """Convert standard message format to Anthropic format.
@@ -432,3 +400,47 @@ class AnthropicClient(LLMInterface):
                 anthropic_messages.append({"role": "user", "content": content})
 
         return anthropic_messages
+
+    def _validate_stop_reason(
+        self,
+        stop_reason: str | None,
+        output_tokens: int,
+        max_tokens: int,
+    ) -> None:
+        """stop_reasonと出力トークン比率を検証してログ出力
+
+        Args:
+            stop_reason: APIから返されたstop_reason
+            output_tokens: 実際の出力トークン数
+            max_tokens: リクエスト時のmax_tokens設定
+        """
+        # stop_reasonの検証
+        # Anthropic stop_reason: end_turn, max_tokens, stop_sequence, tool_use
+        if stop_reason:
+            if stop_reason == "max_tokens":
+                logger.warning(
+                    "Output was truncated due to max_tokens limit",
+                    extra={
+                        "provider": "anthropic",
+                        "model": self._model,
+                        "stop_reason": stop_reason,
+                        "output_tokens": output_tokens,
+                        "max_tokens": max_tokens,
+                    },
+                )
+
+        # 出力トークン比率チェック（max_tokensが指定されている場合のみ）
+        if max_tokens and max_tokens > 0 and output_tokens > 0:
+            ratio = output_tokens / max_tokens
+            # 10%未満は警告（期待より大幅に少ない出力）
+            if ratio < 0.1:
+                logger.warning(
+                    f"Output token ratio is very low: {ratio:.1%} ({output_tokens}/{max_tokens})",
+                    extra={
+                        "provider": "anthropic",
+                        "model": self._model,
+                        "output_tokens": output_tokens,
+                        "max_tokens": max_tokens,
+                        "ratio": ratio,
+                    },
+                )

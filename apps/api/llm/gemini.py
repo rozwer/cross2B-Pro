@@ -308,8 +308,8 @@ class GeminiClient(LLMInterface):
 
             latency_ms = (time.time() - start_time) * 1000
 
-            # レスポンスをパース
-            llm_response = self._parse_response(response, latency_ms)
+            # レスポンスをパース（max_tokensを渡して出力トークン比率チェック）
+            llm_response = self._parse_response(response, latency_ms, config.max_tokens)
 
             self._log_response("generate", llm_response, metadata)
             return llm_response
@@ -378,8 +378,8 @@ class GeminiClient(LLMInterface):
 
             latency_ms = (time.time() - start_time) * 1000
 
-            # レスポンスをパース
-            llm_response = self._parse_response(response, latency_ms)
+            # レスポンスをパース（max_tokensを渡して出力トークン比率チェック）
+            llm_response = self._parse_response(response, latency_ms, config.max_tokens)
             self._log_response("generate_json", llm_response, metadata)
 
             # JSONをパース
@@ -471,8 +471,8 @@ class GeminiClient(LLMInterface):
 
             latency_ms = (time.time() - start_time) * 1000
 
-            # レスポンスをパース
-            llm_response = self._parse_response(response, latency_ms)
+            # レスポンスをパース（max_tokensを渡して出力トークン比率チェック）
+            llm_response = self._parse_response(response, latency_ms, config.max_tokens)
             self._log_response("generate_json_with_usage", llm_response, metadata)
 
             # JSONをパース
@@ -726,8 +726,14 @@ class GeminiClient(LLMInterface):
             model=self._model,
         )
 
-    def _parse_response(self, response: Any, latency_ms: float) -> LLMResponse:
-        """レスポンスをパース"""
+    def _parse_response(self, response: Any, latency_ms: float, max_tokens: int | None = None) -> LLMResponse:
+        """レスポンスをパース
+
+        Args:
+            response: Gemini APIレスポンス
+            latency_ms: レイテンシ（ミリ秒）
+            max_tokens: リクエスト時のmax_tokens設定（出力トークン比率チェック用）
+        """
         # テキストを取得
         text = response.text or ""
 
@@ -747,6 +753,9 @@ class GeminiClient(LLMInterface):
             # 推定（実際にはAPIから取得すべき）
             input_tokens = 0
             output_tokens = 0
+
+        # finish_reason検証とログ出力
+        self._validate_finish_reason(finish_reason, output_tokens, max_tokens)
 
         # Grounding情報を取得
         grounding_metadata = None
@@ -777,6 +786,71 @@ class GeminiClient(LLMInterface):
             latency_ms=latency_ms,
             grounding_metadata=grounding_metadata,
         )
+
+    def _validate_finish_reason(
+        self,
+        finish_reason: str | None,
+        output_tokens: int,
+        max_tokens: int | None,
+    ) -> None:
+        """finish_reasonと出力トークン比率を検証してログ出力
+
+        Args:
+            finish_reason: APIから返されたfinish_reason
+            output_tokens: 実際の出力トークン数
+            max_tokens: リクエスト時のmax_tokens設定
+        """
+        # finish_reasonの検証
+        # Gemini finish_reason: STOP, MAX_TOKENS, SAFETY, RECITATION, OTHER, BLOCKLIST, PROHIBITED_CONTENT
+        if finish_reason:
+            finish_reason_upper = finish_reason.upper()
+
+            if finish_reason_upper == "MAX_TOKENS":
+                logger.warning(
+                    "Output was truncated due to max_tokens limit",
+                    extra={
+                        "provider": self.PROVIDER_NAME,
+                        "model": self._model,
+                        "finish_reason": finish_reason,
+                        "output_tokens": output_tokens,
+                        "max_tokens": max_tokens,
+                    },
+                )
+            elif finish_reason_upper in ("SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT"):
+                logger.error(
+                    f"Content blocked or filtered: {finish_reason}",
+                    extra={
+                        "provider": self.PROVIDER_NAME,
+                        "model": self._model,
+                        "finish_reason": finish_reason,
+                    },
+                )
+            elif finish_reason_upper == "OTHER":
+                logger.warning(
+                    "Unexpected finish_reason: OTHER",
+                    extra={
+                        "provider": self.PROVIDER_NAME,
+                        "model": self._model,
+                        "finish_reason": finish_reason,
+                        "output_tokens": output_tokens,
+                    },
+                )
+
+        # 出力トークン比率チェック（max_tokensが指定されている場合のみ）
+        if max_tokens and max_tokens > 0 and output_tokens > 0:
+            ratio = output_tokens / max_tokens
+            # 10%未満は警告（期待より大幅に少ない出力）
+            if ratio < 0.1:
+                logger.warning(
+                    f"Output token ratio is very low: {ratio:.1%} ({output_tokens}/{max_tokens})",
+                    extra={
+                        "provider": self.PROVIDER_NAME,
+                        "model": self._model,
+                        "output_tokens": output_tokens,
+                        "max_tokens": max_tokens,
+                        "ratio": ratio,
+                    },
+                )
 
     def _convert_exception(self, e: Exception) -> LLMError:
         """例外を統一フォーマットに変換"""
