@@ -849,7 +849,7 @@ No text or watermarks in the image."""
             保存先パス
         """
         # storage/{tenant}/{run}/step11/images/ に統一
-        path = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id, f"images/image_{image_index + 1}.png")
+        path = self.store.build_nested_path(ctx.tenant_id, ctx.run_id, self.step_id, "images", f"image_{image_index + 1}.png")
 
         await self.store.put(
             content=image_data,
@@ -878,8 +878,13 @@ No text or watermarks in the image."""
             保存先パス
         """
         # storage/{tenant}/{run}/step11/images/article_{n}/ に統一
-        path = self.store.build_path(
-            ctx.tenant_id, ctx.run_id, self.step_id, f"images/article_{article_number}/image_{image_index + 1}.png"
+        path = self.store.build_nested_path(
+            ctx.tenant_id,
+            ctx.run_id,
+            self.step_id,
+            "images",
+            f"article_{article_number}",
+            f"image_{image_index + 1}.png",
         )
 
         await self.store.put(
