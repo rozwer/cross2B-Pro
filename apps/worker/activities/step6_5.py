@@ -268,9 +268,9 @@ class Step65IntegrationPackage(BaseActivity):
             quality_score=quality_score,
             handoff_notes=quality.warnings,
             model=response.model,
-            usage={
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+            token_usage={
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             # V2フィールド
             comprehensive_blueprint=comprehensive_blueprint,

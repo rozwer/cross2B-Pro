@@ -9,7 +9,6 @@ import html
 import json
 import logging
 import re
-from datetime import datetime
 from typing import Any
 
 from temporalio import activity
@@ -203,7 +202,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         # 生成メタデータ
         total_images = sum(len(a.images) for a in wordpress_articles)
         generation_metadata = GenerationMetadata(
-            generated_at=datetime.now(),
+            generated_at=ctx.started_at,
             model="claude-3-5-sonnet",
             wordpress_version_target="6.0+",
             total_articles=len(wordpress_articles),
@@ -217,7 +216,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             common_assets=common_assets,
             generation_metadata=generation_metadata,
             model="claude-3-5-sonnet",
-            usage={"total_tokens": total_tokens},
+            token_usage={"input": 0, "output": total_tokens},
             warnings=warnings,
         )
 

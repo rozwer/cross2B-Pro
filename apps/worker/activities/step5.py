@@ -290,7 +290,8 @@ class Step5PrimaryCollection(BaseActivity):
                     else:
                         source["verified"] = False
                         invalid_sources.append(source)
-                except Exception:
+                except Exception as e:
+                    activity.logger.warning(f"URL verification failed for {source.get('url', '')}: {e}")
                     source["verified"] = False
                     invalid_sources.append(source)
         else:

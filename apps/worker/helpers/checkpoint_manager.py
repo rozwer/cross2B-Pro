@@ -118,9 +118,7 @@ class CheckpointManager:
         """
         # Use checkpoint_{phase}.json filename to avoid slash in step parameter
         checkpoint_filename = f"checkpoint_{phase}.json"
-        raw_content = await self.store.get_by_path(
-            tenant_id, run_id, step_id, checkpoint_filename
-        )
+        raw_content = await self.store.get_by_path(tenant_id, run_id, step_id, checkpoint_filename)
 
         if raw_content is None:
             return None
@@ -158,9 +156,7 @@ class CheckpointManager:
         """
         # Use checkpoint_{phase}.json filename to avoid slash in step parameter
         checkpoint_filename = f"checkpoint_{phase}.json"
-        raw_content = await self.store.get_by_path(
-            tenant_id, run_id, step_id, checkpoint_filename
-        )
+        raw_content = await self.store.get_by_path(tenant_id, run_id, step_id, checkpoint_filename)
         return raw_content is not None
 
     async def clear(

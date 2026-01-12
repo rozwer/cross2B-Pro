@@ -103,13 +103,15 @@ async def step_wrapper(
         ) from e
 
     # Step 2: Emit step started event
-    await emitter.emit(Event(
-        event_type=EventType.STEP_STARTED,
-        run_id=ctx.run_id,
-        step_id=ctx.step_id,
-        tenant_id=ctx.tenant_id,
-        payload={"attempt": ctx.attempt},
-    ))
+    await emitter.emit(
+        Event(
+            event_type=EventType.STEP_STARTED,
+            run_id=ctx.run_id,
+            step_id=ctx.step_id,
+            tenant_id=ctx.tenant_id,
+            payload={"attempt": ctx.attempt},
+        )
+    )
 
     try:
         # Step 3: Execute step function
@@ -144,25 +146,29 @@ async def step_wrapper(
         duration_ms = int((time.time() - start_time) * 1000)
 
         # Step 7: Emit success event
-        await emitter.emit(Event(
-            event_type=EventType.STEP_SUCCEEDED,
-            run_id=ctx.run_id,
-            step_id=ctx.step_id,
-            tenant_id=ctx.tenant_id,
-            payload={
-                "duration_ms": duration_ms,
-                "artifact_path": artifact_ref.path,
-                "artifact_digest": artifact_ref.digest,
-            },
-        ))
+        await emitter.emit(
+            Event(
+                event_type=EventType.STEP_SUCCEEDED,
+                run_id=ctx.run_id,
+                step_id=ctx.step_id,
+                tenant_id=ctx.tenant_id,
+                payload={
+                    "duration_ms": duration_ms,
+                    "artifact_path": artifact_ref.path,
+                    "artifact_digest": artifact_ref.digest,
+                },
+            )
+        )
 
         # Step 8: Update state
         state = add_step_output(state, ctx.step_id, artifact_ref)
-        state = GraphState(**{
-            **state,
-            "current_step": ctx.step_id,
-            "status": "running",
-        })
+        state = GraphState(
+            **{
+                **state,
+                "current_step": ctx.step_id,
+                "status": "running",
+            }
+        )
 
         return state
 
@@ -171,16 +177,18 @@ async def step_wrapper(
 
     except Exception as e:
         # Emit failure event
-        await emitter.emit(Event(
-            event_type=EventType.STEP_FAILED,
-            run_id=ctx.run_id,
-            step_id=ctx.step_id,
-            tenant_id=ctx.tenant_id,
-            payload={
-                "error": str(e),
-                "category": ErrorCategory.RETRYABLE.value,
-            },
-        ))
+        await emitter.emit(
+            Event(
+                event_type=EventType.STEP_FAILED,
+                run_id=ctx.run_id,
+                step_id=ctx.step_id,
+                tenant_id=ctx.tenant_id,
+                payload={
+                    "error": str(e),
+                    "category": ErrorCategory.RETRYABLE.value,
+                },
+            )
+        )
 
         # Add error to state
         error = StepError(
@@ -209,7 +217,12 @@ def _extract_render_vars(state: GraphState, config: dict[str, Any]) -> dict[str,
     step_outputs = state.get("step_outputs", {})
     for step_id, artifact_ref in step_outputs.items():
         # Add reference info (not actual content - that's in storage)
-        vars_dict[f"{step_id}_ref"] = artifact_ref.path if artifact_ref else None
+        if isinstance(artifact_ref, ArtifactRef):
+            vars_dict[f"{step_id}_ref"] = artifact_ref.path
+        elif isinstance(artifact_ref, dict):
+            vars_dict[f"{step_id}_ref"] = artifact_ref.get("path")
+        else:
+            vars_dict[f"{step_id}_ref"] = None
 
     return vars_dict
 
@@ -239,6 +252,7 @@ async def _store_artifact(
 def create_node_function(
     step_id: str,
     execute_fn: Callable[[str, GraphState, ExecutionContext], Coroutine[Any, Any, dict[str, Any]]],
+    final_status: str | None = None,
 ) -> Callable[[GraphState], Coroutine[Any, Any, GraphState]]:
     """Create a LangGraph node function with consistent wrapper behavior.
 
@@ -262,11 +276,14 @@ def create_node_function(
             config=state.get("config", {}),
         )
 
-        return await step_wrapper(
+        updated_state = await step_wrapper(
             step_fn=execute_fn,
             ctx=ctx,
             state=state,
             config=state.get("config", {}),
         )
+        if final_status:
+            return GraphState(**{**updated_state, "status": final_status})
+        return updated_state
 
     return node_fn

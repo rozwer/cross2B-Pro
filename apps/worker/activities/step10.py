@@ -618,7 +618,7 @@ class Step10FinalOutput(BaseActivity):
             publication_checklist=checklist,
             publication_readiness=publication_readiness,
             model=llm_provider,
-            usage={"total_tokens": total_tokens},
+            token_usage={"input": 0, "output": total_tokens},
             warnings=warnings,
         )
 

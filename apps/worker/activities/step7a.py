@@ -283,9 +283,9 @@ class Step7ADraftGeneration(BaseActivity):
         # Get response metadata
         response = getattr(self, "_last_response", None)
         model_name = response.model if response else ""
-        usage = {
-            "input_tokens": response.token_usage.input if response else 0,
-            "output_tokens": response.token_usage.output if response else 0,
+        token_usage = {
+            "input": response.token_usage.input if response else 0,
+            "output": response.token_usage.output if response else 0,
         }
 
         # === blog.System Ver8.3 Extensions ===
@@ -324,7 +324,7 @@ class Step7ADraftGeneration(BaseActivity):
             },
             continued=continuation_used,
             model=model_name,
-            usage=usage,
+            token_usage=token_usage,
             # blog.System Ver8.3 extensions
             section_word_counts=[SectionWordCount(**swc) for swc in section_word_counts],
             four_pillars_implementation=[

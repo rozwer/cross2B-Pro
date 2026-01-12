@@ -141,7 +141,7 @@ class Step6_5Output(StepOutputBase):
     quality_score: float = Field(default=0.0, ge=0.0, le=1.0)
     handoff_notes: list[str] = Field(default_factory=list)
     model: str = ""
-    usage: dict[str, int] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System Ver8.3 対応フィールド（後方互換性のため Optional）
     comprehensive_blueprint: ComprehensiveBlueprint | None = Field(default=None, description="包括的構成案（パート1/2構成）")

@@ -177,4 +177,4 @@ class Step12Output(BaseModel):
     output_digest: str = Field(default="", description="sha256ダイジェスト")
     warnings: list[str] = Field(default_factory=list, description="警告メッセージ")
     model: str = Field(default="", description="使用したモデル")
-    usage: dict[str, Any] = Field(default_factory=dict, description="トークン使用量")
+    token_usage: dict[str, Any] = Field(default_factory=dict, description="トークン使用量")

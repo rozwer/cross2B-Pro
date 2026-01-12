@@ -11,6 +11,8 @@ Uses Tools (SERP + Page Fetch) for data collection.
 """
 
 import asyncio
+import hashlib
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -42,6 +44,9 @@ class Step1CompetitorFetch(BaseActivity):
     PAGE_FETCH_MAX_RETRIES = 2
     PAGE_FETCH_TIMEOUT = 30
     MAX_CONTENT_CHARS = 15000  # ~15KB per article
+    PAGE_CACHE_TTL_SECONDS = 60 * 60 * 24
+    PAGE_CACHE_RUN_ID = "_cache"
+    PAGE_CACHE_STEP_ID = "page_fetch"
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
@@ -153,7 +158,7 @@ class Step1CompetitorFetch(BaseActivity):
         remaining_urls = [u for u in urls if u not in already_fetched]
 
         if remaining_urls:
-            new_results, new_failures = await self._fetch_pages_with_retry(page_fetch_tool, remaining_urls)
+            new_results, new_failures = await self._fetch_pages_with_retry(page_fetch_tool, remaining_urls, ctx.tenant_id)
 
             partial_results.extend(new_results)
             failed_urls.extend(new_failures)
@@ -204,12 +209,14 @@ class Step1CompetitorFetch(BaseActivity):
         self,
         page_fetch_tool: Any,
         urls: list[str],
+        tenant_id: str,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Fetch pages with individual retry logic.
 
         Args:
             page_fetch_tool: Page fetch tool instance
             urls: List of URLs to fetch
+            tenant_id: Tenant identifier for cache isolation
 
         Returns:
             Tuple of (successful results, failed results)
@@ -218,7 +225,7 @@ class Step1CompetitorFetch(BaseActivity):
         failures: list[dict[str, Any]] = []
 
         for url in urls:
-            page_data, error = await self._fetch_page_with_retry(page_fetch_tool, url)
+            page_data, error = await self._fetch_page_with_retry(page_fetch_tool, url, tenant_id)
 
             if page_data:
                 results.append(page_data)
@@ -231,17 +238,23 @@ class Step1CompetitorFetch(BaseActivity):
         self,
         page_fetch_tool: Any,
         url: str,
+        tenant_id: str,
     ) -> tuple[dict[str, Any] | None, str | None]:
         """Fetch a single page with retry logic.
 
         Args:
             page_fetch_tool: Page fetch tool instance
             url: URL to fetch
+            tenant_id: Tenant identifier for cache isolation
 
         Returns:
             Tuple of (page data, error message)
         """
         last_error: str | None = None
+
+        cached = await self._load_cached_page(tenant_id, url)
+        if cached:
+            return cached, None
 
         for attempt in range(self.PAGE_FETCH_MAX_RETRIES):
             try:
@@ -255,7 +268,9 @@ class Step1CompetitorFetch(BaseActivity):
 
                     # Content quality check
                     if self._is_valid_content(content):
-                        return self._extract_page_data(fetch_result.data, url), None
+                        page_data = self._extract_page_data(fetch_result.data, url)
+                        await self._store_cached_page(tenant_id, url, page_data)
+                        return page_data, None
 
                     last_error = "invalid_content"
                 else:
@@ -271,6 +286,57 @@ class Step1CompetitorFetch(BaseActivity):
                 await asyncio.sleep(1 * (attempt + 1))
 
         return None, last_error
+
+    async def _load_cached_page(self, tenant_id: str, url: str) -> dict[str, Any] | None:
+        cache_key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        filename = f"{cache_key}.json"
+        try:
+            cached_bytes = await self.store.get_by_path(
+                tenant_id=tenant_id,
+                run_id=self.PAGE_CACHE_RUN_ID,
+                step=self.PAGE_CACHE_STEP_ID,
+                filename=filename,
+            )
+        except Exception as e:
+            logger.warning(f"[STEP1] Cache read failed for {url}: {e}")
+            return None
+
+        if not cached_bytes:
+            return None
+
+        try:
+            cached = json.loads(cached_bytes.decode("utf-8"))
+            cached_at = datetime.fromisoformat(cached.get("cached_at", ""))
+        except (ValueError, json.JSONDecodeError, TypeError):
+            return None
+
+        if (datetime.utcnow() - cached_at).total_seconds() > self.PAGE_CACHE_TTL_SECONDS:
+            return None
+
+        data = cached.get("data")
+        return data if isinstance(data, dict) else None
+
+    async def _store_cached_page(self, tenant_id: str, url: str, page_data: dict[str, Any]) -> None:
+        cache_key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+        filename = f"{cache_key}.json"
+        cache_payload = {
+            "url": url,
+            "cached_at": datetime.utcnow().isoformat(),
+            "data": page_data,
+        }
+        try:
+            await self.store.put(
+                content=json.dumps(cache_payload, ensure_ascii=False).encode("utf-8"),
+                path=self.store.build_path(
+                    tenant_id=tenant_id,
+                    run_id=self.PAGE_CACHE_RUN_ID,
+                    step=self.PAGE_CACHE_STEP_ID,
+                    filename=filename,
+                ),
+                content_type="application/json",
+            )
+        except Exception as e:
+            logger.warning(f"[STEP1] Cache write failed for {url}: {e}")
 
     def _is_valid_content(self, content: str) -> bool:
         """Check if content is valid (not an error page).

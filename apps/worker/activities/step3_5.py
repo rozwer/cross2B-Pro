@@ -8,7 +8,6 @@ Uses Gemini for natural, creative expression generation.
 import hashlib
 import json
 import logging
-from datetime import datetime
 from typing import Any
 
 from temporalio import activity
@@ -482,7 +481,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             "parsed_data": parsed_data if parsed_data else None,
             # Metadata
             "metadata": {
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": ctx.started_at.isoformat(),
                 "model": response.model,
                 "input_files": input_files,
             },

@@ -283,7 +283,7 @@ class Step7aOutput(StepOutputBase):
     generation_stats: dict[str, Any] = Field(default_factory=dict)
     continued: bool = False  # 分割生成で続きを生成した場合
     model: str = ""
-    usage: dict[str, int] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
     # blog.System Ver8.3 extensions
     section_word_counts: list[SectionWordCount] = Field(
         default_factory=list,

@@ -341,9 +341,9 @@ class Step4StrategicOutline(BaseActivity):
         # Get response metadata
         response = getattr(self, "_last_response", None)
         model_name = response.model if response else ""
-        usage = {
-            "input_tokens": response.token_usage.input if response else 0,
-            "output_tokens": response.token_usage.output if response else 0,
+        token_usage = {
+            "input": response.token_usage.input if response else 0,
+            "output": response.token_usage.output if response else 0,
         }
 
         # V2モード検出: pack_idがv2_blog_systemの場合
@@ -387,7 +387,7 @@ class Step4StrategicOutline(BaseActivity):
             metrics=metrics,
             quality=quality,
             model=model_name,
-            usage=usage,
+            token_usage=token_usage,
             # V2フィールド
             title_metadata=title_metadata,
             three_phase_structure=three_phase_structure,

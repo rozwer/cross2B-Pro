@@ -299,9 +299,9 @@ class Step6EnhancedOutline(BaseActivity):
         # Get response metadata
         response = getattr(self, "_last_response", None)
         model_name = response.model if response else ""
-        usage = {
-            "input_tokens": response.token_usage.input if response else 0,
-            "output_tokens": response.token_usage.output if response else 0,
+        token_usage = {
+            "input": response.token_usage.input if response else 0,
+            "output": response.token_usage.output if response else 0,
         }
 
         # Compute original outline hash
@@ -330,7 +330,7 @@ class Step6EnhancedOutline(BaseActivity):
             quality=quality,
             sources_used=len(source_summaries),
             model=model_name,
-            usage=usage,
+            token_usage=token_usage,
             warnings=enhancement_quality.warnings,
             # blog.System 統合フィールド
             data_anchor_placements=data_anchor_placements,

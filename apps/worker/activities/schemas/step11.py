@@ -127,7 +127,7 @@ class PositionAnalysisResult(BaseModel):
         description="推奨挿入位置リスト",
     )
     model: str = Field(default="", description="分析に使用したモデル")
-    usage: dict[str, int] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
 
 
 class Step11State(BaseModel):
@@ -194,7 +194,7 @@ class Step11Output(BaseModel):
         description="画像挿入後のHTMLコンテンツ",
     )
     model: str = Field(default="", description="使用したモデル")
-    usage: dict[str, Any] = Field(default_factory=dict)
+    token_usage: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -393,7 +393,7 @@ class Step11OutputV2(BaseModel):
         description="画像挿入後のHTMLコンテンツ",
     )
     model: str = Field(default="", description="使用したモデル")
-    usage: dict[str, Any] = Field(default_factory=dict)
+    token_usage: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
     # 新規フィールド（blog.System Ver8.3 対応）
