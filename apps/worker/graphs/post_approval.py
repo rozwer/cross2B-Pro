@@ -67,18 +67,16 @@ async def step3_5_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
         emotional_analysis = parsed.get("emotional_analysis", {})
         human_touch_patterns = parsed.get("human_touch_patterns", [])
         experience_episodes = parsed.get("experience_episodes", [])
         emotional_hooks = parsed.get("emotional_hooks", [])
-    except json.JSONDecodeError:
-        emotional_analysis = {}
-        human_touch_patterns = []
-        experience_episodes = []
-        emotional_hooks = []
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 3.5 JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step3_5",

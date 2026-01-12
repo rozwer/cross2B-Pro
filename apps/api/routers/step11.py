@@ -1147,10 +1147,12 @@ async def finalize_images(
         )
 
         # 状態を更新
+        # Note: Run status should remain "running" until Step12 completes
+        # Only update step11_state, not the overall run status
         state.phase = "completed"
         run.step11_state = state.model_dump()
-        run.current_step = "completed"
-        run.status = "completed"
+        run.current_step = "step11"  # Keep at step11, Workflow will advance to step12
+        run.status = "running"  # Keep running, not completed
         run.updated_at = datetime.now()
 
         # Step11のステータスを更新（step_statusテーブル）
@@ -1190,6 +1192,9 @@ async def finalize_images(
             details={"image_count": len(images)},
         )
 
+        # Save previous state for rollback
+        previous_step11_state = run.step11_state
+
         await session.commit()
 
         # Temporal signalを送信してWorkflowを再開
@@ -1204,6 +1209,21 @@ async def finalize_images(
             logger.info("Temporal step11_finalize signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
             logger.error(f"Failed to send step11_finalize signal: {sig_error}", exc_info=True)
+            # Rollback DB state on signal failure
+            try:
+                async with db_manager.get_session(tenant_id) as rollback_session:
+                    rollback_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+                    rollback_result = await rollback_session.execute(rollback_query)
+                    rollback_run = rollback_result.scalar_one_or_none()
+                    if rollback_run:
+                        rollback_run.step11_state = previous_step11_state
+                        rollback_run.current_step = "step11"
+                        rollback_run.status = "waiting_image_input"
+                        rollback_run.updated_at = datetime.now()
+                        await rollback_session.commit()
+                        logger.info(f"Rolled back step11 state for run {run_id}")
+            except Exception as rollback_error:
+                logger.error(f"Failed to rollback step11 state: {rollback_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
 
     return {
@@ -1233,8 +1253,10 @@ async def skip_image_generation(
 
         state = Step11State(phase="skipped")
         run.step11_state = state.model_dump()
-        run.current_step = "completed"
-        run.status = "completed"
+        # Note: Run status should remain "running" until Step12 completes
+        # Only update step11_state, not the overall run status
+        run.current_step = "step11"  # Keep at step11, Workflow will advance to step12
+        run.status = "running"  # Keep running, not completed
         run.updated_at = datetime.now()
 
         # 監査ログ
@@ -1247,6 +1269,9 @@ async def skip_image_generation(
             details={},
         )
 
+        # Save previous state for rollback
+        previous_step11_state = run.step11_state
+
         await session.commit()
 
         # Temporal signalを送信してWorkflowを再開
@@ -1257,6 +1282,21 @@ async def skip_image_generation(
             logger.info("Temporal step11_skip signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
             logger.error(f"Failed to send step11_skip signal: {sig_error}", exc_info=True)
+            # Rollback DB state on signal failure
+            try:
+                async with db_manager.get_session(tenant_id) as rollback_session:
+                    rollback_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+                    rollback_result = await rollback_session.execute(rollback_query)
+                    rollback_run = rollback_result.scalar_one_or_none()
+                    if rollback_run:
+                        rollback_run.step11_state = previous_step11_state
+                        rollback_run.current_step = "step11"
+                        rollback_run.status = "waiting_image_input"
+                        rollback_run.updated_at = datetime.now()
+                        await rollback_session.commit()
+                        logger.info(f"Rolled back step11 skip state for run {run_id}")
+            except Exception as rollback_error:
+                logger.error(f"Failed to rollback step11 skip state: {rollback_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
 
     return {"success": True, "phase": "skipped"}

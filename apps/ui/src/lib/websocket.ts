@@ -134,6 +134,28 @@ export class RunProgressWebSocket {
   getStatus(): WebSocketStatus {
     return this.status;
   }
+
+  getRunId(): string {
+    return this.runId;
+  }
+
+  /**
+   * runIdを変更して再接続する
+   * 古い接続を閉じて新しいrunIdで接続を確立
+   */
+  changeRunId(newRunId: string): void {
+    if (this.runId === newRunId) {
+      return; // Same runId, no change needed
+    }
+
+    // Close existing connection
+    this.disconnect();
+
+    // Update runId and reconnect
+    this.runId = newRunId;
+    this.reconnectCount = 0; // Reset reconnect counter for new connection
+    this.connect();
+  }
 }
 
 export function createRunProgressWebSocket(
