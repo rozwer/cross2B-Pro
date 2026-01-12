@@ -6,9 +6,16 @@ Endpoints for creating, listing, and managing workflow runs.
 import logging
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+if TYPE_CHECKING:
+    from temporalio.client import Client as TemporalClient
+
+    from apps.api.db.tenant import TenantDBManager
+    from apps.api.routers.websocket import ConnectionManager
+    from apps.api.storage import ArtifactStore as ArtifactStoreType
 from pydantic import BaseModel, Field
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import func, select
@@ -44,14 +51,14 @@ router = APIRouter(prefix="/api/runs", tags=["runs"])
 # =============================================================================
 
 
-def _get_temporal_client() -> Any:
+def _get_temporal_client() -> "TemporalClient | None":
     """Get Temporal client from main module."""
     from apps.api.main import temporal_client
 
     return temporal_client
 
 
-def _get_ws_manager() -> Any:
+def _get_ws_manager() -> "ConnectionManager":
     """Get WebSocket manager from main module."""
     from apps.api.main import ws_manager
 
@@ -65,14 +72,14 @@ def _get_temporal_task_queue() -> str:
     return TEMPORAL_TASK_QUEUE
 
 
-def _get_tenant_db_manager() -> Any:
+def _get_tenant_db_manager() -> "TenantDBManager":
     """Get tenant DB manager."""
     from apps.api.db.tenant import get_tenant_manager
 
     return get_tenant_manager()
 
 
-def _get_artifact_store() -> Any:
+def _get_artifact_store() -> "ArtifactStoreType":
     """Get artifact store instance."""
     from apps.api.main import get_artifact_store
 
