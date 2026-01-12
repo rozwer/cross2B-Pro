@@ -599,7 +599,7 @@ class Step8FactCheck(BaseActivity):
                     claims="\n".join(f"[{c.claim_id}] {c.text}" for c in extracted_claims),
                     keyword=keyword,
                 )
-                verify_config = LLMRequestConfig(max_tokens=3000, temperature=0.3)
+                verify_config = LLMRequestConfig(max_tokens=8000, temperature=0.3)
                 verify_response = await llm.generate(
                     messages=[{"role": "user", "content": verify_request}],
                     system_prompt="Verify the claims using available knowledge.",

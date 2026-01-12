@@ -41,7 +41,7 @@ STEP_TIMEOUTS: dict[str, int] = {
     "step7b": 300,
     "step8": 300,
     "step9": 300,
-    "step10": 120,
+    "step10": 900,  # 4記事生成に十分な時間を確保
     "step11": 600,  # 画像生成は時間がかかる
     "step12": 300,
 }
