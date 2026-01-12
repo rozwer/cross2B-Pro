@@ -237,7 +237,7 @@ class Step4StrategicOutline(BaseActivity):
         llm = get_llm_client(llm_provider, model=llm_model)
 
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 4000),
+            max_tokens=config.get("max_tokens", 8000),
             temperature=config.get("temperature", 0.6),
         )
 

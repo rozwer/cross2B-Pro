@@ -174,7 +174,7 @@ class Step0KeywordSelection(BaseActivity):
         )
 
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 2000),
+            max_tokens=config.get("max_tokens", 4000),
             temperature=config.get("temperature", 0.7),
         )
 
