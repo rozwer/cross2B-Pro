@@ -342,11 +342,12 @@ class BaseActivity(ABC):
                 source="activity",
                 context=e.details,
             )
-            # Update step status in DB via API
+            # Update step status in DB via API (with error_code)
             await self._update_step_status(
                 run_id=run_id,
                 step_name=self.step_id,
                 status="failed",
+                error_code=e.category.value,
                 error_message=str(e),
             )
             raise
@@ -370,11 +371,12 @@ class BaseActivity(ABC):
                 source="activity",
                 context={"unexpected": True},
             )
-            # Update step status in DB via API
+            # Update step status in DB via API (with error_code)
             await self._update_step_status(
                 run_id=run_id,
                 step_name=self.step_id,
                 status="failed",
+                error_code=ErrorCategory.RETRYABLE.value,
                 error_message=str(e),
             )
             raise ActivityError(
@@ -572,6 +574,7 @@ class BaseActivity(ABC):
         run_id: str,
         step_name: str,
         status: str,
+        error_code: str | None = None,
         error_message: str | None = None,
         retry_count: int = 0,
     ) -> None:
@@ -579,6 +582,14 @@ class BaseActivity(ABC):
 
         Sends HTTP request to API to record step progress in DB.
         Failures are logged but not raised to avoid blocking workflow.
+
+        Args:
+            run_id: Run identifier
+            step_name: Step identifier
+            status: Step status (running, completed, failed)
+            error_code: ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
+            error_message: Error message (if failed)
+            retry_count: Number of retry attempts
         """
         import logging
 
@@ -592,6 +603,7 @@ class BaseActivity(ABC):
                         "run_id": run_id,
                         "step_name": step_name,
                         "status": status,
+                        "error_code": error_code,
                         "error_message": error_message,
                         "retry_count": retry_count,
                     },

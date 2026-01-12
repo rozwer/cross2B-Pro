@@ -48,6 +48,7 @@ class StepUpdateRequest(BaseModel):
     run_id: str
     step_name: str
     status: Literal["running", "completed", "failed"]
+    error_code: str | None = None  # ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
     error_message: str | None = None
     retry_count: int = 0
     tenant_id: str | None = None  # Optional: passed from Worker, or looked up from run
@@ -122,14 +123,15 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
             # (inconsistent types: text vs character varying)
             await session.execute(
                 text("""
-                    INSERT INTO steps (id, run_id, step_name, status, started_at, retry_count)
+                    INSERT INTO steps (id, run_id, step_name, status, started_at, retry_count, error_code)
                     VALUES (
                         gen_random_uuid(),
                         CAST(:run_id AS UUID),
                         CAST(:step_name AS VARCHAR),
                         CAST(:status AS VARCHAR),
                         CASE WHEN CAST(:status AS VARCHAR) = 'running' THEN NOW() ELSE NULL END,
-                        :retry_count
+                        :retry_count,
+                        CAST(:error_code AS VARCHAR)
                     )
                     ON CONFLICT (run_id, step_name)
                     DO UPDATE SET
@@ -142,6 +144,7 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
                             WHEN CAST(:status AS VARCHAR) IN ('completed', 'failed') THEN NOW()
                             ELSE NULL
                         END,
+                        error_code = CAST(:error_code AS VARCHAR),
                         error_message = :error_message,
                         retry_count = :retry_count
                 """),
@@ -149,6 +152,7 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
                     "run_id": request.run_id,
                     "step_name": request.step_name,
                     "status": request.status,
+                    "error_code": request.error_code,
                     "error_message": request.error_message,
                     "retry_count": request.retry_count,
                 },

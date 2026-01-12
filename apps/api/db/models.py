@@ -146,6 +146,7 @@ class Step(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # ErrorCategory enum value
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 

@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS steps (
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
+    error_code VARCHAR(50),  -- ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
     error_message TEXT,
     retry_count INT DEFAULT 0,
 
