@@ -16,6 +16,7 @@ from sqlalchemy.orm import selectinload
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
+from apps.api.constants import INVALID_RESUME_STEPS, RESUME_STEP_ORDER, RETRY_STEP_ORDER
 from apps.api.db import AuditLogger, Run, Step, TenantIdValidationError
 from apps.api.schemas.article_hearing import ArticleHearingInput, KeywordStatus
 from apps.api.schemas.enums import RunStatus, StepStatus
@@ -580,29 +581,8 @@ async def retry_step(
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # ステップ順序（前ステップデータ読み込み用）
-    step_order = [
-        "step0",
-        "step1",
-        "step1_5",
-        "step2",
-        "step3a",
-        "step3b",
-        "step3c",
-        "step3_5",
-        "step4",
-        "step5",
-        "step6",
-        "step6_5",
-        "step7a",
-        "step7b",
-        "step8",
-        "step9",
-        "step10",
-        "step12",
-    ]
-
-    valid_steps = step_order  # リトライ可能なステップ = 全ステップ
+    # Use centralized step order constant
+    valid_steps = RETRY_STEP_ORDER
 
     requested_step = step.replace(".", "_")
     if requested_step not in valid_steps:
@@ -672,9 +652,9 @@ async def retry_step(
 
                 # 前ステップデータの確認（Activityは load_step_data で storage から読むため config に追加は不要）
                 # ただしログ用に読み込み状況を確認
-                if resume_step in step_order:
-                    step_index = step_order.index(resume_step)
-                    steps_to_load = step_order[:step_index]
+                if resume_step in RETRY_STEP_ORDER:
+                    step_index = RETRY_STEP_ORDER.index(resume_step)
+                    steps_to_load = RETRY_STEP_ORDER[:step_index]
                     loaded_steps = []
 
                     for prev_step in steps_to_load:
@@ -800,30 +780,8 @@ async def resume_from_step(
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    # Valid resume points (step3b/3c not allowed - must resume from step3 or step3a)
-    # step3 is normalized to step3a for Workflow compatibility
-    step_order = [
-        "step0",
-        "step1",
-        "step1_5",
-        "step2",
-        "step3",  # Accepted and normalized to step3a
-        "step3a",  # step3 group entry point
-        "step3_5",
-        "step4",
-        "step5",
-        "step6",
-        "step6_5",
-        "step7a",
-        "step7b",
-        "step8",
-        "step9",
-        "step10",
-        "step12",
-    ]
-
     # Reject step3b/3c - partial step3 group resume not supported
-    if step in ("step3b", "step3c"):
+    if step in INVALID_RESUME_STEPS:
         raise HTTPException(
             status_code=400,
             detail=f"Cannot resume from {step}. Resume from step3 or step3a to re-run the entire parallel group.",
@@ -832,10 +790,10 @@ async def resume_from_step(
     # Normalize step3 to step3a for Workflow compatibility
     normalized_step = "step3a" if step == "step3" else step
 
-    if step not in step_order:
+    if step not in RESUME_STEP_ORDER:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid step: {step}. Valid steps: {', '.join(step_order)}",
+            detail=f"Invalid step: {step}. Valid steps: {', '.join(RESUME_STEP_ORDER)}",
         )
 
     db_manager = _get_tenant_db_manager()
@@ -863,8 +821,8 @@ async def resume_from_step(
                     detail=f"Run is in progress (current status: {original_run.status}). Cancel it before resuming.",
                 )
 
-            step_index = step_order.index(step)
-            steps_to_load = step_order[:step_index]
+            step_index = RESUME_STEP_ORDER.index(step)
+            steps_to_load = RESUME_STEP_ORDER[:step_index]
 
             loaded_config = dict(original_run.config) if original_run.config else {}
 
@@ -897,7 +855,7 @@ async def resume_from_step(
                 },
             )
 
-            steps_to_delete = step_order[step_index:]
+            steps_to_delete = list(RESUME_STEP_ORDER[step_index:])
 
             # Only delete step11 artifacts if resuming from a step BEFORE step11's position
             # step12 depends on step11 images, so preserve step11 when resuming from step12
