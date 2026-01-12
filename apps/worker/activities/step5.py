@@ -152,7 +152,7 @@ class Step5PrimaryCollection(BaseActivity):
                     keyword=keyword,
                     outline=outline,
                 )
-                llm_config = LLMRequestConfig(max_tokens=1000, temperature=0.5)
+                llm_config = LLMRequestConfig(max_tokens=2000, temperature=0.5)
                 query_response = await llm.generate(
                     messages=[{"role": "user", "content": query_request}],
                     system_prompt="Generate search queries for primary source collection.",

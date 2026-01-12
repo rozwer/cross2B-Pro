@@ -162,7 +162,7 @@ class Step65IntegrationPackage(BaseActivity):
         # Execute LLM call
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 6000),
+                max_tokens=config.get("max_tokens", 8000),
                 temperature=config.get("temperature", 0.5),
             )
             response = await llm.generate(
