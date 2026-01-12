@@ -948,6 +948,18 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
   const quality = data.quality as {
     attempts?: number;
     issues?: string[];
+    details?: {
+      output_size?: number;
+      output_tokens?: number;
+      finish_reason?: string;
+    };
+  } | undefined;
+
+  // メトリクス情報（出力サイズ確認用）
+  const metrics = data.metrics as {
+    output_size?: number;
+    output_tokens?: number;
+    input_tokens?: number;
   } | undefined;
 
   // 競合データの型定義
@@ -991,7 +1003,19 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
     incomplete_json: "JSONが不完全",
     parse_error: "パースエラー",
     truncated: "出力が切れている",
+    output_too_small: "出力サイズ不足",
+    appears_truncated: "出力が途中で切れている可能性",
   };
+
+  // 出力切れ関連のissueかどうか
+  const hasTruncationIssue = quality?.issues?.some(
+    issue => ["truncated", "output_too_small", "appears_truncated", "incomplete_json"].includes(issue)
+  );
+
+  // 出力サイズ情報を取得（quality.details または metrics から）
+  const outputSize = quality?.details?.output_size ?? metrics?.output_size;
+  const outputTokens = quality?.details?.output_tokens ?? metrics?.output_tokens ??
+    (data.usage as { output_tokens?: number } | undefined)?.output_tokens;
 
   return (
     <div className="space-y-4">
@@ -1014,7 +1038,7 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
         <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">品質に関する注意</p>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {(quality.issues as string[]).map((issue: string, i: number) => {
@@ -1029,7 +1053,37 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
                   );
                 })}
               </div>
-              {formatDetected === "unknown" && (
+              {/* 出力切れ関連の詳細情報 */}
+              {hasTruncationIssue && (
+                <div className="mt-2 p-2 bg-yellow-100/50 dark:bg-yellow-900/30 rounded text-xs space-y-1">
+                  {outputSize !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-700 dark:text-yellow-300">出力サイズ:</span>
+                      <span className="font-mono text-yellow-800 dark:text-yellow-200">
+                        {outputSize.toLocaleString()} バイト
+                        {outputSize < 3000 && (
+                          <span className="ml-1 text-red-600 dark:text-red-400">(期待値: 3,000+ バイト)</span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {outputTokens !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-700 dark:text-yellow-300">出力トークン:</span>
+                      <span className="font-mono text-yellow-800 dark:text-yellow-200">
+                        {outputTokens.toLocaleString()} トークン
+                        {outputTokens < 500 && (
+                          <span className="ml-1 text-red-600 dark:text-red-400">(期待値: 500+ トークン)</span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-yellow-600 dark:text-yellow-400 mt-1">
+                    この工程の再実行をお勧めします。
+                  </p>
+                </div>
+              )}
+              {formatDetected === "unknown" && !hasTruncationIssue && (
                 <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
                   出力形式が認識できませんでした。LLMの出力が途中で切れている可能性があります。
                 </p>
