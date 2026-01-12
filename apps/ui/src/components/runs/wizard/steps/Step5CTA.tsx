@@ -273,8 +273,8 @@ export function Step5CTA({ data, onChange, errors }: Step5CTAProps) {
             <label className="block text-xs font-medium text-gray-600">
               誘導先の説明
             </label>
-            <input
-              type="text"
+            <textarea
+              rows={2}
               value={data.single?.description || DEFAULT_SINGLE_CTA.description}
               onChange={(e) => updateSingleCTA({ description: e.target.value })}
               placeholder="クロスラーニング広報サイトのTOPページ"
@@ -336,8 +336,8 @@ export function Step5CTA({ data, onChange, errors }: Step5CTAProps) {
                     <label className="block text-xs font-medium text-gray-600">
                       説明
                     </label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={current.description}
                       onChange={(e) =>
                         updateStagedCTA(phase, { description: e.target.value })
