@@ -83,7 +83,17 @@ export function useRunProgress(
     setEvents([]);
   }, []);
 
+  // Track previous runId to detect changes
+  const prevRunIdRef = useRef<string>(runId);
+
   useEffect(() => {
+    // If runId changed, clear events from previous run
+    if (prevRunIdRef.current !== runId) {
+      setEvents([]);
+      setStatus("pending");
+      prevRunIdRef.current = runId;
+    }
+
     if (autoConnect) {
       connect();
     }
@@ -91,7 +101,7 @@ export function useRunProgress(
     return () => {
       disconnect();
     };
-  }, [autoConnect, connect, disconnect]);
+  }, [autoConnect, connect, disconnect, runId]);
 
   return {
     events,

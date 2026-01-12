@@ -57,6 +57,25 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
   const [isPolling, setIsPolling] = useState(pollingInterval > 0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasInitialLoadRef = useRef(false);
+  const prevRunIdRef = useRef<string>(runId);
+
+  // Reset state when runId changes
+  useEffect(() => {
+    if (prevRunIdRef.current !== runId) {
+      // Clear old interval before state reset
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      // Reset state for new run
+      setRun(null);
+      setLoading(true);
+      setRefreshing(false);
+      setError(null);
+      hasInitialLoadRef.current = false;
+      prevRunIdRef.current = runId;
+    }
+  }, [runId]);
 
   const fetch = useCallback(async () => {
     // 初回ローディングか更新中かを判定
