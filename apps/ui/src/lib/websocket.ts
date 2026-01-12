@@ -44,7 +44,9 @@ export class RunProgressWebSocket {
    * WebSocket接続を開始（開発モード用tenant_id付き）
    */
   connect(): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    // Check both OPEN and CONNECTING states to prevent duplicate connections
+    if (this.ws?.readyState === WebSocket.OPEN ||
+        this.ws?.readyState === WebSocket.CONNECTING) {
       return;
     }
 

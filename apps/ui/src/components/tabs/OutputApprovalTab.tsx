@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Play,
   CheckCircle2,
@@ -136,12 +136,13 @@ export function OutputApprovalTab({ onCreateRun }: OutputApprovalTabProps) {
     });
   }, [runs, searchQuery, filterStatus]);
 
-  // Auto-select first run
+  // Auto-select first run (only when selectedRunId is null)
   useEffect(() => {
     if (!selectedRunId && filteredRuns.length > 0) {
       setSelectedRunId(filteredRuns[0].id);
     }
-  }, [filteredRuns, selectedRunId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredRuns]); // Intentionally exclude selectedRunId to prevent infinite loop
 
   return (
     <div className="h-full flex gap-4">
@@ -291,18 +292,22 @@ function RunDetailPanel({ runId }: { runId: string }) {
   const { run, loading, error, fetch, approve, reject, retry } = useRun(runId);
   const { artifacts, fetch: fetchArtifacts } = useArtifacts(runId);
   const { events, wsStatus } = useRunProgress(runId, {
-    onEvent: (event) => {
-      if (
-        event.type === "step_completed" ||
-        event.type === "step_failed" ||
-        event.type === "approval_requested" ||
-        event.type === "run_completed"
-      ) {
-        fetch();
-      }
-      // 承認待ち状態になったら成果物も再フェッチ
-      if (event.type === "approval_requested") {
-        fetchArtifacts();
+    onEvent: async (event) => {
+      try {
+        if (
+          event.type === "step_completed" ||
+          event.type === "step_failed" ||
+          event.type === "approval_requested" ||
+          event.type === "run_completed"
+        ) {
+          await fetch();
+        }
+        // 承認待ち状態になったら成果物も再フェッチ
+        if (event.type === "approval_requested") {
+          await fetchArtifacts();
+        }
+      } catch (err) {
+        console.error("Failed to handle WebSocket event:", err);
       }
     },
   });
@@ -321,7 +326,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
       fetchArtifacts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run?.id, run?.status, fetchArtifacts]);
+  }, [run?.id, run?.status]); // Intentionally exclude fetchArtifacts to prevent duplicate fetch
 
   const toggleStep = (stepName: string) => {
     const newExpanded = new Set(expandedSteps);
@@ -405,7 +410,8 @@ function RunDetailPanel({ runId }: { runId: string }) {
   // Group artifacts by step_name (fallback to step_id for backwards compatibility)
   const artifactsByStep = artifacts.reduce(
     (acc, artifact) => {
-      const stepKey = artifact.step_name || artifact.step_id;
+      // Use "unknown" as fallback if both step_name and step_id are undefined
+      const stepKey = artifact.step_name || artifact.step_id || "unknown";
       if (!acc[stepKey]) acc[stepKey] = [];
       acc[stepKey].push(artifact);
       return acc;
@@ -704,18 +710,31 @@ function StepArtifactsList({ runId, artifacts }: { runId: string; artifacts: Art
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactRef | null>(null);
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
+  const selectedArtifactRef = useRef<ArtifactRef | null>(null);
 
   const loadContent = async (artifact: ArtifactRef) => {
+    // Track the request ID to prevent stale response from overwriting
+    const requestId = artifact.id;
     setSelectedArtifact(artifact);
+    selectedArtifactRef.current = artifact;
     setLoading(true);
     try {
       const data = await api.artifacts.download(runId, artifact.id);
-      setContent(data);
+      // Only update if this is still the selected artifact (prevent race condition)
+      if (selectedArtifactRef.current?.id === requestId) {
+        setContent(data);
+      }
     } catch (err) {
       console.error("Failed to load artifact:", err);
-      setContent(null);
+      // Only update if this is still the selected artifact
+      if (selectedArtifactRef.current?.id === requestId) {
+        setContent(null);
+      }
     } finally {
-      setLoading(false);
+      // Only update loading if this is still the selected artifact
+      if (selectedArtifactRef.current?.id === requestId) {
+        setLoading(false);
+      }
     }
   };
 

@@ -27,6 +27,7 @@ export function useRunProgress(
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [status, setStatus] = useState<RunStatus>("pending");
   const [wsStatus, setWsStatus] = useState<WebSocketStatus>("disconnected");
+  const [connectionState, setConnectionState] = useState<'idle' | 'connecting' | 'connected'>('idle');
 
   const wsRef = useRef<ReturnType<typeof createRunProgressWebSocket> | null>(null);
   const onEventRef = useRef(onEvent);
@@ -57,26 +58,44 @@ export function useRunProgress(
   }, []);
 
   const connect = useCallback(() => {
+    // Guard against multiple concurrent connection attempts
+    if (connectionState === 'connecting') {
+      return;
+    }
+
+    // Clean up existing connection before creating new one
     if (wsRef.current) {
       wsRef.current.disconnect();
+      wsRef.current = null;
     }
+
+    setConnectionState('connecting');
 
     wsRef.current = createRunProgressWebSocket(runId, {
       onMessage: handleMessage,
-      onStatusChange: setWsStatus,
+      onStatusChange: (status) => {
+        setWsStatus(status);
+        if (status === 'connected') {
+          setConnectionState('connected');
+        } else if (status === 'disconnected' || status === 'error') {
+          setConnectionState('idle');
+        }
+      },
       onError: (error) => {
         console.error("WebSocket error:", error);
+        setConnectionState('idle');
       },
     });
 
     wsRef.current.connect();
-  }, [runId, handleMessage]);
+  }, [runId, handleMessage, connectionState]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
       wsRef.current.disconnect();
       wsRef.current = null;
     }
+    setConnectionState('idle');
   }, []);
 
   const clearEvents = useCallback(() => {

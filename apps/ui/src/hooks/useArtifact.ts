@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { ArtifactRef, ArtifactContent } from "@/lib/types";
 import { api } from "@/lib/api";
 
@@ -63,22 +63,46 @@ export function useArtifactContent(
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const fetch = useCallback(async () => {
+    // Cancel any previous in-flight request
+    abortControllerRef.current?.abort();
+
     if (!artifactId) {
       setContent(null);
       return;
     }
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setLoading(true);
     setError(null);
     try {
       const data = await api.artifacts.download(runId, artifactId);
-      setContent(data);
+      // Only update state if not aborted and still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setContent(data);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch artifact content");
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to fetch artifact content");
+      }
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [runId, artifactId]);
 

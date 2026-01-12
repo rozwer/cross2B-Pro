@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { RunSummary, PaginatedResponse } from "@/lib/types";
 import { api } from "@/lib/api";
 
@@ -33,8 +33,24 @@ export function useRuns(options: UseRunsOptions = {}): UseRunsReturn {
   const [page, setPage] = useState(1);
   const [status, setStatusFilter] = useState<string | undefined>(initialStatus);
   const [hasMore, setHasMore] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   const fetch = useCallback(async () => {
+    // Cancel any previous in-flight request to prevent race condition
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setLoading(true);
     setError(null);
     try {
@@ -43,13 +59,20 @@ export function useRuns(options: UseRunsOptions = {}): UseRunsReturn {
         limit,
         status,
       });
-      setRuns(response.items);
-      setTotal(response.total);
-      setHasMore(response.has_more);
+      // Only update state if not aborted and still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setRuns(response.items);
+        setTotal(response.total);
+        setHasMore(response.has_more);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch runs");
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to fetch runs");
+      }
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [page, limit, status]);
 

@@ -73,6 +73,8 @@ export function ImageGenerationWizard({
   onComplete,
 }: ImageGenerationWizardProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const prevPhaseRef = useRef<Step11Phase | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [state, setState] = useState<WizardState>({
     phase: currentPhase || "waiting_11A",
     loading: false,
@@ -107,9 +109,17 @@ export function ImageGenerationWizard({
     }
   }, [isOpen]);
 
-  // Fetch data based on current phase
+  // Fetch data based on current phase (only when phase actually changes)
   useEffect(() => {
     if (!isOpen) return;
+    // Skip if phase hasn't changed to prevent infinite loop
+    if (prevPhaseRef.current === state.phase) return;
+    prevPhaseRef.current = state.phase;
+
+    // Cancel any in-flight request
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     const fetchPhaseData = async () => {
       try {
@@ -117,6 +127,7 @@ export function ImageGenerationWizard({
           case "waiting_11B": {
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Positions(runId);
+            if (abortController.signal.aborted) return;
             setState((prev) => ({
               ...prev,
               loading: false,
@@ -129,6 +140,7 @@ export function ImageGenerationWizard({
           case "waiting_11D": {
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Images(runId);
+            if (abortController.signal.aborted) return;
             setState((prev) => ({
               ...prev,
               loading: false,
@@ -140,6 +152,7 @@ export function ImageGenerationWizard({
           case "waiting_11E": {
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Preview(runId);
+            if (abortController.signal.aborted) return;
             setState((prev) => ({
               ...prev,
               loading: false,
@@ -150,6 +163,7 @@ export function ImageGenerationWizard({
           }
         }
       } catch (err) {
+        if (abortController.signal.aborted) return;
         setState((prev) => ({
           ...prev,
           loading: false,
@@ -159,6 +173,10 @@ export function ImageGenerationWizard({
     };
 
     fetchPhaseData();
+
+    return () => {
+      abortController.abort();
+    };
   }, [isOpen, state.phase, runId]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -50,6 +50,12 @@ export function Phase11D_Review({
     () => new Map()
   );
   const [showRetryInput, setShowRetryInput] = useState<number | null>(null);
+
+  // Reset retryInputs when images change (e.g., after retry)
+  useEffect(() => {
+    setRetryInputs(new Map());
+    setShowRetryInput(null);
+  }, [images]);
 
   const handleAccept = (index: number) => {
     setReviews((prev) => {

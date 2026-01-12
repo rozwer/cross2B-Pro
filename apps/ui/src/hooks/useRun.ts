@@ -58,6 +58,23 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasInitialLoadRef = useRef(false);
   const prevRunIdRef = useRef<string>(runId);
+  const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const stopOnCompleteRef = useRef(stopOnComplete);
+
+  // Keep stopOnComplete ref updated to avoid stale closure
+  useEffect(() => {
+    stopOnCompleteRef.current = stopOnComplete;
+  }, [stopOnComplete]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   // Reset state when runId changes
   useEffect(() => {
@@ -67,6 +84,8 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      // Cancel any in-flight request
+      abortControllerRef.current?.abort();
       // Reset state for new run
       setRun(null);
       setLoading(true);
@@ -78,6 +97,11 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
   }, [runId]);
 
   const fetch = useCallback(async () => {
+    // Cancel any previous in-flight request
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     // 初回ローディングか更新中かを判定
     if (!hasInitialLoadRef.current) {
       setLoading(true);
@@ -87,15 +111,25 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
     setError(null);
     try {
       const data = await api.runs.get(runId);
+      // Check if unmounted or request was aborted
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return null;
+      }
       setRun(data);
       hasInitialLoadRef.current = true;
       return data;
     } catch (err) {
+      // Don't update state if unmounted or aborted
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return null;
+      }
       setError(err instanceof Error ? err.message : "Failed to fetch run");
       return null;
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMountedRef.current && !abortController.signal.aborted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [runId]);
 
@@ -109,16 +143,24 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
 
   const startPolling = useCallback(() => {
     if (pollingInterval <= 0) return;
-    stopPolling();
+    // Clear existing interval directly to avoid circular dependency
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsPolling(true);
     intervalRef.current = setInterval(async () => {
       const data = await fetch();
-      // 完了・失敗時にポーリング停止
-      if (stopOnComplete && data && (data.status === "completed" || data.status === "failed" || data.status === "cancelled")) {
-        stopPolling();
+      // 完了・失敗時にポーリング停止 (use ref to get latest value)
+      if (stopOnCompleteRef.current && data && (data.status === "completed" || data.status === "failed" || data.status === "cancelled")) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        setIsPolling(false);
       }
     }, pollingInterval);
-  }, [pollingInterval, stopOnComplete, fetch, stopPolling]);
+  }, [pollingInterval, fetch]);
 
   // 初回フェッチ
   useEffect(() => {
