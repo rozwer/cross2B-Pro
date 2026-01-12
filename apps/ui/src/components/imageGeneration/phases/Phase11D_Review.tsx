@@ -51,8 +51,18 @@ export function Phase11D_Review({
   );
   const [showRetryInput, setShowRetryInput] = useState<number | null>(null);
 
-  // Reset retryInputs when images change (e.g., after retry)
+  // Reset state when images change (e.g., after retry)
+  // This includes reviews, retryInputs, and showRetryInput to prevent stale data
   useEffect(() => {
+    // Re-initialize reviews map with new images
+    setReviews(
+      new Map(
+        images.map((img) => [
+          img.index,
+          { index: img.index, accepted: true },
+        ])
+      )
+    );
     setRetryInputs(new Map());
     setShowRetryInput(null);
   }, [images]);

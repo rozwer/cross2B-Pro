@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -36,6 +36,13 @@ export function Phase11B_Positions({
 }: Phase11B_PositionsProps) {
   const [positions, setPositions] = useState<ImagePosition[]>(initialPositions);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Sync positions state when initialPositions prop changes
+  // This ensures the component reflects new position data from the parent
+  useEffect(() => {
+    setPositions(initialPositions);
+    setEditingIndex(null); // Reset editing state when positions change
+  }, [initialPositions]);
   const [showReanalyzeInput, setShowReanalyzeInput] = useState(false);
   const [reanalyzeRequest, setReanalyzeRequest] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
