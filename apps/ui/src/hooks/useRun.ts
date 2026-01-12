@@ -4,6 +4,21 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { Run } from "@/lib/types";
 import { api } from "@/lib/api";
 
+/**
+ * Normalize step name to API format (underscore notation)
+ * UI uses dot notation (step1.5, step3.5, step6.5) but API expects underscore (step1_5, step3_5, step6_5)
+ * Also handles parent step3 -> step3a normalization
+ */
+function normalizeStepForApi(step: string): string {
+  // Convert dot notation to underscore
+  const normalized = step.replace(/\./g, "_");
+  // Normalize parent step3 to step3a (parallel group entry point)
+  if (normalized === "step3") {
+    return "step3a";
+  }
+  return normalized;
+}
+
 interface UseRunOptions {
   autoFetch?: boolean;
   /** ポーリング間隔（ミリ秒）。0 でポーリング無効。デフォルト: 5000 */
@@ -104,32 +119,64 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
   }, [pollingInterval, autoFetch, startPolling, stopPolling]);
 
   const approve = useCallback(async () => {
-    await api.runs.approve(runId);
-    await fetch();
+    try {
+      setError(null);
+      await api.runs.approve(runId);
+      await fetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to approve run";
+      setError(message);
+      throw err; // Re-throw for caller handling
+    }
   }, [runId, fetch]);
 
   const reject = useCallback(
     async (reason: string) => {
-      await api.runs.reject(runId, reason);
-      await fetch();
+      try {
+        setError(null);
+        await api.runs.reject(runId, reason);
+        await fetch();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to reject run";
+        setError(message);
+        throw err; // Re-throw for caller handling
+      }
     },
     [runId, fetch],
   );
 
   const retry = useCallback(
     async (step: string) => {
-      const result = await api.runs.retry(runId, step);
-      await fetch();
-      return result;
+      try {
+        setError(null);
+        // Normalize step to API format (dot -> underscore, step3 -> step3a)
+        const normalizedStep = normalizeStepForApi(step);
+        const result = await api.runs.retry(runId, normalizedStep);
+        await fetch();
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : `Failed to retry step ${step}`;
+        setError(message);
+        throw err; // Re-throw for caller handling
+      }
     },
     [runId, fetch],
   );
 
   const resume = useCallback(
     async (step: string) => {
-      const result = await api.runs.resume(runId, step);
-      await fetch();
-      return result;
+      try {
+        setError(null);
+        // Normalize step to API format (dot -> underscore, step3 -> step3a)
+        const normalizedStep = normalizeStepForApi(step);
+        const result = await api.runs.resume(runId, normalizedStep);
+        await fetch();
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : `Failed to resume from step ${step}`;
+        setError(message);
+        throw err; // Re-throw for caller handling
+      }
     },
     [runId, fetch],
   );

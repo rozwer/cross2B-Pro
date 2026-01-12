@@ -18,6 +18,7 @@ from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.db import AuditLogger, Run, Step, TenantIdValidationError
 from apps.api.db.models import Artifact as ArtifactModel
+from apps.api.schemas.article_hearing import ArticleHearingInput, KeywordStatus
 from apps.api.schemas.enums import RunStatus, StepStatus
 from apps.api.schemas.runs import (
     CreateRunInput,
@@ -542,12 +543,13 @@ async def retry_step(
 
     valid_steps = step_order  # リトライ可能なステップ = 全ステップ
 
-    normalized_step = step.replace(".", "_")
-    if normalized_step not in valid_steps:
+    requested_step = step.replace(".", "_")
+    if requested_step not in valid_steps:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid step: {step}. Valid steps: {', '.join(valid_steps)}",
         )
+    resume_step = "step3a" if requested_step in ("step3b", "step3c") else requested_step
 
     db_manager = _get_tenant_db_manager()
     temporal_client = _get_temporal_client()
@@ -570,7 +572,7 @@ async def retry_step(
             # Use underscore format for step_name (matches Worker step_id format)
             step_query = select(Step).where(
                 Step.run_id == run_id,
-                Step.step_name == normalized_step,
+                Step.step_name == requested_step,
             )
             step_result = await session.execute(step_query)
             step_record = step_result.scalar_one_or_none()
@@ -599,18 +601,18 @@ async def retry_step(
                 deleted_count = await artifact_store.delete_step_artifacts(
                     tenant_id=tenant_id,
                     run_id=run_id,
-                    step=normalized_step,
+                    step=requested_step,
                 )
                 if deleted_count > 0:
                     logger.info(
                         f"Deleted {deleted_count} artifacts for retry",
-                        extra={"run_id": run_id, "step": normalized_step},
+                        extra={"run_id": run_id, "step": requested_step},
                     )
 
                 # 前ステップデータの確認（Activityは load_step_data で storage から読むため config に追加は不要）
                 # ただしログ用に読み込み状況を確認
-                if normalized_step in step_order:
-                    step_index = step_order.index(normalized_step)
+                if resume_step in step_order:
+                    step_index = step_order.index(resume_step)
                     steps_to_load = step_order[:step_index]
                     loaded_steps = []
 
@@ -628,7 +630,7 @@ async def retry_step(
                             "Previous step data available for retry",
                             extra={
                                 "run_id": run_id,
-                                "retry_step": normalized_step,
+                                "retry_step": requested_step,
                                 "available_steps": loaded_steps,
                             },
                         )
@@ -637,14 +639,14 @@ async def retry_step(
                             "No previous step data found for retry - this may cause issues",
                             extra={
                                 "run_id": run_id,
-                                "retry_step": normalized_step,
+                                "retry_step": requested_step,
                                 "expected_steps": steps_to_load,
                             },
                         )
 
                 # First, update DB status and commit
                 run.status = RunStatus.RUNNING.value
-                run.current_step = normalized_step
+                run.current_step = resume_step
                 run.error_message = None  # エラーメッセージをクリア
                 run.error_code = None  # エラーコードをクリア
                 run.updated_at = datetime.now()
@@ -668,7 +670,7 @@ async def retry_step(
         try:
             await temporal_client.start_workflow(
                 "ArticleWorkflow",
-                args=[tenant_id, run_id, loaded_config, normalized_step],
+                args=[tenant_id, run_id, loaded_config, resume_step],
                 id=new_workflow_id,
                 task_queue=task_queue,
             )
@@ -681,9 +683,12 @@ async def retry_step(
             # Revert status to failed if workflow start fails
             async with db_manager.get_session(tenant_id) as session:
                 result = await session.execute(select(Run).where(Run.id == run_id))
-                run = result.scalar_one()
-                run.status = RunStatus.FAILED.value
-                run.error_message = f"Retry workflow start failed: {wf_error}"
+                run = result.scalar_one_or_none()
+                if run is None:
+                    logger.warning(f"Run {run_id} not found during retry revert - may have been deleted")
+                else:
+                    run.status = RunStatus.FAILED.value
+                    run.error_message = f"Retry workflow start failed: {wf_error}"
             raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
 
         await ws_manager.broadcast_step_event(
@@ -720,14 +725,15 @@ async def resume_from_step(
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
+    # Valid resume points (step3b/3c not allowed - must resume from step3 or step3a)
+    # step3 is normalized to step3a for Workflow compatibility
     step_order = [
         "step0",
         "step1",
         "step1_5",
         "step2",
-        "step3a",
-        "step3b",
-        "step3c",
+        "step3",  # Accepted and normalized to step3a
+        "step3a",  # step3 group entry point
         "step3_5",
         "step4",
         "step5",
@@ -740,6 +746,16 @@ async def resume_from_step(
         "step10",
         "step12",
     ]
+
+    # Reject step3b/3c - partial step3 group resume not supported
+    if step in ("step3b", "step3c"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot resume from {step}. Resume from step3 or step3a to re-run the entire parallel group.",
+        )
+
+    # Normalize step3 to step3a for Workflow compatibility
+    normalized_step = "step3a" if step == "step3" else step
 
     if step not in step_order:
         raise HTTPException(
@@ -760,6 +776,17 @@ async def resume_from_step(
 
             if not original_run:
                 raise HTTPException(status_code=404, detail="Run not found")
+            in_progress_statuses = {
+                RunStatus.PENDING.value,
+                RunStatus.RUNNING.value,
+                RunStatus.WAITING_APPROVAL.value,
+                RunStatus.WAITING_IMAGE_INPUT.value,
+            }
+            if original_run.status in in_progress_statuses:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is in progress (current status: {original_run.status}). Cancel it before resuming.",
+                )
 
             step_index = step_order.index(step)
             steps_to_load = step_order[:step_index]
@@ -768,11 +795,16 @@ async def resume_from_step(
 
             # Store artifact REFERENCES only, not full data (to avoid gRPC size limits)
             # Activities should load full data from storage via load_step_data()
+            # Note: Use get_by_path to check existence (exists() requires ArtifactRef, not path string)
             artifact_refs: dict[str, dict[str, str]] = {}
             for prev_step in steps_to_load:
-                artifact_path = artifact_store.build_path(tenant_id, run_id, prev_step)
-                exists = await artifact_store.exists(artifact_path)
-                if exists:
+                artifact_data = await artifact_store.get_by_path(
+                    tenant_id=tenant_id,
+                    run_id=run_id,
+                    step=prev_step,
+                )
+                if artifact_data is not None:
+                    artifact_path = artifact_store.build_path(tenant_id, run_id, prev_step)
                     artifact_refs[prev_step] = {
                         "path": artifact_path,
                         "step": prev_step,
@@ -791,10 +823,22 @@ async def resume_from_step(
             )
 
             steps_to_delete = step_order[step_index:]
-            steps_to_delete_with_step11 = steps_to_delete + ["step11"]
+
+            # Only delete step11 artifacts if resuming from a step BEFORE step11's position
+            # step12 depends on step11 images, so preserve step11 when resuming from step12
+            # step11 is placed between step10 and step12 in the workflow
+            if normalized_step == "step12":
+                # Resuming from step12: keep step11 artifacts (images needed for step12)
+                final_steps_to_delete = steps_to_delete
+                logger.debug("Preserving step11 artifacts for step12 resume")
+            else:
+                # Resuming from earlier steps: delete step11 along with other downstream steps
+                final_steps_to_delete = steps_to_delete + ["step11"]
+            if "step11" in final_steps_to_delete:
+                original_run.step11_state = None
 
             deleted_artifacts_count = 0
-            for step_to_delete in steps_to_delete_with_step11:
+            for step_to_delete in final_steps_to_delete:
                 count = await artifact_store.delete_step_artifacts(
                     tenant_id=tenant_id,
                     run_id=run_id,
@@ -808,14 +852,14 @@ async def resume_from_step(
                     extra={
                         "run_id": run_id,
                         "resume_from": step,
-                        "deleted_steps": steps_to_delete_with_step11,
+                        "deleted_steps": final_steps_to_delete,
                     },
                 )
 
             await session.execute(
                 sql_delete(Step).where(
                     Step.run_id == run_id,
-                    Step.step_name.in_(steps_to_delete_with_step11),
+                    Step.step_name.in_(final_steps_to_delete),
                 )
             )
 
@@ -847,7 +891,7 @@ async def resume_from_step(
                 extra={
                     "run_id": run_id,
                     "completed_steps": steps_to_load,
-                    "deleted_step_records": steps_to_delete_with_step11,
+                    "deleted_step_records": final_steps_to_delete,
                 },
             )
 
@@ -859,7 +903,7 @@ async def resume_from_step(
             # First, update DB and commit BEFORE starting workflow
             now = datetime.now()
             original_run.status = RunStatus.RUNNING.value
-            original_run.current_step = step
+            original_run.current_step = normalized_step  # Use normalized step (step3 -> step3a)
             original_run.error_message = None
             original_run.error_code = None
             original_run.completed_at = None
@@ -875,7 +919,7 @@ async def resume_from_step(
                     "resume_from": step,
                     "workflow_id": new_workflow_id,
                     "deleted_artifacts_count": deleted_artifacts_count,
-                    "deleted_steps": steps_to_delete_with_step11,
+                    "deleted_steps": final_steps_to_delete,
                 },
             )
 
@@ -886,7 +930,7 @@ async def resume_from_step(
         try:
             await temporal_client.start_workflow(
                 "ArticleWorkflow",
-                args=[tenant_id, run_id, loaded_config, step],
+                args=[tenant_id, run_id, loaded_config, normalized_step],  # Use normalized step
                 id=new_workflow_id,
                 task_queue=task_queue,
             )
@@ -895,7 +939,8 @@ async def resume_from_step(
                 "Run resumed",
                 extra={
                     "run_id": run_id,
-                    "resume_from": step,
+                    "resume_from": normalized_step,
+                    "original_step": step,
                     "workflow_id": new_workflow_id,
                     "loaded_steps": steps_to_load,
                 },
@@ -905,9 +950,12 @@ async def resume_from_step(
             # Revert status to failed if workflow start fails
             async with db_manager.get_session(tenant_id) as session:
                 result = await session.execute(select(Run).where(Run.id == run_id))
-                run = result.scalar_one()
-                run.status = RunStatus.FAILED.value
-                run.error_message = f"Resume workflow start failed: {wf_error}"
+                run = result.scalar_one_or_none()
+                if run is None:
+                    logger.warning(f"Run {run_id} not found during resume revert - may have been deleted")
+                else:
+                    run.status = RunStatus.FAILED.value
+                    run.error_message = f"Resume workflow start failed: {wf_error}"
             raise HTTPException(status_code=503, detail=f"Failed to start resume workflow: {wf_error}")
 
         return {
@@ -956,14 +1004,67 @@ async def clone_run(
             original_input = original_run.input_data or {}
             original_config = original_run.config or {}
 
-            new_input = {
-                "keyword": (data.keyword if data and data.keyword else original_input.get("keyword", "")),
-                "target_audience": (data.target_audience if data and data.target_audience else original_input.get("target_audience")),
-                "competitor_urls": (data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls")),
-                "additional_requirements": (
-                    data.additional_requirements if data and data.additional_requirements else original_input.get("additional_requirements")
-                ),
-            }
+            new_input: dict[str, Any]
+            if original_input.get("format") == "article_hearing_v1" and original_input.get("data"):
+                try:
+                    article_input = ArticleHearingInput.model_validate(original_input.get("data", {}))
+                except Exception as e:
+                    logger.warning(f"Failed to parse ArticleHearingInput for clone: {e}")
+                    article_input = None
+
+                if article_input:
+                    if data:
+                        updated_keyword = article_input.keyword
+                        if data.keyword:
+                            if updated_keyword.status == KeywordStatus.DECIDED:
+                                updated_keyword = updated_keyword.model_copy(update={"main_keyword": data.keyword})
+                            elif updated_keyword.selected_keyword:
+                                updated_selected = updated_keyword.selected_keyword.model_copy(update={"keyword": data.keyword})
+                                updated_keyword = updated_keyword.model_copy(update={"selected_keyword": updated_selected})
+
+                        updated_business = article_input.business
+                        if data.target_audience:
+                            updated_business = updated_business.model_copy(update={"target_audience": data.target_audience})
+
+                        article_input = article_input.model_copy(
+                            update={
+                                "keyword": updated_keyword,
+                                "business": updated_business,
+                            }
+                        )
+
+                    legacy_fields = article_input.to_legacy_format()
+                    new_input = {
+                        "format": "article_hearing_v1",
+                        "data": article_input.model_dump(mode="json"),
+                        **legacy_fields,
+                    }
+                else:
+                    new_input = {
+                        "keyword": (data.keyword if data and data.keyword else original_input.get("keyword", "")),
+                        "target_audience": (
+                            data.target_audience if data and data.target_audience else original_input.get("target_audience")
+                        ),
+                        "competitor_urls": (
+                            data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls")
+                        ),
+                        "additional_requirements": (
+                            data.additional_requirements
+                            if data and data.additional_requirements
+                            else original_input.get("additional_requirements")
+                        ),
+                    }
+            else:
+                new_input = {
+                    "keyword": (data.keyword if data and data.keyword else original_input.get("keyword", "")),
+                    "target_audience": (data.target_audience if data and data.target_audience else original_input.get("target_audience")),
+                    "competitor_urls": (data.competitor_urls if data and data.competitor_urls else original_input.get("competitor_urls")),
+                    "additional_requirements": (
+                        data.additional_requirements
+                        if data and data.additional_requirements
+                        else original_input.get("additional_requirements")
+                    ),
+                }
 
             if data and data.model_config_override:
                 new_model_config = data.model_config_override.model_dump()
