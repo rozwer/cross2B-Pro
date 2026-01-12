@@ -447,7 +447,9 @@ export function WorkflowPattern1_N8nStyle({
                           )}
 
                           {/* Action buttons for completed or failed steps */}
-                          {(status === "completed" || status === "failed") && (onRetry || onResumeFrom) && (
+                          {(status === "completed" || status === "failed") &&
+                            (onRetry || onResumeFrom) &&
+                            stepName !== "step11" && (
                             <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
                               {status === "failed" && (
                                 <div className="text-xs font-medium text-red-500 dark:text-red-400 mb-2">
