@@ -59,17 +59,43 @@ WORD_COUNT_MODES = {
 class Step3CQualityValidator:
     """Quality validator for competitor analysis."""
 
+    # 最小出力サイズ（バイト）- これ以下は明らかに不完全
+    MIN_OUTPUT_SIZE = 3000
+
     def validate(self, content: str, **kwargs: str) -> QualityResult:
         """Validate competitor analysis quality.
 
         Checks:
-        1. Differentiation analysis keywords
-        2. Presence of recommendations
-        3. 4本柱キーワード（blog.System統合）
-        4. 5 Whys構造（blog.System統合）
+        1. Minimum output size (truncation detection)
+        2. Truncation indicators
+        3. Differentiation analysis keywords
+        4. Presence of recommendations
+        5. 4本柱キーワード（blog.System統合）
+        6. 5 Whys構造（blog.System統合）
         """
         issues: list[str] = []
         content_lower = content.lower()
+
+        # Check for minimum output size (truncation detection)
+        content_size = len(content.encode("utf-8"))
+        if content_size < self.MIN_OUTPUT_SIZE:
+            issues.append("output_too_small")
+            logger.warning(f"step3c output too small: {content_size} bytes < {self.MIN_OUTPUT_SIZE} bytes")
+
+        # Check for truncation indicators (incomplete JSON)
+        truncation_indicators = [
+            '",',  # JSON途中で切れた
+            '":',  # JSONキー途中で切れた
+            "\\n",  # エスケープシーケンス途中
+        ]
+        stripped = content.rstrip()
+        if stripped and not stripped.endswith(("}", "}", "]", '"')):
+            # JSON/テキストが正常に終了していない
+            for indicator in truncation_indicators:
+                if stripped.endswith(indicator):
+                    issues.append("appears_truncated")
+                    logger.warning("step3c output appears truncated")
+                    break
 
         # Check for differentiation keywords
         differentiation_keywords = [
@@ -128,8 +154,12 @@ class Step3CQualityValidator:
         if found_wc < 2:
             issues.append("insufficient_word_count_analysis")
 
+        # Critical issues that should not be acceptable regardless of count
+        critical_issues = {"output_too_small", "appears_truncated"}
+        has_critical = bool(set(issues) & critical_issues)
+
         return QualityResult(
-            is_acceptable=len(issues) <= 2,  # 2つまで許容（拡張による緩和）
+            is_acceptable=not has_critical and len(issues) <= 2,  # criticalなら不許容
             issues=issues,
         )
 
@@ -335,6 +365,17 @@ class Step3CCompetitorAnalysis(BaseActivity):
         parse_result = self.parser.parse_json(content)
 
         parsed_data = parse_result.data if parse_result.success else None
+
+        # Log warning if parsed_data is null (potential truncation or format issue)
+        if parsed_data is None:
+            logger.warning(
+                "step3c parsed_data is null - output may be truncated or malformed",
+                extra={
+                    "content_length": len(content),
+                    "format_detected": parse_result.format_detected,
+                    "parse_error": getattr(parse_result, "error", None),
+                },
+            )
 
         # Extract target_word_count from parsed data or use computed value
         target_word_count = None

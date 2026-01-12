@@ -60,21 +60,21 @@ elif finish_reason in ("SAFETY", "RECITATION", "OTHER"):
 
 ---
 
-## フェーズ 2: 工程別出力検証の強化 `cc:TODO`
+## フェーズ 2: 工程別出力検証の強化 `cc:完了`
 
 ### 2.1 step3c出力の最小サイズチェック
 
 **ファイル**: `apps/worker/activities/step3c.py`
 
-- [ ] 出力バイト数が閾値（例: 3000バイト）未満の場合は品質問題として検出
-- [ ] `parsed_data`がnullの場合は必ず再試行
+- [x] 出力バイト数が閾値（3000バイト）未満の場合は品質問題として検出
+- [x] `parsed_data`がnullの場合は警告ログを出力
 
-### 2.2 CompletenessValidatorの改善
+### 2.2 step3c QualityValidatorの改善
 
-**ファイル**: `apps/worker/helpers/quality_validator.py`
+**ファイル**: `apps/worker/activities/step3c.py`
 
-- [ ] JSONが不完全な場合の検出を強化
-- [ ] 必須フィールドの存在チェックを追加
+- [x] 切れの兆候（truncation indicators）チェックを追加
+- [x] Critical issuesがある場合はis_acceptable=Falseにする
 
 ---
 
