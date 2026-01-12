@@ -489,7 +489,8 @@ class Step11ImageGeneration(BaseActivity):
                             ),
                             image_path=image_path,
                             image_digest=image_result.get("digest", ""),
-                            image_base64=image_result.get("base64", ""),
+                            # Note: image_base64 excluded to avoid Temporal size limit
+                            image_base64="",
                             mime_type="image/png",
                             file_size=len(image_result["image_data"]),
                             accepted=True,  # 単独テストでは自動承認
@@ -1310,7 +1311,8 @@ async def step11_generate_images(args: dict[str, Any]) -> dict[str, Any]:
                     "generated_prompt": image_prompt,
                     "image_path": image_path,
                     "image_digest": image_result.get("digest", ""),
-                    "image_base64": image_result.get("base64", ""),
+                    # Note: image_base64 excluded from Activity return to avoid Temporal size limit
+                    # Use storage path to retrieve image when needed
                     "alt_text": image_result.get("alt_text", position.description),
                     "mime_type": "image/png",
                     "file_size": len(image_result["image_data"]),
@@ -1447,7 +1449,7 @@ async def step11_retry_image(args: dict[str, Any]) -> dict[str, Any]:
                     "generated_prompt": image_prompt,
                     "image_path": image_path,
                     "image_digest": image_result.get("digest", ""),
-                    "image_base64": image_result.get("base64", ""),
+                    # Note: image_base64 excluded from Activity return to avoid Temporal size limit
                     "alt_text": image_result.get("alt_text", position.description),
                     "mime_type": "image/png",
                     "file_size": len(image_result["image_data"]),
