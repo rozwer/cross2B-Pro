@@ -170,6 +170,18 @@ class BaseActivity(ABC):
         """Unique identifier for this step (e.g., 'step0', 'step3a')."""
         ...
 
+    @property
+    def depends_on_steps(self) -> list[str]:
+        """List of step IDs this step depends on.
+
+        Override in subclasses to specify dependencies.
+        Used for idempotency cache invalidation when upstream artifacts change.
+
+        Returns:
+            List of step IDs (e.g., ['step0', 'step1'])
+        """
+        return []
+
     @abstractmethod
     async def execute(
         self,
@@ -233,8 +245,8 @@ class BaseActivity(ABC):
             config=config,
         )
 
-        # Compute input digest for idempotency
-        input_digest = self._compute_input_digest(tenant_id, run_id, config)
+        # Compute input digest for idempotency (includes dependency digests)
+        input_digest = await self._compute_input_digest(tenant_id, run_id, config)
 
         # Check for existing output (idempotency)
         output_path = self.store.build_path(
@@ -262,6 +274,7 @@ class BaseActivity(ABC):
         # Update step status in DB via API
         await self._update_step_status(
             run_id=run_id,
+            tenant_id=tenant_id,
             step_name=self.step_id,
             status="running",
             retry_count=attempt,
@@ -310,6 +323,7 @@ class BaseActivity(ABC):
             # Update step status in DB via API
             await self._update_step_status(
                 run_id=run_id,
+                tenant_id=tenant_id,
                 step_name=self.step_id,
                 status="completed",
             )
@@ -345,6 +359,7 @@ class BaseActivity(ABC):
             # Update step status in DB via API (with error_code)
             await self._update_step_status(
                 run_id=run_id,
+                tenant_id=tenant_id,
                 step_name=self.step_id,
                 status="failed",
                 error_code=e.category.value,
@@ -374,6 +389,7 @@ class BaseActivity(ABC):
             # Update step status in DB via API (with error_code)
             await self._update_step_status(
                 run_id=run_id,
+                tenant_id=tenant_id,
                 step_name=self.step_id,
                 status="failed",
                 error_code=ErrorCategory.RETRYABLE.value,
@@ -385,19 +401,54 @@ class BaseActivity(ABC):
                 details={"original_error": str(e)},
             ) from e
 
-    def _compute_input_digest(
+    async def _get_dependency_digests(
+        self,
+        tenant_id: str,
+        run_id: str,
+    ) -> dict[str, str | None]:
+        """Get digests of all dependent step outputs.
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+
+        Returns:
+            dict mapping step_id to its output digest (or None if not found)
+        """
+        digests: dict[str, str | None] = {}
+        for dep_step in self.depends_on_steps:
+            try:
+                meta_path = self.store.build_path(tenant_id, run_id, dep_step, "metadata.json")
+                meta_content = await self._get_raw_content(meta_path)
+                if meta_content:
+                    metadata = json.loads(meta_content.decode("utf-8"))
+                    digests[dep_step] = metadata.get("output_digest")
+                else:
+                    digests[dep_step] = None
+            except Exception:
+                digests[dep_step] = None
+        return digests
+
+    async def _compute_input_digest(
         self,
         tenant_id: str,
         run_id: str,
         config: dict[str, Any],
     ) -> str:
-        """Compute SHA256 hash of inputs for idempotency check."""
+        """Compute SHA256 hash of inputs for idempotency check.
+
+        Includes dependency artifact digests to invalidate cache when upstream changes.
+        """
+        # Get dependency digests
+        dependency_digests = await self._get_dependency_digests(tenant_id, run_id)
+
         # Normalize config for consistent hashing
         input_data = {
             "tenant_id": tenant_id,
             "run_id": run_id,
             "step_id": self.step_id,
             "config": config,
+            "dependency_digests": dependency_digests,
         }
         input_json = json.dumps(input_data, sort_keys=True)
         return hashlib.sha256(input_json.encode()).hexdigest()
@@ -572,6 +623,7 @@ class BaseActivity(ABC):
     async def _update_step_status(
         self,
         run_id: str,
+        tenant_id: str,
         step_name: str,
         status: str,
         error_code: str | None = None,
@@ -585,6 +637,7 @@ class BaseActivity(ABC):
 
         Args:
             run_id: Run identifier
+            tenant_id: Tenant identifier (required for multi-tenant isolation)
             step_name: Step identifier
             status: Step status (running, completed, failed)
             error_code: ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
@@ -601,6 +654,7 @@ class BaseActivity(ABC):
                     f"{API_BASE_URL}/api/internal/steps/update",
                     json={
                         "run_id": run_id,
+                        "tenant_id": tenant_id,
                         "step_name": step_name,
                         "status": status,
                         "error_code": error_code,

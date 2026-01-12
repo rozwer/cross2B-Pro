@@ -7,7 +7,11 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
+
+from apps.api.auth.middleware import DEV_TENANT_ID, SKIP_AUTH, AuthError, verify_token
+from apps.api.auth.schemas import AuthUser
 
 logger = logging.getLogger(__name__)
 
@@ -134,19 +138,119 @@ ws_manager = ConnectionManager()
 
 
 # =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def _get_tenant_db_manager() -> Any:
+    """Get tenant DB manager (lazy import to avoid circular dependency)."""
+    from apps.api.db.tenant import get_tenant_manager
+
+    return get_tenant_manager()
+
+
+async def _verify_run_ownership(tenant_id: str, run_id: str) -> bool:
+    """Verify that the run belongs to the specified tenant.
+
+    Args:
+        tenant_id: Tenant ID from the authenticated user
+        run_id: Run ID to verify
+
+    Returns:
+        True if the run belongs to the tenant, False otherwise
+    """
+    from apps.api.db import Run
+
+    db_manager = _get_tenant_db_manager()
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+            return run is not None
+    except Exception as e:
+        logger.warning(f"Failed to verify run ownership: {e}")
+        return False
+
+
+async def _authenticate_websocket(
+    websocket: WebSocket,
+    token: str | None,
+) -> AuthUser | None:
+    """Authenticate WebSocket connection using JWT token.
+
+    Args:
+        websocket: WebSocket connection
+        token: JWT token from query parameter
+
+    Returns:
+        AuthUser if authenticated, None if authentication fails
+    """
+    # Development mode: skip auth
+    if SKIP_AUTH:
+        return AuthUser(
+            user_id="dev-user-001",
+            tenant_id=DEV_TENANT_ID,
+            roles=["admin"],
+        )
+
+    if not token:
+        logger.warning("WebSocket connection rejected: missing token")
+        return None
+
+    try:
+        token_data = verify_token(token)
+        return AuthUser(
+            user_id=token_data.sub,
+            tenant_id=token_data.tenant_id,
+            roles=token_data.roles,
+        )
+    except AuthError as e:
+        logger.warning(f"WebSocket authentication failed: {e.reason}")
+        return None
+
+
+# =============================================================================
 # Endpoints
 # =============================================================================
 
 
 @router.websocket("/ws/runs/{run_id}")
-async def websocket_progress(websocket: WebSocket, run_id: str) -> None:
+async def websocket_progress(
+    websocket: WebSocket,
+    run_id: str,
+    token: str | None = Query(default=None, description="JWT authentication token"),
+) -> None:
     """WebSocket endpoint for real-time progress updates.
 
-    NOTE: 開発段階では認証を無効化
+    Authentication:
+    - In production: JWT token required via query parameter (?token=xxx)
+    - In development (SKIP_AUTH=true): Authentication skipped
+
+    Security:
+    - Verifies JWT token validity
+    - Verifies that the run belongs to the authenticated user's tenant
+    - Rejects connections with invalid/missing auth or unauthorized run access
     """
+    # Step 1: Authenticate the connection
+    user = await _authenticate_websocket(websocket, token)
+    if user is None:
+        await websocket.close(code=4001, reason="Authentication required")
+        return
+
+    # Step 2: Verify run ownership (tenant isolation)
+    if not await _verify_run_ownership(user.tenant_id, run_id):
+        logger.warning(f"WebSocket connection rejected: run {run_id} not found for tenant {user.tenant_id}")
+        await websocket.close(code=4003, reason="Run not found or access denied")
+        return
+
+    # Step 3: Accept connection and register
     await websocket.accept()
     await ws_manager.connect(run_id, websocket)
-    logger.info("WebSocket connected", extra={"run_id": run_id})
+    logger.info(
+        "WebSocket connected",
+        extra={"run_id": run_id, "user_id": user.user_id, "tenant_id": user.tenant_id},
+    )
 
     try:
         while True:
