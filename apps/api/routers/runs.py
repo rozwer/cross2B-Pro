@@ -506,13 +506,16 @@ async def retry_step(
         extra={"run_id": run_id, "step": step, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
-    valid_steps = [
+    # ステップ順序（前ステップデータ読み込み用）
+    step_order = [
         "step0",
         "step1",
+        "step1_5",
         "step2",
         "step3a",
         "step3b",
         "step3c",
+        "step3_5",
         "step4",
         "step5",
         "step6",
@@ -522,7 +525,10 @@ async def retry_step(
         "step8",
         "step9",
         "step10",
+        "step12",
     ]
+
+    valid_steps = step_order  # リトライ可能なステップ = 全ステップ
 
     normalized_step = step.replace(".", "_")
     if normalized_step not in valid_steps:
@@ -535,6 +541,7 @@ async def retry_step(
     temporal_client = _get_temporal_client()
     ws_manager = _get_ws_manager()
     task_queue = _get_temporal_task_queue()
+    artifact_store = ArtifactStore()
 
     try:
         async with db_manager.get_session(tenant_id) as session:
@@ -575,6 +582,53 @@ async def retry_step(
                 loaded_config = dict(run.config) if run.config else {}
                 new_workflow_id = f"{run_id}-retry-{new_attempt_id[:8]}"
 
+                # 失敗したステップの成果物を削除（リトライ時にクリーンな状態で実行）
+                deleted_count = await artifact_store.delete_step_artifacts(
+                    tenant_id=tenant_id,
+                    run_id=run_id,
+                    step=normalized_step,
+                )
+                if deleted_count > 0:
+                    logger.info(
+                        f"Deleted {deleted_count} artifacts for retry",
+                        extra={"run_id": run_id, "step": normalized_step},
+                    )
+
+                # 前ステップデータの確認（Activityは load_step_data で storage から読むため config に追加は不要）
+                # ただしログ用に読み込み状況を確認
+                if normalized_step in step_order:
+                    step_index = step_order.index(normalized_step)
+                    steps_to_load = step_order[:step_index]
+                    loaded_steps = []
+
+                    for prev_step in steps_to_load:
+                        artifact_data = await artifact_store.get_by_path(
+                            tenant_id=tenant_id,
+                            run_id=run_id,
+                            step=prev_step,
+                        )
+                        if artifact_data:
+                            loaded_steps.append(prev_step)
+
+                    if loaded_steps:
+                        logger.info(
+                            "Previous step data available for retry",
+                            extra={
+                                "run_id": run_id,
+                                "retry_step": normalized_step,
+                                "available_steps": loaded_steps,
+                            },
+                        )
+                    else:
+                        logger.warning(
+                            "No previous step data found for retry - this may cause issues",
+                            extra={
+                                "run_id": run_id,
+                                "retry_step": normalized_step,
+                                "expected_steps": steps_to_load,
+                            },
+                        )
+
                 await temporal_client.start_workflow(
                     "ArticleWorkflow",
                     args=[tenant_id, run_id, loaded_config, normalized_step],
@@ -590,11 +644,15 @@ async def retry_step(
                 raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
 
             run.status = RunStatus.RUNNING.value
+            run.current_step = normalized_step
+            run.error_message = None  # エラーメッセージをクリア
+            run.error_code = None  # エラーコードをクリア
             run.updated_at = datetime.now()
 
             if step_record:
                 step_record.status = StepStatus.RUNNING.value
                 step_record.retry_count = (step_record.retry_count or 0) + 1
+                step_record.error_message = None  # ステップのエラーメッセージもクリア
 
             await session.flush()
             logger.info("Step retry initiated", extra={"run_id": run_id, "step": step})
