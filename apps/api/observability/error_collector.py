@@ -51,9 +51,7 @@ class ErrorLogEntry(BaseModel):
     error_type: str = Field(..., description="Exception class name")
     error_message: str = Field(..., description="Error message")
     stack_trace: str | None = Field(default=None, description="Full stack trace")
-    context: dict[str, Any] | None = Field(
-        default=None, description="Additional context (LLM model, tool, params)"
-    )
+    context: dict[str, Any] | None = Field(default=None, description="Additional context (LLM model, tool, params)")
     attempt: int = Field(default=1, ge=1, description="Attempt number")
     timestamp: datetime = Field(default_factory=datetime.now)
 
@@ -115,11 +113,7 @@ class ErrorCollector:
         Returns:
             Created ErrorLog record
         """
-        category_str = (
-            error_category.value
-            if isinstance(error_category, ErrorCategory)
-            else error_category
-        )
+        category_str = error_category.value if isinstance(error_category, ErrorCategory) else error_category
         source_str = source.value if isinstance(source, LogSource) else source
 
         error_log = ErrorLog(
@@ -162,9 +156,7 @@ class ErrorCollector:
         Returns:
             Created ErrorLog record
         """
-        stack_trace = "".join(
-            traceback.format_exception(type(exception), exception, exception.__traceback__)
-        )
+        stack_trace = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
 
         return await self.log_error(
             run_id=run_id,
@@ -372,11 +364,7 @@ class ErrorCollector:
         Returns:
             List of ErrorLog records ordered by created_at
         """
-        stmt = (
-            select(ErrorLog)
-            .where(ErrorLog.run_id == run_id)
-            .order_by(ErrorLog.created_at.asc())
-        )
+        stmt = select(ErrorLog).where(ErrorLog.run_id == run_id).order_by(ErrorLog.created_at.asc())
 
         if step_id:
             stmt = stmt.where(ErrorLog.step_id == step_id)

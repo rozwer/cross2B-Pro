@@ -23,6 +23,7 @@ RETRY_STEP_ORDER: tuple[str, ...] = (
     "step8",
     "step9",
     "step10",
+    "step11",
     "step12",
 )
 
@@ -46,6 +47,7 @@ RESUME_STEP_ORDER: tuple[str, ...] = (
     "step8",
     "step9",
     "step10",
+    "step11",
     "step12",
 )
 
