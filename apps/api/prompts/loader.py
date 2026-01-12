@@ -12,11 +12,15 @@ blog.System Ver8.3 対応:
 
 import json
 import logging
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# VULN-015: キャッシュ上限設定
+PROMPT_PACK_CACHE_MAX_SIZE = 50  # プロンプトパックの最大キャッシュ数
 
 
 class PromptPackError(Exception):
@@ -134,18 +138,60 @@ class PromptPackLoader:
     CRITICAL: Auto-execution without explicit pack_id is FORBIDDEN.
     All load operations require a non-None pack_id.
 
+    VULN-015: メモリリーク防止
+    - LRUキャッシュによる上限管理
+    - 古いエントリの自動削除
+
     Packs are loaded from apps/api/prompts/packs/{pack_id}.json
     """
 
-    def __init__(self, packs_dir: Path | None = None) -> None:
+    def __init__(self, packs_dir: Path | None = None, max_cache_size: int | None = None) -> None:
         """Initialize loader.
 
         Args:
             packs_dir: Directory containing prompt pack JSON files.
                       Defaults to apps/api/prompts/packs/
+            max_cache_size: Maximum number of packs to cache (VULN-015).
+                          Defaults to PROMPT_PACK_CACHE_MAX_SIZE.
         """
         self._packs_dir = packs_dir or PACKS_DIR
-        self._cache: dict[str, PromptPack] = {}
+        self._max_cache_size = max_cache_size or PROMPT_PACK_CACHE_MAX_SIZE
+        # VULN-015: OrderedDictでLRUキャッシュを実装
+        self._cache: OrderedDict[str, PromptPack] = OrderedDict()
+
+    def _cache_put(self, pack_id: str, pack: PromptPack) -> None:
+        """Put a pack into cache with LRU eviction (VULN-015).
+
+        Args:
+            pack_id: Pack identifier
+            pack: PromptPack instance
+        """
+        # If already in cache, move to end (most recently used)
+        if pack_id in self._cache:
+            self._cache.move_to_end(pack_id)
+            self._cache[pack_id] = pack
+            return
+
+        # Evict oldest entries if at capacity
+        while len(self._cache) >= self._max_cache_size:
+            evicted_id, _ = self._cache.popitem(last=False)
+            logger.debug(f"Evicted prompt pack from cache: {evicted_id}")
+
+        self._cache[pack_id] = pack
+
+    def _cache_get(self, pack_id: str) -> PromptPack | None:
+        """Get a pack from cache, updating LRU order (VULN-015).
+
+        Args:
+            pack_id: Pack identifier
+
+        Returns:
+            PromptPack if found, None otherwise
+        """
+        if pack_id in self._cache:
+            self._cache.move_to_end(pack_id)
+            return self._cache[pack_id]
+        return None
 
     def load(self, pack_id: str | None) -> PromptPack:
         """Load a prompt pack by ID from JSON file.
@@ -165,19 +211,20 @@ class PromptPackLoader:
         if pack_id is None:
             raise ValueError("pack_id is required. Auto-execution without explicit pack_id is forbidden.")
 
-        # Check cache
-        if pack_id in self._cache:
-            return self._cache[pack_id]
+        # Check cache (VULN-015: LRU update)
+        cached = self._cache_get(pack_id)
+        if cached is not None:
+            return cached
 
         # Handle mock pack for testing
         if pack_id == "mock_pack":
             pack = self._load_mock_pack()
-            self._cache[pack_id] = pack
+            self._cache_put(pack_id, pack)
             return pack
 
         # Load from JSON file
         pack = self._load_from_json(pack_id)
-        self._cache[pack_id] = pack
+        self._cache_put(pack_id, pack)
         return pack
 
     async def load_async(self, pack_id: str | None) -> PromptPack:

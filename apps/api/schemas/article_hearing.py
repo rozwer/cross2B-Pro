@@ -8,7 +8,7 @@ Also includes HearingTemplate schemas for template save/reuse functionality.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
@@ -328,8 +328,11 @@ class ArticleHearingInput(BaseModel):
 
     This is the comprehensive input structure for starting a new workflow run,
     organized into 6 sections matching the hearing form design.
+
+    VULN-016: 明確な型識別のためformat_typeフィールドを追加
     """
 
+    format_type: Literal["article_hearing_v1"] = "article_hearing_v1"
     business: BusinessInput = Field(..., description="セクション1: 事業内容とターゲット")
     keyword: KeywordInput = Field(..., description="セクション2: キーワード選定")
     strategy: StrategyInput = Field(..., description="セクション3: 記事戦略")
