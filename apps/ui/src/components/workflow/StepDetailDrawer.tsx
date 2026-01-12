@@ -18,7 +18,7 @@ import {
 import type { Step, StepAttempt } from "@/lib/types";
 import { STEP_LABELS, normalizeStepName } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 /**
  * Step Detail Drawer
@@ -136,6 +136,16 @@ export function StepDetailDrawer({
   isOpen,
 }: StepDetailDrawerProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   // Use stepName from prop if step is not available
   const effectiveStepName = step?.step_name || propStepName;
@@ -169,8 +179,12 @@ export function StepDetailDrawer({
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
+    // Clear any existing timer before setting a new one
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    timerRef.current = setTimeout(() => setCopiedId(null), 2000);
   };
 
   const getStatusIcon = (status: string) => {
@@ -432,7 +446,7 @@ export function StepDetailDrawer({
         </div>
 
         {/* Footer Actions */}
-        {status === "failed" && onRetry && (
+        {status === "failed" && onRetry && normalizedStepName !== "step11" && (
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => onRetry(effectiveStepName)}

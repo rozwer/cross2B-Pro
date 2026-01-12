@@ -131,11 +131,13 @@ export default function RunDetailPage({
     }
   }, [reject]);
 
-  const handleOpenPreview = useCallback(async (articleNumber: number = previewArticle) => {
-    setPreviewArticle(articleNumber);
+  const handleOpenPreview = useCallback(async (articleNumber?: number) => {
+    // Use provided articleNumber, fallback to current previewArticle
+    const targetArticle = articleNumber ?? previewArticle;
+    setPreviewArticle(targetArticle);
     setPreviewModal({ isOpen: true, loading: true, error: null, content: null });
     try {
-      const htmlContent = await api.artifacts.getPreview(id, articleNumber);
+      const htmlContent = await api.artifacts.getPreview(id, targetArticle);
       setPreviewModal({ isOpen: true, loading: false, error: null, content: htmlContent });
     } catch (err) {
       setPreviewModal({
@@ -145,7 +147,9 @@ export default function RunDetailPage({
         content: null,
       });
     }
-  }, [id, previewArticle]);
+    // Intentionally exclude previewArticle to avoid stale closure on rapid clicks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleClosePreview = useCallback(() => {
     setPreviewModal({ isOpen: false, loading: false, error: null, content: null });
