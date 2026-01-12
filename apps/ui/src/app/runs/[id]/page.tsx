@@ -28,7 +28,7 @@ import { ArtifactViewer } from "@/components/artifacts/ArtifactViewer";
 import { LoadingPage } from "@/components/common/Loading";
 import { ErrorMessage } from "@/components/common/ErrorBoundary";
 import { formatDate } from "@/lib/utils";
-import { STEP_LABELS, getStep11Phase } from "@/lib/types";
+import { STEP_LABELS, getStep11Phase, getKeywordFromInput } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -237,7 +237,7 @@ export default function RunDetailPage({
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
-                {run.input.keyword}
+                {getKeywordFromInput(run.input)}
               </h1>
               <RunStatusBadge status={run.status} />
             </div>
