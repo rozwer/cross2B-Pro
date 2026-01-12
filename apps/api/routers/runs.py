@@ -4,9 +4,10 @@ Endpoints for creating, listing, and managing workflow runs.
 """
 
 import logging
-import uuid
+import uuid as uuid_module
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -111,9 +112,17 @@ class CloneRunInput(BaseModel):
 
 
 class BulkDeleteRequest(BaseModel):
-    """Request body for bulk delete."""
+    """Request body for bulk delete.
 
-    run_ids: list[str]
+    VULN-017: UUIDバリデーションによる入力検証強化
+    run_idsをlist[UUID]に変更してパース時にバリデーション
+    """
+
+    run_ids: list[UUID] = Field(..., min_length=1, max_length=100, description="削除対象のrun ID (UUID形式)")
+
+    def get_run_ids_as_str(self) -> list[str]:
+        """Get run_ids as string list for database queries."""
+        return [str(rid) for rid in self.run_ids]
 
 
 class BulkDeleteResponse(BaseModel):
@@ -199,7 +208,7 @@ async def create_run(
         user: Authenticated user
     """
     tenant_id = user.tenant_id
-    run_id = str(uuid.uuid4())
+    run_id = str(uuid_module.uuid4())
     now = datetime.now()
 
     # Prepare JSON data for storage using normalized input
@@ -672,7 +681,7 @@ async def retry_step(
             step_result = await session.execute(step_query)
             step_record = step_result.scalar_one_or_none()
 
-            new_attempt_id = str(uuid.uuid4())
+            new_attempt_id = str(uuid_module.uuid4())
             audit = AuditLogger(session)
             await audit.log(
                 user_id=user.user_id,
@@ -1063,7 +1072,7 @@ async def resume_from_step(
             if temporal_client is None:
                 raise HTTPException(status_code=503, detail="Temporal client not available")
 
-            new_workflow_id = f"{run_id}-resume-{uuid.uuid4().hex[:8]}"
+            new_workflow_id = f"{run_id}-resume-{uuid_module.uuid4().hex[:8]}"
 
             # First, update DB status to WORKFLOW_STARTING (race condition mitigation)
             now = datetime.now()
@@ -1244,17 +1253,28 @@ async def clone_run(
                     ),
                 }
 
+            # VULN-018: clone時のconfig検証強化
+            # 元のconfigをPydanticでバリデーション
+            try:
+                validated_original_config = _validate_run_config(dict(original_config) if original_config else {})
+            except PydanticValidationError as config_error:
+                logger.error(f"Invalid source run config for clone: {config_error}", extra={"run_id": run_id})
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Source run has invalid config, cannot clone: {config_error}",
+                ) from config_error
+
             if data and data.model_config_override:
                 new_model_config = data.model_config_override.model_dump()
             else:
-                new_model_config = original_config.get("model_config", DEFAULT_MODEL_CONFIG)
+                new_model_config = validated_original_config.get("model_config", DEFAULT_MODEL_CONFIG)
 
             new_workflow_config = {
                 "model_config": new_model_config,
-                "step_configs": original_config.get("step_configs"),
-                "tool_config": original_config.get("tool_config"),
-                "options": original_config.get("options"),
-                "pack_id": original_config.get("pack_id", "default"),
+                "step_configs": validated_original_config.get("step_configs"),
+                "tool_config": validated_original_config.get("tool_config"),
+                "options": validated_original_config.get("options"),
+                "pack_id": validated_original_config.get("pack_id", "default"),
                 "input": new_input,
                 "keyword": new_input["keyword"],
                 "target_audience": new_input.get("target_audience"),
@@ -1262,7 +1282,7 @@ async def clone_run(
                 "additional_requirements": new_input.get("additional_requirements"),
             }
 
-            new_run_id = str(uuid.uuid4())
+            new_run_id = str(uuid_module.uuid4())
             now = datetime.now()
 
             new_run = Run(
@@ -1495,11 +1515,16 @@ async def bulk_delete_runs(
     request: BulkDeleteRequest,
     user: AuthUser = Depends(get_current_user),
 ) -> BulkDeleteResponse:
-    """Delete multiple runs. Running/pending/waiting runs are cancelled first."""
+    """Delete multiple runs. Running/pending/waiting runs are cancelled first.
+
+    VULN-017: run_idsはUUID形式でバリデーション済み
+    """
     tenant_id = user.tenant_id
+    # VULN-017: UUIDをstr形式に変換して使用
+    run_ids_str = request.get_run_ids_as_str()
     logger.info(
         "Bulk deleting runs",
-        extra={"run_ids": request.run_ids, "tenant_id": tenant_id, "user_id": user.user_id},
+        extra={"run_ids": run_ids_str, "tenant_id": tenant_id, "user_id": user.user_id},
     )
 
     db_manager = _get_tenant_db_manager()
@@ -1516,7 +1541,7 @@ async def bulk_delete_runs(
     ]
 
     try:
-        for run_id in request.run_ids:
+        for run_id in run_ids_str:
             try:
                 async with db_manager.get_session(tenant_id) as session:
                     query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()

@@ -1,8 +1,8 @@
 """Run-related Pydantic models for API requests and responses."""
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Discriminator, Field, Tag, field_validator
 
 from .article_hearing import ArticleHearingInput
 from .enums import ErrorType, RunStatus, StepAttemptStatus, StepStatus
@@ -69,16 +69,31 @@ class ToolConfig(BaseModel):
 
 
 class LegacyRunInput(BaseModel):
-    """Legacy run input data (backward compatibility)."""
+    """Legacy run input data (backward compatibility).
 
+    VULN-016: 明確な型識別のためformat_typeフィールドを追加
+    """
+
+    format_type: Literal["legacy"] = "legacy"
     keyword: str
     target_audience: str | None = None
     competitor_urls: list[str] | None = None
     additional_requirements: str | None = None
 
 
-# Type alias for backward compatibility
-RunInput = LegacyRunInput | ArticleHearingInput
+# VULN-016: Discriminated Union for type safety
+# format_typeフィールドで明確に型を識別
+def _get_input_discriminator(v: Any) -> str:
+    """Determine input type from format_type field."""
+    if isinstance(v, dict):
+        return v.get("format_type", "legacy")
+    return getattr(v, "format_type", "legacy")
+
+
+RunInput = Annotated[
+    Annotated[LegacyRunInput, Tag("legacy")] | Annotated[ArticleHearingInput, Tag("article_hearing_v1")],
+    Discriminator(_get_input_discriminator),
+]
 
 
 class RunOptions(BaseModel):
@@ -104,14 +119,17 @@ class CreateRunInput(BaseModel):
     """Request to create a new run - supports both legacy and new input formats.
 
     For legacy format:
-        input: { keyword: "...", target_audience: "...", ... }
+        input: { format_type: "legacy", keyword: "...", target_audience: "...", ... }
 
     For new format (ArticleHearingInput):
-        input: { business: {...}, keyword: {...}, strategy: {...}, ... }
+        input: { format_type: "article_hearing_v1", business: {...}, keyword: {...}, ... }
+
+    VULN-016: Discriminated Union による型安全性の向上
+    format_type フィールドで明確に入力形式を識別
     """
 
-    # Accept either LegacyRunInput or ArticleHearingInput
-    input: LegacyRunInput | ArticleHearingInput
+    # VULN-016: Discriminated Union で型を識別
+    input: RunInput
     model_config_data: ModelConfig = Field(alias="model_config")
     step_configs: list[StepModelConfig] | None = None
     tool_config: ToolConfig | None = None
