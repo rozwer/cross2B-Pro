@@ -325,11 +325,11 @@ class ArticleWorkflow:
             "config": config,
         }
 
-        # ========== PRE-APPROVAL PHASE ==========
-        self.current_step = "pre_approval"
-
         # Track artifact refs only (not full data)
         artifact_refs: dict[str, dict[str, Any]] = {}
+
+        # ========== PRE-APPROVAL PHASE ==========
+        self.current_step = "pre_approval"
 
         # Step 0: Keyword Selection
         if self._should_run("step0", resume_from):
@@ -374,11 +374,28 @@ class ArticleWorkflow:
         # Step 3: Parallel Analysis (3A/3B/3C)
         if self._should_run("step3", resume_from):
             self.current_step = "step3_parallel"
-            step3_results = await run_parallel_steps(tenant_id, run_id, config)
-            # Store artifact refs only
-            for step_key in ["step3a", "step3b", "step3c"]:
-                if step_key in step3_results:
-                    artifact_refs[step_key] = step3_results[step_key].get("artifact_ref", {})
+            try:
+                step3_results = await run_parallel_steps(tenant_id, run_id, config)
+                # Store artifact refs only
+                for step_key in ["step3a", "step3b", "step3c"]:
+                    if step_key in step3_results:
+                        artifact_refs[step_key] = step3_results[step_key].get("artifact_ref", {})
+            except Exception as e:
+                # Parallel steps failed after all retries - sync failed status to DB
+                workflow.logger.error(f"Parallel steps failed: {e}")
+                error_message = str(e)[:500]
+                try:
+                    await self._sync_run_status(
+                        tenant_id,
+                        run_id,
+                        "failed",
+                        "step3_parallel",
+                        error_code="PARALLEL_STEP_FAILED",
+                        error_message=error_message,
+                    )
+                except Exception as sync_error:
+                    workflow.logger.warning(f"Failed to sync failed status: {sync_error}")
+                raise
 
         # ========== APPROVAL WAIT ==========
         # Skip approval wait if resuming from post-approval step
@@ -532,8 +549,25 @@ class ArticleWorkflow:
 
         # ========== STEP 11: MULTI-PHASE IMAGE GENERATION ==========
         if self._should_run("step11", resume_from):
-            step11_result = await self._run_step11_multiphase(tenant_id, run_id, config, activity_args, resume_from)
-            artifact_refs["step11"] = step11_result.get("artifact_ref", {})
+            try:
+                step11_result = await self._run_step11_multiphase(tenant_id, run_id, config, activity_args, resume_from)
+                artifact_refs["step11"] = step11_result.get("artifact_ref", {})
+            except Exception as e:
+                # Step11 failed - sync failed status to DB
+                workflow.logger.error(f"Step11 failed: {e}")
+                error_message = str(e)[:500]
+                try:
+                    await self._sync_run_status(
+                        tenant_id,
+                        run_id,
+                        "failed",
+                        "step11",
+                        error_code="STEP11_FAILED",
+                        error_message=error_message,
+                    )
+                except Exception as sync_error:
+                    workflow.logger.warning(f"Failed to sync failed status: {sync_error}")
+                raise
 
         # Step 12: WordPress HTML Generation
         if self._should_run("step12", resume_from):
@@ -632,16 +666,39 @@ class ArticleWorkflow:
 
         Returns:
             Activity result
+
+        Raises:
+            ApplicationError: Re-raises after syncing failed status to DB
         """
         timeout = STEP_TIMEOUTS.get(step_id, 120)
+        tenant_id = args.get("tenant_id", "")
+        run_id = args.get("run_id", "")
 
-        result = await workflow.execute_activity(
-            activity_name,
-            args,
-            start_to_close_timeout=timedelta(seconds=timeout),
-            retry_policy=DEFAULT_RETRY_POLICY,
-        )
-        return cast(dict[str, Any], result)
+        try:
+            result = await workflow.execute_activity(
+                activity_name,
+                args,
+                start_to_close_timeout=timedelta(seconds=timeout),
+                retry_policy=DEFAULT_RETRY_POLICY,
+            )
+            return cast(dict[str, Any], result)
+        except Exception as e:
+            # Activity failed after all retries - sync failed status to DB
+            workflow.logger.error(f"Activity {activity_name} failed: {e}")
+            error_message = str(e)[:500]  # Truncate long error messages
+            try:
+                await self._sync_run_status(
+                    tenant_id,
+                    run_id,
+                    "failed",
+                    step_id,
+                    error_code="ACTIVITY_FAILED",
+                    error_message=f"{activity_name}: {error_message}",
+                )
+            except Exception as sync_error:
+                workflow.logger.warning(f"Failed to sync failed status: {sync_error}")
+            # Re-raise to let Temporal handle the workflow failure
+            raise
 
     async def _sync_run_status(
         self,
