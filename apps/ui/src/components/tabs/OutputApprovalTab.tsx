@@ -39,7 +39,7 @@ import { ApprovalDialog } from "@/components/common/ApprovalDialog";
 import { JsonViewer } from "@/components/artifacts/JsonViewer";
 import { MarkdownViewer } from "@/components/artifacts/MarkdownViewer";
 import { HtmlPreview } from "@/components/artifacts/HtmlPreview";
-import { STEP_LABELS } from "@/lib/types";
+import { STEP_LABELS, getKeywordFromInput } from "@/lib/types";
 
 interface OutputApprovalTabProps {
   onCreateRun?: () => void;
@@ -289,18 +289,23 @@ function RunDetailPanel({ runId }: { runId: string }) {
   const [approvalLoading, setApprovalLoading] = useState(false);
 
   const { run, loading, error, fetch, approve, reject, retry } = useRun(runId);
+  const { artifacts, fetch: fetchArtifacts } = useArtifacts(runId);
   const { events, wsStatus } = useRunProgress(runId, {
     onEvent: (event) => {
       if (
         event.type === "step_completed" ||
         event.type === "step_failed" ||
+        event.type === "approval_requested" ||
         event.type === "run_completed"
       ) {
         fetch();
       }
+      // 承認待ち状態になったら成果物も再フェッチ
+      if (event.type === "approval_requested") {
+        fetchArtifacts();
+      }
     },
   });
-  const { artifacts, fetch: fetchArtifacts } = useArtifacts(runId);
 
   // Auto-expand current step
   useEffect(() => {
@@ -309,12 +314,14 @@ function RunDetailPanel({ runId }: { runId: string }) {
     }
   }, [run?.current_step]);
 
-  // Fetch artifacts when run loads
+  // Fetch artifacts when run loads or status changes to waiting_approval
+  // run?.id と run?.status のみを監視し、過剰な再フェッチを防ぐ
   useEffect(() => {
     if (run) {
       fetchArtifacts();
     }
-  }, [run, fetchArtifacts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run?.id, run?.status, fetchArtifacts]);
 
   const toggleStep = (stepName: string) => {
     const newExpanded = new Set(expandedSteps);
@@ -412,7 +419,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-gray-900 truncate">{run.input.keyword}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 truncate">{getKeywordFromInput(run.input)}</h2>
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm",

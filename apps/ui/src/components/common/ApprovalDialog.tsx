@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X,
   AlertTriangle,
@@ -79,6 +79,21 @@ export function ApprovalDialog({
     return APPROVAL_TARGET_STEPS.filter((step) => groups[step]).map((step) => [step, groups[step]] as const);
   }, [approvalArtifacts]);
 
+  // loadContent を useEffect より先に定義（依存関係解決のため）
+  const loadContent = useCallback(async (artifact: ArtifactRef) => {
+    setSelectedArtifact(artifact);
+    setContentLoading(true);
+    try {
+      const data = await api.artifacts.download(runId, artifact.id);
+      setContent(data);
+    } catch (err) {
+      console.error("Failed to load artifact content:", err);
+      setContent(null);
+    } finally {
+      setContentLoading(false);
+    }
+  }, [runId]);
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -96,13 +111,12 @@ export function ApprovalDialog({
     };
   }, [isOpen]);
 
-  // 最初の成果物を自動選択
+  // 最初の成果物を自動選択（ダイアログが開いた時、または成果物リストが更新された時）
   useEffect(() => {
     if (isOpen && approvalArtifacts.length > 0 && !selectedArtifact) {
       loadContent(approvalArtifacts[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, approvalArtifacts.length]);
+  }, [isOpen, approvalArtifacts, selectedArtifact, loadContent]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -141,20 +155,6 @@ export function ApprovalDialog({
       newExpanded.add(stepKey);
     }
     setExpandedSteps(newExpanded);
-  };
-
-  const loadContent = async (artifact: ArtifactRef) => {
-    setSelectedArtifact(artifact);
-    setContentLoading(true);
-    try {
-      const data = await api.artifacts.download(runId, artifact.id);
-      setContent(data);
-    } catch (err) {
-      console.error("Failed to load artifact content:", err);
-      setContent(null);
-    } finally {
-      setContentLoading(false);
-    }
   };
 
   const getIcon = (contentType: string) => {
