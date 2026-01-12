@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock, Cpu, Zap, ArrowRight, Sparkles, Trash2 } from "lucide-react";
+import { Clock, Zap, ArrowRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RunSummary } from "@/lib/types";
 import { RunStatusBadge } from "./RunStatusBadge";
@@ -163,15 +163,6 @@ export function RunCard({ run, onDelete, selectMode, isSelected, isDeletable, on
           </div>
 
           <div className="flex items-center gap-2.5 text-sm">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-accent-50 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400">
-              <Cpu className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-gray-600 dark:text-gray-400">
-              {run.model_config.platform} / {run.model_config.model}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5 text-sm">
             <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
               <Clock className="h-3.5 w-3.5" />
             </div>
@@ -181,15 +172,18 @@ export function RunCard({ run, onDelete, selectMode, isSelected, isDeletable, on
           </div>
         </div>
 
-        {/* Grounding badge */}
-        {run.model_config.options?.grounding && (
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        {/* Grounding status */}
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          {run.model_config.options?.grounding ? (
             <span className="badge badge-primary">
-              <Sparkles className="h-3 w-3" />
               Grounding有効
             </span>
-          </div>
-        )}
+          ) : (
+            <span className="badge badge-secondary">
+              Grounding無効
+            </span>
+          )}
+        </div>
 
         {/* Hover action hint - only show when not in select mode */}
         {!selectMode && (
