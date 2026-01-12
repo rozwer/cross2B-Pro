@@ -16,6 +16,7 @@ from typing import Any, cast
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import ApplicationError
 
 from .parallel import run_parallel_steps
 
@@ -112,6 +113,13 @@ class ArticleWorkflow:
         self.image_gen_decision_made = True
         self.image_gen_enabled = config.get("enabled", True)
         self.image_gen_config = config
+        # Also populate step11_settings for the multi-phase workflow
+        # This ensures image_gen_config values are used in step11 execution
+        if self.image_gen_enabled:
+            self.step11_settings = {
+                "image_count": config.get("image_count", 3),
+                "position_request": config.get("position_request", ""),
+            }
 
     @workflow.signal
     async def skip_image_generation(self) -> None:
@@ -233,12 +241,15 @@ class ArticleWorkflow:
             WorkflowFailedError: If workflow cannot complete
         """
         # Validate pack_id is provided (no auto-execution)
+        # Raising ApplicationError ensures Temporal marks the workflow as failed,
+        # which triggers proper status updates in the API
         pack_id = config.get("pack_id")
         if not pack_id:
-            return {
-                "status": "failed",
-                "error": "pack_id required. Auto-execution without pack_id is forbidden.",
-            }
+            raise ApplicationError(
+                "pack_id required. Auto-execution without pack_id is forbidden.",
+                type="VALIDATION_ERROR",
+                non_retryable=True,
+            )
 
         self.config = config
 
@@ -643,7 +654,8 @@ class ArticleWorkflow:
         if not skip_initial_wait:
             self.step11_phase = "waiting_11A"
             self.current_step = "waiting_image_generation"
-            await self._sync_run_status(tenant_id, run_id, "waiting_approval", "waiting_image_generation")
+            # Use waiting_image_input (not waiting_approval) for Step11 waiting state
+            await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "waiting_image_generation")
 
             # Wait for settings signal or skip signal
             await workflow.wait_condition(lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made)

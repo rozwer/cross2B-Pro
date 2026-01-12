@@ -119,10 +119,11 @@ class Step5PrimaryCollection(BaseActivity):
             )
 
         # === CheckpointManager統合: クエリ生成のチェックポイント ===
+        # Use full outline hash for proper cache invalidation when outline changes
         input_digest = self.checkpoint.compute_digest(
             {
                 "keyword": keyword,
-                "outline": outline[:500],  # Use truncated outline for digest
+                "outline": outline,  # Full outline for accurate cache invalidation
             }
         )
 

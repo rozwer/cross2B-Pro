@@ -9,13 +9,14 @@ from datetime import datetime
 from typing import Any
 
 from apps.api.db import Run, Step
+from apps.api.schemas.article_hearing import ArticleHearingInput
 from apps.api.schemas.enums import RunStatus, StepStatus
 from apps.api.schemas.runs import (
     ArtifactRef,
+    LegacyRunInput,
     ModelConfig,
     ModelConfigOptions,
     RunError,
-    RunInput,
     RunOptions,
     RunResponse,
     StepModelConfig,
@@ -32,12 +33,25 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
     input_data = run.input_data or {}
     config = run.config or {}
 
-    run_input = RunInput(
-        keyword=input_data.get("keyword", ""),
-        target_audience=input_data.get("target_audience"),
-        competitor_urls=input_data.get("competitor_urls"),
-        additional_requirements=input_data.get("additional_requirements"),
-    )
+    run_input: LegacyRunInput | ArticleHearingInput
+    if input_data.get("format") == "article_hearing_v1" and input_data.get("data"):
+        try:
+            run_input = ArticleHearingInput.model_validate(input_data.get("data", {}))
+        except Exception as e:
+            logger.warning(f"Failed to parse ArticleHearingInput for run {run.id}: {e}")
+            run_input = LegacyRunInput(
+                keyword=input_data.get("keyword", ""),
+                target_audience=input_data.get("target_audience"),
+                competitor_urls=input_data.get("competitor_urls"),
+                additional_requirements=input_data.get("additional_requirements"),
+            )
+    else:
+        run_input = LegacyRunInput(
+            keyword=input_data.get("keyword", ""),
+            target_audience=input_data.get("target_audience"),
+            competitor_urls=input_data.get("competitor_urls"),
+            additional_requirements=input_data.get("additional_requirements"),
+        )
 
     model_config_data = config.get("model_config", {})
     model_config = ModelConfig(
@@ -178,7 +192,8 @@ async def get_steps_from_storage(
     ]
 
     # Steps that are always completed once workflow starts (no artifact needed)
-    always_completed_steps = {"step-1", "step0"}
+    # Note: Only step-1 (input) is always completed; step0 requires output.json check
+    always_completed_steps = {"step-1"}
 
     # Define parent steps with their children (parent status derived from children)
     parent_child_groups = {
@@ -186,12 +201,11 @@ async def get_steps_from_storage(
     }
 
     # Define parallel step groups (these steps run in parallel, not sequentially)
+    # Note: step7a/step7b are sequential, not parallel - removed from parallel_groups
     parallel_groups = {
         "step3a": {"step3a", "step3b", "step3c"},
         "step3b": {"step3a", "step3b", "step3c"},
         "step3c": {"step3a", "step3b", "step3c"},
-        "step7a": {"step7a", "step7b"},
-        "step7b": {"step7a", "step7b"},
     }
 
     # Define steps after each parallel group (used for inference)
@@ -199,8 +213,6 @@ async def get_steps_from_storage(
         "step3a": "step3_5",
         "step3b": "step3_5",
         "step3c": "step3_5",
-        "step7a": "step8",
-        "step7b": "step8",
     }
 
     step_responses: list[StepResponse] = []
@@ -284,6 +296,10 @@ def _determine_step_status(
     if current_step and current_step == display_name:
         if run_status == RunStatus.FAILED.value:
             return StepStatus.FAILED
+        return StepStatus.RUNNING
+
+    # Handle step3_parallel: treat step3a/b/c as running during parallel execution phase
+    if current_step == "step3_parallel" and step_name in {"step3a", "step3b", "step3c"}:
         return StepStatus.RUNNING
 
     # Special handling for input steps: always completed once workflow starts
