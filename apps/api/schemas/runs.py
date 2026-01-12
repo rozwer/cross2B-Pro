@@ -211,6 +211,8 @@ class StepResponse(BaseModel):
     attempts: list[StepAttempt] = Field(default_factory=list)
     started_at: str | None = None
     completed_at: str | None = None
+    error_code: str | None = None  # ErrorCategory enum value (RETRYABLE, NON_RETRYABLE, etc.)
+    error_message: str | None = None
     artifacts: list[ArtifactRef] | None = None
     validation_report: ValidationReport | None = None
 
