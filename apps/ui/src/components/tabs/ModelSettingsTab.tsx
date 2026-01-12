@@ -37,6 +37,9 @@ interface ModelOption {
 }
 
 // バックエンド実装に基づいたモデル一覧（apps/api/llm/）
+// 参照: https://ai.google.dev/gemini-api/docs/models
+//       https://platform.openai.com/docs/models
+//       https://platform.claude.com/docs/en/about-claude/models/overview
 const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
   gemini: [
     {
@@ -45,23 +48,32 @@ const PLATFORM_MODELS: Record<LLMPlatform, ModelOption[]> = {
       description: "高速・コスト効率（デフォルト）",
       isDefault: true,
     },
-    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "標準" },
     { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "高精度" },
-    { id: "gemini-3-pro-preview", name: "Gemini 3 Pro Preview", description: "最新プレビュー" },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "標準" },
+    { id: "gemini-3.0-pro", name: "Gemini 3.0 Pro", description: "最新・最高性能" },
+    { id: "gemini-3-pro-latest", name: "Gemini 3 Pro Latest", description: "最新安定版" },
+    { id: "gemini-3-pro-preview-11-2025", name: "Gemini 3 Pro Preview", description: "最新プレビュー" },
+    { id: "gemini-3-flash-preview", name: "Gemini 3 Flash Preview", description: "最新高速プレビュー" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "安定版" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", description: "軽量" },
   ],
   openai: [
-    { id: "gpt-4o", name: "GPT-4o", description: "最新（デフォルト）", isDefault: true },
+    { id: "gpt-5.2", name: "GPT-5.2", description: "最新・最高性能", isDefault: true },
+    { id: "gpt-5.2-pro", name: "GPT-5.2 Pro", description: "最高精度" },
+    { id: "gpt-4o", name: "GPT-4o", description: "高性能" },
     { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "軽量・高速" },
-    { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "高精度" },
+    { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "安定版" },
   ],
   anthropic: [
     {
-      id: "claude-sonnet-4-20250514",
-      name: "Claude Sonnet 4",
-      description: "バランス型（デフォルト）",
+      id: "claude-sonnet-4-5-20250929",
+      name: "Claude Sonnet 4.5",
+      description: "最新バランス型（デフォルト）",
       isDefault: true,
     },
-    { id: "claude-opus-4-20250514", name: "Claude Opus 4", description: "最高精度" },
+    { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5", description: "最新・最高精度" },
+    { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", description: "バランス型" },
+    { id: "claude-opus-4-20250514", name: "Claude Opus 4", description: "高精度" },
     { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "高速" },
   ],
 };
