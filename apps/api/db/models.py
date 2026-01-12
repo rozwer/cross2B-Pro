@@ -167,7 +167,7 @@ class Artifact(Base):
     __tablename__ = "artifacts"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
-    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False)
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False)
     step_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True)
     artifact_type: Mapped[str] = mapped_column(String(100), nullable=False)
     ref_path: Mapped[str] = mapped_column(Text, nullable=False)

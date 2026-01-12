@@ -10,6 +10,7 @@ VULN-004 + REVIEW-007: SQLインジェクション対策
 - 識別子のエスケープ
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -93,15 +94,18 @@ class TenantDBManager:
             pool_size: Connection pool size per tenant
             max_overflow: Max overflow connections
         """
-        self.common_db_url: str = common_db_url or os.getenv(
-            "COMMON_DATABASE_URL"
-        ) or "postgresql+asyncpg://postgres:postgres@localhost:5432/seo_gen_common"
+        self.common_db_url: str = (
+            common_db_url or os.getenv("COMMON_DATABASE_URL") or "postgresql+asyncpg://postgres:postgres@localhost:5432/seo_gen_common"
+        )
         self.pool_size = pool_size
         self.max_overflow = max_overflow
 
         # Cache of tenant engines and session factories
         self._engines: dict[str, AsyncEngine] = {}
         self._session_factories: dict[str, async_sessionmaker[AsyncSession]] = {}
+
+        # Lock for thread-safe engine creation (prevents race condition creating duplicate engines)
+        self._engine_lock = asyncio.Lock()
 
         # Common DB engine
         self._common_engine: AsyncEngine = create_async_engine(
@@ -129,9 +133,22 @@ class TenantDBManager:
                 raise TenantDBError(f"Tenant is inactive: {tenant_id}")
             return str(row.database_url)
 
-    def _get_or_create_engine(self, tenant_id: str, db_url: str) -> AsyncEngine:
-        """Get or create engine for tenant."""
-        if tenant_id not in self._engines:
+    async def _get_or_create_engine(self, tenant_id: str, db_url: str) -> AsyncEngine:
+        """Get or create engine for tenant (thread-safe with asyncio.Lock).
+
+        Uses double-checked locking pattern: first check without lock for fast path,
+        then acquire lock and check again to prevent race condition.
+        """
+        # Fast path: check without lock
+        if tenant_id in self._engines:
+            return self._engines[tenant_id]
+
+        # Slow path: acquire lock and check again
+        async with self._engine_lock:
+            # Double-check after acquiring lock (another coroutine may have created it)
+            if tenant_id in self._engines:
+                return self._engines[tenant_id]
+
             engine = create_async_engine(
                 db_url,
                 pool_size=self.pool_size,
@@ -143,7 +160,7 @@ class TenantDBManager:
                 class_=AsyncSession,
                 expire_on_commit=False,
             )
-        return self._engines[tenant_id]
+            return engine
 
     @asynccontextmanager
     async def get_session(self, tenant_id: str) -> AsyncGenerator[AsyncSession, None]:
@@ -163,12 +180,10 @@ class TenantDBManager:
         # VULN-004: tenant_id のバリデーション
         if not validate_tenant_id(tenant_id):
             logger.warning(f"Invalid tenant_id format in get_session: {tenant_id[:20]}...")
-            raise TenantIdValidationError(
-                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
-            )
+            raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         db_url = await self._get_tenant_db_url(tenant_id)
-        self._get_or_create_engine(tenant_id, db_url)
+        await self._get_or_create_engine(tenant_id, db_url)
 
         async with self._session_factories[tenant_id]() as session:
             try:
@@ -222,9 +237,7 @@ class TenantDBManager:
         # VULN-004: tenant_id のバリデーション
         if not validate_tenant_id(tenant_id):
             logger.warning(f"Invalid tenant_id format rejected: {tenant_id[:20]}...")
-            raise TenantIdValidationError(
-                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
-            )
+            raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         db_host = db_host or os.getenv("DB_HOST", "localhost")
         db_user = db_user or os.getenv("DB_USER", "postgres")
@@ -295,9 +308,7 @@ class TenantDBManager:
         # VULN-004: tenant_id のバリデーション
         if not validate_tenant_id(tenant_id):
             logger.warning(f"Invalid tenant_id format in delete_tenant_db: {tenant_id[:20]}...")
-            raise TenantIdValidationError(
-                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
-            )
+            raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         if not confirm:
             raise TenantDBError("Must confirm=True to delete tenant database")
@@ -370,12 +381,10 @@ class TenantDBManager:
             TenantNotFoundError: If tenant does not exist
         """
         if not validate_tenant_id(tenant_id):
-            raise TenantIdValidationError(
-                f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}"
-            )
+            raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         db_url = await self._get_tenant_db_url(tenant_id)
-        return self._get_or_create_engine(tenant_id, db_url)
+        return await self._get_or_create_engine(tenant_id, db_url)
 
 
 # =============================================================================

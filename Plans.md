@@ -159,71 +159,52 @@ if run is None:
 
 ---
 
-## 🟠 フェーズ3: 大規模修正 `cc:TODO`
+## 🟢 フェーズ3: 大規模修正 `cc:完了`
 
-### 3-1. [CRITICAL] Temporal決定性違反 - datetime.now() の除去 `cc:TODO`
-**ファイル**:
-- [base.py](apps/worker/activities/base.py:243,594)
-- step1.py:341
-- step11.py:1191,1333
-- pre_approval.py:284
-
-**修正内容**:
-- Workflow/Graph 内の `datetime.now()` を Activity context の開始時刻に置き換え
-- Activity 内では許容（外部副作用は Activity に閉じ込める原則に合致）
-
-**影響**: Workflow replay 失敗の防止、障害復旧の信頼性向上
-**工数**: 1-2時間
-
-**注意**:
-- Workflow 内での datetime.now() は決定性違反
-- Activity 内での datetime.now() は許容だが、テストで検証必要
-- LangGraph state 内での datetime.now() も確認必要
+### 3-1. [CRITICAL] Temporal決定性違反 - datetime.now() の除去 ✅ (問題なし)
+**調査結果**: Workflow内にdatetime.now()は存在しない
+- すべてのdatetime.now()はActivity内またはActivity経由で呼ばれるLangGraph内で使用
+- Activity内での使用は許容（外部副作用はActivityに閉じ込める原則に合致）
+- **対応不要**
 
 ---
 
-### 3-2. [CRITICAL] Workflow開始とDB更新の競合状態対策 `cc:TODO`
-**ファイル**: [runs.py (routers)](apps/api/routers/runs.py:661-690)
+### 3-2. [CRITICAL] Workflow開始とDB更新の競合状態対策 ✅
+**ファイル**: [runs.py (routers)](apps/api/routers/runs.py), [enums.py](apps/api/schemas/enums.py)
 **修正内容**:
-- Option A: Saga パターン（補償トランザクション）
-- Option B: ステータスを `WORKFLOW_STARTING` にして、成功後に `RUNNING` に更新
-
+- RunStatusに`WORKFLOW_STARTING`ステータスを追加
+- retry/resume関数で、まずWORKFLOW_STARTINGに設定→Workflow開始成功後にRUNNINGに更新
+- Workflow開始失敗時はFAILEDに戻す補償処理を維持
 **影響**: DBは `RUNNING` だが Workflow が存在しない状態の防止
-**工数**: 1-2時間
 
 ---
 
-### 3-3. [CRITICAL] Audit Log チェーンのレースコンディション対策 `cc:TODO`
-**ファイル**: audit.py:94-123
+### 3-3. [CRITICAL] Audit Log チェーンのレースコンディション対策 ✅
+**ファイル**: [audit.py](apps/api/db/audit.py)
 **修正内容**:
-- Option A: `SELECT FOR UPDATE` で排他ロック
-- Option B: 楽観的ロック（version カラム追加）
-
+- `_get_last_entry()`に`for_update`パラメータを追加
+- `log()`メソッドで`SELECT FOR UPDATE`を使用して排他ロック
+- ダブルチェックロックパターンで並行リクエスト時のチェーン分岐を防止
 **影響**: 監査ログの整合性保証
-**工数**: 1時間
 
 ---
 
-### 3-4. [CRITICAL] Artifact カスケード削除問題 `cc:TODO`
-**ファイル**: [models.py](apps/api/db/models.py:171)
+### 3-4. [CRITICAL] Artifact カスケード削除問題 ✅
+**ファイル**: [models.py](apps/api/db/models.py)
 **修正内容**:
-- Option A: `ondelete="SET NULL"` → `ondelete="CASCADE"` に変更
-- Option B: 孤立 Artifact のクリーンアップジョブ追加
-- MinIO ストレージの孤立オブジェクト削除も必要
-
-**影響**: ストレージリークの防止
-**工数**: 1-2時間
+- Artifact.run_idのFKに`ondelete="CASCADE"`を追加
+- 既存の実装（delete_run）でMinIOオブジェクト削除は既に実装済み
+**影響**: DB側でもカスケード削除を保証、ストレージリークの防止
 
 ---
 
-### 3-5. [HIGH] テナントエンジンキャッシュのレースコンディション対策 `cc:TODO`
-**ファイル**: tenant.py:132-146
+### 3-5. [HIGH] テナントエンジンキャッシュのレースコンディション対策 ✅
+**ファイル**: [tenant.py](apps/api/db/tenant.py)
 **修正内容**:
-- Option A: `asyncio.Lock` で排他制御
-- Option B: `setdefault` パターンでアトミックに設定
-
+- `asyncio.Lock`を追加して排他制御
+- `_get_or_create_engine()`をasyncメソッドに変更
+- ダブルチェックロックパターンでパフォーマンスと安全性を両立
 **影響**: 同一テナントに複数エンジン生成の防止、接続プール枯渇防止
-**工数**: 30分
 
 ---
 
