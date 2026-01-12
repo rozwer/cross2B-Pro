@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Loader2,
@@ -31,6 +31,19 @@ export function Phase11C_Instructions({
   const [instructions, setInstructions] = useState<string[]>(
     positions.map(() => "")
   );
+
+  // Sync instructions array length when positions change
+  // This ensures the component correctly handles position additions/removals
+  useEffect(() => {
+    setInstructions((prev) => {
+      // If positions length changed, re-initialize with empty strings
+      // preserving existing values where possible
+      if (prev.length !== positions.length) {
+        return positions.map((_, i) => prev[i] ?? "");
+      }
+      return prev;
+    });
+  }, [positions]);
 
   const handleInstructionChange = (index: number, value: string) => {
     setInstructions((prev) => {

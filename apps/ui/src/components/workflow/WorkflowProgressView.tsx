@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LayoutGrid, Clock, Target } from "lucide-react";
 import type { Step } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -57,16 +57,19 @@ export function WorkflowProgressView({
   onImageGenSkip,
   defaultPattern = "n8n",
 }: WorkflowProgressViewProps) {
-  // Load saved pattern from localStorage
-  const [pattern, setPattern] = useState<WorkflowViewPattern>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved && (saved === "n8n" || saved === "timeline" || saved === "radial")) {
-        return saved as WorkflowViewPattern;
-      }
+  // Use defaultPattern for initial render to prevent SSR/hydration mismatch
+  // localStorage is accessed only on client-side after mount
+  const [pattern, setPattern] = useState<WorkflowViewPattern>(defaultPattern);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load saved pattern from localStorage after hydration
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && (saved === "n8n" || saved === "timeline" || saved === "radial")) {
+      setPattern(saved as WorkflowViewPattern);
     }
-    return defaultPattern;
-  });
+    setIsHydrated(true);
+  }, []);
 
   const handlePatternChange = (newPattern: WorkflowViewPattern) => {
     setPattern(newPattern);
