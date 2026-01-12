@@ -258,10 +258,53 @@ async def _load_step11_state(
     *,
     action: str,
 ) -> Step11State:
-    """Load Step11State with validation and reset on corruption."""
+    """Load Step11State with validation and reset on corruption.
+
+    If images in DB state show errors but MinIO has successful images,
+    sync the MinIO data back to DB state.
+    """
     state_data = run.step11_state or {}
     try:
-        return Step11State(**state_data)
+        state = Step11State(**state_data)
+
+        # Check if images need sync from MinIO
+        # (DB shows failed but MinIO might have succeeded after retry)
+        images_need_sync = any(img.status == "failed" or not img.image_path for img in state.images) if state.images else False
+
+        if images_need_sync:
+            store = ArtifactStore()
+            try:
+                images_path = store.build_path(run.tenant_id, str(run.id), "step11", "images.json")
+                images_data = await store.get(images_path)
+                if images_data:
+                    minio_data = json.loads(images_data.decode("utf-8"))
+                    minio_images = minio_data.get("generated_images", [])
+
+                    # Check if MinIO has successful images
+                    if minio_images and all(img.get("image_path") for img in minio_images):
+                        # Update state with MinIO data
+                        for minio_img in minio_images:
+                            minio_img["status"] = "generated"
+                            minio_img["error"] = None
+
+                        state.images = [GeneratedImage(**img) for img in minio_images]
+
+                        # Persist to DB
+                        run.step11_state = state.model_dump()
+                        run.updated_at = datetime.now()
+                        await session.commit()
+
+                        logger.info(
+                            "Synced step11 images from MinIO to DB",
+                            extra={"run_id": str(run.id), "image_count": len(minio_images)},
+                        )
+            except Exception as e:
+                logger.warning(
+                    f"Failed to sync images from MinIO: {e}",
+                    extra={"run_id": str(run.id)},
+                )
+
+        return state
     except ValidationError as exc:
         logger.warning(
             "Invalid step11_state detected; resetting to default",
