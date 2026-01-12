@@ -632,7 +632,7 @@ class Step8FactCheck(BaseActivity):
                 keyword=keyword,
                 verification="\n".join(f"[{r.claim_id}] {r.status}: {r.evidence}" for r in verification_results),
             )
-            faq_config = LLMRequestConfig(max_tokens=4000, temperature=0.6)
+            faq_config = LLMRequestConfig(max_tokens=8000, temperature=0.6)
             faq_response = await llm.generate(
                 messages=[{"role": "user", "content": faq_request}],
                 system_prompt="Generate FAQ based on the verification results.",
