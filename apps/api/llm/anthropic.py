@@ -1,10 +1,12 @@
 """Anthropic Claude API client implementation."""
 
+import asyncio
 import json
 import logging
 import os
 from typing import Any, cast
 
+import httpx
 from anthropic import (
     APIConnectionError,
     APIStatusError,
@@ -14,7 +16,7 @@ from anthropic import (
 )
 from anthropic.types import MessageParam, ToolParam, ToolUseBlock
 
-from .base import LLMInterface
+from .base import LLMInterface, _maybe_close_client
 from .exceptions import NonRetryableLLMError, RetryableLLMError, ValidationLLMError
 from .schemas import (
     AnthropicConfig,
@@ -77,7 +79,18 @@ class AnthropicClient(LLMInterface):
         if model not in SUPPORTED_MODELS:
             raise NonRetryableLLMError(f"Model '{model}' is not supported. Supported models: {SUPPORTED_MODELS}")
 
-        self.client = AsyncAnthropic(api_key=resolved_key)
+        # Configure httpx client with connection pool limits
+        # max_connections: total connection pool size
+        # max_keepalive_connections: connections kept alive for reuse
+        http_client = httpx.AsyncClient(
+            limits=httpx.Limits(
+                max_connections=100,
+                max_keepalive_connections=20,
+            ),
+            timeout=httpx.Timeout(timeout=120.0, connect=10.0),
+        )
+        self.client = AsyncAnthropic(api_key=resolved_key, http_client=http_client)
+        self._http_client = http_client
         self._model = model
         self.max_retries = max_retries
         self._anthropic_config = anthropic_config or AnthropicConfig()
@@ -128,6 +141,12 @@ class AnthropicClient(LLMInterface):
         """現在のモデルを返す"""
         return self._model
 
+    async def close(self) -> None:
+        """Close underlying client resources if available."""
+        await _maybe_close_client(self.client)
+        if hasattr(self, "_http_client") and self._http_client:
+            await self._http_client.aclose()
+
     async def health_check(self) -> bool:
         """ヘルスチェック"""
         try:
@@ -168,15 +187,16 @@ class AnthropicClient(LLMInterface):
 
         self._log_request("generate", self.model, metadata)
 
+        retry_config = self._get_retry_config()
         attempt = 0
 
-        while attempt < self.max_retries:
+        while attempt < retry_config.max_attempts:
             attempt += 1
             try:
                 logger.info(
                     "Anthropic API call attempt %d/%d, model=%s, temp=%s, max=%d",
                     attempt,
-                    self.max_retries,
+                    retry_config.max_attempts,
                     self.model,
                     config.temperature,
                     config.max_tokens,
@@ -228,38 +248,80 @@ class AnthropicClient(LLMInterface):
                 raise NonRetryableLLMError(f"Authentication failed: {e}")
 
             except RateLimitError as e:
-                # Rate limit is retryable
-                logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
-                if attempt >= self.max_retries:
-                    raise RetryableLLMError(f"Rate limit exceeded after {self.max_retries} attempts: {e}")
-                # Continue to next attempt
+                # Rate limit is retryable with exponential backoff
+                logger.warning(f"Rate limit error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Rate limit exceeded after {retry_config.max_attempts} attempts: {e}")
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after rate limit")
+                await asyncio.sleep(delay)
 
             except APIConnectionError as e:
-                # Connection errors are retryable
-                logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
-                if attempt >= self.max_retries:
-                    raise RetryableLLMError(f"Connection failed after {self.max_retries} attempts: {e}")
-                # Continue to next attempt
+                # Connection errors are retryable with exponential backoff
+                logger.warning(f"Connection error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Connection failed after {retry_config.max_attempts} attempts: {e}")
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after connection error")
+                await asyncio.sleep(delay)
 
             except APIStatusError as e:
                 # Check if the error is retryable based on status code
                 if e.status_code >= 500:
-                    logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
-                    if attempt >= self.max_retries:
-                        raise RetryableLLMError(f"Server error after {self.max_retries} attempts: {e}")
-                    # Continue to next attempt
+                    logger.warning(f"Server error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                    if attempt >= retry_config.max_attempts:
+                        raise RetryableLLMError(f"Server error after {retry_config.max_attempts} attempts: {e}")
+                    # Exponential backoff before next attempt
+                    delay = min(
+                        retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                        retry_config.max_delay,
+                    )
+                    logger.info(f"Retrying in {delay:.1f}s after server error")
+                    await asyncio.sleep(delay)
                 else:
                     # Client errors (4xx except rate limit) are non-retryable
                     logger.error(f"API error: {e}")
                     raise NonRetryableLLMError(f"API error: {e}")
 
+            except TimeoutError as e:
+                # Timeout errors are retryable
+                logger.warning(f"Timeout error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Timeout after {retry_config.max_attempts} attempts: {e}")
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after timeout")
+                await asyncio.sleep(delay)
+
+            except OSError as e:
+                # Network-level errors (connection refused, etc.) are retryable
+                logger.warning(f"OS/Network error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Network error after {retry_config.max_attempts} attempts: {e}")
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after network error")
+                await asyncio.sleep(delay)
+
             except Exception as e:
                 # Unknown errors are treated as non-retryable
-                logger.error(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error: {e}", exc_info=True)
                 raise NonRetryableLLMError(f"Unexpected error: {e}")
 
         # Should not reach here, but handle edge case
-        raise RetryableLLMError(f"Failed after {self.max_retries} attempts")
+        raise RetryableLLMError(f"Failed after {retry_config.max_attempts} attempts")
 
     async def generate_json(
         self,
@@ -291,6 +353,7 @@ class AnthropicClient(LLMInterface):
         config = config or LLMRequestConfig()
         normalized_messages = self._normalize_messages(messages)
 
+        retry_config = self._get_retry_config()
         attempt = 0
 
         # Create a tool definition from the schema
@@ -303,10 +366,10 @@ class AnthropicClient(LLMInterface):
             }
         ]
 
-        while attempt < self.max_retries:
+        while attempt < retry_config.max_attempts:
             attempt += 1
             try:
-                logger.info(f"Anthropic API JSON call attempt {attempt}/{self.max_retries}, model={self.model}")
+                logger.info(f"Anthropic API JSON call attempt {attempt}/{retry_config.max_attempts}, model={self.model}")
 
                 # Convert messages to Anthropic format
                 anthropic_messages = self._convert_messages(normalized_messages)
@@ -339,20 +402,41 @@ class AnthropicClient(LLMInterface):
                 raise NonRetryableLLMError(f"Authentication failed: {e}")
 
             except RateLimitError as e:
-                logger.warning(f"Rate limit error (attempt {attempt}/{self.max_retries}): {e}")
-                if attempt >= self.max_retries:
-                    raise RetryableLLMError(f"Rate limit exceeded after {self.max_retries} attempts: {e}")
+                logger.warning(f"Rate limit error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Rate limit exceeded after {retry_config.max_attempts} attempts: {e}")
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after rate limit")
+                await asyncio.sleep(delay)
 
             except APIConnectionError as e:
-                logger.warning(f"Connection error (attempt {attempt}/{self.max_retries}): {e}")
-                if attempt >= self.max_retries:
-                    raise RetryableLLMError(f"Connection failed after {self.max_retries} attempts: {e}")
+                logger.warning(f"Connection error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Connection failed after {retry_config.max_attempts} attempts: {e}")
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after connection error")
+                await asyncio.sleep(delay)
 
             except APIStatusError as e:
                 if e.status_code >= 500:
-                    logger.warning(f"Server error (attempt {attempt}/{self.max_retries}): {e}")
-                    if attempt >= self.max_retries:
-                        raise RetryableLLMError(f"Server error after {self.max_retries} attempts: {e}")
+                    logger.warning(f"Server error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                    if attempt >= retry_config.max_attempts:
+                        raise RetryableLLMError(f"Server error after {retry_config.max_attempts} attempts: {e}")
+                    # Exponential backoff before next attempt
+                    delay = min(
+                        retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                        retry_config.max_delay,
+                    )
+                    logger.info(f"Retrying in {delay:.1f}s after server error")
+                    await asyncio.sleep(delay)
                 else:
                     logger.error(f"API error: {e}")
                     raise NonRetryableLLMError(f"API error: {e}")
@@ -365,11 +449,35 @@ class AnthropicClient(LLMInterface):
                 logger.error(f"JSON decode error: {e}")
                 raise ValidationLLMError(f"Failed to parse JSON response: {e}")
 
+            except TimeoutError as e:
+                # Timeout errors are retryable
+                logger.warning(f"Timeout error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Timeout after {retry_config.max_attempts} attempts: {e}")
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after timeout")
+                await asyncio.sleep(delay)
+
+            except OSError as e:
+                # Network-level errors (connection refused, etc.) are retryable
+                logger.warning(f"OS/Network error (attempt {attempt}/{retry_config.max_attempts}): {e}")
+                if attempt >= retry_config.max_attempts:
+                    raise RetryableLLMError(f"Network error after {retry_config.max_attempts} attempts: {e}")
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after network error")
+                await asyncio.sleep(delay)
+
             except Exception as e:
-                logger.error(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error: {e}", exc_info=True)
                 raise NonRetryableLLMError(f"Unexpected error: {e}")
 
-        raise RetryableLLMError(f"Failed after {self.max_retries} attempts")
+        raise RetryableLLMError(f"Failed after {retry_config.max_attempts} attempts")
 
     def _convert_messages(self, messages: list[dict[str, Any]]) -> list[MessageParam]:
         """Convert standard message format to Anthropic format.
@@ -429,11 +537,19 @@ class AnthropicClient(LLMInterface):
                     },
                 )
 
-        # 出力トークン比率チェック（max_tokensが指定されている場合のみ）
-        if max_tokens and max_tokens > 0 and output_tokens > 0:
+        # 出力トークン比率チェック
+        # max_tokensで切れた場合（stop_reason=="max_tokens"）や
+        # tool_use（JSON出力）の場合は警告をスキップ
+        # max_tokensが小さい場合（1000未満）もスキップ（短い応答が期待されている）
+        if (
+            max_tokens
+            and max_tokens >= 1000  # 短い応答が期待される場合はスキップ
+            and output_tokens > 0
+            and stop_reason in ("end_turn", None)  # 正常終了時のみチェック
+        ):
             ratio = output_tokens / max_tokens
-            # 10%未満は警告（期待より大幅に少ない出力）
-            if ratio < 0.1:
+            # 5%未満は警告（期待より大幅に少ない出力、閾値を10%→5%に下げて誤警告を減らす）
+            if ratio < 0.05:
                 logger.warning(
                     f"Output token ratio is very low: {ratio:.1%} ({output_tokens}/{max_tokens})",
                     extra={
@@ -442,5 +558,6 @@ class AnthropicClient(LLMInterface):
                         "output_tokens": output_tokens,
                         "max_tokens": max_tokens,
                         "ratio": ratio,
+                        "stop_reason": stop_reason,
                     },
                 )
