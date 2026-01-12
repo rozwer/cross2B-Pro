@@ -447,7 +447,7 @@ export function WorkflowPattern4_VerticalTimeline({
                                         完了: {new Date(step.completed_at).toLocaleTimeString()}
                                       </p>
                                     )}
-                                    {onResumeFrom && (
+                                    {onResumeFrom && stepName !== "step11" && (
                                       <button
                                         onClick={() => onResumeFrom(stepName)}
                                         className="inline-flex items-center gap-1 px-2 py-1 mt-2 text-xs text-violet-600 dark:text-violet-400 hover:bg-violet-200 dark:hover:bg-violet-500/20 rounded transition-colors"
@@ -464,7 +464,7 @@ export function WorkflowPattern4_VerticalTimeline({
                                       エラーが発生しました
                                     </p>
                                     <div className="flex flex-wrap gap-2">
-                                      {onRetry && (
+                                      {onRetry && stepName !== "step11" && (
                                         <button
                                           onClick={() => onRetry(stepName)}
                                           className="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 rounded transition-colors"
@@ -473,7 +473,7 @@ export function WorkflowPattern4_VerticalTimeline({
                                           リトライ
                                         </button>
                                       )}
-                                      {onResumeFrom && (
+                                      {onResumeFrom && stepName !== "step11" && (
                                         <button
                                           onClick={() => onResumeFrom(stepName)}
                                           className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500/20 rounded transition-colors"

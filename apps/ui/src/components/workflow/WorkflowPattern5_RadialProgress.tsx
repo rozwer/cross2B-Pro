@@ -579,7 +579,8 @@ export function WorkflowPattern5_RadialProgress({
 
                 {/* Action buttons - show retry for failed, resume for completed/failed */}
                 {(selectedEffectiveStatus === "failed" || selectedEffectiveStatus === "completed") &&
-                 (onRetry || onResumeFrom) && (
+                 (onRetry || onResumeFrom) &&
+                 selectedStep !== "step11" && (
                   <div className="space-y-1.5 pt-2 border-t border-gray-200 dark:border-white/10">
                     {/* Retry button - only for failed */}
                     {selectedEffectiveStatus === "failed" && onRetry && (

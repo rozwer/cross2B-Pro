@@ -481,7 +481,7 @@ class ApiClient {
 
     /**
      * 完了済みRunに画像を追加（Phase 11A開始）
-     * 新API: /step11/settings を使用（Temporal不要）
+     * ImageAdditionWorkflow を起動
      */
     addImagesToRun: async (
       id: string,
@@ -491,7 +491,7 @@ class ApiClient {
       },
     ): Promise<{ success: boolean; message: string }> => {
       return this.request<{ success: boolean; message: string }>(
-        `/api/runs/${id}/step11/settings`,
+        `/api/runs/${id}/step11/add-images`,
         {
           method: "POST",
           body: JSON.stringify(data),
