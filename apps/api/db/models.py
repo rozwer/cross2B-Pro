@@ -13,6 +13,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -104,6 +105,10 @@ class Run(Base):
     """Workflow execution record."""
 
     __tablename__ = "runs"
+    __table_args__ = (
+        # Composite index for tenant-scoped queries filtered by status
+        Index("ix_runs_tenant_id_status", "tenant_id", "status"),
+    )
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
@@ -118,7 +123,9 @@ class Run(Base):
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    step11_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # Step11 画像生成の状態（Temporal不使用）
+    # Step11 画像生成の状態を保持するJSON。詳細構造は apps.api.routers.step11.Step11State を参照。
+    # フィールド: phase, settings, positions, instructions, images, analysis_summary, sections, error
+    step11_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -167,8 +174,8 @@ class Artifact(Base):
     __tablename__ = "artifacts"
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
-    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False)
-    step_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True)
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    step_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True, index=True)
     artifact_type: Mapped[str] = mapped_column(String(100), nullable=False)
     ref_path: Mapped[str] = mapped_column(Text, nullable=False)
     digest: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -233,9 +240,9 @@ class ErrorLog(Base):
 
     id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
     run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id"), nullable=False, index=True)
-    step_id: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, index=True
-    )  # References steps.id (Integer, no FK due to legacy schema)
+    step_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("steps.id", ondelete="SET NULL"), nullable=True, index=True
+    )  # References steps.id (UUID)
     source: Mapped[str] = mapped_column(
         String(32), nullable=False, default="activity", index=True
     )  # llm, tool, validation, storage, activity, api

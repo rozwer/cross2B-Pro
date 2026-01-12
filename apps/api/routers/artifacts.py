@@ -88,8 +88,13 @@ class ArtifactContent(BaseModel):
 
 
 @router.get("/api/runs/{run_id}/files", response_model=list[ArtifactRef])
-async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)) -> list[ArtifactRef]:
-    """List all artifacts for a run.
+async def list_artifacts(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+    limit: int = Query(default=100, ge=1, le=1000, description="Max number of artifacts to return"),
+    offset: int = Query(default=0, ge=0, description="Number of artifacts to skip"),
+) -> list[ArtifactRef]:
+    """List all artifacts for a run with pagination.
 
     Falls back to MinIO listing if DB artifacts table is empty.
     """
@@ -118,8 +123,14 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
             steps = steps_result.scalars().all()
             step_id_to_name = {str(s.id): s.step_name for s in steps}
 
-            # Query artifacts from DB
-            artifact_query = select(ArtifactModel).where(ArtifactModel.run_id == run_id)
+            # Query artifacts from DB with pagination
+            artifact_query = (
+                select(ArtifactModel)
+                .where(ArtifactModel.run_id == run_id)
+                .order_by(ArtifactModel.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+            )
             artifact_result = await session.execute(artifact_query)
             artifacts = artifact_result.scalars().all()
 
@@ -164,7 +175,11 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
                             stat = store.client.stat_object(store.bucket, path)
                             size_bytes = stat.size if stat.size is not None else 0
                             created_at = stat.last_modified.isoformat() if stat.last_modified else datetime.now().isoformat()
-                        except Exception:
+                        except Exception as stat_error:
+                            logger.debug(
+                                f"Could not stat artifact {path}: {stat_error}",
+                                extra={"path": path, "run_id": run_id},
+                            )
                             size_bytes = 0
                             created_at = datetime.now().isoformat()
 
@@ -188,7 +203,8 @@ async def list_artifacts(run_id: str, user: AuthUser = Depends(get_current_user)
                             )
                         )
 
-                return artifact_refs
+                # Apply pagination to MinIO results
+                return artifact_refs[offset : offset + limit]
             except Exception as e:
                 logger.warning(f"Failed to list from MinIO: {e}")
                 return []

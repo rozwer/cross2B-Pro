@@ -24,38 +24,82 @@ router = APIRouter(tags=["websocket"])
 
 
 class ConnectionManager:
-    """WebSocket connection manager for real-time updates."""
+    """WebSocket connection manager for real-time updates with tenant isolation."""
 
     def __init__(self) -> None:
-        self.active_connections: dict[str, list[WebSocket]] = {}
+        # Structure: {tenant_id: {run_id: [websockets]}}
+        self.active_connections: dict[str, dict[str, list[WebSocket]]] = {}
+        # Legacy structure for backward compatibility during transition
+        self._legacy_connections: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, run_id: str, websocket: WebSocket) -> None:
-        """Track a WebSocket connection (acceptは呼び出し側で実施済み)."""
-        if run_id not in self.active_connections:
-            self.active_connections[run_id] = []
-        self.active_connections[run_id].append(websocket)
-        logger.info("WebSocket connected", extra={"run_id": run_id})
+    async def connect(self, run_id: str, websocket: WebSocket, tenant_id: str | None = None) -> None:
+        """Track a WebSocket connection (acceptは呼び出し側で実施済み).
 
-    def disconnect(self, run_id: str, websocket: WebSocket) -> None:
+        Args:
+            run_id: Run identifier
+            websocket: WebSocket connection
+            tenant_id: Tenant identifier for isolation (required for secure connections)
+        """
+        if tenant_id:
+            # Tenant-isolated storage
+            if tenant_id not in self.active_connections:
+                self.active_connections[tenant_id] = {}
+            if run_id not in self.active_connections[tenant_id]:
+                self.active_connections[tenant_id][run_id] = []
+            self.active_connections[tenant_id][run_id].append(websocket)
+            logger.info("WebSocket connected", extra={"run_id": run_id, "tenant_id": tenant_id})
+        else:
+            # Legacy mode (backward compatibility)
+            if run_id not in self._legacy_connections:
+                self._legacy_connections[run_id] = []
+            self._legacy_connections[run_id].append(websocket)
+            logger.info("WebSocket connected (legacy)", extra={"run_id": run_id})
+
+    def disconnect(self, run_id: str, websocket: WebSocket, tenant_id: str | None = None) -> None:
         """Remove a WebSocket connection."""
-        if run_id in self.active_connections:
-            if websocket in self.active_connections[run_id]:
-                self.active_connections[run_id].remove(websocket)
-            if not self.active_connections[run_id]:
-                del self.active_connections[run_id]
-        logger.info("WebSocket disconnected", extra={"run_id": run_id})
+        if tenant_id and tenant_id in self.active_connections:
+            if run_id in self.active_connections[tenant_id]:
+                if websocket in self.active_connections[tenant_id][run_id]:
+                    self.active_connections[tenant_id][run_id].remove(websocket)
+                if not self.active_connections[tenant_id][run_id]:
+                    del self.active_connections[tenant_id][run_id]
+            if not self.active_connections[tenant_id]:
+                del self.active_connections[tenant_id]
+            logger.info("WebSocket disconnected", extra={"run_id": run_id, "tenant_id": tenant_id})
+        elif run_id in self._legacy_connections:
+            # Legacy mode
+            if websocket in self._legacy_connections[run_id]:
+                self._legacy_connections[run_id].remove(websocket)
+            if not self._legacy_connections[run_id]:
+                del self._legacy_connections[run_id]
+            logger.info("WebSocket disconnected (legacy)", extra={"run_id": run_id})
 
-    async def broadcast(self, run_id: str, message: dict[str, Any]) -> None:
-        """Broadcast message to all connections for a run."""
-        if run_id in self.active_connections:
+    async def broadcast(self, run_id: str, message: dict[str, Any], tenant_id: str | None = None) -> None:
+        """Broadcast message to all connections for a run.
+
+        Args:
+            run_id: Run identifier
+            message: Message to broadcast
+            tenant_id: Tenant identifier for isolation (when provided, only broadcasts to tenant-specific connections)
+        """
+        connections: list[WebSocket] = []
+
+        if tenant_id and tenant_id in self.active_connections:
+            # Tenant-isolated broadcast
+            connections = self.active_connections[tenant_id].get(run_id, [])
+        elif run_id in self._legacy_connections:
+            # Legacy mode fallback
+            connections = self._legacy_connections.get(run_id, [])
+
+        if connections:
             disconnected = []
-            for websocket in self.active_connections[run_id]:
+            for websocket in connections:
                 try:
                     await websocket.send_json(message)
                 except Exception:
                     disconnected.append(websocket)
             for ws in disconnected:
-                self.disconnect(run_id, ws)
+                self.disconnect(run_id, ws, tenant_id)
 
     async def broadcast_run_update(
         self,
@@ -149,7 +193,16 @@ def _get_tenant_db_manager() -> Any:
     return get_tenant_manager()
 
 
-async def _verify_run_ownership(tenant_id: str, run_id: str) -> bool:
+class RunVerificationResult:
+    """Result of run ownership verification."""
+
+    def __init__(self, success: bool, error_type: str | None = None, error_message: str | None = None):
+        self.success = success
+        self.error_type = error_type  # "not_found", "access_denied", "db_error"
+        self.error_message = error_message
+
+
+async def _verify_run_ownership(tenant_id: str, run_id: str) -> RunVerificationResult:
     """Verify that the run belongs to the specified tenant.
 
     Args:
@@ -157,7 +210,7 @@ async def _verify_run_ownership(tenant_id: str, run_id: str) -> bool:
         run_id: Run ID to verify
 
     Returns:
-        True if the run belongs to the tenant, False otherwise
+        RunVerificationResult with success status and error details if applicable
     """
     from apps.api.db import Run
 
@@ -167,10 +220,22 @@ async def _verify_run_ownership(tenant_id: str, run_id: str) -> bool:
             query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
             result = await session.execute(query)
             run = result.scalar_one_or_none()
-            return run is not None
+            if run is not None:
+                return RunVerificationResult(success=True)
+            else:
+                # Run not found or belongs to different tenant
+                return RunVerificationResult(
+                    success=False,
+                    error_type="not_found",
+                    error_message="Run not found or access denied",
+                )
     except Exception as e:
-        logger.warning(f"Failed to verify run ownership: {e}")
-        return False
+        logger.error(f"Database error during run verification: {e}", exc_info=True)
+        return RunVerificationResult(
+            success=False,
+            error_type="db_error",
+            error_message="Internal error during verification",
+        )
 
 
 async def _authenticate_websocket(
@@ -239,9 +304,14 @@ async def websocket_progress(
         return
 
     # Step 2: Verify run ownership (tenant isolation)
-    if not await _verify_run_ownership(user.tenant_id, run_id):
-        logger.warning(f"WebSocket connection rejected: run {run_id} not found for tenant {user.tenant_id}")
-        await websocket.close(code=4003, reason="Run not found or access denied")
+    verification = await _verify_run_ownership(user.tenant_id, run_id)
+    if not verification.success:
+        if verification.error_type == "db_error":
+            logger.error(f"WebSocket connection rejected due to DB error: {verification.error_message}")
+            await websocket.close(code=4500, reason="Internal server error")
+        else:
+            logger.warning(f"WebSocket connection rejected: {verification.error_message} (run_id={run_id}, tenant={user.tenant_id})")
+            await websocket.close(code=4003, reason=verification.error_message or "Run not found or access denied")
         return
 
     # Step 3: Accept connection and register

@@ -17,10 +17,10 @@ from sqlalchemy.orm import selectinload
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.db import AuditLogger, Run, Step, TenantIdValidationError
-from apps.api.db.models import Artifact as ArtifactModel
 from apps.api.schemas.article_hearing import ArticleHearingInput, KeywordStatus
 from apps.api.schemas.enums import RunStatus, StepStatus
 from apps.api.schemas.runs import (
+    DEFAULT_MODEL_CONFIG,
     CreateRunInput,
     ModelConfig,
     RejectRunInput,
@@ -205,7 +205,9 @@ async def create_run(
                 # Update run status in separate transaction
                 async with db_manager.get_session(tenant_id) as session:
                     result = await session.execute(select(Run).where(Run.id == run_id))
-                    run_orm = result.scalar_one()
+                    run_orm = result.scalar_one_or_none()
+                    if run_orm is None:
+                        raise HTTPException(status_code=404, detail="Run not found after creation")
                     run_orm.status = RunStatus.RUNNING.value
                     run_orm.started_at = now
                     run_orm.updated_at = now
@@ -227,7 +229,10 @@ async def create_run(
                 # Update run status to failed in separate transaction
                 async with db_manager.get_session(tenant_id) as session:
                     result = await session.execute(select(Run).where(Run.id == run_id))
-                    run_orm = result.scalar_one()
+                    run_orm = result.scalar_one_or_none()
+                    if run_orm is None:
+                        logger.error(f"Run {run_id} not found when trying to mark as failed")
+                        raise HTTPException(status_code=404, detail="Run not found")
                     run_orm.status = RunStatus.FAILED.value
                     run_orm.error_code = "WORKFLOW_START_FAILED"
                     run_orm.error_message = str(wf_error)
@@ -357,9 +362,18 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
 async def approve_run(
     run_id: str,
     comment: str | None = None,
+    expected_updated_at: str | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, bool]:
-    """Approve a run waiting for approval."""
+    """Approve a run waiting for approval.
+
+    Args:
+        run_id: Run identifier
+        comment: Optional approval comment
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
     tenant_id = user.tenant_id
     logger.info(
         "Approving run",
@@ -378,6 +392,24 @@ async def approve_run(
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
+
+            # Optimistic lock check
+            if expected_updated_at and run.updated_at:
+                expected_dt = datetime.fromisoformat(expected_updated_at.replace("Z", "+00:00"))
+                # Compare with tolerance of 1 second to handle minor precision differences
+                if abs((run.updated_at - expected_dt).total_seconds()) > 1:
+                    logger.warning(
+                        "Optimistic lock conflict",
+                        extra={
+                            "run_id": run_id,
+                            "expected": expected_updated_at,
+                            "actual": run.updated_at.isoformat(),
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Run was modified by another user. Please refresh and try again.",
+                    )
 
             if run.status != RunStatus.WAITING_APPROVAL.value:
                 raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
@@ -406,6 +438,9 @@ async def approve_run(
             run.status = RunStatus.RUNNING.value
             run.updated_at = datetime.now()
 
+            # Note: flush() writes changes to DB but doesn't commit.
+            # The actual commit is handled by the session context manager (get_session).
+            # This ensures atomicity: if anything fails before context exit, all changes rollback.
             await session.flush()
             logger.info("Run approved", extra={"run_id": run_id, "tenant_id": tenant_id})
 
@@ -431,9 +466,18 @@ async def approve_run(
 async def reject_run(
     run_id: str,
     data: RejectRunInput,
+    expected_updated_at: str | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, bool]:
-    """Reject a run waiting for approval."""
+    """Reject a run waiting for approval.
+
+    Args:
+        run_id: Run identifier
+        data: Rejection reason
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
     reason = data.reason
     tenant_id = user.tenant_id
     logger.info(
@@ -453,6 +497,23 @@ async def reject_run(
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
+
+            # Optimistic lock check
+            if expected_updated_at and run.updated_at:
+                expected_dt = datetime.fromisoformat(expected_updated_at.replace("Z", "+00:00"))
+                if abs((run.updated_at - expected_dt).total_seconds()) > 1:
+                    logger.warning(
+                        "Optimistic lock conflict",
+                        extra={
+                            "run_id": run_id,
+                            "expected": expected_updated_at,
+                            "actual": run.updated_at.isoformat(),
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Run was modified by another user. Please refresh and try again.",
+                    )
 
             if run.status != RunStatus.WAITING_APPROVAL.value:
                 raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
@@ -660,6 +721,9 @@ async def retry_step(
                     retry_count = step_record.retry_count
 
                 # Commit DB changes before starting workflow
+                # Note: This manual commit is intentional to ensure DB state is persisted
+                # before Temporal workflow starts. The session context manager will call
+                # commit() again on exit, but that's a no-op on an already-committed transaction.
                 await session.commit()
                 logger.info("Step retry DB update committed (WORKFLOW_STARTING)", extra={"run_id": run_id, "step": step})
 
@@ -934,6 +998,7 @@ async def resume_from_step(
                 },
             )
 
+            # Note: Manual commit before Temporal workflow start (same pattern as retry_step)
             await session.commit()
             logger.info("Resume DB update committed (WORKFLOW_STARTING)", extra={"run_id": run_id, "step": step})
 
@@ -1090,14 +1155,7 @@ async def clone_run(
             if data and data.model_config_override:
                 new_model_config = data.model_config_override.model_dump()
             else:
-                new_model_config = original_config.get(
-                    "model_config",
-                    {
-                        "platform": "gemini",
-                        "model": "gemini-1.5-pro",
-                        "options": {},
-                    },
-                )
+                new_model_config = original_config.get("model_config", DEFAULT_MODEL_CONFIG)
 
             new_workflow_config = {
                 "model_config": new_model_config,
@@ -1313,8 +1371,8 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
             except Exception as storage_error:
                 logger.warning(f"Failed to delete some artifacts from storage: {storage_error}")
 
-            await session.execute(sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id))
-            await session.execute(sql_delete(Step).where(Step.run_id == run_id))
+            # Use ORM delete with cascade - Steps, Artifacts, ErrorLogs, DiagnosticReports
+            # are automatically deleted due to cascade="all, delete-orphan" on Run model
             await session.delete(run)
 
             await session.flush()
@@ -1379,7 +1437,7 @@ async def bulk_delete_runs(
                                 logger.warning(f"Failed to cancel Temporal workflow {run_id}: {cancel_error}")
 
                         run.status = RunStatus.CANCELLED.value
-                        run.updated_at = datetime.utcnow()
+                        run.updated_at = datetime.now()
                         await session.flush()
 
                         audit = AuditLogger(session)
@@ -1405,8 +1463,7 @@ async def bulk_delete_runs(
                     except Exception as storage_error:
                         logger.warning(f"Failed to delete artifacts for {run_id}: {storage_error}")
 
-                    await session.execute(sql_delete(ArtifactModel).where(ArtifactModel.run_id == run_id))
-                    await session.execute(sql_delete(Step).where(Step.run_id == run_id))
+                    # Use ORM delete with cascade - related records auto-deleted
                     await session.delete(run)
 
                     deleted.append(run_id)

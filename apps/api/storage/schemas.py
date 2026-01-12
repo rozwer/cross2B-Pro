@@ -44,21 +44,30 @@ class ArtifactRef(BaseModel):
         """Extract step name from path."""
         parts = self.path.split("/")
         if len(parts) >= 4:
-            return parts[3]
+            step = parts[3]
+            if not step:
+                raise ValueError(f"Empty step name in artifact path: {self.path}")
+            return step
         raise ValueError(f"Invalid artifact path format: {self.path}")
 
     def get_run_id(self) -> str:
         """Extract run_id from path."""
         parts = self.path.split("/")
         if len(parts) >= 3:
-            return parts[2]
+            run_id = parts[2]
+            if not run_id:
+                raise ValueError(f"Empty run_id in artifact path: {self.path}")
+            return run_id
         raise ValueError(f"Invalid artifact path format: {self.path}")
 
     def get_tenant_id(self) -> str:
         """Extract tenant_id from path."""
         parts = self.path.split("/")
         if len(parts) >= 2:
-            return parts[1]
+            tenant_id = parts[1]
+            if not tenant_id:
+                raise ValueError(f"Empty tenant_id in artifact path: {self.path}")
+            return tenant_id
         raise ValueError(f"Invalid artifact path format: {self.path}")
 
 

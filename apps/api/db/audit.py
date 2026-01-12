@@ -129,6 +129,8 @@ class AuditLogger:
             作成されたAuditLogエントリー
         """
         # 前のエントリーのハッシュを取得（FOR UPDATE でロックしてレースコンディション防止）
+        # Note: SKIP LOCKED is NOT used intentionally because audit logs require strict ordering
+        # for chain hash integrity. Waiting for the lock is the correct behavior here.
         last_entry = await self._get_last_entry(for_update=True)
         prev_hash = last_entry.entry_hash if last_entry else None
 
@@ -159,7 +161,13 @@ class AuditLogger:
         )
 
         self.session.add(entry)
-        await self.session.flush()  # IDを取得
+        # Note: flush() is used to get the ID immediately for logging.
+        # The actual commit is handled by the session context manager.
+        # If an exception occurs after flush() but before commit(),
+        # the audit log entry will be rolled back along with the main transaction.
+        # This is intentional: audit logs should only persist if the main
+        # operation succeeds, ensuring atomicity between operation and audit.
+        await self.session.flush()
 
         logger.info(
             "Audit log created",
