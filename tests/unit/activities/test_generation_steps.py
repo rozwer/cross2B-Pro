@@ -6,8 +6,6 @@ actual LLM calls or Temporal infrastructure.
 
 import re
 
-import pytest
-
 from apps.worker.helpers import (
     CompletenessValidator,
     CompositeValidator,
@@ -66,20 +64,23 @@ class TestStep6HelperIntegration:
 
     def test_outline_validator_config(self) -> None:
         """アウトライン検証器の設定."""
-        validator = CompositeValidator([
-            StructureValidator(
-                min_h2_sections=3,
-                require_h3=True,
-                min_word_count=200,
-            ),
-            CompletenessValidator(
-                conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
-                check_truncation=True,
-            ),
-        ])
+        validator = CompositeValidator(
+            [
+                StructureValidator(
+                    min_h2_sections=3,
+                    require_h3=True,
+                    min_word_count=200,
+                ),
+                CompletenessValidator(
+                    conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
+                    check_truncation=True,
+                ),
+            ]
+        )
 
         # Valid outline
-        valid_outline = """
+        valid_outline = (
+            """
 ## セクション1
 内容1
 
@@ -97,7 +98,9 @@ class TestStep6HelperIntegration:
 
 ## まとめ
 結論内容
-""" + " word" * 150  # Ensure word count
+"""
+            + " word" * 200
+        )  # Ensure word count (200 words minimum)
 
         result = validator.validate(valid_outline)
         assert result.is_acceptable is True
@@ -192,7 +195,7 @@ class TestStep7aHelperIntegration:
     def test_input_validation_integration_package_too_short(self) -> None:
         """integration_package が短すぎる."""
         validator = InputValidator()
-        result = validator.validate(
+        validator.validate(
             data={"step6_5": {"integration_package": "短い"}},
             required=["step6_5.integration_package"],
             min_lengths={"step6_5.integration_package": 500},
@@ -203,23 +206,26 @@ class TestStep7aHelperIntegration:
 
     def test_draft_validator_config(self) -> None:
         """ドラフト検証器の設定."""
-        MIN_WORD_COUNT = 1000
-        MIN_SECTION_COUNT = 3
+        min_word_count = 1000
+        min_section_count = 3
 
-        validator = CompositeValidator([
-            StructureValidator(
-                min_h2_sections=MIN_SECTION_COUNT,
-                require_h3=False,
-                min_word_count=MIN_WORD_COUNT,
-            ),
-            CompletenessValidator(
-                conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
-                check_truncation=True,
-            ),
-        ])
+        validator = CompositeValidator(
+            [
+                StructureValidator(
+                    min_h2_sections=min_section_count,
+                    require_h3=False,
+                    min_word_count=min_word_count,
+                ),
+                CompletenessValidator(
+                    conclusion_patterns=["まとめ", "結論", "おわり", "conclusion"],
+                    check_truncation=True,
+                ),
+            ]
+        )
 
         # Valid draft
-        valid_draft = """
+        valid_draft = (
+            """
 ## はじめに
 導入文
 
@@ -234,7 +240,9 @@ class TestStep7aHelperIntegration:
 
 ## まとめ
 結論
-""" + " word" * 900  # Ensure word count >= 1000
+"""
+            + " word" * 1000
+        )  # Ensure word count >= 1000
 
         result = validator.validate(valid_draft)
         assert result.is_acceptable is True

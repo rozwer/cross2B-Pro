@@ -1,18 +1,19 @@
 """Unit tests for Anthropic Claude client."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from anthropic import APIConnectionError, RateLimitError, AuthenticationError, APIStatusError
+
+import pytest
+from anthropic import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
 from anthropic.types import ToolUseBlock
 
-from apps.api.llm.anthropic import AnthropicClient, SUPPORTED_MODELS, DEFAULT_MODEL
-from apps.api.llm.schemas import LLMRequestConfig, LLMResponse, TokenUsage
+from apps.api.llm.anthropic import DEFAULT_MODEL, SUPPORTED_MODELS, AnthropicClient
 from apps.api.llm.exceptions import (
     ErrorCategory,
-    RetryableLLMError,
     NonRetryableLLMError,
+    RetryableLLMError,
     ValidationLLMError,
 )
+from apps.api.llm.schemas import LLMRequestConfig, LLMResponse
 
 
 class TestAnthropicClientInit:
@@ -73,6 +74,7 @@ class TestAnthropicClientGenerate:
         mock_response.content = [MagicMock(type="text", text="Generated content")]
         mock_response.usage = MagicMock(input_tokens=100, output_tokens=50)
         mock_response.model = "claude-sonnet-4-20250514"
+        mock_response.stop_reason = "end_turn"
 
         mock_api.messages.create = AsyncMock(return_value=mock_response)
 
@@ -136,9 +138,7 @@ class TestAnthropicClientGenerate:
         client, mock_api = mock_client
         client.max_retries = 2
 
-        mock_api.messages.create = AsyncMock(
-            side_effect=APIConnectionError(request=MagicMock())
-        )
+        mock_api.messages.create = AsyncMock(side_effect=APIConnectionError(request=MagicMock()))
 
         with pytest.raises(RetryableLLMError) as exc_info:
             await client.generate(
@@ -343,8 +343,9 @@ class TestNoAutoSwitching:
 
     def test_no_auto_switch_patterns_in_code(self):
         """Verify no automatic switching logic exists in the module."""
-        import apps.api.llm.anthropic as module
         import inspect
+
+        import apps.api.llm.anthropic as module
 
         source = inspect.getsource(module)
         # Check for common auto-switching patterns (not in comments/docstrings)

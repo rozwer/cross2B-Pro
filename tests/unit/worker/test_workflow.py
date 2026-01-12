@@ -1,12 +1,11 @@
 """Unit tests for ArticleWorkflow."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from apps.worker.workflows.article_workflow import (
-    ArticleWorkflow,
-    STEP_TIMEOUTS,
     DEFAULT_RETRY_POLICY,
+    STEP_TIMEOUTS,
+    ArticleWorkflow,
 )
 
 
@@ -28,6 +27,7 @@ class TestArticleWorkflow:
 
         # Simulate approve signal
         import asyncio
+
         asyncio.get_event_loop().run_until_complete(workflow.approve())
 
         assert workflow.approved is True
@@ -40,6 +40,7 @@ class TestArticleWorkflow:
 
         # Simulate reject signal
         import asyncio
+
         asyncio.get_event_loop().run_until_complete(workflow.reject(reason))
 
         assert workflow.rejected is True
@@ -80,10 +81,21 @@ class TestArticleWorkflow:
     def test_step_timeouts_defined(self):
         """Test all steps have defined timeouts."""
         expected_steps = [
-            "step0", "step1", "step2",
-            "step3a", "step3b", "step3c",
-            "step4", "step5", "step6", "step6_5",
-            "step7a", "step7b", "step8", "step9", "step10",
+            "step0",
+            "step1",
+            "step2",
+            "step3a",
+            "step3b",
+            "step3c",
+            "step4",
+            "step5",
+            "step6",
+            "step6_5",
+            "step7a",
+            "step7b",
+            "step8",
+            "step9",
+            "step10",
         ]
 
         for step in expected_steps:
@@ -105,28 +117,27 @@ class TestWorkflowPackIdValidation:
     """Tests for pack_id validation in workflow."""
 
     @pytest.mark.asyncio
-    async def test_missing_pack_id_returns_error(self):
-        """Test workflow fails early if pack_id is missing."""
+    async def test_missing_pack_id_raises_application_error(self):
+        """Test workflow raises ApplicationError if pack_id is missing."""
+        from temporalio.exceptions import ApplicationError
+
         workflow = ArticleWorkflow()
 
-        # Mock the workflow.execute_activity to avoid actual execution
-        with patch.object(workflow, '_execute_activity', new_callable=AsyncMock):
-            result = await workflow.run(
+        # Workflow should raise ApplicationError when pack_id is missing
+        with pytest.raises(ApplicationError) as exc_info:
+            await workflow.run(
                 tenant_id="test_tenant",
                 run_id="test_run",
                 config={},  # No pack_id
             )
 
-        assert result["status"] == "failed"
-        assert "pack_id required" in result["error"]
+        assert "pack_id required" in str(exc_info.value)
+        assert exc_info.value.type == "VALIDATION_ERROR"
 
-    @pytest.mark.asyncio
-    async def test_pack_id_provided_continues(self):
-        """Test workflow continues when pack_id is provided."""
-        workflow = ArticleWorkflow()
-
-        # We can't fully test without mocking Temporal, but we can verify
-        # the pack_id check passes
+    def test_pack_id_provided_passes_validation(self):
+        """Test pack_id check passes when provided."""
+        # We can't fully test workflow execution without mocking Temporal,
+        # but we can verify the pack_id validation logic
         config = {"pack_id": "mock_pack"}
         pack_id = config.get("pack_id")
         assert pack_id is not None
