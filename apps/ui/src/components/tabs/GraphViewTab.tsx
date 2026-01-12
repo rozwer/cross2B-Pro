@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StepConfig } from "@/components/workflow/NodeConfigPanel";
-import type { Step, StepStatus, RunStatus, LLMPlatform } from "@/lib/types";
+import type { Step, StepStatus, RunStatus } from "@/lib/types";
 import { normalizeStepName } from "@/lib/types";
 
 interface GraphViewTabProps {
@@ -44,8 +44,6 @@ interface WorkflowNodeData extends Record<string, unknown> {
   stepId: string;
   label: string;
   description: string;
-  aiModel: LLMPlatform;
-  modelName: string;
   status: StepStatus | "pending";
   stepType: "input" | "analysis" | "generation" | "verification" | "output" | "approval";
   isParallel?: boolean;
@@ -59,11 +57,6 @@ type WorkflowNode = Node<WorkflowNodeData>;
 const HORIZONTAL_GAP = 250;
 const VERTICAL_GAP = 150;
 
-const PLATFORM_COLORS: Record<LLMPlatform, { bg: string; border: string; text: string }> = {
-  gemini: { bg: "bg-blue-100", border: "border-blue-400", text: "text-blue-700" },
-  anthropic: { bg: "bg-orange-100", border: "border-orange-400", text: "text-orange-700" },
-  openai: { bg: "bg-green-100", border: "border-green-400", text: "text-green-700" },
-};
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; icon: React.ReactNode }> = {
   pending: {
@@ -95,7 +88,6 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; icon: React.Re
 
 // Custom Node Component
 function CustomWorkflowNode({ data }: { data: WorkflowNodeData }) {
-  const platformColors = PLATFORM_COLORS[data.aiModel];
   const statusInfo = STATUS_COLORS[data.status] || STATUS_COLORS.pending;
 
   return (
@@ -130,30 +122,6 @@ function CustomWorkflowNode({ data }: { data: WorkflowNodeData }) {
       {/* Body */}
       <div className="px-3 py-2">
         <p className="text-xs text-gray-500 mb-2 line-clamp-2">{data.description}</p>
-
-        {/* Model Info */}
-        {!data.isApprovalPoint && (
-          <div
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs",
-              platformColors.bg,
-              platformColors.text,
-            )}
-          >
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{
-                backgroundColor:
-                  data.aiModel === "gemini"
-                    ? "#3b82f6"
-                    : data.aiModel === "anthropic"
-                      ? "#f97316"
-                      : "#22c55e",
-              }}
-            />
-            <span>{data.modelName || data.aiModel}</span>
-          </div>
-        )}
 
         {data.isApprovalPoint && (
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-700">
@@ -205,8 +173,6 @@ function createNodes(
           stepId: step.stepId,
           label: step.label,
           description: step.description,
-          aiModel: step.aiModel,
-          modelName: step.modelName,
           status: getStepStatus(stepId),
           stepType: stepId === "step-1" ? "input" : "analysis",
           isCurrent: normalizedCurrentStep === normalizedStepId,
@@ -230,8 +196,6 @@ function createNodes(
           stepId: step.stepId,
           label: step.label,
           description: step.description,
-          aiModel: step.aiModel,
-          modelName: step.modelName,
           status: getStepStatus(stepId),
           isParallel: true,
           stepType: "analysis",
@@ -253,8 +217,6 @@ function createNodes(
         stepId: "approval",
         label: approvalStep.label,
         description: approvalStep.description,
-        aiModel: "gemini",
-        modelName: "",
         status: getStepStatus("approval"),
         isApprovalPoint: true,
         stepType: "approval",
@@ -288,8 +250,6 @@ function createNodes(
             stepId: step.stepId,
             label: step.label,
             description: step.description,
-            aiModel: step.aiModel,
-            modelName: step.modelName,
             status: getStepStatus(stepId),
             stepType:
               stepId === "step10" || stepId === "step11" || stepId === "step12"
@@ -639,20 +599,6 @@ export function GraphViewTab({
         <div className="absolute top-4 right-4 bg-white rounded-lg border border-gray-200 shadow-sm p-3">
           <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">凡例</h4>
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="w-3 h-3 rounded bg-blue-400" />
-              <span className="text-gray-600">Gemini</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="w-3 h-3 rounded bg-orange-400" />
-              <span className="text-gray-600">Claude</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="w-3 h-3 rounded bg-green-400" />
-              <span className="text-gray-600">OpenAI</span>
-            </div>
-          </div>
-          <div className="border-t border-gray-200 mt-2 pt-2 space-y-1.5">
             <div className="flex items-center gap-2 text-xs">
               <CheckCircle2 className="w-3 h-3 text-green-500" />
               <span className="text-gray-600">完了</span>
