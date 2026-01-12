@@ -16,7 +16,7 @@ import time
 from datetime import datetime
 from typing import Any
 
-from .base import LLMInterface
+from .base import LLMInterface, _maybe_close_client
 from .exceptions import (
     ErrorCategory,
     LLMAuthenticationError,
@@ -87,7 +87,7 @@ class GeminiClient(LLMInterface):
         api_key: str | None = None,
         model: str | None = None,
         gemini_config: GeminiConfig | None = None,
-        timeout: float = 420.0,
+        timeout: float = 600.0,
     ) -> None:
         """初期化
 
@@ -95,7 +95,7 @@ class GeminiClient(LLMInterface):
             api_key: Gemini API キー（省略時は環境変数 GEMINI_API_KEY を使用）
             model: 使用するモデルID
             gemini_config: Gemini固有の設定（grounding等）
-            timeout: タイムアウト（秒）
+            timeout: タイムアウト（秒）。大規模コンテンツ生成向けに600秒がデフォルト
 
         Raises:
             LLMConfigurationError: 設定エラー
@@ -136,6 +136,10 @@ class GeminiClient(LLMInterface):
     @property
     def available_models(self) -> list[str]:
         return self.AVAILABLE_MODELS.copy()
+
+    async def close(self) -> None:
+        """Close underlying client resources if available."""
+        await _maybe_close_client(self._client)
 
     @property
     def model(self) -> str:
@@ -289,8 +293,9 @@ class GeminiClient(LLMInterface):
             # システムプロンプト設定
             system_instruction = system_prompt if system_prompt else None
 
-            # grounding設定
-            tools = self._build_tools() if self._gemini_config.grounding.enabled else None
+            # ツール設定（grounding/url_context/code_executionを含む）
+            # _build_tools()は有効なツールがなければNoneを返す
+            tools = self._build_tools()
 
             # 生成設定を構築（system_instruction と tools を含める）
             generation_config = self._build_generation_config(
@@ -836,11 +841,19 @@ class GeminiClient(LLMInterface):
                     },
                 )
 
-        # 出力トークン比率チェック（max_tokensが指定されている場合のみ）
-        if max_tokens and max_tokens > 0 and output_tokens > 0:
+        # 出力トークン比率チェック
+        # MAX_TOKENSで切れた場合や正常終了（STOP）以外は警告をスキップ
+        # JSON出力など短い応答が期待される場合は誤警告を防ぐため、
+        # max_tokensが小さい場合（1000未満）はチェックをスキップ
+        if (
+            max_tokens
+            and max_tokens >= 1000  # 短い応答が期待される場合はスキップ
+            and output_tokens > 0
+            and finish_reason_upper in ("STOP", "END_OF_CONTENT", None)  # 正常終了時のみチェック
+        ):
             ratio = output_tokens / max_tokens
-            # 10%未満は警告（期待より大幅に少ない出力）
-            if ratio < 0.1:
+            # 5%未満は警告（期待より大幅に少ない出力、閾値を10%→5%に下げて誤警告を減らす）
+            if ratio < 0.05:
                 logger.warning(
                     f"Output token ratio is very low: {ratio:.1%} ({output_tokens}/{max_tokens})",
                     extra={
@@ -849,30 +862,86 @@ class GeminiClient(LLMInterface):
                         "output_tokens": output_tokens,
                         "max_tokens": max_tokens,
                         "ratio": ratio,
+                        "finish_reason": finish_reason,
                     },
                 )
 
     def _convert_exception(self, e: Exception) -> LLMError:
-        """例外を統一フォーマットに変換"""
+        """例外を統一フォーマットに変換
+
+        Google Genai SDKの例外型と文字列パターンの両方でチェック。
+        例外型が優先され、フォールバックとして文字列パターンマッチングを使用。
+        """
         error_msg = str(e)
         error_type = type(e).__name__
 
-        # エラーメッセージに基づいて分類
-        if "401" in error_msg or "authentication" in error_msg.lower():
+        # 1. 例外型によるチェック（SDK例外型を優先）
+        try:
+            from google.genai import errors as genai_errors
+
+            # ServerError: 5xx系エラー → リトライ可能
+            if isinstance(e, genai_errors.ServerError):
+                return LLMServiceUnavailableError(
+                    message=f"Server error: {error_msg}",
+                    provider=self.PROVIDER_NAME,
+                    model=self._model,
+                )
+
+            # ClientError: 4xx系エラー（認証、レート制限、無効リクエスト等）
+            if isinstance(e, genai_errors.ClientError):
+                # HTTPステータスコードを取得（あれば）
+                status_code = getattr(e, "status_code", None)
+                if status_code == 401 or status_code == 403:
+                    return LLMAuthenticationError(
+                        message=f"Authentication failed: {error_msg}",
+                        provider=self.PROVIDER_NAME,
+                        model=self._model,
+                    )
+                if status_code == 429:
+                    return LLMRateLimitError(
+                        message=f"Rate limit exceeded: {error_msg}",
+                        provider=self.PROVIDER_NAME,
+                        model=self._model,
+                    )
+                # その他のClientErrorは無効リクエスト
+                return LLMInvalidRequestError(
+                    message=f"Client error: {error_msg}",
+                    provider=self.PROVIDER_NAME,
+                    model=self._model,
+                    details={"original_error": error_type, "status_code": status_code},
+                )
+
+            # APIError: 一般的なAPIエラー（基底クラス）
+            if isinstance(e, genai_errors.APIError):
+                return LLMError(
+                    message=f"API error: {error_msg}",
+                    category=ErrorCategory.RETRYABLE,
+                    provider=self.PROVIDER_NAME,
+                    model=self._model,
+                    details={"original_error": error_type},
+                )
+        except ImportError:
+            # google.genai.errorsのインポートに失敗した場合は文字列マッチングにフォールバック
+            pass
+
+        # 2. 文字列パターンマッチングによるフォールバック
+        error_msg_lower = error_msg.lower()
+
+        if "401" in error_msg or "403" in error_msg or "authentication" in error_msg_lower:
             return LLMAuthenticationError(
                 message=f"Authentication failed: {error_msg}",
                 provider=self.PROVIDER_NAME,
                 model=self._model,
             )
 
-        if "429" in error_msg or "rate limit" in error_msg.lower():
+        if "429" in error_msg or "rate limit" in error_msg_lower or "quota" in error_msg_lower:
             return LLMRateLimitError(
                 message=f"Rate limit exceeded: {error_msg}",
                 provider=self.PROVIDER_NAME,
                 model=self._model,
             )
 
-        if "400" in error_msg or "invalid" in error_msg.lower():
+        if "400" in error_msg or "invalid" in error_msg_lower:
             return LLMInvalidRequestError(
                 message=f"Invalid request: {error_msg}",
                 provider=self.PROVIDER_NAME,
@@ -880,21 +949,21 @@ class GeminiClient(LLMInterface):
                 details={"original_error": error_type},
             )
 
-        if "safety" in error_msg.lower() or "blocked" in error_msg.lower():
+        if "safety" in error_msg_lower or "blocked" in error_msg_lower or "harm" in error_msg_lower:
             return LLMContentFilterError(
                 message=f"Content blocked: {error_msg}",
                 provider=self.PROVIDER_NAME,
                 model=self._model,
             )
 
-        if "503" in error_msg or "unavailable" in error_msg.lower():
+        if "503" in error_msg or "500" in error_msg or "unavailable" in error_msg_lower:
             return LLMServiceUnavailableError(
                 message=f"Service unavailable: {error_msg}",
                 provider=self.PROVIDER_NAME,
                 model=self._model,
             )
 
-        if "timeout" in error_msg.lower():
+        if "timeout" in error_msg_lower:
             return LLMTimeoutError(
                 message=f"Timeout: {error_msg}",
                 provider=self.PROVIDER_NAME,

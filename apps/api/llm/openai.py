@@ -4,11 +4,13 @@
 同一条件でのリトライのみ許容（上限3回、ログ必須）。
 """
 
+import asyncio
 import json
 import logging
 import os
 from typing import Any
 
+import httpx
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -18,7 +20,7 @@ from openai import (
     RateLimitError,
 )
 
-from .base import LLMInterface
+from .base import LLMInterface, _maybe_close_client
 from .exceptions import ErrorCategory, LLMError, LLMValidationError
 from .schemas import (
     LLMCallMetadata,
@@ -75,7 +77,18 @@ class OpenAIClient(LLMInterface):
                 provider=self.PROVIDER,
             )
 
-        self.client = AsyncOpenAI(api_key=resolved_api_key)
+        # Configure httpx client with connection pool limits
+        # max_connections: total connection pool size
+        # max_keepalive_connections: connections kept alive for reuse
+        http_client = httpx.AsyncClient(
+            limits=httpx.Limits(
+                max_connections=100,
+                max_keepalive_connections=20,
+            ),
+            timeout=httpx.Timeout(timeout=120.0, connect=10.0),
+        )
+        self.client = AsyncOpenAI(api_key=resolved_api_key, http_client=http_client)
+        self._http_client = http_client
         self.model = model or self.DEFAULT_MODEL
         self.max_retries = max_retries or self.MAX_RETRIES
         self._openai_config = openai_config or OpenAIConfig()
@@ -122,6 +135,12 @@ class OpenAIClient(LLMInterface):
         """利用可能なモデル一覧を返す"""
         return self.AVAILABLE_MODELS.copy()
 
+    async def close(self) -> None:
+        """Close underlying client resources if available."""
+        await _maybe_close_client(self.client)
+        if hasattr(self, "_http_client") and self._http_client:
+            await self._http_client.aclose()
+
     async def health_check(self) -> bool:
         """ヘルスチェック"""
         try:
@@ -156,14 +175,15 @@ class OpenAIClient(LLMInterface):
         full_messages = [{"role": "system", "content": system_prompt}, *normalized_messages]
 
         self._log_request("generate", self.model, metadata)
+        retry_config = self._get_retry_config()
 
-        for attempt in range(1, self.max_retries + 1):
+        for attempt in range(1, retry_config.max_attempts + 1):
             try:
                 logger.info(
                     "OpenAI API call: model=%s, attempt=%d/%d",
                     self.model,
                     attempt,
-                    self.max_retries,
+                    retry_config.max_attempts,
                 )
 
                 response = await self.client.chat.completions.create(
@@ -200,16 +220,23 @@ class OpenAIClient(LLMInterface):
                     "OpenAI API retryable error: model=%s, attempt=%d/%d, error=%s",
                     self.model,
                     attempt,
-                    self.max_retries,
+                    retry_config.max_attempts,
                     str(e),
                 )
-                if attempt == self.max_retries:
+                if attempt == retry_config.max_attempts:
                     raise LLMError(
-                        message=f"OpenAI API failed after {self.max_retries} attempts: {e}",
+                        message=f"OpenAI API failed after {retry_config.max_attempts} attempts: {e}",
                         category=ErrorCategory.RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
                     ) from e
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after error")
+                await asyncio.sleep(delay)
                 continue
 
             except AuthenticationError as e:
@@ -236,17 +263,24 @@ class OpenAIClient(LLMInterface):
                         "OpenAI API server error: model=%s, attempt=%d/%d, status=%d",
                         self.model,
                         attempt,
-                        self.max_retries,
+                        retry_config.max_attempts,
                         e.status_code,
                     )
-                    if attempt == self.max_retries:
-                        msg = f"OpenAI server error after {self.max_retries} tries: {e}"
+                    if attempt == retry_config.max_attempts:
+                        msg = f"OpenAI server error after {retry_config.max_attempts} tries: {e}"
                         raise LLMError(
                             message=msg,
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,
                         ) from e
+                    # Exponential backoff before next attempt
+                    delay = min(
+                        retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                        retry_config.max_delay,
+                    )
+                    logger.info(f"Retrying in {delay:.1f}s after server error")
+                    await asyncio.sleep(delay)
                     continue
                 else:
                     logger.error("OpenAI API error: status=%d, %s", e.status_code, str(e))
@@ -258,7 +292,7 @@ class OpenAIClient(LLMInterface):
                     ) from e
 
         raise LLMError(
-            message=f"OpenAI API failed after {self.max_retries} attempts",
+            message=f"OpenAI API failed after {retry_config.max_attempts} attempts",
             category=ErrorCategory.RETRYABLE,
             provider=self.PROVIDER,
             model=self.model,
@@ -302,14 +336,15 @@ class OpenAIClient(LLMInterface):
             {"role": "system", "content": enhanced_system_prompt},
             *normalized_messages,
         ]
+        retry_config = self._get_retry_config()
 
-        for attempt in range(1, self.max_retries + 1):
+        for attempt in range(1, retry_config.max_attempts + 1):
             try:
                 logger.info(
                     "OpenAI API JSON call: model=%s, attempt=%d/%d",
                     self.model,
                     attempt,
-                    self.max_retries,
+                    retry_config.max_attempts,
                 )
 
                 response = await self.client.chat.completions.create(  # type: ignore[call-overload]
@@ -324,18 +359,25 @@ class OpenAIClient(LLMInterface):
                 try:
                     parsed = json.loads(content)
                 except json.JSONDecodeError as e:
+                    # Log truncated content for readability, but preserve full content in error
+                    truncated_for_log = content[:500]
+                    if len(content) > 500:
+                        truncated_for_log += f"... (total {len(content)} chars)"
                     logger.error(
-                        "OpenAI API JSON parse error: model=%s, attempt=%d/%d, error=%s",
+                        "OpenAI API JSON parse error: model=%s, attempt=%d/%d, error=%s, content=%s",
                         self.model,
                         attempt,
-                        self.max_retries,
+                        retry_config.max_attempts,
                         str(e),
+                        truncated_for_log,
                     )
                     raise LLMValidationError(
                         message=f"Failed to parse JSON response: {e}",
                         provider=self.PROVIDER,
                         model=self.model,
-                        validation_errors=[content[:500]],
+                        # Preserve full content for debugging/artifact storage
+                        validation_errors=[content],
+                        raw_output=content,
                     ) from e
 
                 logger.info(
@@ -351,16 +393,23 @@ class OpenAIClient(LLMInterface):
                     "OpenAI API JSON retryable error: model=%s, attempt=%d/%d, error=%s",
                     self.model,
                     attempt,
-                    self.max_retries,
+                    retry_config.max_attempts,
                     str(e),
                 )
-                if attempt == self.max_retries:
+                if attempt == retry_config.max_attempts:
                     raise LLMError(
-                        message=f"OpenAI API JSON failed after {self.max_retries} attempts: {e}",
+                        message=f"OpenAI API JSON failed after {retry_config.max_attempts} attempts: {e}",
                         category=ErrorCategory.RETRYABLE,
                         provider=self.PROVIDER,
                         model=self.model,
                     ) from e
+                # Exponential backoff before next attempt
+                delay = min(
+                    retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                    retry_config.max_delay,
+                )
+                logger.info(f"Retrying in {delay:.1f}s after error")
+                await asyncio.sleep(delay)
                 continue
 
             except AuthenticationError as e:
@@ -387,17 +436,24 @@ class OpenAIClient(LLMInterface):
                         "OpenAI API JSON server error: model=%s, attempt=%d/%d, status=%d",
                         self.model,
                         attempt,
-                        self.max_retries,
+                        retry_config.max_attempts,
                         e.status_code,
                     )
-                    if attempt == self.max_retries:
-                        msg = f"OpenAI server error after {self.max_retries} tries: {e}"
+                    if attempt == retry_config.max_attempts:
+                        msg = f"OpenAI server error after {retry_config.max_attempts} tries: {e}"
                         raise LLMError(
                             message=msg,
                             category=ErrorCategory.RETRYABLE,
                             provider=self.PROVIDER,
                             model=self.model,
                         ) from e
+                    # Exponential backoff before next attempt
+                    delay = min(
+                        retry_config.base_delay * (retry_config.exponential_base ** (attempt - 1)),
+                        retry_config.max_delay,
+                    )
+                    logger.info(f"Retrying in {delay:.1f}s after server error")
+                    await asyncio.sleep(delay)
                     continue
                 else:
                     logger.error("OpenAI API error: status=%d, %s", e.status_code, str(e))
@@ -412,7 +468,7 @@ class OpenAIClient(LLMInterface):
                 raise
 
         raise LLMError(
-            message=f"OpenAI API JSON failed after {self.max_retries} attempts",
+            message=f"OpenAI API JSON failed after {retry_config.max_attempts} attempts",
             category=ErrorCategory.RETRYABLE,
             provider=self.PROVIDER,
             model=self.model,
