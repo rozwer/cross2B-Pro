@@ -747,7 +747,9 @@ async def retry_step(
                         )
 
             try:
-                new_workflow_id = f"{run_id}-retry-{new_attempt_id[:8]}"
+                # Use run_id as workflow_id for consistent signal routing
+                # Previous workflow should be in Failed state, allowing reuse of the same ID
+                new_workflow_id = run_id
 
                 # 失敗したステップの成果物を削除（リトライ時にクリーンな状態で実行）
                 deleted_count = await artifact_store.delete_step_artifacts(
@@ -1073,7 +1075,9 @@ async def resume_from_step(
             if temporal_client is None:
                 raise HTTPException(status_code=503, detail="Temporal client not available")
 
-            new_workflow_id = f"{run_id}-resume-{uuid_module.uuid4().hex[:8]}"
+            # Use run_id as workflow_id for consistent signal routing
+            # Previous workflow should be in terminal state, allowing reuse of the same ID
+            new_workflow_id = run_id
 
             # First, update DB status to WORKFLOW_STARTING (race condition mitigation)
             now = datetime.now()
