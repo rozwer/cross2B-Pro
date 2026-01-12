@@ -14,9 +14,12 @@ IMPORTANT:
 from datetime import timedelta
 from typing import Any, cast
 
+from pydantic import ValidationError
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
+
+from apps.worker.activities.schemas.step11 import Step11PositionReviewPayload
 
 from .parallel import run_parallel_steps
 
@@ -90,15 +93,36 @@ class ArticleWorkflow:
         self.step11_generated_images: list[dict[str, Any]] | None = None
         self.step11_image_reviews: list[dict[str, Any]] | None = None
         self.step11_finalized: dict[str, Any] | None = None
+        # Step11 signal sequencing to avoid lost updates
+        self.step11_positions_confirmed_seq: int = 0
+        self.step11_positions_confirmed_seen: int = 0
+        self.step11_instructions_seq: int = 0
+        self.step11_instructions_seen: int = 0
+        self.step11_image_reviews_seq: int = 0
+        self.step11_image_reviews_seen: int = 0
+        self.step11_finalized_seq: int = 0
+        self.step11_finalized_seen: int = 0
 
     @workflow.signal
     async def approve(self) -> None:
-        """Signal handler for approval."""
+        """Signal handler for approval.
+
+        Mutual exclusion: Once rejected, approval is ignored.
+        """
+        if self.rejected:
+            workflow.logger.warning("Approve signal ignored: already rejected")
+            return
         self.approved = True
 
     @workflow.signal
     async def reject(self, reason: str) -> None:
-        """Signal handler for rejection."""
+        """Signal handler for rejection.
+
+        Mutual exclusion: Once approved, rejection is ignored.
+        """
+        if self.approved:
+            workflow.logger.warning("Reject signal ignored: already approved")
+            return
         self.rejected = True
         self.rejection_reason = reason
 
@@ -141,6 +165,10 @@ class ArticleWorkflow:
                 - image_count: int (1-10)
                 - position_request: str (optional user preference)
         """
+        # Phase validation: only valid when step11 not yet started or in initial phase
+        if self.step11_phase not in ("idle", "waiting", "waiting_11A", "11A"):
+            workflow.logger.warning(f"step11_start_settings ignored: wrong phase {self.step11_phase}")
+            return
         self.step11_phase = "11A"
         self.step11_settings = config
         # Also set legacy flags for compatibility
@@ -150,6 +178,10 @@ class ArticleWorkflow:
     @workflow.signal
     async def step11_skip(self) -> None:
         """Skip image generation entirely."""
+        # Phase validation: can skip before starting or in early phases
+        if self.step11_phase not in ("idle", "waiting", "waiting_11A", "11A", "11B", "waiting_11B"):
+            workflow.logger.warning(f"step11_skip ignored: wrong phase {self.step11_phase}")
+            return
         self.step11_phase = "skipped"
         self.image_gen_decision_made = True
         self.image_gen_enabled = False
@@ -165,7 +197,18 @@ class ArticleWorkflow:
                 - reanalyze: bool (request re-analysis)
                 - reanalyze_request: str (additional instructions)
         """
-        self.step11_positions_confirmed = payload
+        # Phase validation: only valid in 11A or 11B phase
+        if self.step11_phase not in ("11A", "11B", "waiting_11B"):
+            workflow.logger.warning(f"step11_confirm_positions ignored: wrong phase {self.step11_phase}")
+            return
+        try:
+            validated = Step11PositionReviewPayload.model_validate(payload)
+        except ValidationError as exc:
+            workflow.logger.warning(f"step11_confirm_positions ignored: invalid payload {exc}")
+            return
+        self.step11_phase = "11B"
+        self.step11_positions_confirmed = validated.model_dump()
+        self.step11_positions_confirmed_seq += 1
 
     @workflow.signal
     async def step11_submit_instructions(self, payload: dict[str, Any]) -> None:
@@ -175,7 +218,13 @@ class ArticleWorkflow:
             payload:
                 - instructions: list[{index: int, instruction: str}]
         """
+        # Phase validation: only valid in 11B or 11C phase
+        if self.step11_phase not in ("11B", "11C", "waiting_11C"):
+            workflow.logger.warning(f"step11_submit_instructions ignored: wrong phase {self.step11_phase}")
+            return
+        self.step11_phase = "11C"
         self.step11_instructions = payload.get("instructions", [])
+        self.step11_instructions_seq += 1
 
     @workflow.signal
     async def step11_review_images(self, payload: dict[str, Any]) -> None:
@@ -190,7 +239,13 @@ class ArticleWorkflow:
                     retry_instruction: str
                 }]
         """
+        # Phase validation: only valid in 11C or 11D phase
+        if self.step11_phase not in ("11C", "11D", "waiting_11D"):
+            workflow.logger.warning(f"step11_review_images ignored: wrong phase {self.step11_phase}")
+            return
+        self.step11_phase = "11D"
         self.step11_image_reviews = payload.get("reviews", [])
+        self.step11_image_reviews_seq += 1
 
     @workflow.signal
     async def step11_finalize(self, payload: dict[str, Any]) -> None:
@@ -201,7 +256,13 @@ class ArticleWorkflow:
                 - confirmed: bool
                 - restart_from: str | None (e.g., "11C" to go back)
         """
+        # Phase validation: only valid in 11D or 11E phase
+        if self.step11_phase not in ("11D", "11E", "waiting_11E"):
+            workflow.logger.warning(f"step11_finalize ignored: wrong phase {self.step11_phase}")
+            return
+        self.step11_phase = "11E"
         self.step11_finalized = payload
+        self.step11_finalized_seq += 1
 
     @workflow.query
     def get_status(self) -> dict[str, Any]:
@@ -712,16 +773,17 @@ class ArticleWorkflow:
         while True:
             self.step11_phase = "waiting_11B"
             self.current_step = "step11_position_review"
-            self.step11_positions_confirmed = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_position_review")
 
             await workflow.wait_condition(
-                lambda: self.step11_positions_confirmed is not None,
+                lambda: self.step11_positions_confirmed_seq > self.step11_positions_confirmed_seen,
                 timeout=timedelta(days=7),
             )
+            self.step11_positions_confirmed_seen = self.step11_positions_confirmed_seq
+            confirmed_payload = self.step11_positions_confirmed or {}
 
             # Check if reanalyze requested
-            if self.step11_positions_confirmed.get("reanalyze"):
+            if confirmed_payload.get("reanalyze"):
                 self.step11_phase = "11B_reanalyzing"
                 self.current_step = "step11_analyzing"
                 await self._sync_run_status(tenant_id, run_id, "running", "step11_analyzing")
@@ -734,9 +796,7 @@ class ArticleWorkflow:
                         "step11_enabled": True,
                         "step11_image_count": (self.step11_settings or {}).get("image_count", 3),
                         "step11_position_request": (
-                            (self.step11_settings or {}).get("position_request", "")
-                            + "\n"
-                            + self.step11_positions_confirmed.get("reanalyze_request", "")
+                            (self.step11_settings or {}).get("position_request", "") + "\n" + confirmed_payload.get("reanalyze_request", "")
                         ),
                     },
                 }
@@ -749,8 +809,8 @@ class ArticleWorkflow:
                 continue  # Loop back to wait for confirmation
 
             # Apply modified positions if provided
-            if self.step11_positions_confirmed.get("modified_positions"):
-                self.step11_positions = self.step11_positions_confirmed["modified_positions"]
+            if confirmed_payload.get("modified_positions"):
+                self.step11_positions = confirmed_payload["modified_positions"]
 
             break  # Positions confirmed, proceed to next phase
 
@@ -762,13 +822,13 @@ class ArticleWorkflow:
 
             self.step11_phase = "waiting_11C"
             self.current_step = "step11_image_instructions"
-            self.step11_instructions = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_instructions")
 
             await workflow.wait_condition(
-                lambda: self.step11_instructions is not None,
+                lambda: self.step11_instructions_seq > self.step11_instructions_seen,
                 timeout=timedelta(days=7),
             )
+            self.step11_instructions_seen = self.step11_instructions_seq
 
             # ========== Phase 11D: Generate images and wait for review ==========
             self.step11_phase = "11D_generating"
@@ -799,20 +859,36 @@ class ArticleWorkflow:
             while True:
                 self.step11_phase = "waiting_11D"
                 self.current_step = "step11_image_review"
-                self.step11_image_reviews = None
                 await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_review")
 
                 await workflow.wait_condition(
-                    lambda: self.step11_image_reviews is not None,
+                    lambda: self.step11_image_reviews_seq > self.step11_image_reviews_seen,
                     timeout=timedelta(days=7),
                 )
+                self.step11_image_reviews_seen = self.step11_image_reviews_seq
 
                 # Process retries with index bounds validation
+                reviews = self.step11_image_reviews or []
                 num_positions = len(self.step11_positions)
                 num_images = len(self.step11_generated_images)
+                invalid_indices = [
+                    r.get("index")
+                    for r in reviews
+                    if not isinstance(r.get("index"), int)
+                    or r.get("index", -1) < 0
+                    or r.get("index", -1) >= num_positions
+                    or r.get("index", -1) >= num_images
+                ]
+                if invalid_indices:
+                    raise ApplicationError(
+                        f"Step11 review indices out of bounds: {invalid_indices}",
+                        type="STEP11_INVALID_REVIEW_INDEX",
+                        non_retryable=True,
+                    )
+
                 retries_needed = [
                     r
-                    for r in self.step11_image_reviews
+                    for r in reviews
                     if r.get("retry")
                     and 0 <= r.get("index", -1) < num_positions
                     and r.get("index", -1) < len(retry_counts)
@@ -877,13 +953,13 @@ class ArticleWorkflow:
             # Wait for final confirmation
             self.step11_phase = "waiting_11E"
             self.current_step = "step11_preview"
-            self.step11_finalized = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_preview")
 
             await workflow.wait_condition(
-                lambda: self.step11_finalized is not None,
+                lambda: self.step11_finalized_seq > self.step11_finalized_seen,
                 timeout=timedelta(days=7),
             )
+            self.step11_finalized_seen = self.step11_finalized_seq
 
             # Check if restart requested
             if self.step11_finalized.get("restart_from") == "11C":
@@ -924,6 +1000,15 @@ class ImageAdditionWorkflow:
         self.step11_finalized: dict[str, Any] | None = None
         self.skipped: bool = False
         self.current_step: str = "step11"
+        # Signal sequencing to avoid lost updates
+        self.step11_positions_confirmed_seq: int = 0
+        self.step11_positions_confirmed_seen: int = 0
+        self.step11_instructions_seq: int = 0
+        self.step11_instructions_seen: int = 0
+        self.step11_image_reviews_seq: int = 0
+        self.step11_image_reviews_seen: int = 0
+        self.step11_finalized_seq: int = 0
+        self.step11_finalized_seen: int = 0
 
     # ========== Signals ==========
 
@@ -931,21 +1016,25 @@ class ImageAdditionWorkflow:
     async def step11_confirm_positions(self, payload: dict[str, Any]) -> None:
         """Phase 11B: User confirms or modifies positions."""
         self.step11_positions_confirmed = payload
+        self.step11_positions_confirmed_seq += 1
 
     @workflow.signal
     async def step11_submit_instructions(self, payload: dict[str, Any]) -> None:
         """Phase 11C: User submits per-image instructions."""
         self.step11_instructions = payload.get("instructions", [])
+        self.step11_instructions_seq += 1
 
     @workflow.signal
     async def step11_review_images(self, payload: dict[str, Any]) -> None:
         """Phase 11D: User reviews generated images."""
         self.step11_image_reviews = payload.get("reviews", [])
+        self.step11_image_reviews_seq += 1
 
     @workflow.signal
     async def step11_finalize(self, payload: dict[str, Any]) -> None:
         """Phase 11E: User confirms final preview."""
         self.step11_finalized = payload
+        self.step11_finalized_seq += 1
 
     @workflow.signal
     async def skip(self) -> None:
@@ -990,38 +1079,17 @@ class ImageAdditionWorkflow:
             "position_request": config.get("position_request", ""),
         }
 
-        # Helper for executing activities
-        with workflow.unsafe.imports_passed_through():
-            from apps.worker.activities import (
-                step11_analyze_positions,
-                step11_generate_images,
-                step11_insert_images,
-                step11_retry_image,
-                sync_run_status,
-            )
-
         async def execute_activity(
             activity_name: str,
             activity_input: dict[str, Any],
             step_name: str = "step11",
         ) -> dict[str, Any]:
             """Execute an activity with standard settings."""
-            activities = {
-                "step11_analyze_positions": step11_analyze_positions,
-                "step11_generate_images": step11_generate_images,
-                "step11_retry_image": step11_retry_image,
-                "step11_insert_images": step11_insert_images,
-                "sync_run_status": sync_run_status,
-            }
-            activity = activities.get(activity_name)
-            if not activity:
-                raise ValueError(f"Unknown activity: {activity_name}")
-
             timeout = STEP_TIMEOUTS.get(step_name, 300)
             return cast(
                 dict[str, Any],
                 await workflow.execute_activity(
-                    activity,
+                    activity_name,
                     activity_input,
                     start_to_close_timeout=timedelta(seconds=timeout),
                     retry_policy=DEFAULT_RETRY_POLICY,
@@ -1065,13 +1133,14 @@ class ImageAdditionWorkflow:
         while True:
             self.step11_phase = "waiting_11B"
             self.current_step = "step11_position_review"
-            self.step11_positions_confirmed = None
             await update_status("waiting_image_input", "step11_position_review")
 
             await workflow.wait_condition(
-                lambda: self.step11_positions_confirmed is not None or self.skipped,
+                lambda: self.step11_positions_confirmed_seq > self.step11_positions_confirmed_seen or self.skipped,
                 timeout=timedelta(days=7),
             )
+            if self.step11_positions_confirmed_seq > self.step11_positions_confirmed_seen:
+                self.step11_positions_confirmed_seen = self.step11_positions_confirmed_seq
 
             if self.skipped:
                 await update_status("completed", "step11")
@@ -1117,13 +1186,14 @@ class ImageAdditionWorkflow:
                 phase_11c_start = False
                 self.step11_phase = "waiting_11C"
                 self.current_step = "step11_image_instructions"
-                self.step11_instructions = None
                 await update_status("waiting_image_input", "step11_image_instructions")
 
                 await workflow.wait_condition(
-                    lambda: self.step11_instructions is not None or self.skipped,
+                    lambda: self.step11_instructions_seq > self.step11_instructions_seen or self.skipped,
                     timeout=timedelta(days=7),
                 )
+                if self.step11_instructions_seq > self.step11_instructions_seen:
+                    self.step11_instructions_seen = self.step11_instructions_seq
 
                 if self.skipped:
                     await update_status("completed", "step11")
@@ -1153,24 +1223,41 @@ class ImageAdditionWorkflow:
             while True:
                 self.step11_phase = "waiting_11D"
                 self.current_step = "step11_image_review"
-                self.step11_image_reviews = None
                 await update_status("waiting_image_input", "step11_image_review")
 
                 await workflow.wait_condition(
-                    lambda: self.step11_image_reviews is not None or self.skipped,
+                    lambda: self.step11_image_reviews_seq > self.step11_image_reviews_seen or self.skipped,
                     timeout=timedelta(days=7),
                 )
+                if self.step11_image_reviews_seq > self.step11_image_reviews_seen:
+                    self.step11_image_reviews_seen = self.step11_image_reviews_seq
 
                 if self.skipped:
                     await update_status("completed", "step11")
                     return {"artifact_ref": {}, "skipped": True}
 
                 # Validate index bounds before processing retries
+                reviews = self.step11_image_reviews or []
                 num_positions = len(self.step11_positions)
                 num_images = len(self.step11_generated_images)
+                invalid_indices = [
+                    r.get("index")
+                    for r in reviews
+                    if not isinstance(r.get("index"), int)
+                    or r.get("index", -1) < 0
+                    or r.get("index", -1) >= num_positions
+                    or r.get("index", -1) >= num_images
+                ]
+                if invalid_indices:
+                    raise ApplicationError(
+                        f"Step11 review indices out of bounds: {invalid_indices}",
+                        type="STEP11_INVALID_REVIEW_INDEX",
+                        non_retryable=True,
+                    )
+
                 retries_requested = [
                     r
-                    for r in self.step11_image_reviews
+                    for r in reviews
                     if r.get("retry")
                     and 0 <= r.get("index", -1) < num_positions
                     and r.get("index", -1) < len(retry_counts)
@@ -1230,13 +1317,14 @@ class ImageAdditionWorkflow:
             # Preview confirmation
             self.step11_phase = "waiting_11E"
             self.current_step = "step11_preview"
-            self.step11_finalized = None
             await update_status("waiting_image_input", "step11_preview")
 
             await workflow.wait_condition(
-                lambda: self.step11_finalized is not None or self.skipped,
+                lambda: self.step11_finalized_seq > self.step11_finalized_seen or self.skipped,
                 timeout=timedelta(days=7),
             )
+            if self.step11_finalized_seq > self.step11_finalized_seen:
+                self.step11_finalized_seen = self.step11_finalized_seq
 
             if self.skipped:
                 await update_status("completed", "step11")

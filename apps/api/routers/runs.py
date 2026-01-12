@@ -17,14 +17,16 @@ if TYPE_CHECKING:
     from apps.api.routers.websocket import ConnectionManager
     from apps.api.storage import ArtifactStore as ArtifactStoreType
 from pydantic import BaseModel, Field
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.constants import INVALID_RESUME_STEPS, RESUME_STEP_ORDER, RETRY_STEP_ORDER
-from apps.api.db import AuditLogger, Run, Step, TenantIdValidationError
+from apps.api.db import Artifact, AuditLogger, Run, Step, TenantIdValidationError
 from apps.api.schemas.article_hearing import ArticleHearingInput, KeywordStatus
 from apps.api.schemas.enums import RunStatus, StepStatus
 from apps.api.schemas.runs import (
@@ -32,7 +34,10 @@ from apps.api.schemas.runs import (
     CreateRunInput,
     ModelConfig,
     RejectRunInput,
+    RunOptions,
     RunResponse,
+    StepModelConfig,
+    ToolConfig,
 )
 from apps.api.services.runs import (
     get_steps_from_storage,
@@ -116,6 +121,63 @@ class BulkDeleteResponse(BaseModel):
 
     deleted: list[str]
     failed: list[dict[str, str]]  # [{"id": "...", "error": "..."}]
+
+
+def _parse_expected_updated_at(expected_updated_at: str) -> datetime:
+    try:
+        return datetime.fromisoformat(expected_updated_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid expected_updated_at format") from exc
+
+
+def _check_optimistic_lock(run: Run, expected_updated_at: str | None, *, error_detail: str) -> None:
+    if not expected_updated_at or not run.updated_at:
+        return
+
+    expected_dt = _parse_expected_updated_at(expected_updated_at)
+    actual_dt = run.updated_at
+
+    if expected_dt.tzinfo and actual_dt.tzinfo is None:
+        actual_dt = actual_dt.replace(tzinfo=expected_dt.tzinfo)
+    elif expected_dt.tzinfo is None and actual_dt.tzinfo is not None:
+        expected_dt = expected_dt.replace(tzinfo=actual_dt.tzinfo)
+
+    if actual_dt != expected_dt:
+        logger.warning(
+            "Optimistic lock conflict",
+            extra={
+                "run_id": str(run.id),
+                "expected": expected_updated_at,
+                "actual": run.updated_at.isoformat(),
+            },
+        )
+        raise HTTPException(status_code=409, detail=error_detail)
+
+
+def _validate_run_config(config: dict[str, Any]) -> dict[str, Any]:
+    if not config:
+        return {}
+
+    validated = dict(config)
+
+    model_config_data = validated.get("model_config") or DEFAULT_MODEL_CONFIG
+    model_config = ModelConfig.model_validate(model_config_data)
+    validated["model_config"] = model_config.model_dump()
+
+    step_configs_data = validated.get("step_configs")
+    if step_configs_data is not None:
+        validated_steps = [StepModelConfig.model_validate(sc).model_dump() for sc in step_configs_data]
+        validated["step_configs"] = validated_steps
+
+    tool_config_data = validated.get("tool_config")
+    if tool_config_data is not None:
+        validated["tool_config"] = ToolConfig.model_validate(tool_config_data).model_dump()
+
+    options_data = validated.get("options")
+    if options_data is not None:
+        validated["options"] = RunOptions.model_validate(options_data).model_dump()
+
+    return validated
 
 
 # =============================================================================
@@ -230,6 +292,7 @@ async def create_run(
                     run_id=run_id,
                     event_type="run.started",
                     status=RunStatus.RUNNING.value,
+                    tenant_id=tenant_id,
                 )
 
             except Exception as wf_error:
@@ -394,30 +457,18 @@ async def approve_run(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            # Optimistic lock check
-            if expected_updated_at and run.updated_at:
-                expected_dt = datetime.fromisoformat(expected_updated_at.replace("Z", "+00:00"))
-                # Compare with tolerance of 1 second to handle minor precision differences
-                if abs((run.updated_at - expected_dt).total_seconds()) > 1:
-                    logger.warning(
-                        "Optimistic lock conflict",
-                        extra={
-                            "run_id": run_id,
-                            "expected": expected_updated_at,
-                            "actual": run.updated_at.isoformat(),
-                        },
-                    )
-                    raise HTTPException(
-                        status_code=409,
-                        detail="Run was modified by another user. Please refresh and try again.",
-                    )
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
 
             if run.status != RunStatus.WAITING_APPROVAL.value:
                 raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
@@ -443,21 +494,17 @@ async def approve_run(
                 logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
-            run.status = RunStatus.RUNNING.value
-            run.updated_at = datetime.now()
-
-            # Note: flush() writes changes to DB but doesn't commit.
-            # The actual commit is handled by the session context manager (get_session).
-            # This ensures atomicity: if anything fails before context exit, all changes rollback.
-            await session.flush()
-            logger.info("Run approved", extra={"run_id": run_id, "tenant_id": tenant_id})
+            logger.info("Run approval signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
 
             await ws_manager.broadcast_run_update(
                 run_id=run_id,
                 event_type="run.approved",
-                status=RunStatus.RUNNING.value,
+                status=run.status,
+                message="Approval signal sent; waiting for workflow update",
+                tenant_id=tenant_id,
             )
 
+            await session.commit()
             return {"success": True}
 
     except HTTPException:
@@ -499,29 +546,18 @@ async def reject_run(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            # Optimistic lock check
-            if expected_updated_at and run.updated_at:
-                expected_dt = datetime.fromisoformat(expected_updated_at.replace("Z", "+00:00"))
-                if abs((run.updated_at - expected_dt).total_seconds()) > 1:
-                    logger.warning(
-                        "Optimistic lock conflict",
-                        extra={
-                            "run_id": run_id,
-                            "expected": expected_updated_at,
-                            "actual": run.updated_at.isoformat(),
-                        },
-                    )
-                    raise HTTPException(
-                        status_code=409,
-                        detail="Run was modified by another user. Please refresh and try again.",
-                    )
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
 
             if run.status != RunStatus.WAITING_APPROVAL.value:
                 raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
@@ -547,22 +583,18 @@ async def reject_run(
                 logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
-            run.status = RunStatus.FAILED.value
-            run.error_code = "REJECTED"
-            run.error_message = reason or "Rejected by reviewer"
-            run.updated_at = datetime.now()
-            run.completed_at = datetime.now()
-
-            await session.flush()
-            logger.info("Run rejected", extra={"run_id": run_id, "tenant_id": tenant_id})
+            logger.info("Run rejection signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
 
             await ws_manager.broadcast_run_update(
                 run_id=run_id,
                 event_type="run.rejected",
-                status=RunStatus.FAILED.value,
+                status=run.status,
                 error={"code": "REJECTED", "message": reason or "Rejected by reviewer"},
+                message="Rejection signal sent; waiting for workflow update",
+                tenant_id=tenant_id,
             )
 
+            await session.commit()
             return {"success": True}
 
     except HTTPException:
@@ -579,9 +611,18 @@ async def reject_run(
 async def retry_step(
     run_id: str,
     step: str,
+    expected_updated_at: str | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Retry a failed step."""
+    """Retry a failed step.
+
+    Args:
+        run_id: Run identifier
+        step: Step to retry
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
     tenant_id = user.tenant_id
     logger.info(
         "Retrying step",
@@ -607,12 +648,18 @@ async def retry_step(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Optimistic lock conflict: run has been modified since last read",
+            )
 
             if run.status != RunStatus.FAILED.value:
                 raise HTTPException(status_code=400, detail=f"Run must be in failed status to retry (current status: {run.status})")
@@ -642,7 +689,55 @@ async def retry_step(
                 raise HTTPException(status_code=503, detail="Temporal client not available")
 
             try:
-                loaded_config = dict(run.config) if run.config else {}
+                loaded_config = _validate_run_config(dict(run.config) if run.config else {})
+            except PydanticValidationError as config_error:
+                logger.error(f"Invalid run config for retry: {config_error}", extra={"run_id": run_id})
+                raise HTTPException(status_code=400, detail="Invalid run config for retry") from config_error
+
+            def _is_step_enabled(step_name: str) -> bool:
+                if step_name == "step1_5":
+                    return loaded_config.get("enable_step1_5", True)
+                if step_name == "step3_5":
+                    return loaded_config.get("enable_step3_5", True)
+                if step_name == "step12":
+                    return loaded_config.get("enable_step12", True)
+                return True
+
+            if not _is_step_enabled(requested_step):
+                raise HTTPException(status_code=400, detail=f"Step {requested_step} is disabled by config")
+
+            if resume_step in RETRY_STEP_ORDER:
+                step_index = RETRY_STEP_ORDER.index(resume_step)
+                required_steps = [s for s in RETRY_STEP_ORDER[:step_index] if _is_step_enabled(s)]
+                if required_steps:
+                    required_query = select(Step).where(
+                        Step.run_id == run_id,
+                        Step.step_name.in_(required_steps),
+                    )
+                    required_result = await session.execute(required_query)
+                    required_records = {step.step_name: step for step in required_result.scalars().all()}
+
+                    missing_or_incomplete: list[str] = []
+                    for required_step in required_steps:
+                        record = required_records.get(required_step)
+                        if record and record.status in (StepStatus.COMPLETED.value, StepStatus.SKIPPED.value):
+                            continue
+                        artifact_data = await artifact_store.get_by_path(
+                            tenant_id=tenant_id,
+                            run_id=run_id,
+                            step=required_step,
+                        )
+                        if artifact_data:
+                            continue
+                        missing_or_incomplete.append(required_step)
+
+                    if missing_or_incomplete:
+                        raise HTTPException(
+                            status_code=400,
+                            detail="Retry prerequisites not met. Missing or incomplete steps: " + ", ".join(missing_or_incomplete),
+                        )
+
+            try:
                 new_workflow_id = f"{run_id}-retry-{new_attempt_id[:8]}"
 
                 # 失敗したステップの成果物を削除（リトライ時にクリーンな状態で実行）
@@ -656,6 +751,14 @@ async def retry_step(
                         f"Deleted {deleted_count} artifacts for retry",
                         extra={"run_id": run_id, "step": requested_step},
                     )
+
+                artifact_prefix = f"storage/{tenant_id}/{run_id}/{requested_step}/"
+                await session.execute(
+                    sql_delete(Artifact).where(
+                        Artifact.run_id == run_id,
+                        Artifact.ref_path.like(f"{artifact_prefix}%"),
+                    )
+                )
 
                 # 前ステップデータの確認（Activityは load_step_data で storage から読むため config に追加は不要）
                 # ただしログ用に読み込み状況を確認
@@ -750,7 +853,9 @@ async def retry_step(
                     logger.warning(f"Run {run_id} not found during retry revert - may have been deleted")
                 else:
                     run.status = RunStatus.FAILED.value
+                    run.error_code = "WORKFLOW_START_FAILED"
                     run.error_message = f"Retry workflow start failed: {wf_error}"
+                    run.updated_at = datetime.now()
             raise HTTPException(status_code=503, detail=f"Failed to start retry workflow: {wf_error}")
 
         await ws_manager.broadcast_step_event(
@@ -760,6 +865,7 @@ async def retry_step(
             status=StepStatus.RUNNING.value,
             message=f"Retrying step {step}",
             attempt=retry_count,
+            tenant_id=tenant_id,
         )
 
         return {"success": True, "new_attempt_id": new_attempt_id}
@@ -778,9 +884,18 @@ async def retry_step(
 async def resume_from_step(
     run_id: str,
     step: str,
+    expected_updated_at: str | None = None,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Resume/restart workflow from a specific step."""
+    """Resume/restart workflow from a specific step.
+
+    Args:
+        run_id: Run identifier
+        step: Step to resume from
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
     tenant_id = user.tenant_id
     logger.info(
         "Resuming run",
@@ -810,12 +925,19 @@ async def resume_from_step(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             original_run = result.scalar_one_or_none()
 
             if not original_run:
                 raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                original_run,
+                expected_updated_at,
+                error_detail="Optimistic lock conflict: run has been modified since last read",
+            )
+
             in_progress_statuses = {
                 RunStatus.PENDING.value,
                 RunStatus.RUNNING.value,
@@ -831,20 +953,20 @@ async def resume_from_step(
             step_index = RESUME_STEP_ORDER.index(step)
             steps_to_load = RESUME_STEP_ORDER[:step_index]
 
-            loaded_config = dict(original_run.config) if original_run.config else {}
+            try:
+                loaded_config = _validate_run_config(dict(original_run.config) if original_run.config else {})
+            except PydanticValidationError as config_error:
+                logger.error(f"Invalid run config for resume: {config_error}", extra={"run_id": run_id})
+                raise HTTPException(status_code=400, detail="Invalid run config for resume") from config_error
 
             # Store artifact REFERENCES only, not full data (to avoid gRPC size limits)
             # Activities should load full data from storage via load_step_data()
-            # Note: Use get_by_path to check existence (exists() requires ArtifactRef, not path string)
             artifact_refs: dict[str, dict[str, str]] = {}
+            artifact_paths = await artifact_store.list_run_artifacts(tenant_id, run_id)
+            artifact_path_set = set(artifact_paths)
             for prev_step in steps_to_load:
-                artifact_data = await artifact_store.get_by_path(
-                    tenant_id=tenant_id,
-                    run_id=run_id,
-                    step=prev_step,
-                )
-                if artifact_data is not None:
-                    artifact_path = artifact_store.build_path(tenant_id, run_id, prev_step)
+                artifact_path = artifact_store.build_path(tenant_id, run_id, prev_step)
+                if artifact_path in artifact_path_set:
                     artifact_refs[prev_step] = {
                         "path": artifact_path,
                         "step": prev_step,
@@ -864,16 +986,10 @@ async def resume_from_step(
 
             steps_to_delete = list(RESUME_STEP_ORDER[step_index:])
 
-            # Only delete step11 artifacts if resuming from a step BEFORE step11's position
             # step12 depends on step11 images, so preserve step11 when resuming from step12
-            # step11 is placed between step10 and step12 in the workflow
             if normalized_step == "step12":
-                # Resuming from step12: keep step11 artifacts (images needed for step12)
-                final_steps_to_delete = steps_to_delete
                 logger.debug("Preserving step11 artifacts for step12 resume")
-            else:
-                # Resuming from earlier steps: delete step11 along with other downstream steps
-                final_steps_to_delete = steps_to_delete + ["step11"]
+            final_steps_to_delete = steps_to_delete
             if "step11" in final_steps_to_delete:
                 original_run.step11_state = None
 
@@ -894,6 +1010,15 @@ async def resume_from_step(
                         "resume_from": step,
                         "deleted_steps": final_steps_to_delete,
                     },
+                )
+
+            for step_to_delete in final_steps_to_delete:
+                artifact_prefix = f"storage/{tenant_id}/{run_id}/{step_to_delete}/"
+                await session.execute(
+                    sql_delete(Artifact).where(
+                        Artifact.run_id == run_id,
+                        Artifact.ref_path.like(f"{artifact_prefix}%"),
+                    )
                 )
 
             await session.execute(
@@ -1006,7 +1131,9 @@ async def resume_from_step(
                     logger.warning(f"Run {run_id} not found during resume revert - may have been deleted")
                 else:
                     run.status = RunStatus.FAILED.value
+                    run.error_code = "WORKFLOW_START_FAILED"
                     run.error_message = f"Resume workflow start failed: {wf_error}"
+                    run.updated_at = datetime.now()
             raise HTTPException(status_code=503, detail=f"Failed to start resume workflow: {wf_error}")
 
         return {
@@ -1163,7 +1290,7 @@ async def clone_run(
                 },
             )
 
-            await session.flush()
+            await session.commit()
             logger.info(
                 "Run cloned",
                 extra={"new_run_id": new_run_id, "source_run_id": run_id, "tenant_id": tenant_id},
@@ -1192,6 +1319,7 @@ async def clone_run(
                         run_id=new_run_id,
                         event_type="run.started",
                         status=RunStatus.RUNNING.value,
+                        tenant_id=tenant_id,
                     )
 
                 except Exception as wf_error:
@@ -1273,8 +1401,10 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
                 run_id=run_id,
                 event_type="run.cancelled",
                 status=RunStatus.CANCELLED.value,
+                tenant_id=tenant_id,
             )
 
+            await session.commit()
             return {"success": True}
 
     except HTTPException:
@@ -1338,11 +1468,16 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
             # Use ORM delete with cascade - Steps, Artifacts, ErrorLogs, DiagnosticReports
             # are automatically deleted due to cascade="all, delete-orphan" on Run model
-            await session.delete(run)
+            try:
+                await session.delete(run)
+                await session.flush()
+            except IntegrityError as delete_error:
+                logger.error(f"Failed to delete run due to integrity error: {delete_error}", extra={"run_id": run_id})
+                raise HTTPException(status_code=409, detail="Run deletion failed due to integrity constraints") from delete_error
 
-            await session.flush()
             logger.info("Run deleted", extra={"run_id": run_id, "tenant_id": tenant_id})
 
+            await session.commit()
             return {"success": True}
 
     except HTTPException:
@@ -1381,10 +1516,10 @@ async def bulk_delete_runs(
     ]
 
     try:
-        async with db_manager.get_session(tenant_id) as session:
-            for run_id in request.run_ids:
-                try:
-                    query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        for run_id in request.run_ids:
+            try:
+                async with db_manager.get_session(tenant_id) as session:
+                    query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
                     result = await session.execute(query)
                     run = result.scalar_one_or_none()
 
@@ -1400,10 +1535,12 @@ async def bulk_delete_runs(
                                 logger.info("Temporal workflow cancelled for bulk delete", extra={"run_id": run_id})
                             except Exception as cancel_error:
                                 logger.warning(f"Failed to cancel Temporal workflow {run_id}: {cancel_error}")
+                                failed.append({"id": run_id, "error": "Failed to cancel Temporal workflow"})
+                                continue
 
+                        previous_status = run.status
                         run.status = RunStatus.CANCELLED.value
                         run.updated_at = datetime.now()
-                        await session.flush()
 
                         audit = AuditLogger(session)
                         await audit.log(
@@ -1411,7 +1548,7 @@ async def bulk_delete_runs(
                             action="cancel",
                             resource_type="run",
                             resource_id=run_id,
-                            details={"previous_status": run.status, "bulk": True, "reason": "bulk_delete"},
+                            details={"previous_status": previous_status, "bulk": True, "reason": "bulk_delete"},
                         )
 
                     audit = AuditLogger(session)
@@ -1430,14 +1567,17 @@ async def bulk_delete_runs(
 
                     # Use ORM delete with cascade - related records auto-deleted
                     await session.delete(run)
+                    await session.flush()
 
                     deleted.append(run_id)
+                    await session.commit()
 
-                except Exception as e:
-                    logger.error(f"Failed to delete run {run_id}: {e}")
-                    failed.append({"id": run_id, "error": str(e)})
-
-            await session.flush()
+            except IntegrityError as delete_error:
+                logger.error(f"Failed to delete run {run_id} due to integrity error: {delete_error}")
+                failed.append({"id": run_id, "error": "Integrity error during deletion"})
+            except Exception as e:
+                logger.error(f"Failed to delete run {run_id}: {e}")
+                failed.append({"id": run_id, "error": str(e)})
 
         logger.info(f"Bulk delete completed: {len(deleted)} deleted, {len(failed)} failed")
         return BulkDeleteResponse(deleted=deleted, failed=failed)

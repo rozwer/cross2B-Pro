@@ -31,7 +31,12 @@ import type {
   CostResponse,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
+
+// Warn if localhost is used in production (likely misconfiguration)
+if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && API_BASE.includes("localhost")) {
+  console.warn("WARNING: Using localhost API in production mode - check NEXT_PUBLIC_API_URL");
+}
 
 // 開発環境用の固定テナントID（本番では認証から取得）
 const DEV_TENANT_ID = "dev-tenant-001";
@@ -100,12 +105,30 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
+      // Try to parse error response body
+      let errorData: Record<string, unknown> | null = null;
+      let parseError: string | null = null;
+      try {
+        const text = await response.text();
+        if (text) {
+          errorData = JSON.parse(text);
+        }
+      } catch (e) {
+        // JSON parse failed - capture partial error info
+        parseError = e instanceof Error ? e.message : "JSON parse failed";
+      }
+
       // FastAPI の形式 { detail: string } または { error: { message: string } }
-      const message =
-        errorData?.detail ||
-        errorData?.error?.message ||
-        `HTTP ${response.status}: ${response.statusText}`;
+      let message: string;
+      if (errorData?.detail) {
+        message = String(errorData.detail);
+      } else if (errorData?.error && typeof errorData.error === "object" && "message" in errorData.error) {
+        message = String((errorData.error as { message: unknown }).message);
+      } else if (parseError) {
+        message = `HTTP ${response.status}: ${response.statusText} (response parse error: ${parseError})`;
+      } else {
+        message = `HTTP ${response.status}: ${response.statusText}`;
+      }
       throw new Error(message);
     }
 

@@ -22,7 +22,6 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 import asyncio
 import logging
-from datetime import datetime
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -44,6 +43,31 @@ from apps.worker.graphs.wrapper import create_node_function
 # ============================================================
 # Step Node Functions
 # ============================================================
+
+
+def _get_execution_time(state: GraphState, ctx: ExecutionContext) -> str:
+    """Return deterministic execution time from state/config."""
+    metadata = state.get("metadata") or {}
+    for key in ("execution_time", "run_started_at"):
+        value = metadata.get(key)
+        if value:
+            if isinstance(value, str):
+                return value
+            if hasattr(value, "isoformat"):
+                return value.isoformat()
+            return str(value)
+
+    config = ctx.config or {}
+    for key in ("execution_time", "run_started_at"):
+        value = config.get(key)
+        if value:
+            if isinstance(value, str):
+                return value
+            if hasattr(value, "isoformat"):
+                return value.isoformat()
+            return str(value)
+
+    raise ValueError("execution_time is required in state.metadata or config for deterministic timestamps")
 
 
 async def step0_execute(
@@ -210,6 +234,7 @@ async def step1_5_execute(
     page_fetch_timeout = 30
 
     related_competitor_data: list[dict[str, Any]] = []
+    failed_keywords: list[str] = []
 
     for keyword in related_keywords[:max_keywords]:
         try:
@@ -217,6 +242,7 @@ async def step1_5_execute(
 
             if not serp_result.success:
                 logger.warning(f"[STEP1.5] SERP fetch failed for '{keyword}': {serp_result.error_message}")
+                failed_keywords.append(keyword)
                 continue
 
             # Handle both "urls" and "results" keys for compatibility
@@ -261,9 +287,12 @@ async def step1_5_execute(
             )
         except Exception as e:
             logger.warning(f"[STEP1.5] Error processing keyword '{keyword}': {e}")
+            failed_keywords.append(keyword)
             continue
 
     total_articles = sum(len(d.get("competitors", [])) for d in related_competitor_data)
+    if total_articles == 0:
+        raise ValueError(f"step1_5 failed to fetch any related competitor articles. failed_keywords={failed_keywords}")
 
     return {
         "step": "step1_5",
@@ -271,7 +300,7 @@ async def step1_5_execute(
         "related_keywords_analyzed": len(related_competitor_data),
         "related_competitor_data": related_competitor_data,
         "metadata": {
-            "fetched_at": datetime.utcnow().isoformat(),
+            "fetched_at": _get_execution_time(state, ctx),
             "total_articles_fetched": total_articles,
         },
     }
@@ -292,7 +321,7 @@ async def step2_execute(
     return {
         "step": "step2",
         "is_valid": True,
-        "validated_at": datetime.now().isoformat(),
+        "validated_at": _get_execution_time(state, ctx),
     }
 
 
@@ -348,7 +377,7 @@ async def step3_parallel_execute(
                 },
             }
         except Exception as e:
-            return {"step": "step3a", "error": str(e)}
+            raise RuntimeError(f"step3a failed: {e}") from e
 
     async def run_step3b() -> dict[str, Any]:
         """Step 3B: Co-occurrence (heart). REVIEW-002: metadata必須化"""
@@ -381,7 +410,7 @@ async def step3_parallel_execute(
                 },
             }
         except Exception as e:
-            return {"step": "step3b", "error": str(e)}
+            raise RuntimeError(f"step3b failed: {e}") from e
 
     async def run_step3c() -> dict[str, Any]:
         """Step 3C: Competitor Analysis. REVIEW-002: metadata必須化"""
@@ -414,7 +443,7 @@ async def step3_parallel_execute(
                 },
             }
         except Exception as e:
-            return {"step": "step3c", "error": str(e)}
+            raise RuntimeError(f"step3c failed: {e}") from e
 
     # Run all three in parallel
     results = await asyncio.gather(
@@ -424,30 +453,43 @@ async def step3_parallel_execute(
         return_exceptions=True,
     )
 
-    # Process results
-    def result_or_error(r: Any) -> dict[str, Any]:
-        return r if not isinstance(r, Exception) else {"error": str(r)}
+    step_results = {
+        "step3a": results[0],
+        "step3b": results[1],
+        "step3c": results[2],
+    }
 
-    step3a_result = result_or_error(results[0])
-    step3b_result = result_or_error(results[1])
-    step3c_result = result_or_error(results[2])
+    failures: dict[str, str] = {}
+    import traceback
 
-    # Check for failures
-    failures = []
-    if "error" in step3a_result:
-        failures.append("step3a")
-    if "error" in step3b_result:
-        failures.append("step3b")
-    if "error" in step3c_result:
-        failures.append("step3c")
+    for step_name, result in step_results.items():
+        if isinstance(result, Exception):
+            logger.error(
+                f"Step3 parallel execution failed for {step_name}: {type(result).__name__}: {result}",
+                extra={
+                    "step": step_name,
+                    "error_type": type(result).__name__,
+                    "stack_trace": "".join(traceback.format_exception(type(result), result, result.__traceback__)),
+                },
+            )
+            failures[step_name] = f"{type(result).__name__}: {result}"
+        elif isinstance(result, dict) and result.get("error"):
+            logger.error(
+                f"Step3 parallel returned error for {step_name}: {result.get('error')}",
+                extra={"step": step_name},
+            )
+            failures[step_name] = str(result.get("error"))
+
+    if failures:
+        raise RuntimeError(f"step3_parallel failed: {failures}")
 
     return {
         "step": "step3_parallel",
-        "step3a": step3a_result,
-        "step3b": step3b_result,
-        "step3c": step3c_result,
-        "all_succeeded": len(failures) == 0,
-        "failures": failures,
+        "step3a": step_results["step3a"],
+        "step3b": step_results["step3b"],
+        "step3c": step_results["step3c"],
+        "all_succeeded": True,
+        "failures": [],
     }
 
 
@@ -469,7 +511,11 @@ def build_pre_approval_graph() -> Any:
     step1_node = create_node_function("step1", step1_execute)
     step1_5_node = create_node_function("step1_5", step1_5_execute)
     step2_node = create_node_function("step2", step2_execute)
-    step3_parallel_node = create_node_function("step3_parallel", step3_parallel_execute)
+    step3_parallel_node = create_node_function(
+        "step3_parallel",
+        step3_parallel_execute,
+        final_status="waiting_approval",
+    )
 
     # Add nodes
     graph.add_node("step0", step0_node)  # type: ignore[call-overload]

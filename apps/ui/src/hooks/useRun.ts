@@ -12,11 +12,17 @@ import { api } from "@/lib/api";
 function normalizeStepForApi(step: string): string {
   // Convert dot notation to underscore
   const normalized = step.replace(/\./g, "_");
-  // Normalize parent step3 to step3a (parallel group entry point)
-  if (normalized === "step3") {
-    return "step3a";
+  // Normalize parent steps to their entry points (parallel group handling)
+  // step3 has subgroups: step3a, step3b, step3c
+  // step7 has subgroups: step7a, step7b
+  switch (normalized) {
+    case "step3":
+      return "step3a";
+    case "step7":
+      return "step7a";
+    default:
+      return normalized;
   }
-  return normalized;
 }
 
 interface UseRunOptions {

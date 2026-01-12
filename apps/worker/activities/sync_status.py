@@ -12,6 +12,19 @@ from temporalio import activity
 
 logger = logging.getLogger(__name__)
 
+# Valid state transitions for run status
+# Each key is the current state, and values are allowed next states
+VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
+    "pending": {"running", "cancelled", "failed"},
+    "workflow_starting": {"running", "failed", "cancelled"},
+    "running": {"waiting_approval", "waiting_image_input", "completed", "failed", "cancelled"},
+    "waiting_approval": {"running", "completed", "failed", "cancelled"},
+    "waiting_image_input": {"running", "completed", "failed", "cancelled"},
+    "completed": set(),  # Terminal state - no transitions allowed
+    "failed": set(),  # Terminal state - no transitions allowed
+    "cancelled": set(),  # Terminal state - no transitions allowed
+}
+
 
 @activity.defn
 async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
@@ -62,10 +75,20 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
             now = datetime.now()
             updated_fields = []
 
-            # Update status
+            # Update status with state transition validation
             if run.status != status:
-                run.status = status
-                updated_fields.append("status")
+                current_status = run.status
+                allowed_transitions = VALID_STATUS_TRANSITIONS.get(current_status, set())
+
+                if status in allowed_transitions:
+                    run.status = status
+                    updated_fields.append("status")
+                else:
+                    # Log invalid transition but don't fail - the workflow's state is authoritative
+                    logger.warning(
+                        f"Invalid state transition skipped: {current_status} -> {status} "
+                        f"(run_id={run_id}). Allowed: {allowed_transitions or 'none (terminal state)'}"
+                    )
 
             # Update current_step
             if run.current_step != current_step:
@@ -112,5 +135,5 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
         raise ApplicationError(
             f"Failed to sync run status for run_id={run_id}: {e}",
             type="SYNC_STATUS_FAILED",
-            non_retryable=False,  # リトライ可能
+            non_retryable=True,  # リトライはWorkflow側で管理
         ) from e

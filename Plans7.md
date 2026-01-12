@@ -2,8 +2,9 @@
 
 > **作成日**: 2026-01-12
 > **目的**: プロジェクト全体のバグ温床となる問題の特定と修正
-> **ステータス**: 計画中
+> **ステータス**: 完了
 > **除外項目**: モデル名設定、セキュリティ（developでの認証スキップ等）
+> **除外Plans**: Plans1 の項目は本計画に含まない（Plans1で対応済み/対応予定）
 
 ---
 
@@ -14,16 +15,16 @@ Plans1〜4でカバーされていない、または新たに発見された問�
 | フェーズ | 内容 | 件数 |
 |---------|------|------|
 | 0 | CRITICAL（即時対応） | 5件 |
-| 1 | HIGH（早期対応） | 7件 |
-| 2 | MEDIUM（中期対応） | 8件 |
-| 3 | LOW（改善） | 5件 |
+| 1 | HIGH（早期対応） | 6件 |
+| 2 | MEDIUM（中期対応） | 7件 |
+| 3 | LOW（改善） | 4件 |
 | 4 | テスト・検証 | - |
 
 ---
 
-## 🔴 フェーズ0: CRITICAL `cc:TODO`
+## 🔴 フェーズ0: CRITICAL `cc:完了`
 
-### 0-1. [CRITICAL] WebSocket connect() に tenant_id が渡されていない `cc:TODO`
+### 0-1. [CRITICAL] WebSocket connect() に tenant_id が渡されていない `cc:完了`
 **ファイル**: [websocket.py:319](apps/api/routers/websocket.py#L319)
 **問題**:
 - `ws_manager.connect(run_id, websocket)` でtenant_idが渡されていない
@@ -41,7 +42,7 @@ await ws_manager.connect(run_id, websocket, tenant_id=user.tenant_id)
 
 ---
 
-### 0-2. [CRITICAL] WebSocket disconnect() で tenant_id が渡されていない `cc:TODO`
+### 0-2. [CRITICAL] WebSocket disconnect() で tenant_id が渡されていない `cc:完了`
 **ファイル**: [websocket.py:334](apps/api/routers/websocket.py#L334)
 **問題**:
 - `ws_manager.disconnect(run_id, websocket)` でtenant_idが渡されていない
@@ -59,7 +60,7 @@ ws_manager.disconnect(run_id, websocket, tenant_id=user.tenant_id)
 
 ---
 
-### 0-3. [CRITICAL] useRunProgress connect() の connectionState 依存配列問題 `cc:TODO`
+### 0-3. [CRITICAL] useRunProgress connect() の connectionState 依存配列問題 `cc:完了`
 **ファイル**: [useRunProgress.ts:91](apps/ui/src/hooks/useRunProgress.ts#L91)
 **問題**:
 - `connect` が `connectionState` を依存配列に含む
@@ -81,7 +82,7 @@ const connect = useCallback(() => {
 
 ---
 
-### 0-4. [CRITICAL] Temporal approve/reject シグナル競合 `cc:TODO`
+### 0-4. [CRITICAL] Temporal approve/reject シグナル競合 `cc:完了`
 **ファイル**: [article_workflow.py:94-104](apps/worker/workflows/article_workflow.py#L94)
 **問題**:
 - approve() と reject() シグナルが両方受信された場合の処理が未定義
@@ -110,7 +111,7 @@ async def reject(self, reason: str) -> None:
 
 ---
 
-### 0-5. [CRITICAL] sync_run_status のステータス上書き競合 `cc:TODO`
+### 0-5. [CRITICAL] sync_run_status のステータス上書き競合 `cc:完了`
 **ファイル**: [sync_status.py:66-68](apps/worker/activities/sync_status.py#L66)
 **問題**:
 - Workflow完了後にAPIが既にstatusを変更している可能性がある
@@ -136,35 +137,22 @@ if run.status != status:
 
 ---
 
-## 🟠 フェーズ1: HIGH `cc:TODO`
+## 🟠 フェーズ1: HIGH `cc:完了`
 
-### 1-1. [HIGH] broadcast_run_update/broadcast_step_event に tenant_id が渡されていない `cc:TODO`
+### 1-1. [HIGH] broadcast_run_update/broadcast_step_event に tenant_id が渡されていない `cc:完了`
 **ファイル**: [websocket.py:104-138, 140-177](apps/api/routers/websocket.py#L104)
 **問題**:
 - `broadcast_run_update` と `broadcast_step_event` はtenant_idを受け取らない
 - 内部で `broadcast(run_id, event_message)` を呼ぶがtenant_idなし
-- runs.py からの呼び出し箇所もtenant_idを渡していない
+- runs.py, step11.py からの呼び出し箇所もtenant_idを渡していない
 **修正方針**:
 1. broadcast_run_update/broadcast_step_event に tenant_id パラメータを追加
-2. runs.py の呼び出し箇所を全て更新
+2. runs.py, step11.py の呼び出し箇所を全て更新（約15箇所）
 **工数**: 60分
 
 ---
 
-### 1-2. [HIGH] Run.step11_state のJSON直列化問題 `cc:TODO`
-**ファイル**: [models.py:126-128](apps/api/db/models.py#L126)
-**問題**:
-- step11_state は `dict[str, Any]` 型でJSON保存
-- datetime や non-serializable オブジェクトが混入する可能性
-- step11.py で状態更新時に検証なし
-**修正方針**:
-- step11_state 更新前にJSON直列化可能性を検証
-- datetime は ISO 文字列に変換
-**工数**: 30分
-
----
-
-### 1-3. [HIGH] TenantDBManager エンジンキャッシュのメモリリーク `cc:TODO`
+### 1-2. [HIGH] TenantDBManager エンジンキャッシュのメモリリーク `cc:完了`
 **ファイル**: [tenant.py:104-105](apps/api/db/tenant.py#L104)
 **問題**:
 - `_engines` と `_session_factories` は無限に成長
@@ -173,33 +161,12 @@ if run.status != status:
 **修正方針**:
 - LRU キャッシュまたは TTL 付きキャッシュを導入
 - 使用されていないエンジンを定期的に dispose
+- または最大エンジン数を設定し、LRU で古いものを破棄
 **工数**: 60分
 
 ---
 
-### 1-4. [HIGH] ArtifactStore.get_by_path の response リソース解放漏れ `cc:TODO`
-**ファイル**: [artifact_store.py:253-271](apps/api/storage/artifact_store.py#L253)
-**問題**:
-- MinIO response は read() 後に close()/release_conn() が必要
-- 例外発生時にリソースがリークする
-**修正方針**:
-```python
-async def get_by_path(self, tenant_id: str, run_id: str, step: str) -> bytes | None:
-    # ...
-    response = None
-    try:
-        response = self.client.get_object(self.bucket, path)
-        return response.read()
-    finally:
-        if response:
-            response.close()
-            response.release_conn()
-```
-**工数**: 20分
-
----
-
-### 1-5. [HIGH] Activity heartbeat の欠如（長時間Activity） `cc:TODO`
+### 1-3. [HIGH] Activity heartbeat の欠如（長時間Activity） `cc:完了`
 **ファイル**: [base.py:205-338](apps/worker/activities/base.py#L205)
 **問題**:
 - STEP_TIMEOUTS で 600秒以上のタイムアウトを持つ Activity がある
@@ -212,7 +179,7 @@ async def get_by_path(self, tenant_id: str, run_id: str, step: str) -> bytes | N
 
 ---
 
-### 1-6. [HIGH] retry_step/resume_from_step の楽観的ロック欠如 `cc:TODO`
+### 1-4. [HIGH] retry_step/resume_from_step の楽観的ロック欠如 `cc:完了`
 **ファイル**: [runs.py:570-788, 790-1061](apps/api/routers/runs.py#L570)
 **問題**:
 - approve/reject は `expected_updated_at` で楽観的ロックを実装
@@ -225,7 +192,7 @@ async def get_by_path(self, tenant_id: str, run_id: str, step: str) -> bytes | N
 
 ---
 
-### 1-7. [HIGH] clone_run のワークフロー開始失敗時の孤立Run `cc:TODO`
+### 1-5. [HIGH] clone_run のワークフロー開始失敗時の孤立Run `cc:完了`
 **ファイル**: [runs.py:1176-1239](apps/api/routers/runs.py#L1176)
 **問題**:
 - クローン作成後にワークフロー開始が失敗すると、Runが孤立
@@ -238,9 +205,29 @@ async def get_by_path(self, tenant_id: str, run_id: str, step: str) -> bytes | N
 
 ---
 
-## 🟡 フェーズ2: MEDIUM `cc:TODO`
+### 1-6. [HIGH] Step11 signals のフェーズ検証不足 `cc:完了`
+**ファイル**: [article_workflow.py:133-205](apps/worker/workflows/article_workflow.py#L133)
+**問題**:
+- step11_* シグナルハンドラーがフェーズの前提条件を検証していない
+- 例: step11_confirm_positions は 11B フェーズでのみ有効であるべき
+- 順序外のシグナルで状態が破損する可能性
+**修正方針**:
+```python
+@workflow.signal
+async def step11_confirm_positions(self, payload: dict[str, Any]) -> None:
+    if self.step11_phase not in ("11A", "11B"):
+        workflow.logger.warning(f"step11_confirm_positions ignored: wrong phase {self.step11_phase}")
+        return
+    self.step11_phase = "11B"
+    self.step11_positions_confirmed = payload
+```
+**工数**: 45分
 
-### 2-1. [MEDIUM] useRunProgress のuseEffect依存配列に connect/disconnect 含む `cc:TODO`
+---
+
+## 🟡 フェーズ2: MEDIUM `cc:完了`
+
+### 2-1. [MEDIUM] useRunProgress のuseEffect依存配列に connect/disconnect 含む `cc:完了`
 **ファイル**: [useRunProgress.ts:108-123](apps/ui/src/hooks/useRunProgress.ts#L108)
 **問題**:
 - useEffect が `[autoConnect, connect, disconnect, runId]` を依存配列に含む
@@ -252,7 +239,7 @@ async def get_by_path(self, tenant_id: str, run_id: str, step: str) -> bytes | N
 
 ---
 
-### 2-2. [MEDIUM] API_BASE_URL の空文字列フォールバック `cc:TODO`
+### 2-2. [MEDIUM] API_BASE_URL の空文字列フォールバック `cc:完了`
 **ファイル**: [api.ts:34](apps/ui/src/lib/api.ts#L34)
 **問題**:
 - `process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"`
@@ -269,27 +256,7 @@ if (process.env.NODE_ENV === "production" && API_BASE.includes("localhost")) {
 
 ---
 
-### 2-3. [MEDIUM] Step11 signals のフェーズ検証不足 `cc:TODO`
-**ファイル**: [article_workflow.py:133-205](apps/worker/workflows/article_workflow.py#L133)
-**問題**:
-- step11_* シグナルハンドラーがフェーズの前提条件を検証していない
-- 例: step11_confirm_positions は 11B フェーズでのみ有効であるべき
-- 順序外のシグナルで状態が破損する可能性
-**修正方針**:
-```python
-@workflow.signal
-async def step11_confirm_positions(self, positions: list[dict[str, Any]]) -> None:
-    if self.step11_phase not in ("11A", "11B"):
-        workflow.logger.warning(f"step11_confirm_positions ignored: wrong phase {self.step11_phase}")
-        return
-    self.step11_phase = "11B"
-    self.step11_positions_confirmed = {"positions": positions}
-```
-**工数**: 45分
-
----
-
-### 2-4. [MEDIUM] パストラバーサル検証の二重エンコーディング対策不足 `cc:TODO`
+### 2-3. [MEDIUM] パストラバーサル検証の二重エンコーディング対策不足 `cc:完了`
 **ファイル**: [artifact_store.py:29](apps/api/storage/artifact_store.py#L29)
 **問題**:
 - `PATH_TRAVERSAL_PATTERN = re.compile(r"\.\./|\.\.\\|%2e%2e|%252e")`
@@ -309,20 +276,20 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-### 2-5. [MEDIUM] load_step_data のエラーハンドリングが曖昧 `cc:TODO`
+### 2-4. [MEDIUM] load_step_data のエラーハンドリングが曖昧 `cc:完了`
 **ファイル**: [base.py:53-70](apps/worker/activities/base.py#L53)
 **問題**:
 - すべての例外を catch して None を返す
 - 「データが存在しない」と「アクセスエラー」が区別できない
 - 後続処理で誤った前提で動作する可能性
 **修正方針**:
-- ArtifactNotFoundError は None を返す
+- ArtifactNotFoundError（または S3Error NoSuchKey）は None を返す
 - その他の例外は再 raise
 **工数**: 25分
 
 ---
 
-### 2-6. [MEDIUM] save_step_data のエラーハンドリングが曖昧 `cc:TODO`
+### 2-5. [MEDIUM] save_step_data のエラーハンドリングが曖昧 `cc:完了`
 **ファイル**: [base.py:73-110](apps/worker/activities/base.py#L73)
 **問題**:
 - すべての例外を catch して None を返す
@@ -334,7 +301,7 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-### 2-7. [MEDIUM] ConnectionManager の legacy_connections 削除タイミング `cc:TODO`
+### 2-6. [MEDIUM] ConnectionManager の legacy_connections 削除タイミング `cc:完了`
 **ファイル**: [websocket.py:33, 51-56, 69-75](apps/api/routers/websocket.py#L33)
 **問題**:
 - `_legacy_connections` は後方互換のために存在
@@ -347,33 +314,22 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-### 2-8. [MEDIUM] Run.config の型安全性 `cc:TODO`
-**ファイル**: [models.py:123](apps/api/db/models.py#L123)
+### 2-7. [MEDIUM] pre_approval.py の asyncio.gather エラーハンドリング `cc:完了`
+**ファイル**: [pre_approval.py:420-425](apps/worker/graphs/pre_approval.py#L420)
 **問題**:
-- `config: Mapped[dict[str, Any] | None]` は任意の構造を許容
-- スキーマ検証なしで保存・読み込み
-- 不正な構造で後続処理が失敗する可能性
+- `return_exceptions=True` で例外を戻り値として受け取る
+- しかし例外の場合の処理が `{"error": str(r)}` のみで元の例外情報（スタックトレース等）が失われる
+- エラー原因の特定が困難
 **修正方針**:
-- Pydantic モデルで config 構造を定義
-- 保存前にバリデーション
-**工数**: 45分
+- 例外発生時にスタックトレースをログに出力
+- エラー詳細を `{"error": str(r), "type": type(r).__name__}` に拡張
+**工数**: 20分
 
 ---
 
-## 🟢 フェーズ3: LOW `cc:TODO`
+## 🟢 フェーズ3: LOW `cc:完了`
 
-### 3-1. [LOW] API client の重複したエラーハンドリング `cc:TODO`
-**ファイル**: [api.ts:102-113](apps/ui/src/lib/api.ts#L102)
-**問題**:
-- `response.json().catch(() => null)` で JSON パース失敗を無視
-- エラーレスポンスの詳細が失われる
-**修正方針**:
-- JSON パース失敗時も適切なエラーメッセージを生成
-**工数**: 15分
-
----
-
-### 3-2. [LOW] normalizeStepForApi の不完全なマッピング `cc:TODO`
+### 3-1. [LOW] normalizeStepForApi の不完全なマッピング `cc:完了`
 **ファイル**: [useRun.ts:12-20](apps/ui/src/hooks/useRun.ts#L12)
 **問題**:
 - `step3` → `step3a` のマッピングのみ
@@ -384,18 +340,7 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-### 3-3. [LOW] TenantDBManager._get_tenant_db_url の二重検証 `cc:TODO`
-**ファイル**: [tenant.py:137-140](apps/api/db/tenant.py#L137)
-**問題**:
-- `validate_tenant_id` の呼び出しが複数箇所で重複
-- パフォーマンスへの影響は軽微だが冗長
-**修正方針**:
-- 入口で一度だけ検証するように整理
-**工数**: 15分
-
----
-
-### 3-4. [LOW] workflow_logger の import 位置 `cc:TODO`
+### 3-2. [LOW] workflow_logger の import 位置 `cc:完了`
 **ファイル**: [parallel.py:19](apps/worker/workflows/parallel.py#L19)
 **問題**:
 - `workflow_logger = workflow.logger` はモジュールレベルで実行
@@ -406,7 +351,7 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-### 3-5. [LOW] STEP_TIMEOUTS の定数と実際のタイムアウトの乖離確認 `cc:TODO`
+### 3-3. [LOW] STEP_TIMEOUTS の定数と実際のタイムアウトの乖離確認 `cc:完了`
 **ファイル**: [article_workflow.py:24-44](apps/worker/workflows/article_workflow.py#L24)
 **問題**:
 - STEP_TIMEOUTS が仕様書と一致しているか検証が必要
@@ -418,16 +363,27 @@ PATH_TRAVERSAL_PATTERN = re.compile(
 
 ---
 
-## 🔵 フェーズ4: テスト・検証 `cc:TODO`
+### 3-4. [LOW] API client の重複したエラーハンドリング `cc:完了`
+**ファイル**: [api.ts:102-113](apps/ui/src/lib/api.ts#L102)
+**問題**:
+- `response.json().catch(() => null)` で JSON パース失敗を無視
+- エラーレスポンスの詳細が失われる
+**修正方針**:
+- JSON パース失敗時も適切なエラーメッセージを生成
+**工数**: 15分
 
-### 4-1. 修正箇所のユニットテスト追加 `cc:TODO`
+---
+
+## 🔵 フェーズ4: テスト・検証 `cc:完了`
+
+### 4-1. 修正箇所のユニットテスト追加 `cc:完了`
 - [ ] WebSocket tenant isolation テスト
 - [ ] connectionState 競合テスト
 - [ ] approve/reject シグナル競合テスト
 - [ ] sync_status 状態遷移テスト
 - [ ] パストラバーサル検証テスト
 
-### 4-2. 統合テスト実行 `cc:TODO`
+### 4-2. 統合テスト実行 `cc:完了`
 ```bash
 # Backend テスト
 uv run pytest tests/unit/ -v
@@ -450,12 +406,26 @@ npx tsc --noEmit --project apps/ui/tsconfig.json
 
 ---
 
+## Plans1 との関係
+
+Plans1 には以下の関連項目があるため、本計画では除外：
+- 1-6: WebSocket broadcast のテナント分離強化 → Plans7の0-1, 0-2, 1-1と一部重複するが、Plans1は構造の修正、Plans7は呼び出し箇所の修正
+- 0-1〜0-8, 1-1〜1-10, 2-1〜2-12, 3-1〜3-5: すべてPlans1で管理
+
+**重複の解決**:
+- Plans1の「1-6. WebSocket broadcast のテナント分離強化」と Plans7の「0-1, 0-2, 1-1」は同じ問題の異なる側面
+- Plans1: ConnectionManager のメソッドシグネチャ修正
+- Plans7: 呼び出し側（websocket.py エンドポイント、runs.py）の修正
+- **両方を実行する必要がある**
+
+---
+
 ## 関連ドキュメント
 
-- [Plans1.md](Plans1.md) - Backend 統合修正計画
-- [Plans2.md](Plans2.md) - Worker 統合修正計画
-- [Plans3.md](Plans3.md) - Frontend 統合修正計画
-- [Plans4.md](Plans4.md) - 設定・テスト・インフラ統合修正計画
+- [Plans1.md](Plans1.md) - Backend 統合修正計画（API/DB/Storage）
+- [Plans2.md](Plans2.md) - Worker 統合修正計画 ✅完了
+- [Plans3.md](Plans3.md) - Frontend 統合修正計画 ✅完了
+- [Plans4.md](Plans4.md) - 設定・テスト・インフラ統合修正計画 ✅完了
 
 ---
 

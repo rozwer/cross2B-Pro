@@ -14,8 +14,11 @@ import asyncio
 import logging
 import os
 import re
+import time
+from collections import OrderedDict
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import NamedTuple
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -28,6 +31,9 @@ from sqlalchemy.ext.asyncio import (
 from .models import Base, Tenant
 
 logger = logging.getLogger(__name__)
+
+# Maximum number of tenant engines to cache (LRU eviction beyond this limit)
+MAX_CACHED_ENGINES = int(os.getenv("MAX_TENANT_ENGINES", "50"))
 
 # VULN-004: tenant_id に許可する文字パターン（英数字とハイフン、アンダースコアのみ）
 SAFE_TENANT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
@@ -74,6 +80,14 @@ class TenantIdValidationError(TenantDBError):
     pass
 
 
+class _CachedEngine(NamedTuple):
+    """Cached engine with metadata for LRU tracking."""
+
+    engine: AsyncEngine
+    session_factory: async_sessionmaker[AsyncSession]
+    last_used: float
+
+
 class TenantDBManager:
     """Manages connections to tenant-specific databases.
 
@@ -99,13 +113,17 @@ class TenantDBManager:
         )
         self.pool_size = pool_size
         self.max_overflow = max_overflow
+        self.max_cached_engines = MAX_CACHED_ENGINES
 
-        # Cache of tenant engines and session factories
-        self._engines: dict[str, AsyncEngine] = {}
-        self._session_factories: dict[str, async_sessionmaker[AsyncSession]] = {}
+        # LRU cache of tenant engines (OrderedDict maintains insertion/access order)
+        # Structure: {tenant_id: _CachedEngine}
+        self._engine_cache: OrderedDict[str, _CachedEngine] = OrderedDict()
 
         # Lock for thread-safe engine creation (prevents race condition creating duplicate engines)
         self._engine_lock = asyncio.Lock()
+
+        # Pending engine disposals (to avoid blocking during cache eviction)
+        self._pending_disposals: list[AsyncEngine] = []
 
         # Common DB engine
         self._common_engine: AsyncEngine = create_async_engine(
@@ -151,35 +169,88 @@ class TenantDBManager:
                 raise TenantDBError(f"Tenant is inactive: {tenant_id}")
             return str(row.database_url)
 
-    async def _get_or_create_engine(self, tenant_id: str, db_url: str) -> AsyncEngine:
+    async def _get_or_create_engine(self, tenant_id: str, db_url: str) -> _CachedEngine:
         """Get or create engine for tenant (thread-safe with asyncio.Lock).
 
         Uses double-checked locking pattern: first check without lock for fast path,
         then acquire lock and check again to prevent race condition.
+
+        LRU eviction: When cache exceeds max_cached_engines, oldest unused engines are disposed.
+
+        Returns:
+            _CachedEngine containing engine, session_factory, and last_used timestamp
         """
-        # Fast path: check without lock
-        if tenant_id in self._engines:
-            return self._engines[tenant_id]
+        # Fast path: check without lock and update last_used
+        if tenant_id in self._engine_cache:
+            # Move to end (most recently used) and update timestamp
+            cached = self._engine_cache[tenant_id]
+            self._engine_cache.move_to_end(tenant_id)
+            self._engine_cache[tenant_id] = _CachedEngine(
+                engine=cached.engine,
+                session_factory=cached.session_factory,
+                last_used=time.time(),
+            )
+            return self._engine_cache[tenant_id]
 
         # Slow path: acquire lock and check again
         async with self._engine_lock:
             # Double-check after acquiring lock (another coroutine may have created it)
-            if tenant_id in self._engines:
-                return self._engines[tenant_id]
+            if tenant_id in self._engine_cache:
+                cached = self._engine_cache[tenant_id]
+                self._engine_cache.move_to_end(tenant_id)
+                self._engine_cache[tenant_id] = _CachedEngine(
+                    engine=cached.engine,
+                    session_factory=cached.session_factory,
+                    last_used=time.time(),
+                )
+                return self._engine_cache[tenant_id]
 
+            # Evict oldest engines if cache is full
+            await self._evict_oldest_engines()
+
+            # Create new engine
             engine = create_async_engine(
                 db_url,
                 pool_size=self.pool_size,
                 max_overflow=self.max_overflow,
                 pool_pre_ping=True,  # Health check before each connection use
             )
-            self._engines[tenant_id] = engine
-            self._session_factories[tenant_id] = async_sessionmaker(
+            session_factory = async_sessionmaker(
                 engine,
                 class_=AsyncSession,
                 expire_on_commit=False,
             )
-            return engine
+            cached_engine = _CachedEngine(
+                engine=engine,
+                session_factory=session_factory,
+                last_used=time.time(),
+            )
+            self._engine_cache[tenant_id] = cached_engine
+            logger.debug(f"Created engine for tenant {tenant_id}, cache size: {len(self._engine_cache)}")
+            return cached_engine
+
+    async def _evict_oldest_engines(self) -> None:
+        """Evict oldest engines when cache exceeds limit.
+
+        Must be called while holding _engine_lock.
+        """
+        while len(self._engine_cache) >= self.max_cached_engines:
+            # Pop oldest (first) item
+            oldest_tenant_id, oldest_cached = self._engine_cache.popitem(last=False)
+            logger.info(f"Evicting engine for tenant {oldest_tenant_id} (LRU cache full)")
+
+            # Schedule disposal without blocking (to avoid deadlock)
+            self._pending_disposals.append(oldest_cached.engine)
+
+        # Process pending disposals asynchronously
+        if self._pending_disposals:
+            engines_to_dispose = self._pending_disposals.copy()
+            self._pending_disposals.clear()
+            for engine in engines_to_dispose:
+                try:
+                    await engine.dispose()
+                except Exception as e:
+                    logger.warning(f"Error disposing engine: {e}")
 
     @asynccontextmanager
     async def get_session(
@@ -209,9 +280,9 @@ class TenantDBManager:
             raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         db_url = await self._get_tenant_db_url(tenant_id)
-        await self._get_or_create_engine(tenant_id, db_url)
+        cached_engine = await self._get_or_create_engine(tenant_id, db_url)
 
-        async with self._session_factories[tenant_id]() as session:
+        async with cached_engine.session_factory() as session:
             try:
                 if isolation_level:
                     # Set isolation level for this transaction
@@ -352,10 +423,9 @@ class TenantDBManager:
             raise TenantDBError("Unexpected database name format")
 
         # Close any existing connections
-        if tenant_id in self._engines:
-            await self._engines[tenant_id].dispose()
-            del self._engines[tenant_id]
-            del self._session_factories[tenant_id]
+        if tenant_id in self._engine_cache:
+            cached = self._engine_cache.pop(tenant_id)
+            await cached.engine.dispose()
 
         # Drop database
         from sqlalchemy import create_engine
@@ -390,11 +460,10 @@ class TenantDBManager:
 
     async def close(self) -> None:
         """Close all database connections."""
-        for engine in self._engines.values():
-            await engine.dispose()
+        for cached in self._engine_cache.values():
+            await cached.engine.dispose()
         await self._common_engine.dispose()
-        self._engines.clear()
-        self._session_factories.clear()
+        self._engine_cache.clear()
 
     async def get_engine(self, tenant_id: str) -> AsyncEngine:
         """Get or create engine for tenant.
@@ -413,7 +482,8 @@ class TenantDBManager:
             raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
 
         db_url = await self._get_tenant_db_url(tenant_id)
-        return await self._get_or_create_engine(tenant_id, db_url)
+        cached = await self._get_or_create_engine(tenant_id, db_url)
+        return cached.engine
 
 
 # =============================================================================

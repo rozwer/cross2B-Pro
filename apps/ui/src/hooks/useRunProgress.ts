@@ -27,11 +27,12 @@ export function useRunProgress(
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [status, setStatus] = useState<RunStatus>("pending");
   const [wsStatus, setWsStatus] = useState<WebSocketStatus>("disconnected");
-  const [connectionState, setConnectionState] = useState<'idle' | 'connecting' | 'connected'>('idle');
 
   const wsRef = useRef<ReturnType<typeof createRunProgressWebSocket> | null>(null);
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
+  // Use ref to track connection state without causing re-renders or dependency issues
+  const connectionStateRef = useRef<'idle' | 'connecting' | 'connected'>('idle');
 
   const handleMessage = useCallback((event: ProgressEvent) => {
     setEvents((prev) => [...prev, event]);
@@ -59,7 +60,7 @@ export function useRunProgress(
 
   const connect = useCallback(() => {
     // Guard against multiple concurrent connection attempts
-    if (connectionState === 'connecting') {
+    if (connectionStateRef.current === 'connecting') {
       return;
     }
 
@@ -69,33 +70,33 @@ export function useRunProgress(
       wsRef.current = null;
     }
 
-    setConnectionState('connecting');
+    connectionStateRef.current = 'connecting';
 
     wsRef.current = createRunProgressWebSocket(runId, {
       onMessage: handleMessage,
-      onStatusChange: (status) => {
-        setWsStatus(status);
-        if (status === 'connected') {
-          setConnectionState('connected');
-        } else if (status === 'disconnected' || status === 'error') {
-          setConnectionState('idle');
+      onStatusChange: (newStatus) => {
+        setWsStatus(newStatus);
+        if (newStatus === 'connected') {
+          connectionStateRef.current = 'connected';
+        } else if (newStatus === 'disconnected' || newStatus === 'error') {
+          connectionStateRef.current = 'idle';
         }
       },
       onError: (error) => {
         console.error("WebSocket error:", error);
-        setConnectionState('idle');
+        connectionStateRef.current = 'idle';
       },
     });
 
     wsRef.current.connect();
-  }, [runId, handleMessage, connectionState]);
+  }, [runId, handleMessage]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
       wsRef.current.disconnect();
       wsRef.current = null;
     }
-    setConnectionState('idle');
+    connectionStateRef.current = 'idle';
   }, []);
 
   const clearEvents = useCallback(() => {
@@ -104,6 +105,13 @@ export function useRunProgress(
 
   // Track previous runId to detect changes
   const prevRunIdRef = useRef<string>(runId);
+
+  // Store connect/disconnect in refs to avoid useEffect dependency changes
+  // This prevents unnecessary reconnections when the callbacks are recreated
+  const connectRef = useRef(connect);
+  const disconnectRef = useRef(disconnect);
+  connectRef.current = connect;
+  disconnectRef.current = disconnect;
 
   useEffect(() => {
     // If runId changed, clear events from previous run
@@ -114,13 +122,13 @@ export function useRunProgress(
     }
 
     if (autoConnect) {
-      connect();
+      connectRef.current();
     }
 
     return () => {
-      disconnect();
+      disconnectRef.current();
     };
-  }, [autoConnect, connect, disconnect, runId]);
+  }, [autoConnect, runId]);
 
   return {
     events,

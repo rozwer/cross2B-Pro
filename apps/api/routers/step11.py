@@ -25,10 +25,10 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from sqlalchemy import select
 
 from apps.api.auth import get_current_user
@@ -36,6 +36,7 @@ from apps.api.auth.schemas import AuthUser
 from apps.api.db import Artifact as ArtifactModel
 from apps.api.db import AuditLogger, Run, Step, TenantDBManager
 from apps.api.llm import ImageGenerationConfig, NanoBananaClient
+from apps.api.schemas.enums import RunStatus
 from apps.api.storage import ArtifactStore
 
 logger = logging.getLogger(__name__)
@@ -76,20 +77,11 @@ def get_ws_manager() -> Any:
 
 
 # =============================================================================
-# Enums
+# Constants
 # =============================================================================
 
-
-class RunStatus:
-    """Run status values"""
-
-    PENDING = "pending"
-    RUNNING = "running"
-    WAITING_APPROVAL = "waiting_approval"
-    WAITING_IMAGE_INPUT = "waiting_image_input"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+STEP11_IMAGE_COUNT_MIN = 1
+STEP11_IMAGE_COUNT_MAX = 10
 
 
 # =============================================================================
@@ -101,14 +93,14 @@ class Step11StartInput(BaseModel):
     """画像生成開始入力"""
 
     enabled: bool = True
-    image_count: int = Field(default=3, ge=1, le=5)
+    image_count: int = Field(default=3, ge=STEP11_IMAGE_COUNT_MIN, le=STEP11_IMAGE_COUNT_MAX)
     position_request: str | None = None
 
 
 class Step11SettingsInput(BaseModel):
     """11A: 設定入力"""
 
-    image_count: int = Field(ge=1, le=10, default=3)
+    image_count: int = Field(ge=STEP11_IMAGE_COUNT_MIN, le=STEP11_IMAGE_COUNT_MAX, default=3)
     position_request: str = Field(default="", max_length=500)
 
 
@@ -191,20 +183,50 @@ class FinalizeInput(BaseModel):
     """11E: 完了確認入力"""
 
     confirmed: bool = True
-    restart_from: str | None = None
+    restart_from: Literal["11A", "11B", "11C", "11D"] | None = None
 
 
 class Step11State(BaseModel):
-    """Step11 の状態"""
+    """Step11 の状態
+
+    VULN-014: List型フィールドのdict/Pydantic混在修正
+    - DBから読み込んだdictを適切にPydanticモデルに変換
+    - 型の一貫性を保証
+    """
 
     phase: str = "idle"  # idle, 11A, 11B, 11C, 11D, 11E, completed, skipped
     settings: Step11SettingsInput | None = None
-    positions: list[ImagePosition] = []
-    instructions: list[ImageInstruction] = []
-    images: list[GeneratedImage] = []
+    positions: list[ImagePosition] = Field(default_factory=list)
+    instructions: list[ImageInstruction] = Field(default_factory=list)
+    images: list[GeneratedImage] = Field(default_factory=list)
     analysis_summary: str = ""
-    sections: list[dict[str, Any]] = []
+    sections: list[dict[str, Any]] = Field(default_factory=list)
     error: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_list_items(cls, data: dict[str, Any]) -> dict[str, Any]:
+        """Ensure list items are properly typed (VULN-014).
+
+        DBから読み込んだデータでlist内の要素がdictのままの場合、
+        適切なPydanticモデルに変換する。
+        """
+        if not isinstance(data, dict):
+            return data
+
+        # positions: list[ImagePosition]
+        if "positions" in data and isinstance(data["positions"], list):
+            data["positions"] = [ImagePosition(**item) if isinstance(item, dict) else item for item in data["positions"]]
+
+        # instructions: list[ImageInstruction]
+        if "instructions" in data and isinstance(data["instructions"], list):
+            data["instructions"] = [ImageInstruction(**item) if isinstance(item, dict) else item for item in data["instructions"]]
+
+        # images: list[GeneratedImage]
+        if "images" in data and isinstance(data["images"], list):
+            data["images"] = [GeneratedImage(**item) if isinstance(item, dict) else item for item in data["images"]]
+
+        return data
 
 
 # =============================================================================
@@ -229,6 +251,36 @@ def get_artifact_store() -> ArtifactStore:
     return _artifact_store
 
 
+async def _load_step11_state(
+    run: Run,
+    session: Any,
+    user: AuthUser,
+    *,
+    action: str,
+) -> Step11State:
+    """Load Step11State with validation and reset on corruption."""
+    state_data = run.step11_state or {}
+    try:
+        return Step11State(**state_data)
+    except ValidationError as exc:
+        logger.warning(
+            "Invalid step11_state detected; resetting to default",
+            extra={"run_id": str(run.id), "tenant_id": run.tenant_id, "action": action},
+        )
+        default_state = Step11State()
+        run.step11_state = default_state.model_dump()
+        run.updated_at = datetime.now()
+        audit = AuditLogger(session)
+        await audit.log(
+            user_id=user.user_id,
+            action="step11_state_reset",
+            resource_type="run",
+            resource_id=str(run.id),
+            details={"source": action, "error": str(exc)},
+        )
+        return default_state
+
+
 async def get_run_and_state(
     run_id: str,
     user: AuthUser,
@@ -246,9 +298,7 @@ async def get_run_and_state(
             logger.error(f"Run not found: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
-        # step11_state を取得（なければデフォルト）
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="get_run_and_state")
 
         return run, state
 
@@ -262,7 +312,7 @@ async def save_step11_state(
     db_manager = get_tenant_db_manager()
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -612,7 +662,7 @@ async def submit_settings(
 
     async with db_manager.get_session(tenant_id) as session:
         # Run を取得
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -650,7 +700,7 @@ async def submit_settings(
 
         run.step11_state = state.model_dump()
         run.current_step = "step11_position_review"
-        run.status = "waiting_image_input"
+        run.status = RunStatus.WAITING_IMAGE_INPUT.value
         run.updated_at = datetime.now()
 
         # 監査ログ
@@ -701,7 +751,7 @@ async def confirm_positions(
     tenant_id = user.tenant_id
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -709,8 +759,7 @@ async def confirm_positions(
             logger.error(f"Run not found for position confirm: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="confirm_positions")
 
         if data.reanalyze:
             # 再分析
@@ -742,7 +791,6 @@ async def confirm_positions(
 
         run.step11_state = state.model_dump()
         run.updated_at = datetime.now()
-        await session.commit()
 
         # Temporal signalを送信してWorkflowを再開
         try:
@@ -761,6 +809,8 @@ async def confirm_positions(
         except Exception as sig_error:
             logger.error(f"Failed to send step11_confirm_positions signal: {sig_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+        await session.commit()
 
     return {
         "success": True,
@@ -782,7 +832,7 @@ async def submit_instructions(
     tenant_id = user.tenant_id
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -790,8 +840,7 @@ async def submit_instructions(
             logger.error(f"Run not found for instructions: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="submit_instructions")
         state.instructions = data.instructions
 
         # 画像生成を実行
@@ -815,7 +864,6 @@ async def submit_instructions(
         run.step11_state = state.model_dump()
         run.current_step = "step11_image_review"
         run.updated_at = datetime.now()
-        await session.commit()
 
         # Temporal signalを送信してWorkflowを再開
         try:
@@ -829,6 +877,8 @@ async def submit_instructions(
         except Exception as sig_error:
             logger.error(f"Failed to send step11_submit_instructions signal: {sig_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+        await session.commit()
 
     return {
         "success": True,
@@ -867,7 +917,7 @@ async def retry_image(
     tenant_id = user.tenant_id
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -875,8 +925,7 @@ async def retry_image(
             logger.error(f"Run not found for image retry: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="retry_image")
 
         positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
 
@@ -932,7 +981,7 @@ async def review_images(
     tenant_id = user.tenant_id
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -940,8 +989,7 @@ async def review_images(
             logger.error(f"Run not found for image review: run_id={run_id}, tenant_id={tenant_id}")
             raise HTTPException(status_code=404, detail="Run not found")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="review_images")
 
         positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
         existing_images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
@@ -987,7 +1035,6 @@ async def review_images(
 
         run.step11_state = state.model_dump()
         run.updated_at = datetime.now()
-        await session.commit()
 
         # Temporal signalを送信してWorkflowを再開
         try:
@@ -1001,6 +1048,8 @@ async def review_images(
         except Exception as sig_error:
             logger.error(f"Failed to send step11_review_images signal: {sig_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+        await session.commit()
 
     return {
         "success": True,
@@ -1063,7 +1112,7 @@ async def finalize_images(
     tenant_id = user.tenant_id
 
     async with db_manager.get_session(tenant_id) as session:
-        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+        query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
         result = await session.execute(query)
         run = result.scalar_one_or_none()
 
@@ -1077,8 +1126,7 @@ async def finalize_images(
             logger.info(f"Step11 restart from phase: {restart_phase}")
 
             # フェーズに応じた状態リセット
-            state_data = run.step11_state or {}
-            state = Step11State(**state_data)
+            state = await _load_step11_state(run, session, user, action="finalize_restart")
 
             if restart_phase == "11A":
                 # 最初からやり直し
@@ -1110,8 +1158,7 @@ async def finalize_images(
             logger.warning(f"Finalize without confirmation: run_id={run_id}")
             raise HTTPException(status_code=400, detail="Confirmation required")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="finalize")
 
         # Step10 の記事を取得
         try:
@@ -1152,7 +1199,7 @@ async def finalize_images(
         state.phase = "completed"
         run.step11_state = state.model_dump()
         run.current_step = "step11"  # Keep at step11, Workflow will advance to step12
-        run.status = "running"  # Keep running, not completed
+        run.status = RunStatus.RUNNING.value  # Keep running, not completed
         run.updated_at = datetime.now()
 
         # Step11のステータスを更新（step_statusテーブル）
@@ -1192,11 +1239,6 @@ async def finalize_images(
             details={"image_count": len(images)},
         )
 
-        # Save previous state for rollback
-        previous_step11_state = run.step11_state
-
-        await session.commit()
-
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
@@ -1209,22 +1251,9 @@ async def finalize_images(
             logger.info("Temporal step11_finalize signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
             logger.error(f"Failed to send step11_finalize signal: {sig_error}", exc_info=True)
-            # Rollback DB state on signal failure
-            try:
-                async with db_manager.get_session(tenant_id) as rollback_session:
-                    rollback_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
-                    rollback_result = await rollback_session.execute(rollback_query)
-                    rollback_run = rollback_result.scalar_one_or_none()
-                    if rollback_run:
-                        rollback_run.step11_state = previous_step11_state
-                        rollback_run.current_step = "step11"
-                        rollback_run.status = "waiting_image_input"
-                        rollback_run.updated_at = datetime.now()
-                        await rollback_session.commit()
-                        logger.info(f"Rolled back step11 state for run {run_id}")
-            except Exception as rollback_error:
-                logger.error(f"Failed to rollback step11 state: {rollback_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+        await session.commit()
 
     return {
         "success": True,
@@ -1256,7 +1285,7 @@ async def skip_image_generation(
         # Note: Run status should remain "running" until Step12 completes
         # Only update step11_state, not the overall run status
         run.current_step = "step11"  # Keep at step11, Workflow will advance to step12
-        run.status = "running"  # Keep running, not completed
+        run.status = RunStatus.RUNNING.value  # Keep running, not completed
         run.updated_at = datetime.now()
 
         # 監査ログ
@@ -1269,11 +1298,6 @@ async def skip_image_generation(
             details={},
         )
 
-        # Save previous state for rollback
-        previous_step11_state = run.step11_state
-
-        await session.commit()
-
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
@@ -1282,22 +1306,9 @@ async def skip_image_generation(
             logger.info("Temporal step11_skip signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
             logger.error(f"Failed to send step11_skip signal: {sig_error}", exc_info=True)
-            # Rollback DB state on signal failure
-            try:
-                async with db_manager.get_session(tenant_id) as rollback_session:
-                    rollback_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
-                    rollback_result = await rollback_session.execute(rollback_query)
-                    rollback_run = rollback_result.scalar_one_or_none()
-                    if rollback_run:
-                        rollback_run.step11_state = previous_step11_state
-                        rollback_run.current_step = "step11"
-                        rollback_run.status = "waiting_image_input"
-                        rollback_run.updated_at = datetime.now()
-                        await rollback_session.commit()
-                        logger.info(f"Rolled back step11 skip state for run {run_id}")
-            except Exception as rollback_error:
-                logger.error(f"Failed to rollback step11 skip state: {rollback_error}", exc_info=True)
             raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+
+        await session.commit()
 
     return {"success": True, "phase": "skipped"}
 
@@ -1322,8 +1333,7 @@ async def regenerate_output(
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-        state_data = run.step11_state or {}
-        state = Step11State(**state_data)
+        state = await _load_step11_state(run, session, user, action="regenerate_output")
 
         if state.phase != "completed":
             raise HTTPException(status_code=400, detail="Step11 is not completed yet")
@@ -1411,14 +1421,14 @@ async def start_image_generation(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            allowed_statuses = [RunStatus.WAITING_APPROVAL, RunStatus.WAITING_IMAGE_INPUT]
+            allowed_statuses = [RunStatus.WAITING_APPROVAL.value, RunStatus.WAITING_IMAGE_INPUT.value]
             if run.status not in allowed_statuses:
                 raise HTTPException(
                     status_code=400,
@@ -1455,10 +1465,10 @@ async def start_image_generation(
                 raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
 
             # Run状態を更新
-            run.status = RunStatus.RUNNING
+            run.status = RunStatus.RUNNING.value
             run.updated_at = datetime.now()
 
-            await session.flush()
+            await session.commit()
 
             # WebSocket broadcast
             try:
@@ -1466,7 +1476,8 @@ async def start_image_generation(
                 await ws_manager.broadcast_run_update(
                     run_id=run_id,
                     event_type="run.image_generation_started",
-                    status=RunStatus.RUNNING,
+                    status=RunStatus.RUNNING.value,
+                    tenant_id=tenant_id,
                 )
             except Exception as ws_error:
                 logger.warning(f"WebSocket broadcast failed: {ws_error}")
@@ -1500,7 +1511,7 @@ async def complete_step11(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
@@ -1513,7 +1524,7 @@ async def complete_step11(
             existing_steps = {s.step_name: s for s in all_steps_result.scalars().all()}
 
             # レガシーrun対応: completedだがステップがない場合はバックフィル
-            if run.status == "completed" and len(existing_steps) == 0:
+            if run.status == RunStatus.COMPLETED.value and len(existing_steps) == 0:
                 import uuid
 
                 all_step_names = [
@@ -1589,6 +1600,7 @@ async def complete_step11(
                     event_type="step_completed",
                     status=run.status,
                     current_step="step11",
+                    tenant_id=tenant_id,
                 )
             except Exception as ws_error:
                 logger.warning(f"WebSocket broadcast failed: {ws_error}")
@@ -1630,14 +1642,14 @@ async def add_images_to_completed_run(
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            if run.status != RunStatus.COMPLETED:
+            if run.status != RunStatus.COMPLETED.value:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Run must be completed to add images (current status: {run.status})",
@@ -1660,7 +1672,7 @@ async def add_images_to_completed_run(
                     )
 
             # Run状態を更新
-            run.status = RunStatus.WAITING_APPROVAL
+            run.status = RunStatus.WAITING_APPROVAL.value
             run.current_step = "waiting_image_generation"
             run.updated_at = datetime.now()
 
@@ -1752,8 +1764,9 @@ async def add_images_to_completed_run(
                 await ws_manager.broadcast_run_update(
                     run_id=run_id,
                     event_type="run.add_images_initiated",
-                    status=RunStatus.RUNNING,
+                    status=RunStatus.RUNNING.value,
                     current_step="step11_analyzing",
+                    tenant_id=tenant_id,
                 )
             except Exception as ws_error:
                 logger.warning(f"WebSocket broadcast failed: {ws_error}")
