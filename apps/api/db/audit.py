@@ -91,11 +91,21 @@ class AuditLogger:
         json_str = json.dumps(data, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(json_str.encode()).hexdigest()
 
-    async def _get_last_entry(self) -> AuditLog | None:
-        """最新の監査ログエントリーを取得"""
-        result = await self.session.execute(
-            select(AuditLog).order_by(AuditLog.id.desc()).limit(1)
-        )
+    async def _get_last_entry(self, for_update: bool = False) -> AuditLog | None:
+        """最新の監査ログエントリーを取得
+
+        Args:
+            for_update: Trueの場合、SELECT FOR UPDATEで排他ロックを取得
+                        （新規エントリー追加時のレースコンディション対策）
+
+        Returns:
+            最新のAuditLogエントリー、または存在しない場合はNone
+        """
+        query = select(AuditLog).order_by(AuditLog.id.desc()).limit(1)
+        if for_update:
+            # SELECT FOR UPDATE でロック（同一トランザクション内で他の書き込みをブロック）
+            query = query.with_for_update()
+        result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def log(
@@ -118,8 +128,8 @@ class AuditLogger:
         Returns:
             作成されたAuditLogエントリー
         """
-        # 前のエントリーのハッシュを取得
-        last_entry = await self._get_last_entry()
+        # 前のエントリーのハッシュを取得（FOR UPDATE でロックしてレースコンディション防止）
+        last_entry = await self._get_last_entry(for_update=True)
         prev_hash = last_entry.entry_hash if last_entry else None
 
         # タイムスタンプ
@@ -193,10 +203,7 @@ class AuditLogger:
         for entry in entries:
             # 前のハッシュの整合性チェック
             if entry.prev_hash != prev_hash:
-                logger.error(
-                    f"Audit log chain broken at id={entry.id}: "
-                    f"expected prev_hash={prev_hash}, got {entry.prev_hash}"
-                )
+                logger.error(f"Audit log chain broken at id={entry.id}: expected prev_hash={prev_hash}, got {entry.prev_hash}")
                 raise AuditLogIntegrityError(
                     f"Chain broken at entry {entry.id}: prev_hash mismatch",
                     entry_id=entry.id,
@@ -214,10 +221,7 @@ class AuditLogger:
             )
 
             if computed_hash != entry.entry_hash:
-                logger.error(
-                    f"Audit log tampered at id={entry.id}: "
-                    f"computed hash={computed_hash}, stored hash={entry.entry_hash}"
-                )
+                logger.error(f"Audit log tampered at id={entry.id}: computed hash={computed_hash}, stored hash={entry.entry_hash}")
                 raise AuditLogIntegrityError(
                     f"Entry {entry.id} has been tampered with",
                     entry_id=entry.id,

@@ -7,6 +7,7 @@ class RunStatus(str, Enum):
     """Run status values matching UI expectations."""
 
     PENDING = "pending"
+    WORKFLOW_STARTING = "workflow_starting"  # Temporal Workflow開始処理中（競合状態対策）
     RUNNING = "running"
     WAITING_APPROVAL = "waiting_approval"
     WAITING_IMAGE_INPUT = "waiting_image_input"  # Step11画像生成のユーザー入力待ち

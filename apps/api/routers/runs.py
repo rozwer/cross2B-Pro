@@ -644,8 +644,9 @@ async def retry_step(
                             },
                         )
 
-                # First, update DB status and commit
-                run.status = RunStatus.RUNNING.value
+                # First, update DB status to WORKFLOW_STARTING (race condition mitigation)
+                # This intermediate status indicates workflow is being started
+                run.status = RunStatus.WORKFLOW_STARTING.value
                 run.current_step = resume_step
                 run.error_message = None  # エラーメッセージをクリア
                 run.error_code = None  # エラーコードをクリア
@@ -660,7 +661,7 @@ async def retry_step(
 
                 # Commit DB changes before starting workflow
                 await session.commit()
-                logger.info("Step retry DB update committed", extra={"run_id": run_id, "step": step})
+                logger.info("Step retry DB update committed (WORKFLOW_STARTING)", extra={"run_id": run_id, "step": step})
 
             except Exception as db_error:
                 logger.error(f"Failed to update DB for retry: {db_error}", exc_info=True)
@@ -678,6 +679,16 @@ async def retry_step(
                 "Temporal retry workflow started",
                 extra={"run_id": run_id, "step": step, "new_workflow_id": new_workflow_id},
             )
+
+            # Update status to RUNNING after successful workflow start
+            async with db_manager.get_session(tenant_id) as session:
+                result = await session.execute(select(Run).where(Run.id == run_id))
+                run = result.scalar_one_or_none()
+                if run and run.status == RunStatus.WORKFLOW_STARTING.value:
+                    run.status = RunStatus.RUNNING.value
+                    run.updated_at = datetime.now()
+                    logger.info("Run status updated to RUNNING after workflow start", extra={"run_id": run_id})
+
         except Exception as wf_error:
             logger.error(f"Failed to start retry workflow: {wf_error}", exc_info=True)
             # Revert status to failed if workflow start fails
@@ -900,9 +911,9 @@ async def resume_from_step(
 
             new_workflow_id = f"{run_id}-resume-{uuid.uuid4().hex[:8]}"
 
-            # First, update DB and commit BEFORE starting workflow
+            # First, update DB status to WORKFLOW_STARTING (race condition mitigation)
             now = datetime.now()
-            original_run.status = RunStatus.RUNNING.value
+            original_run.status = RunStatus.WORKFLOW_STARTING.value
             original_run.current_step = normalized_step  # Use normalized step (step3 -> step3a)
             original_run.error_message = None
             original_run.error_code = None
@@ -924,7 +935,7 @@ async def resume_from_step(
             )
 
             await session.commit()
-            logger.info("Resume DB update committed", extra={"run_id": run_id, "step": step})
+            logger.info("Resume DB update committed (WORKFLOW_STARTING)", extra={"run_id": run_id, "step": step})
 
         # Start Temporal workflow AFTER DB commit (outside session context)
         try:
@@ -945,6 +956,16 @@ async def resume_from_step(
                     "loaded_steps": steps_to_load,
                 },
             )
+
+            # Update status to RUNNING after successful workflow start
+            async with db_manager.get_session(tenant_id) as session:
+                result = await session.execute(select(Run).where(Run.id == run_id))
+                run = result.scalar_one_or_none()
+                if run and run.status == RunStatus.WORKFLOW_STARTING.value:
+                    run.status = RunStatus.RUNNING.value
+                    run.updated_at = datetime.now()
+                    logger.info("Run status updated to RUNNING after workflow start", extra={"run_id": run_id})
+
         except Exception as wf_error:
             logger.error(f"Failed to start resume workflow: {wf_error}", exc_info=True)
             # Revert status to failed if workflow start fails
