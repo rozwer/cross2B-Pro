@@ -408,9 +408,9 @@ class Step3BCooccurrenceExtraction(BaseActivity):
             "format_detected": parse_result.format_detected,
             "competitor_count": len(competitors),
             "model": response.model,
-            "usage": {
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+            "token_usage": {
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             "metrics": {
                 "char_count": text_metrics.char_count,

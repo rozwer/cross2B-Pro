@@ -197,7 +197,7 @@ class Step0Output(BaseModel):
 
     # Model info
     model: str = Field(default="", description="使用したLLMモデル")
-    usage: dict[str, int] = Field(default_factory=dict, description="トークン使用量")
+    token_usage: dict[str, int] = Field(default_factory=dict, description="トークン使用量")
 
     # Metrics
     metrics: dict[str, int] = Field(default_factory=dict, description="テキストメトリクス (char_count, word_count)")

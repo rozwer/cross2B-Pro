@@ -681,9 +681,8 @@ class Step8FactCheck(BaseActivity):
             recommend_rejection=recommend_rejection,
             model=llm_model or "default",
             token_usage={
-                "claims_tokens": 0,  # Token tracking simplified
-                "verify_tokens": 0,
-                "faq_tokens": 0,
+                "input": 0,  # Token tracking simplified
+                "output": 0,
             },
             # blog.System Ver8.3 extensions
             verification_categories=verification_categories,

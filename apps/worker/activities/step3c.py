@@ -403,9 +403,9 @@ class Step3CCompetitorAnalysis(BaseActivity):
             "word_count_statistics": word_count_stats,
             "target_word_count": target_word_count,
             "model": response.model,
-            "usage": {
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+            "token_usage": {
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             "metrics": {
                 "char_count": text_metrics.char_count,

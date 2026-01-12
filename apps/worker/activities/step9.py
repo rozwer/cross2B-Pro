@@ -578,8 +578,8 @@ class Step9FinalRewrite(BaseActivity):
             quality_warnings=quality_warnings,
             model=response.model,
             token_usage={
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             # New fields
             factcheck_corrections=factcheck_corrections,

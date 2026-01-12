@@ -89,7 +89,7 @@ class Step6Output(StepOutputBase):
     quality: EnhancedOutlineQuality = Field(default_factory=EnhancedOutlineQuality)
     sources_used: int = 0
     model: str = ""
-    usage: dict[str, int] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System 統合用フィールド（オプショナル）
     data_anchor_placements: list[DataAnchorPlacement] = Field(default_factory=list, description="データアンカー配置情報")

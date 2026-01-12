@@ -400,8 +400,8 @@ class Step7BBrushUp(BaseActivity):
             "quality_warnings": quality_warnings,
             "model": response.model,
             "token_usage": {
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             "is_v2": is_v2,
         }

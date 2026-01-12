@@ -319,7 +319,7 @@ class Step10Output(BaseModel):
 
     # === 共通フィールド ===
     model: str = ""
-    usage: dict[str, Any] = Field(default_factory=dict)
+    token_usage: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     output_path: str = Field(default="", description="統合出力ファイルのパス")
     output_digest: str = Field(default="", description="統合出力のダイジェスト")

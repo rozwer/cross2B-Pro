@@ -22,7 +22,6 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import json
-from datetime import datetime
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -31,6 +30,8 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
+from apps.api.storage.artifact_store import ArtifactStore
+from apps.api.storage.schemas import ArtifactRef
 from apps.api.tools.registry import ToolRegistry
 from apps.worker.activities.step11 import Step11ImageGeneration
 from apps.worker.graphs.wrapper import create_node_function
@@ -38,6 +39,104 @@ from apps.worker.graphs.wrapper import create_node_function
 # ============================================================
 # Step Node Functions
 # ============================================================
+
+
+def _get_execution_time(state: GraphState, ctx: ExecutionContext) -> str:
+    """Return deterministic execution time from state/config."""
+    metadata = state.get("metadata") or {}
+    for key in ("execution_time", "run_started_at"):
+        value = metadata.get(key)
+        if value:
+            if isinstance(value, str):
+                return value
+            if hasattr(value, "isoformat"):
+                return value.isoformat()
+            return str(value)
+
+    config = ctx.config or {}
+    for key in ("execution_time", "run_started_at"):
+        value = config.get(key)
+        if value:
+            if isinstance(value, str):
+                return value
+            if hasattr(value, "isoformat"):
+                return value.isoformat()
+            return str(value)
+
+    raise ValueError("execution_time is required in state.metadata or config for deterministic timestamps")
+
+
+async def _load_step_output(state: GraphState, step_id: str) -> dict[str, Any]:
+    """Load step output from ArtifactRef or embedded dict."""
+    step_outputs = state.get("step_outputs", {})
+    ref = step_outputs.get(step_id)
+    if not ref:
+        return {}
+
+    if isinstance(ref, ArtifactRef):
+        store = ArtifactStore()
+        content = await store.get(ref)
+        return json.loads(content.decode("utf-8"))
+
+    if isinstance(ref, dict):
+        if "path" in ref and "digest" in ref:
+            store = ArtifactStore()
+            ref_obj = ArtifactRef(**ref)
+            content = await store.get(ref_obj)
+            return json.loads(content.decode("utf-8"))
+        return ref
+
+    return {}
+
+
+def _detect_contradictions(verification: str) -> bool:
+    """Detect contradictions using keyword heuristics."""
+    if not verification:
+        return False
+
+    text = verification.lower()
+    negation_phrases = [
+        "矛盾がない",
+        "矛盾はない",
+        "矛盾なし",
+        "不整合なし",
+        "不整合はない",
+        "誤りなし",
+        "誤りはない",
+        "問題なし",
+        "問題はない",
+        "no contradiction",
+        "no contradictions",
+        "no inconsistency",
+        "no inconsistencies",
+        "no errors",
+        "no error",
+        "no issues",
+        "no issue",
+        "without contradiction",
+    ]
+    for phrase in negation_phrases:
+        text = text.replace(phrase, "")
+
+    positive_keywords = [
+        "contradiction",
+        "contradictions",
+        "contradicted",
+        "inconsistency",
+        "inconsistencies",
+        "incorrect",
+        "error",
+        "errors",
+        "mistake",
+        "false",
+        "矛盾",
+        "不整合",
+        "誤り",
+        "間違い",
+        "不一致",
+        "不正確",
+    ]
+    return any(keyword in text for keyword in positive_keywords)
 
 
 async def step3_5_execute(
@@ -345,7 +444,7 @@ async def step8_execute(
     )
 
     verification = response.content
-    has_contradictions = "contradiction" in verification.lower()
+    has_contradictions = _detect_contradictions(verification)
 
     return {
         "step": "step8",
@@ -430,7 +529,7 @@ async def step10_execute(
         "step": "step10",
         "html": html_content,
         "html_valid": html_valid,
-        "completed_at": datetime.now().isoformat(),
+        "completed_at": _get_execution_time(state, ctx),
         "model": response.model,
     }
 
@@ -453,11 +552,18 @@ async def step11_execute(
     config = ctx.config
     enable_images = config.get("enable_images", False)
 
-    # Get step10 articles from state for skip case
-    step10_output = state.step_outputs.get("step10", {})
-    articles_data = step10_output.get("articles", [])
-
     if not enable_images:
+        # Get step10 articles from state for skip case
+        step10_output = await _load_step_output(state, "step10")
+        articles_data = step10_output.get("articles", [])
+        if not articles_data and step10_output.get("html"):
+            articles_data = [
+                {
+                    "article_number": 1,
+                    "html_content": step10_output.get("html", ""),
+                    "title": step10_output.get("article_title", ""),
+                }
+            ]
         # Skip image generation, pass through articles unchanged
         return {
             "step": "step11",
@@ -489,8 +595,8 @@ async def step12_execute(
     """
 
     # Get step10 articles from state
-    step10_output = state.step_outputs.get("step10", {})
-    step11_output = state.step_outputs.get("step11", {})
+    step10_output = await _load_step_output(state, "step10")
+    step11_output = await _load_step_output(state, "step11")
 
     articles_data = step10_output.get("articles", [])
     _ = step11_output.get("images", [])  # Reserved for future image integration
@@ -542,7 +648,7 @@ async def step12_execute(
             "recommended_plugins": ["Yoast SEO"],
         },
         "generation_metadata": {
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": _get_execution_time(state, ctx),
             "model": ctx.config.get("llm_model", ""),
             "wordpress_version_target": "6.0+",
             "total_articles": len(wordpress_articles),
@@ -625,7 +731,7 @@ def build_post_approval_graph() -> Any:
     step9_node = create_node_function("step9", step9_execute)
     step10_node = create_node_function("step10", step10_execute)
     step11_node = create_node_function("step11", step11_execute)
-    step12_node = create_node_function("step12", step12_execute)
+    step12_node = create_node_function("step12", step12_execute, final_status="completed")
 
     # Add nodes
     graph.add_node("step3_5", step3_5_node)  # type: ignore[call-overload]

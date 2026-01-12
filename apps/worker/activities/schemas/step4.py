@@ -185,7 +185,7 @@ class Step4Output(BaseModel):
     metrics: OutlineMetrics
     quality: OutlineQuality
     model: str = ""
-    usage: dict[str, int] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System Ver8.3 対応フィールド（後方互換性のため Optional）
     title_metadata: TitleMetadata | None = Field(default=None, description="タイトルルール検証")

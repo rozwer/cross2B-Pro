@@ -119,9 +119,7 @@ class QualityRetryLoop:
 
             # Log retry attempt
             if not is_final_attempt:
-                logger.warning(
-                    f"Quality retry {attempt + 1}/{self.max_retries}: {quality.issues}"
-                )
+                logger.warning(f"Quality retry {attempt + 1}/{self.max_retries}: {quality.issues}")
 
                 # Enhance prompt for next attempt
                 if enhance_prompt is not None:

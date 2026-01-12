@@ -394,9 +394,9 @@ class Step3AQueryAnalysis(BaseActivity):
             "parsed_data": parse_result.data if parse_result.success else None,
             "format_detected": parse_result.format_detected,
             "model": response.model,
-            "usage": {
-                "input_tokens": response.token_usage.input,
-                "output_tokens": response.token_usage.output,
+            "token_usage": {
+                "input": response.token_usage.input,
+                "output": response.token_usage.output,
             },
             "metrics": {
                 "char_count": text_metrics.char_count,
