@@ -86,10 +86,7 @@ async def run_parallel_steps(
         if not pending:
             break
 
-        workflow_logger.info(
-            f"Parallel steps attempt {attempt}/{max_retry_rounds}: "
-            f"running {pending}"
-        )
+        workflow_logger.info(f"Parallel steps attempt {attempt}/{max_retry_rounds}: running {pending}")
 
         # Launch pending steps concurrently
         tasks = []
@@ -112,15 +109,16 @@ async def run_parallel_steps(
         # Process results
         for (step, _), result in zip(tasks, results):
             if isinstance(result, Exception):
-                # Extract error message
+                # Extract error message with type and traceback info
                 if isinstance(result, ActivityError):
                     error_msg = str(result.cause) if result.cause else str(result)
+                    error_type = type(result.cause).__name__ if result.cause else "ActivityError"
                 else:
                     error_msg = str(result)
-                last_errors[step] = error_msg
-                workflow_logger.warning(
-                    f"{step} failed (attempt {attempt}): {error_msg}"
-                )
+                    error_type = type(result).__name__
+                # Store both message and type for better diagnostics
+                last_errors[step] = f"[{error_type}] {error_msg}"
+                workflow_logger.warning(f"{step} failed (attempt {attempt}): [{error_type}] {error_msg}")
             else:
                 completed[step] = result
                 workflow_logger.info(f"{step} succeeded on attempt {attempt}")

@@ -111,11 +111,12 @@ async def step4_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
-    except json.JSONDecodeError:
-        parsed = {"raw_content": response.content}
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 4 JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step4",
@@ -181,11 +182,12 @@ async def step6_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
-    except json.JSONDecodeError:
-        parsed = {"raw_content": response.content}
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 6 JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step6",
@@ -216,18 +218,16 @@ async def step6_5_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
         integration_package = parsed.get("integration_package", "")
         outline_summary = parsed.get("outline_summary", "")
         section_count = parsed.get("section_count", 0)
         total_sources = parsed.get("total_sources", 0)
-    except json.JSONDecodeError:
-        integration_package = response.content
-        outline_summary = ""
-        section_count = 0
-        total_sources = 0
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 6.5 JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step6_5",
@@ -261,16 +261,15 @@ async def step7a_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
         draft = parsed.get("draft", "")
         section_count = parsed.get("section_count", 0)
         cta_positions = parsed.get("cta_positions", [])
-    except json.JSONDecodeError:
-        draft = response.content
-        section_count = 0
-        cta_positions = []
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 7a JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step7a",
@@ -304,14 +303,14 @@ async def step7b_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
         polished = parsed.get("polished", "")
         changes_made = parsed.get("changes_made", [])
-    except json.JSONDecodeError:
-        polished = response.content
-        changes_made = []
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 7b JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step7b",
@@ -379,16 +378,15 @@ async def step9_execute(
         config=llm_config,
     )
 
-    # Parse JSON response
+    # Parse JSON response - NO FALLBACK, fail on parse error
     try:
         parsed = json.loads(response.content)
         final_content = parsed.get("final_content", "")
         meta_description = parsed.get("meta_description", "")
         internal_link_suggestions = parsed.get("internal_link_suggestions", [])
-    except json.JSONDecodeError:
-        final_content = response.content
-        meta_description = ""
-        internal_link_suggestions = []
+    except json.JSONDecodeError as e:
+        # フォールバック禁止: パース失敗時はエラーを投げる
+        raise ValueError(f"Step 9 JSON parse failed: {e}. LLM response was not valid JSON. Response: {response.content[:500]}...") from e
 
     return {
         "step": "step9",

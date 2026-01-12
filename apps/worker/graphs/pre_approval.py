@@ -166,7 +166,18 @@ async def step1_5_execute(
     use the Temporal Activity (step1_5_related_keyword_extraction).
     """
     config = ctx.config
-    related_keywords: list[str] = config.get("related_keywords", [])
+    raw_keywords = config.get("related_keywords", [])
+
+    # Validate related_keywords type
+    if isinstance(raw_keywords, str):
+        # Single string provided - convert to list
+        related_keywords: list[str] = [raw_keywords] if raw_keywords.strip() else []
+    elif isinstance(raw_keywords, list):
+        # Filter and convert non-string items
+        related_keywords = [str(k) for k in raw_keywords if k]
+    else:
+        logger.warning(f"[STEP1.5] Invalid related_keywords type: {type(raw_keywords)}, using empty list")
+        related_keywords = []
 
     # Skip if no related keywords
     if not related_keywords:

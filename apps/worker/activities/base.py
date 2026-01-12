@@ -294,10 +294,20 @@ class BaseActivity(ABC):
                 metadata={},
             )
 
+            # Send heartbeat for long-running activities (timeout > 120s)
+            timeout_seconds = config.get("timeout", 120)
+            if timeout_seconds > 120:
+                activity.heartbeat(f"Starting {self.step_id}...")
+                logger.info(f"[BaseActivity.run] Sent heartbeat for {self.step_id}")
+
             logger.info(f"[BaseActivity.run] Calling execute() for {self.step_id}")
             # Execute the step
             result = await self.execute(ctx, state)
             logger.info(f"[BaseActivity.run] execute() completed for {self.step_id}")
+
+            # Send completion heartbeat for long-running activities
+            if timeout_seconds > 120:
+                activity.heartbeat(f"Completed {self.step_id}, storing output...")
 
             # Store output
             artifact_ref = await self._store_output(
@@ -438,9 +448,24 @@ class BaseActivity(ABC):
         """Compute SHA256 hash of inputs for idempotency check.
 
         Includes dependency artifact digests to invalidate cache when upstream changes.
+
+        Raises:
+            ActivityError: If required dependencies are missing
         """
         # Get dependency digests
         dependency_digests = await self._get_dependency_digests(tenant_id, run_id)
+
+        # Validate required dependencies exist
+        missing_deps = [dep for dep, digest in dependency_digests.items() if digest is None]
+        if missing_deps:
+            raise ActivityError(
+                message=f"Step {self.step_id} cannot execute: missing required dependencies: {missing_deps}",
+                category=ErrorCategory.NON_RETRYABLE,
+                details={
+                    "missing_dependencies": missing_deps,
+                    "step": self.step_id,
+                },
+            )
 
         # Normalize config for consistent hashing
         input_data = {
@@ -587,6 +612,10 @@ class BaseActivity(ABC):
         )
 
         # Store metadata (for idempotency verification)
+        # NOTE: datetime.now() is allowed in Activity context because:
+        # 1. Activities are non-deterministic by design (external side effects)
+        # 2. Temporal's determinism requirement applies only to Workflow code
+        # 3. This metadata is for operational observability, not replay logic
         meta_content = json.dumps(
             {
                 "input_digest": input_digest,
