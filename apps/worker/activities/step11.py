@@ -757,11 +757,8 @@ No text or watermarks in the image."""
 
         except Exception as e:
             activity.logger.error(f"Prompt creation failed: {e}")
-            # フォールバックプロンプト
-            return f"""Professional infographic illustration about {keyword}.
-Topic: {position.section_title}.
-Style: Clean, modern flat design with vibrant colors.
-No text in the image."""
+            # フォールバック禁止: 例外を再スロー
+            raise ValueError(f"Failed to create image prompt for keyword={keyword}, section={position.section_title}: {e}") from e
 
     async def _generate_image(
         self,

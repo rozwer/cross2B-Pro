@@ -75,7 +75,9 @@ class ArticleWorkflow:
         self.rejection_reason: str | None = None
         self.current_step: str = "init"
         self.config: dict[str, Any] = {}
-        # Step11 (image generation) state - Legacy (backward compatibility)
+        # Step11 (image generation) state - Legacy (backward compatibility for existing runs)
+        # DEPRECATED: Use step11_* state for new runs
+        # TODO: Remove after migration completes (all existing runs finished)
         self.image_gen_decision_made: bool = False
         self.image_gen_enabled: bool = False
         self.image_gen_config: dict[str, Any] | None = None
@@ -338,8 +340,12 @@ class ArticleWorkflow:
         if not skip_approval:
             self.current_step = "waiting_approval"
 
-            # Wait for approval or rejection signal
-            await workflow.wait_condition(lambda: self.approved or self.rejected)
+            # Wait for approval or rejection signal (max 7 days)
+            # シグナルが来ない場合、永久に待機するのを防ぐ
+            await workflow.wait_condition(
+                lambda: self.approved or self.rejected,
+                timeout=timedelta(days=7),
+            )
 
             if self.rejected:
                 # Sync rejected status to API DB
@@ -657,8 +663,11 @@ class ArticleWorkflow:
             # Use waiting_image_input (not waiting_approval) for Step11 waiting state
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "waiting_image_generation")
 
-            # Wait for settings signal or skip signal
-            await workflow.wait_condition(lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made)
+            # Wait for settings signal or skip signal (max 7 days)
+            await workflow.wait_condition(
+                lambda: self.step11_phase in ("11A", "skipped") or self.image_gen_decision_made,
+                timeout=timedelta(days=7),
+            )
 
             # Handle legacy skip signal
             if self.image_gen_decision_made and not self.image_gen_enabled:
@@ -706,7 +715,10 @@ class ArticleWorkflow:
             self.step11_positions_confirmed = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_position_review")
 
-            await workflow.wait_condition(lambda: self.step11_positions_confirmed is not None)
+            await workflow.wait_condition(
+                lambda: self.step11_positions_confirmed is not None,
+                timeout=timedelta(days=7),
+            )
 
             # Check if reanalyze requested
             if self.step11_positions_confirmed.get("reanalyze"):
@@ -753,7 +765,10 @@ class ArticleWorkflow:
             self.step11_instructions = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_instructions")
 
-            await workflow.wait_condition(lambda: self.step11_instructions is not None)
+            await workflow.wait_condition(
+                lambda: self.step11_instructions is not None,
+                timeout=timedelta(days=7),
+            )
 
             # ========== Phase 11D: Generate images and wait for review ==========
             self.step11_phase = "11D_generating"
@@ -787,7 +802,10 @@ class ArticleWorkflow:
                 self.step11_image_reviews = None
                 await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_review")
 
-                await workflow.wait_condition(lambda: self.step11_image_reviews is not None)
+                await workflow.wait_condition(
+                    lambda: self.step11_image_reviews is not None,
+                    timeout=timedelta(days=7),
+                )
 
                 # Process retries with index bounds validation
                 num_positions = len(self.step11_positions)
@@ -862,7 +880,10 @@ class ArticleWorkflow:
             self.step11_finalized = None
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_preview")
 
-            await workflow.wait_condition(lambda: self.step11_finalized is not None)
+            await workflow.wait_condition(
+                lambda: self.step11_finalized is not None,
+                timeout=timedelta(days=7),
+            )
 
             # Check if restart requested
             if self.step11_finalized.get("restart_from") == "11C":
@@ -1047,7 +1068,10 @@ class ImageAdditionWorkflow:
             self.step11_positions_confirmed = None
             await update_status("waiting_image_input", "step11_position_review")
 
-            await workflow.wait_condition(lambda: self.step11_positions_confirmed is not None or self.skipped)
+            await workflow.wait_condition(
+                lambda: self.step11_positions_confirmed is not None or self.skipped,
+                timeout=timedelta(days=7),
+            )
 
             if self.skipped:
                 await update_status("completed", "step11")
@@ -1096,7 +1120,10 @@ class ImageAdditionWorkflow:
                 self.step11_instructions = None
                 await update_status("waiting_image_input", "step11_image_instructions")
 
-                await workflow.wait_condition(lambda: self.step11_instructions is not None or self.skipped)
+                await workflow.wait_condition(
+                    lambda: self.step11_instructions is not None or self.skipped,
+                    timeout=timedelta(days=7),
+                )
 
                 if self.skipped:
                     await update_status("completed", "step11")
@@ -1129,7 +1156,10 @@ class ImageAdditionWorkflow:
                 self.step11_image_reviews = None
                 await update_status("waiting_image_input", "step11_image_review")
 
-                await workflow.wait_condition(lambda: self.step11_image_reviews is not None or self.skipped)
+                await workflow.wait_condition(
+                    lambda: self.step11_image_reviews is not None or self.skipped,
+                    timeout=timedelta(days=7),
+                )
 
                 if self.skipped:
                     await update_status("completed", "step11")
@@ -1203,7 +1233,10 @@ class ImageAdditionWorkflow:
             self.step11_finalized = None
             await update_status("waiting_image_input", "step11_preview")
 
-            await workflow.wait_condition(lambda: self.step11_finalized is not None or self.skipped)
+            await workflow.wait_condition(
+                lambda: self.step11_finalized is not None or self.skipped,
+                timeout=timedelta(days=7),
+            )
 
             if self.skipped:
                 await update_status("completed", "step11")

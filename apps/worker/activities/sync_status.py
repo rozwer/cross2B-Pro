@@ -92,7 +92,10 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
 
             await session.flush()
 
-            logger.info(f"Run status synced: run_id={run_id}, updated={updated_fields}")
+            if updated_fields:
+                logger.info(f"Run status synced: run_id={run_id}, updated={updated_fields}")
+            else:
+                logger.debug(f"Run status sync no-op: run_id={run_id}, status already={status}")
 
             return {
                 "success": True,
@@ -103,5 +106,11 @@ async def sync_run_status(args: dict[str, Any]) -> dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to sync run status: {e}", exc_info=True)
-        # Return error but don't fail the activity - status sync is best-effort
-        return {"success": False, "error": str(e)}
+        # フォールバック禁止: 例外を ApplicationError として raise し、Activity 失敗とする
+        from temporalio.exceptions import ApplicationError
+
+        raise ApplicationError(
+            f"Failed to sync run status for run_id={run_id}: {e}",
+            type="SYNC_STATUS_FAILED",
+            non_retryable=False,  # リトライ可能
+        ) from e
