@@ -112,6 +112,7 @@ class TenantDBManager:
             self.common_db_url,
             pool_size=pool_size,
             max_overflow=max_overflow,
+            pool_pre_ping=True,  # Health check before each connection use
         )
         self._common_session_factory = async_sessionmaker(
             self._common_engine,
@@ -120,7 +121,24 @@ class TenantDBManager:
         )
 
     async def _get_tenant_db_url(self, tenant_id: str) -> str:
-        """Fetch tenant database URL from common DB."""
+        """Fetch tenant database URL from common DB.
+
+        Args:
+            tenant_id: Tenant identifier (validated before DB query)
+
+        Returns:
+            Database URL for the tenant
+
+        Raises:
+            TenantIdValidationError: If tenant_id format is invalid
+            TenantNotFoundError: If tenant does not exist
+            TenantDBError: If tenant is inactive
+        """
+        # Double validation: ensure tenant_id is validated even if called directly
+        if not validate_tenant_id(tenant_id):
+            logger.warning(f"Invalid tenant_id format in _get_tenant_db_url: {tenant_id[:20]}...")
+            raise TenantIdValidationError(f"Invalid tenant_id format. Must match pattern: {SAFE_TENANT_ID_PATTERN.pattern}")
+
         async with self._common_session_factory() as session:
             result = await session.execute(
                 text("SELECT database_url, is_active FROM tenants WHERE id = :id"),
@@ -153,6 +171,7 @@ class TenantDBManager:
                 db_url,
                 pool_size=self.pool_size,
                 max_overflow=self.max_overflow,
+                pool_pre_ping=True,  # Health check before each connection use
             )
             self._engines[tenant_id] = engine
             self._session_factories[tenant_id] = async_sessionmaker(
@@ -163,11 +182,18 @@ class TenantDBManager:
             return engine
 
     @asynccontextmanager
-    async def get_session(self, tenant_id: str) -> AsyncGenerator[AsyncSession, None]:
+    async def get_session(
+        self,
+        tenant_id: str,
+        isolation_level: str | None = None,
+    ) -> AsyncGenerator[AsyncSession, None]:
         """Get a session for the specified tenant's database.
 
         Args:
             tenant_id: Tenant identifier
+            isolation_level: Optional transaction isolation level.
+                Valid values: "SERIALIZABLE", "REPEATABLE READ", "READ COMMITTED", "READ UNCOMMITTED"
+                Default: Uses database default (typically "READ COMMITTED" for PostgreSQL)
 
         Yields:
             AsyncSession for the tenant's database
@@ -187,6 +213,9 @@ class TenantDBManager:
 
         async with self._session_factories[tenant_id]() as session:
             try:
+                if isolation_level:
+                    # Set isolation level for this transaction
+                    await session.execute(text(f"SET TRANSACTION ISOLATION LEVEL {isolation_level}"))
                 yield session
                 await session.commit()
             except Exception:

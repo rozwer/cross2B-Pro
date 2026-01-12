@@ -250,18 +250,21 @@ class ArtifactStore:
             ArtifactNotFoundError: If artifact does not exist
             ArtifactIntegrityError: If digest verification fails
         """
+        response = None
         try:
             response = self.client.get_object(
                 bucket_name=self.bucket,
                 object_name=ref.path,
             )
             content = response.read()
-            response.close()
-            response.release_conn()
         except S3Error as e:
             if e.code == "NoSuchKey":
                 raise ArtifactNotFoundError(f"Artifact not found: {ref.path}") from e
             raise ArtifactStoreError(f"Failed to retrieve artifact: {e}") from e
+        finally:
+            if response is not None:
+                response.close()
+                response.release_conn()
 
         if verify:
             actual_digest = self._compute_digest(content)

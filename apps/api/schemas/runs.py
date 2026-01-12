@@ -2,10 +2,37 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .article_hearing import ArticleHearingInput
 from .enums import ErrorType, RunStatus, StepAttemptStatus, StepStatus
+
+# Valid step IDs for workflow - shared with apps/api/services/runs.py
+VALID_STEP_IDS: frozenset[str] = frozenset(
+    [
+        "step-1",
+        "step0",
+        "step1",
+        "step1_5",
+        "step2",
+        "step3",
+        "step3a",
+        "step3b",
+        "step3c",
+        "step3_5",
+        "step4",
+        "step5",
+        "step6",
+        "step6_5",
+        "step7a",
+        "step7b",
+        "step8",
+        "step9",
+        "step10",
+        "step11",
+        "step12",
+    ]
+)
 
 
 class ModelConfigOptions(BaseModel):
@@ -22,6 +49,14 @@ class ModelConfig(BaseModel):
     platform: str  # gemini, openai, anthropic
     model: str
     options: ModelConfigOptions = Field(default_factory=ModelConfigOptions)
+
+
+# Default model configuration for cloning runs or when no config is provided
+DEFAULT_MODEL_CONFIG: dict[str, str | dict[str, str]] = {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash",
+    "options": {},
+}
 
 
 class ToolConfig(BaseModel):
@@ -43,7 +78,7 @@ class LegacyRunInput(BaseModel):
 
 
 # Type alias for backward compatibility
-RunInput = LegacyRunInput
+RunInput = LegacyRunInput | ArticleHearingInput
 
 
 class RunOptions(BaseModel):
@@ -84,6 +119,26 @@ class CreateRunInput(BaseModel):
 
     class Config:
         populate_by_name = True
+
+    @field_validator("step_configs")
+    @classmethod
+    def validate_step_configs(cls, v: list[StepModelConfig] | None) -> list[StepModelConfig] | None:
+        """Validate step_configs for duplicate and invalid step_ids."""
+        if v is None:
+            return v
+
+        seen_step_ids: set[str] = set()
+        for config in v:
+            # Check for duplicate step_ids
+            if config.step_id in seen_step_ids:
+                raise ValueError(f"Duplicate step_id: {config.step_id}")
+            seen_step_ids.add(config.step_id)
+
+            # Check for invalid step_ids
+            if config.step_id not in VALID_STEP_IDS:
+                raise ValueError(f"Invalid step_id: {config.step_id}. Valid step_ids: {sorted(VALID_STEP_IDS)}")
+
+        return v
 
     def get_normalized_input(self) -> dict[str, Any]:
         """Normalize input to a consistent format for storage and workflow."""

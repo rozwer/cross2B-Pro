@@ -51,6 +51,19 @@ def upgrade() -> None:
     op.create_index("idx_hearing_templates_tenant_id", "hearing_templates", ["tenant_id"])
     op.create_index("idx_hearing_templates_name", "hearing_templates", ["name"])
 
+    # Ensure update_updated_at_column function exists (PostgreSQL specific)
+    op.execute(
+        """
+        CREATE OR REPLACE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = CURRENT_TIMESTAMP;
+            RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+        """
+    )
+
     # Create trigger for updated_at (PostgreSQL specific)
     op.execute(
         """

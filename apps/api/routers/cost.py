@@ -117,6 +117,15 @@ async def get_run_cost(
             artifact_result = await session.execute(artifact_query)
             artifacts = artifact_result.scalars().all()
 
+            # Pre-fetch all steps for this run to avoid N+1 queries
+            step_ids = [a.step_id for a in artifacts if a.step_id is not None]
+            step_map: dict[str, str] = {}
+            if step_ids:
+                step_query = select(Step).where(Step.id.in_(step_ids))
+                step_result = await session.execute(step_query)
+                steps = step_result.scalars().all()
+                step_map = {str(s.id): s.step_name for s in steps}
+
             # Calculate costs from artifact content
             breakdown: list[CostBreakdown] = []
             total_input_tokens = 0
@@ -156,14 +165,10 @@ async def get_run_cost(
                         rates = DEFAULT_COST_RATES.get(model, {"input": 0.001, "output": 0.002})
                         step_cost = (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"]
 
-                        # Get step name from step_id if available
+                        # Get step name from pre-fetched step_map
                         step_name = artifact.artifact_type
                         if artifact.step_id:
-                            step_query = select(Step).where(Step.id == artifact.step_id)
-                            step_result = await session.execute(step_query)
-                            step_record = step_result.scalar_one_or_none()
-                            if step_record:
-                                step_name = step_record.step_name
+                            step_name = step_map.get(str(artifact.step_id), step_name)
 
                         breakdown.append(
                             CostBreakdown(
@@ -179,8 +184,12 @@ async def get_run_cost(
                         total_output_tokens += output_tokens
                         total_cost += step_cost
 
-                except Exception:
-                    # Skip artifacts that can't be parsed
+                except Exception as parse_error:
+                    # Log and skip artifacts that can't be parsed
+                    logger.debug(
+                        f"Skipping artifact {artifact.id}: {parse_error}",
+                        extra={"artifact_id": str(artifact.id), "run_id": run_id},
+                    )
                     continue
 
             return CostResponse(
