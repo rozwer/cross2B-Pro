@@ -600,7 +600,7 @@ class TestPositionAnalysisResultBackwardCompatibility:
         assert result.analysis_summary == ""
         assert result.positions == []
         assert result.model == ""
-        assert result.usage == {}
+        assert result.token_usage == {}
 
     def test_position_analysis_result_with_positions(self):
         """位置リストを含めて作成可能."""
@@ -612,8 +612,8 @@ class TestPositionAnalysisResultBackwardCompatibility:
             analysis_summary="2箇所の挿入位置を特定",
             positions=positions,
             model="gemini-2.5-flash",
-            usage={"input_tokens": 100, "output_tokens": 50},
+            token_usage={"input_tokens": 100, "output_tokens": 50},
         )
         assert len(result.positions) == 2
         assert result.model == "gemini-2.5-flash"
-        assert result.usage["input_tokens"] == 100
+        assert result.token_usage["input_tokens"] == 100

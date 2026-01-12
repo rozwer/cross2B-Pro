@@ -25,8 +25,14 @@ from .schemas import ArtifactRef
 
 logger = logging.getLogger(__name__)
 
-# VULN-012: パストラバーサル検出パターン
-PATH_TRAVERSAL_PATTERN = re.compile(r"\.\./|\.\.\\|%2e%2e|%252e")
+# VULN-012: パストラバーサル検出パターン（二重エンコード対策含む）
+PATH_TRAVERSAL_PATTERN = re.compile(
+    r"\.\./|\.\.\\|"  # 通常のトラバーサル
+    r"%2e%2e|%252e%252e|"  # URLエンコード、二重エンコード
+    r"%2e%2e%2f|%2e%2e%5c|"  # 混合エンコード（../ と ..\\）
+    r"\.%2e|%2e\.",  # 部分エンコード
+    re.IGNORECASE,
+)
 
 # tenant_id 許可パターン（SQL injection対策と同じ）
 SAFE_TENANT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")

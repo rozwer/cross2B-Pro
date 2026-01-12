@@ -1,8 +1,14 @@
 """WebSocket router.
 
 Handles WebSocket connections for real-time progress streaming.
+
+VULN-013: WebSocket接続管理
+- テナント単位の接続数上限
+- 接続タイムアウト機構
+- アイドル接続の自動切断
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any
@@ -17,6 +23,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websocket"])
 
+# Connection limits and timeouts (VULN-013)
+MAX_CONNECTIONS_PER_TENANT = 100  # テナント単位の最大接続数
+MAX_CONNECTIONS_PER_RUN = 10  # run単位の最大接続数
+CONNECTION_IDLE_TIMEOUT_SECONDS = 300  # 5分間のアイドルでタイムアウト
+PING_INTERVAL_SECONDS = 30  # Pingの送信間隔
+
 
 # =============================================================================
 # Connection Manager
@@ -24,39 +36,120 @@ router = APIRouter(tags=["websocket"])
 
 
 class ConnectionManager:
-    """WebSocket connection manager for real-time updates with tenant isolation."""
+    """WebSocket connection manager for real-time updates with tenant isolation.
+
+    VULN-013: メモリリーク防止
+    - テナント単位・run単位の接続数制限
+    - 接続メタデータの追跡（最終アクティビティ時刻）
+    - アイドル接続のクリーンアップ
+    """
 
     def __init__(self) -> None:
         # Structure: {tenant_id: {run_id: [websockets]}}
         self.active_connections: dict[str, dict[str, list[WebSocket]]] = {}
+        # Connection metadata: {websocket_id: {"last_activity": datetime, "tenant_id": str, "run_id": str}}
+        self._connection_metadata: dict[int, dict[str, Any]] = {}
         # Legacy structure for backward compatibility during transition
         self._legacy_connections: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, run_id: str, websocket: WebSocket, tenant_id: str | None = None) -> None:
+    def get_tenant_connection_count(self, tenant_id: str) -> int:
+        """Get total connection count for a tenant (VULN-013)."""
+        if tenant_id not in self.active_connections:
+            return 0
+        return sum(len(conns) for conns in self.active_connections[tenant_id].values())
+
+    def get_run_connection_count(self, tenant_id: str, run_id: str) -> int:
+        """Get connection count for a specific run (VULN-013)."""
+        if tenant_id not in self.active_connections:
+            return 0
+        return len(self.active_connections[tenant_id].get(run_id, []))
+
+    def can_accept_connection(self, tenant_id: str, run_id: str) -> tuple[bool, str]:
+        """Check if a new connection can be accepted (VULN-013).
+
+        Returns:
+            tuple of (can_accept, rejection_reason)
+        """
+        tenant_count = self.get_tenant_connection_count(tenant_id)
+        if tenant_count >= MAX_CONNECTIONS_PER_TENANT:
+            return False, f"Tenant connection limit exceeded ({MAX_CONNECTIONS_PER_TENANT})"
+
+        run_count = self.get_run_connection_count(tenant_id, run_id)
+        if run_count >= MAX_CONNECTIONS_PER_RUN:
+            return False, f"Run connection limit exceeded ({MAX_CONNECTIONS_PER_RUN})"
+
+        return True, ""
+
+    def update_activity(self, websocket: WebSocket) -> None:
+        """Update last activity timestamp for a connection (VULN-013)."""
+        ws_id = id(websocket)
+        if ws_id in self._connection_metadata:
+            self._connection_metadata[ws_id]["last_activity"] = datetime.now()
+
+    async def connect(self, run_id: str, websocket: WebSocket, tenant_id: str | None = None) -> bool:
         """Track a WebSocket connection (acceptは呼び出し側で実施済み).
 
         Args:
             run_id: Run identifier
             websocket: WebSocket connection
             tenant_id: Tenant identifier for isolation (required for secure connections)
+
+        Returns:
+            bool: True if connection was accepted, False if rejected due to limits
         """
         if tenant_id:
+            # VULN-013: Check connection limits before accepting
+            can_accept, reason = self.can_accept_connection(tenant_id, run_id)
+            if not can_accept:
+                logger.warning(
+                    "WebSocket connection rejected due to limit",
+                    extra={"run_id": run_id, "tenant_id": tenant_id, "reason": reason},
+                )
+                return False
+
             # Tenant-isolated storage
             if tenant_id not in self.active_connections:
                 self.active_connections[tenant_id] = {}
             if run_id not in self.active_connections[tenant_id]:
                 self.active_connections[tenant_id][run_id] = []
             self.active_connections[tenant_id][run_id].append(websocket)
-            logger.info("WebSocket connected", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            # Track connection metadata (VULN-013)
+            self._connection_metadata[id(websocket)] = {
+                "last_activity": datetime.now(),
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+            }
+
+            logger.info(
+                "WebSocket connected",
+                extra={
+                    "run_id": run_id,
+                    "tenant_id": tenant_id,
+                    "tenant_total": self.get_tenant_connection_count(tenant_id),
+                    "run_total": self.get_run_connection_count(tenant_id, run_id),
+                },
+            )
+            return True
         else:
-            # Legacy mode (backward compatibility)
+            # Legacy mode (backward compatibility) - deprecated, will be removed in future version
+            logger.warning(
+                "WebSocket connected without tenant_id (legacy mode deprecated)",
+                extra={"run_id": run_id},
+            )
             if run_id not in self._legacy_connections:
                 self._legacy_connections[run_id] = []
             self._legacy_connections[run_id].append(websocket)
             logger.info("WebSocket connected (legacy)", extra={"run_id": run_id})
+            return True
 
     def disconnect(self, run_id: str, websocket: WebSocket, tenant_id: str | None = None) -> None:
         """Remove a WebSocket connection."""
+        # VULN-013: Clean up connection metadata
+        ws_id = id(websocket)
+        if ws_id in self._connection_metadata:
+            del self._connection_metadata[ws_id]
+
         if tenant_id and tenant_id in self.active_connections:
             if run_id in self.active_connections[tenant_id]:
                 if websocket in self.active_connections[tenant_id][run_id]:
@@ -74,6 +167,61 @@ class ConnectionManager:
                 del self._legacy_connections[run_id]
             logger.info("WebSocket disconnected (legacy)", extra={"run_id": run_id})
 
+    async def cleanup_idle_connections(self) -> int:
+        """Clean up idle connections that have exceeded timeout (VULN-013).
+
+        Returns:
+            Number of connections cleaned up
+        """
+        now = datetime.now()
+        cleanup_count = 0
+        connections_to_close: list[tuple[WebSocket, str, str]] = []
+
+        # Find idle connections
+        for ws_id, metadata in list(self._connection_metadata.items()):
+            last_activity = metadata.get("last_activity")
+            if last_activity:
+                idle_seconds = (now - last_activity).total_seconds()
+                if idle_seconds > CONNECTION_IDLE_TIMEOUT_SECONDS:
+                    # Find the websocket object
+                    tenant_id = metadata.get("tenant_id")
+                    run_id = metadata.get("run_id")
+                    if tenant_id and run_id and tenant_id in self.active_connections:
+                        for ws in self.active_connections[tenant_id].get(run_id, []):
+                            if id(ws) == ws_id:
+                                connections_to_close.append((ws, tenant_id, run_id))
+                                break
+
+        # Close idle connections
+        for websocket, tenant_id, run_id in connections_to_close:
+            try:
+                await websocket.close(code=4408, reason="Connection timeout due to inactivity")
+            except Exception:
+                pass  # Connection may already be closed
+            self.disconnect(run_id, websocket, tenant_id)
+            cleanup_count += 1
+            logger.info(
+                "WebSocket idle connection cleaned up",
+                extra={"run_id": run_id, "tenant_id": tenant_id},
+            )
+
+        if cleanup_count > 0:
+            logger.info(f"Cleaned up {cleanup_count} idle WebSocket connections")
+
+        return cleanup_count
+
+    def get_stats(self) -> dict[str, Any]:
+        """Get connection statistics for monitoring (VULN-013)."""
+        total_connections = sum(len(conns) for tenant_conns in self.active_connections.values() for conns in tenant_conns.values())
+        legacy_connections = sum(len(conns) for conns in self._legacy_connections.values())
+
+        return {
+            "total_connections": total_connections,
+            "legacy_connections": legacy_connections,
+            "tenant_count": len(self.active_connections),
+            "metadata_entries": len(self._connection_metadata),
+        }
+
     async def broadcast(self, run_id: str, message: dict[str, Any], tenant_id: str | None = None) -> None:
         """Broadcast message to all connections for a run.
 
@@ -84,12 +232,13 @@ class ConnectionManager:
         """
         connections: list[WebSocket] = []
 
-        if tenant_id and tenant_id in self.active_connections:
+        if tenant_id is None:
+            logger.warning("Broadcast skipped due to missing tenant_id", extra={"run_id": run_id})
+            return
+
+        if tenant_id in self.active_connections:
             # Tenant-isolated broadcast
             connections = self.active_connections[tenant_id].get(run_id, [])
-        elif run_id in self._legacy_connections:
-            # Legacy mode fallback
-            connections = self._legacy_connections.get(run_id, [])
 
         if connections:
             disconnected = []
@@ -110,6 +259,7 @@ class ConnectionManager:
         error: dict[str, Any] | None = None,
         progress: int = 0,
         message: str = "",
+        tenant_id: str | None = None,
     ) -> None:
         """Broadcast a run status update event.
 
@@ -121,6 +271,7 @@ class ConnectionManager:
             error: Error details if applicable
             progress: Progress percentage (0-100), default 0
             message: Human-readable status message, default empty
+            tenant_id: Tenant identifier for isolation (recommended for security)
         """
         # Match frontend ProgressEvent type for consistency
         event_message: dict[str, Any] = {
@@ -135,7 +286,7 @@ class ConnectionManager:
         if error:
             event_message["error"] = error
             event_message["details"] = error  # FE may also look for 'details'
-        await self.broadcast(run_id, event_message)
+        await self.broadcast(run_id, event_message, tenant_id=tenant_id)
 
     async def broadcast_step_event(
         self,
@@ -147,6 +298,7 @@ class ConnectionManager:
         message: str = "",
         attempt: int | None = None,
         details: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
     ) -> None:
         """Broadcast a step-level event.
 
@@ -159,6 +311,7 @@ class ConnectionManager:
             message: Human-readable status message
             attempt: Attempt number if applicable
             details: Additional details
+            tenant_id: Tenant identifier for isolation (recommended for security)
         """
         # Match frontend ProgressEvent type
         event_message: dict[str, Any] = {
@@ -174,7 +327,7 @@ class ConnectionManager:
             event_message["attempt"] = attempt
         if details:
             event_message["details"] = details
-        await self.broadcast(run_id, event_message)
+        await self.broadcast(run_id, event_message, tenant_id=tenant_id)
 
 
 # Global connection manager (will be imported by main.py)
@@ -292,9 +445,11 @@ async def websocket_progress(
     - In production: JWT token required via query parameter (?token=xxx)
     - In development (SKIP_AUTH=true): Authentication skipped
 
-    Security:
+    Security (VULN-013):
     - Verifies JWT token validity
     - Verifies that the run belongs to the authenticated user's tenant
+    - Enforces connection limits per tenant and per run
+    - Implements idle timeout for inactive connections
     - Rejects connections with invalid/missing auth or unauthorized run access
     """
     # Step 1: Authenticate the connection
@@ -314,9 +469,24 @@ async def websocket_progress(
             await websocket.close(code=4003, reason=verification.error_message or "Run not found or access denied")
         return
 
-    # Step 3: Accept connection and register
+    # Step 3: Check connection limits (VULN-013)
+    can_accept, rejection_reason = ws_manager.can_accept_connection(user.tenant_id, run_id)
+    if not can_accept:
+        logger.warning(
+            f"WebSocket connection rejected due to limit: {rejection_reason}",
+            extra={"run_id": run_id, "tenant_id": user.tenant_id},
+        )
+        await websocket.close(code=4029, reason=rejection_reason)
+        return
+
+    # Step 4: Accept connection and register
     await websocket.accept()
-    await ws_manager.connect(run_id, websocket)
+    accepted = await ws_manager.connect(run_id, websocket, tenant_id=user.tenant_id)
+    if not accepted:
+        # Race condition: limit exceeded between check and connect
+        await websocket.close(code=4029, reason="Connection limit exceeded")
+        return
+
     logger.info(
         "WebSocket connected",
         extra={"run_id": run_id, "user_id": user.user_id, "tenant_id": user.tenant_id},
@@ -324,11 +494,30 @@ async def websocket_progress(
 
     try:
         while True:
-            data = await websocket.receive_text()
+            # VULN-013: Use timeout for receive to detect idle connections
+            try:
+                data = await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=CONNECTION_IDLE_TIMEOUT_SECONDS,
+                )
+            except TimeoutError:
+                logger.info(
+                    "WebSocket connection timed out due to inactivity",
+                    extra={"run_id": run_id, "tenant_id": user.tenant_id},
+                )
+                await websocket.close(code=4408, reason="Connection timeout due to inactivity")
+                break
+
+            # Update activity timestamp on any received data
+            ws_manager.update_activity(websocket)
             logger.debug("WebSocket received", extra={"run_id": run_id, "payload": data})
 
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
 
     except WebSocketDisconnect:
-        ws_manager.disconnect(run_id, websocket)
+        pass  # Normal disconnect
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}", extra={"run_id": run_id}, exc_info=True)
+    finally:
+        ws_manager.disconnect(run_id, websocket, tenant_id=user.tenant_id)

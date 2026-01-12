@@ -1,13 +1,10 @@
 """Unit tests for parallel step execution."""
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from apps.worker.workflows.parallel import (
-    run_parallel_steps,
-    ParallelStepError,
-    STEP_RETRY_POLICY,
     PARALLEL_STEP_TIMEOUT,
+    ParallelStepError,
 )
 
 
@@ -22,10 +19,6 @@ class TestParallelStepExecution:
         assert error.failed_steps == failed
         assert "step3a" in str(error)
         assert "step3c" in str(error)
-
-    def test_retry_policy_configured(self):
-        """Test retry policy is properly configured."""
-        assert STEP_RETRY_POLICY.maximum_attempts == 3
 
     def test_timeout_configured(self):
         """Test parallel step timeout is 120 seconds."""

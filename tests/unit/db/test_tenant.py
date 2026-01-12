@@ -71,8 +71,8 @@ class TestTenantDBManagerEngineCache:
                 manager._get_or_create_engine(tenant_id, db_url),
             )
 
-            # All should return the same engine
-            assert all(r == mock_engine for r in results)
+            # All should return the same _CachedEngine with the same engine
+            assert all(r.engine == mock_engine for r in results)
 
             # Engine should be created only once (double-checked locking)
             assert mock_create.call_count == 1
@@ -107,17 +107,14 @@ class TestTenantDBManagerEngineCache:
             mock_create.return_value = mock_engine
 
             # First call creates the engine
-            await manager._get_or_create_engine(tenant_id, db_url)
+            first_result = await manager._get_or_create_engine(tenant_id, db_url)
             assert mock_create.call_count == 1
 
-            # Pre-cache the engine manually to test fast path
-            manager._engines[tenant_id] = mock_engine
-
-            # Second call should use fast path (no lock acquisition needed)
+            # Second call should use fast path (cache hit)
             result = await manager._get_or_create_engine(tenant_id, db_url)
-            assert result == mock_engine
+            assert result.engine == first_result.engine
 
-            # Should still be 1 call (fast path doesn't create)
+            # Should still be 1 call (fast path doesn't create new engine)
             assert mock_create.call_count == 1
 
 

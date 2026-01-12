@@ -7,6 +7,7 @@ All workflow activities inherit from BaseActivity to ensure:
 - Storage: All outputs stored via ArtifactStore (path/digest only returned)
 """
 
+import asyncio
 import hashlib
 import json
 import os
@@ -49,9 +50,14 @@ async def load_step_data(
         step: Step identifier (e.g., 'step0', 'step3a')
 
     Returns:
-        dict with step output data, or None if not found
+        dict with step output data, or None if not found (artifact doesn't exist)
+
+    Raises:
+        Exception: If storage access fails (non-NotFound errors)
     """
     import logging
+
+    from minio.error import S3Error
 
     logger = logging.getLogger(__name__)
 
@@ -65,9 +71,22 @@ async def load_step_data(
             return result
         logger.warning(f"[load_step_data] No data found for {step}")
         return None
+    except S3Error as e:
+        # NoSuchKey is expected when artifact doesn't exist - return None
+        if e.code == "NoSuchKey":
+            logger.warning(f"[load_step_data] No data found for {step} (NoSuchKey)")
+            return None
+        # Other S3 errors (permissions, network, etc.) should be raised
+        logger.error(f"[load_step_data] S3 error loading {step}: {e.code}: {e}")
+        raise
+    except json.JSONDecodeError as e:
+        # Corrupted data - should be raised as it indicates a serious problem
+        logger.error(f"[load_step_data] Invalid JSON for {step}: {e}")
+        raise
     except Exception as e:
+        # Unexpected errors should be raised for proper handling upstream
         logger.error(f"[load_step_data] Failed to load {step}: {type(e).__name__}: {e}")
-        return None
+        raise
 
 
 async def save_step_data(
@@ -77,7 +96,7 @@ async def save_step_data(
     step: str,
     data: dict[str, Any],
     filename: str = "output.json",
-) -> ArtifactRef | None:
+) -> ArtifactRef:
     """Save step output data to storage.
 
     Helper function for activities that need to save intermediate or final step data.
@@ -91,7 +110,10 @@ async def save_step_data(
         filename: Output filename (default: output.json)
 
     Returns:
-        ArtifactRef with path and digest, or None if failed
+        ArtifactRef with path and digest
+
+    Raises:
+        Exception: If storage save fails (callers should handle appropriately)
     """
     import logging
 
@@ -106,8 +128,9 @@ async def save_step_data(
         logger.info(f"[save_step_data] Saved {step}/{filename}: {len(content)} bytes")
         return ref
     except Exception as e:
+        # Save failures are critical - raise for proper handling upstream
         logger.error(f"[save_step_data] Failed to save {step}/{filename}: {type(e).__name__}: {e}")
-        return None
+        raise
 
 
 class ActivityError(Exception):
@@ -202,6 +225,32 @@ class BaseActivity(ABC):
         """
         ...
 
+    async def _heartbeat_loop(
+        self,
+        step_id: str,
+        interval_seconds: int = 30,
+    ) -> None:
+        """Background task to send periodic heartbeats.
+
+        Args:
+            step_id: Step identifier for heartbeat message
+            interval_seconds: Interval between heartbeats (default: 30s)
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+        elapsed = 0
+        while True:
+            await asyncio.sleep(interval_seconds)
+            elapsed += interval_seconds
+            try:
+                activity.heartbeat(f"{step_id} running ({elapsed}s elapsed)")
+                logger.debug(f"Heartbeat sent for {step_id} ({elapsed}s)")
+            except Exception as e:
+                # Heartbeat failure is not fatal, just log and continue
+                logger.warning(f"Heartbeat failed for {step_id}: {e}")
+                break
+
     async def run(
         self,
         tenant_id: str,
@@ -280,6 +329,13 @@ class BaseActivity(ABC):
             retry_count=attempt,
         )
 
+        # Start heartbeat loop for long-running activities (timeout > 120s)
+        timeout_seconds = config.get("timeout", 120)
+        heartbeat_task: asyncio.Task[None] | None = None
+        if timeout_seconds > 120:
+            heartbeat_task = asyncio.create_task(self._heartbeat_loop(self.step_id, interval_seconds=30))
+            logger.info(f"[BaseActivity.run] Started heartbeat loop for {self.step_id}")
+
         try:
             # Build minimal state for execution
             state = GraphState(
@@ -294,20 +350,10 @@ class BaseActivity(ABC):
                 metadata={},
             )
 
-            # Send heartbeat for long-running activities (timeout > 120s)
-            timeout_seconds = config.get("timeout", 120)
-            if timeout_seconds > 120:
-                activity.heartbeat(f"Starting {self.step_id}...")
-                logger.info(f"[BaseActivity.run] Sent heartbeat for {self.step_id}")
-
             logger.info(f"[BaseActivity.run] Calling execute() for {self.step_id}")
             # Execute the step
             result = await self.execute(ctx, state)
             logger.info(f"[BaseActivity.run] execute() completed for {self.step_id}")
-
-            # Send completion heartbeat for long-running activities
-            if timeout_seconds > 120:
-                activity.heartbeat(f"Completed {self.step_id}, storing output...")
 
             # Store output
             artifact_ref = await self._store_output(
@@ -411,6 +457,16 @@ class BaseActivity(ABC):
                 details={"original_error": str(e)},
             ) from e
 
+        finally:
+            # Cancel heartbeat task if running
+            if heartbeat_task is not None and not heartbeat_task.done():
+                heartbeat_task.cancel()
+                try:
+                    await heartbeat_task
+                except asyncio.CancelledError:
+                    pass  # Expected when cancelling
+                logger.info(f"[BaseActivity.run] Cancelled heartbeat loop for {self.step_id}")
+
     async def _get_dependency_digests(
         self,
         tenant_id: str,
@@ -427,16 +483,28 @@ class BaseActivity(ABC):
         """
         digests: dict[str, str | None] = {}
         for dep_step in self.depends_on_steps:
+            meta_path = self.store.build_path(tenant_id, run_id, dep_step, "metadata.json")
             try:
-                meta_path = self.store.build_path(tenant_id, run_id, dep_step, "metadata.json")
                 meta_content = await self._get_raw_content(meta_path)
-                if meta_content:
-                    metadata = json.loads(meta_content.decode("utf-8"))
-                    digests[dep_step] = metadata.get("output_digest")
-                else:
-                    digests[dep_step] = None
-            except Exception:
+            except Exception as e:
+                raise ActivityError(
+                    message=f"Failed to load dependency metadata for {dep_step}: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                ) from e
+
+            if not meta_content:
                 digests[dep_step] = None
+                continue
+
+            try:
+                metadata = json.loads(meta_content.decode("utf-8"))
+            except json.JSONDecodeError as e:
+                raise ActivityError(
+                    message=f"Invalid metadata JSON for {dep_step}: {e}",
+                    category=ErrorCategory.NON_RETRYABLE,
+                ) from e
+
+            digests[dep_step] = metadata.get("output_digest")
         return digests
 
     async def _compute_input_digest(
@@ -574,8 +642,9 @@ class BaseActivity(ABC):
             if e.code == "NoSuchKey":
                 return None
             raise
-        except Exception:
-            return None
+        except Exception as e:
+            activity.logger.warning(f"Storage read failed for {path}: {e}")
+            raise
 
     async def _store_output(
         self,
@@ -612,15 +681,11 @@ class BaseActivity(ABC):
         )
 
         # Store metadata (for idempotency verification)
-        # NOTE: datetime.now() is allowed in Activity context because:
-        # 1. Activities are non-deterministic by design (external side effects)
-        # 2. Temporal's determinism requirement applies only to Workflow code
-        # 3. This metadata is for operational observability, not replay logic
         meta_content = json.dumps(
             {
                 "input_digest": input_digest,
                 "step_id": self.step_id,
-                "created_at": datetime.now().isoformat(),
+                "created_at": ctx.started_at.isoformat(),
                 "attempt": ctx.attempt,
             }
         )
@@ -677,27 +742,31 @@ class BaseActivity(ABC):
 
         logger = logging.getLogger(__name__)
 
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{API_BASE_URL}/api/internal/steps/update",
-                    json={
-                        "run_id": run_id,
-                        "tenant_id": tenant_id,
-                        "step_name": step_name,
-                        "status": status,
-                        "error_code": error_code,
-                        "error_message": error_message,
-                        "retry_count": retry_count,
-                    },
-                )
-                if response.status_code != 200:
-                    logger.warning(f"Failed to update step status: {response.status_code} {response.text}")
-                else:
+        max_attempts = 3 if status in ("completed", "failed") else 1
+        for attempt in range(1, max_attempts + 1):
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.post(
+                        f"{API_BASE_URL}/api/internal/steps/update",
+                        json={
+                            "run_id": run_id,
+                            "tenant_id": tenant_id,
+                            "step_name": step_name,
+                            "status": status,
+                            "error_code": error_code,
+                            "error_message": error_message,
+                            "retry_count": retry_count,
+                        },
+                    )
+                if response.status_code == 200:
                     logger.info(f"Step status updated: {step_name} -> {status}")
-        except Exception as e:
-            # Log but don't raise - step status update is not critical
-            logger.warning(f"Failed to update step status via API: {e}")
+                    return
+                logger.warning(f"Failed to update step status: {response.status_code} {response.text}")
+            except Exception as e:
+                logger.warning(f"Failed to update step status via API: {e}")
+
+            if attempt < max_attempts:
+                await asyncio.sleep(2 ** (attempt - 1))
 
     def create_step_error(
         self,

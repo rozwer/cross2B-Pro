@@ -12,11 +12,10 @@ from datetime import timedelta
 from typing import Any
 
 from temporalio import workflow
-from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
-# Import logger for workflow-safe logging
-workflow_logger = workflow.logger
+# Note: workflow.logger should be accessed within workflow context
+# Using module-level workflow.logger is deprecated; prefer workflow.logger directly
 
 
 class ParallelStepError(Exception):
@@ -26,14 +25,6 @@ class ParallelStepError(Exception):
         self.failed_steps = failed_steps
         super().__init__(message or f"Parallel steps failed: {failed_steps}")
 
-
-# Individual step retry policy
-STEP_RETRY_POLICY = RetryPolicy(
-    maximum_attempts=3,
-    initial_interval=timedelta(seconds=2),
-    maximum_interval=timedelta(seconds=30),
-    backoff_coefficient=2.0,
-)
 
 # Timeout per parallel step
 PARALLEL_STEP_TIMEOUT = timedelta(seconds=120)
@@ -86,7 +77,7 @@ async def run_parallel_steps(
         if not pending:
             break
 
-        workflow_logger.info(f"Parallel steps attempt {attempt}/{max_retry_rounds}: running {pending}")
+        workflow.logger.info(f"Parallel steps attempt {attempt}/{max_retry_rounds}: running {pending}")
 
         # Launch pending steps concurrently
         tasks = []
@@ -96,7 +87,6 @@ async def run_parallel_steps(
                 activity_name,
                 activity_args,
                 start_to_close_timeout=PARALLEL_STEP_TIMEOUT,
-                retry_policy=STEP_RETRY_POLICY,
             )
             tasks.append((step, task))
 
@@ -118,10 +108,10 @@ async def run_parallel_steps(
                     error_type = type(result).__name__
                 # Store both message and type for better diagnostics
                 last_errors[step] = f"[{error_type}] {error_msg}"
-                workflow_logger.warning(f"{step} failed (attempt {attempt}): [{error_type}] {error_msg}")
+                workflow.logger.warning(f"{step} failed (attempt {attempt}): [{error_type}] {error_msg}")
             else:
                 completed[step] = result
-                workflow_logger.info(f"{step} succeeded on attempt {attempt}")
+                workflow.logger.info(f"{step} succeeded on attempt {attempt}")
 
     # Check if all steps completed
     if len(completed) < len(parallel_steps):
@@ -132,5 +122,5 @@ async def run_parallel_steps(
             message=f"Parallel steps failed after {max_retry_rounds} attempts: {error_details}",
         )
 
-    workflow_logger.info("All parallel steps completed successfully")
+    workflow.logger.info("All parallel steps completed successfully")
     return completed
