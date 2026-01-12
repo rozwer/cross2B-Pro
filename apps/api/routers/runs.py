@@ -213,13 +213,13 @@ async def create_run(
                 # Update run status in separate transaction
                 async with db_manager.get_session(tenant_id) as session:
                     result = await session.execute(select(Run).where(Run.id == run_id))
-                    run_orm = result.scalar_one_or_none()
-                    if run_orm is None:
+                    run_orm_updated = result.scalar_one_or_none()
+                    if run_orm_updated is None:
                         raise HTTPException(status_code=404, detail="Run not found after creation")
-                    run_orm.status = RunStatus.RUNNING.value
-                    run_orm.started_at = now
-                    run_orm.updated_at = now
-                    run_response = run_orm_to_response(run_orm)
+                    run_orm_updated.status = RunStatus.RUNNING.value
+                    run_orm_updated.started_at = now
+                    run_orm_updated.updated_at = now
+                    run_response = run_orm_to_response(run_orm_updated)
 
                 logger.info(
                     "Temporal workflow started",
@@ -237,15 +237,15 @@ async def create_run(
                 # Update run status to failed in separate transaction
                 async with db_manager.get_session(tenant_id) as session:
                     result = await session.execute(select(Run).where(Run.id == run_id))
-                    run_orm = result.scalar_one_or_none()
-                    if run_orm is None:
+                    run_orm_failed = result.scalar_one_or_none()
+                    if run_orm_failed is None:
                         logger.error(f"Run {run_id} not found when trying to mark as failed")
                         raise HTTPException(status_code=404, detail="Run not found")
-                    run_orm.status = RunStatus.FAILED.value
-                    run_orm.error_code = "WORKFLOW_START_FAILED"
-                    run_orm.error_message = str(wf_error)
-                    run_orm.updated_at = now
-                    run_response = run_orm_to_response(run_orm)
+                    run_orm_failed.status = RunStatus.FAILED.value
+                    run_orm_failed.error_code = "WORKFLOW_START_FAILED"
+                    run_orm_failed.error_message = str(wf_error)
+                    run_orm_failed.updated_at = now
+                    run_response = run_orm_to_response(run_orm_failed)
 
         elif start_workflow and temporal_client is None:
             logger.warning(

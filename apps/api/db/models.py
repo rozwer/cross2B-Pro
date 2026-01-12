@@ -203,7 +203,7 @@ class AuditLog(Base):
     resource_type: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_id: Mapped[str] = mapped_column(String(128), nullable=False)
     details: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False, index=True)
     # VULN-011: チェーンハッシュ
     prev_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)  # 最初のエントリはNone
     entry_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # SHA256 of entry content
