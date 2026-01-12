@@ -4,8 +4,11 @@
 フォールバック禁止：別モデル/別プロバイダへの自動切替は行わない。
 """
 
+import inspect
+import json
 import logging
 from abc import ABC, abstractmethod
+from types import TracebackType
 from typing import Any
 
 from .schemas import (
@@ -116,9 +119,11 @@ class LLMInterface(ABC):
         """
         ...
 
-    def _normalize_messages(
-        self, messages: list[dict[str, str]] | list[LLMMessage]
-    ) -> list[dict[str, str]]:
+    async def close(self) -> None:
+        """Close underlying resources (optional for providers)."""
+        return None
+
+    def _normalize_messages(self, messages: list[dict[str, str]] | list[LLMMessage]) -> list[dict[str, str]]:
         """メッセージを正規化
 
         LLMMessageリストを辞書リストに変換。
@@ -207,9 +212,41 @@ class LLMInterface(ABC):
             },
         )
 
+    async def __aenter__(self) -> "LLMInterface":
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        await self.close()
+
+
+def _serialize_cache_kwargs(kwargs: dict[str, Any]) -> str:
+    """Serialize kwargs for cache key generation."""
+    if not kwargs:
+        return ""
+    try:
+        return json.dumps(kwargs, sort_keys=True, default=repr, ensure_ascii=True)
+    except (TypeError, ValueError):
+        return repr(sorted(kwargs.items(), key=lambda item: item[0]))
+
+
+async def _maybe_close_client(client: Any) -> None:
+    """Attempt to close a client if it exposes a close/aclose method."""
+    close_fn = getattr(client, "aclose", None) or getattr(client, "close", None)
+    if callable(close_fn):
+        result = close_fn()
+        if inspect.isawaitable(result):
+            await result
+
 
 # エイリアス（後方互換性のため）
 LLMClient = LLMInterface
+
+_LLM_CLIENT_CACHE: dict[str, LLMInterface] = {}
 
 
 def get_llm_client(provider: str, **kwargs: Any) -> LLMInterface:
@@ -226,15 +263,25 @@ def get_llm_client(provider: str, **kwargs: Any) -> LLMInterface:
         ValueError: 不明なプロバイダ
     """
     provider = provider.lower()
+    cache_key = f"{provider}:{_serialize_cache_kwargs(kwargs)}"
+    cached = _LLM_CLIENT_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
 
     if provider == "gemini":
         from .gemini import GeminiClient
-        return GeminiClient(**kwargs)
+
+        client: LLMInterface = GeminiClient(**kwargs)
     elif provider == "openai":
         from .openai import OpenAIClient
-        return OpenAIClient(**kwargs)
+
+        client = OpenAIClient(**kwargs)
     elif provider == "anthropic":
         from .anthropic import AnthropicClient
-        return AnthropicClient(**kwargs)
+
+        client = AnthropicClient(**kwargs)
     else:
         raise ValueError(f"Unknown LLM provider: {provider}")
+
+    _LLM_CLIENT_CACHE[cache_key] = client
+    return client

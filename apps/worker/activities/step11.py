@@ -292,10 +292,43 @@ class Step11ImageGeneration(BaseActivity):
 
         return classifications
 
-    def _get_gemini_client(self) -> GeminiClient:
-        """GeminiClientを取得（遅延初期化）."""
+    async def _get_gemini_client(self, force_new: bool = False) -> GeminiClient:
+        """GeminiClientを取得（遅延初期化 + ヘルスチェック）.
+
+        Args:
+            force_new: Trueの場合、既存のクライアントを破棄して新規作成
+
+        Returns:
+            GeminiClient: 健全なクライアントインスタンス
+
+        Note:
+            接続エラーやタイムアウト後に再利用すると不健全なクライアントで
+            再試行される可能性があるため、health_checkで状態を確認する。
+        """
+        if force_new and self._gemini_client is not None:
+            try:
+                await self._gemini_client.close()
+            except Exception:
+                pass  # クローズ失敗は無視
+            self._gemini_client = None
+
         if self._gemini_client is None:
             self._gemini_client = GeminiClient()
+        else:
+            # 既存クライアントのヘルスチェック
+            try:
+                is_healthy = await self._gemini_client.health_check()
+                if not is_healthy:
+                    activity.logger.warning("GeminiClient health check failed, creating new client")
+                    try:
+                        await self._gemini_client.close()
+                    except Exception:
+                        pass
+                    self._gemini_client = GeminiClient()
+            except Exception as e:
+                activity.logger.warning(f"GeminiClient health check error: {e}, creating new client")
+                self._gemini_client = GeminiClient()
+
         return self._gemini_client
 
     def _get_image_client(self) -> NanoBananaClient:
@@ -383,7 +416,8 @@ class Step11ImageGeneration(BaseActivity):
         # 全記事に対して画像を生成
         all_generated_images: list[GeneratedImage] = []
         total_tokens = 0
-        total_analysis_tokens = 0
+        total_analysis_input_tokens = 0
+        total_analysis_output_tokens = 0
         global_image_index = 0
 
         for article_data in articles_data:
@@ -406,7 +440,9 @@ class Step11ImageGeneration(BaseActivity):
                 image_count=step11_config.image_count,
                 position_request=step11_config.position_request,
             )
-            total_analysis_tokens += position_analysis.usage.get("tokens", 0)
+            analysis_usage = position_analysis.token_usage or {}
+            total_analysis_input_tokens += analysis_usage.get("input", 0)
+            total_analysis_output_tokens += analysis_usage.get("output", 0)
 
             if not position_analysis.positions:
                 warnings.append(f"article_{article_number}_no_positions_found")
@@ -502,9 +538,9 @@ class Step11ImageGeneration(BaseActivity):
             "markdown_with_images": final_markdown,
             "html_with_images": final_html,
             "model": "gemini-2.5-flash-image",
-            "usage": {
-                "analysis_tokens": total_analysis_tokens,
-                "image_tokens": total_tokens,
+            "token_usage": {
+                "input": total_analysis_input_tokens,
+                "output": total_analysis_output_tokens + total_tokens,
             },
             "warnings": warnings,
             "is_v2": is_v2,
@@ -557,7 +593,7 @@ class Step11ImageGeneration(BaseActivity):
         Returns:
             PositionAnalysisResult
         """
-        gemini = self._get_gemini_client()
+        gemini = await self._get_gemini_client()
 
         # セクション構造を抽出
         sections = self._extract_sections(markdown_content)
@@ -646,10 +682,9 @@ class Step11ImageGeneration(BaseActivity):
                 analysis_summary=result.get("analysis_summary", ""),
                 positions=positions,
                 model=response.model,
-                usage={
-                    "input_tokens": token_usage.input,
-                    "output_tokens": token_usage.output,
-                    "total_tokens": token_usage.total,
+                token_usage={
+                    "input": token_usage.input,
+                    "output": token_usage.output,
                 },
             )
 
@@ -701,7 +736,7 @@ class Step11ImageGeneration(BaseActivity):
         Returns:
             英語の画像生成プロンプト
         """
-        gemini = self._get_gemini_client()
+        gemini = await self._get_gemini_client()
 
         system_prompt = """あなたは画像生成AI用のプロンプトを作成する専門家です。
 与えられた情報から、高品質な画像を生成するための詳細なプロンプトを英語で作成してください。
@@ -1538,7 +1573,7 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
         markdown_with_images=final_markdown,
         html_with_images=final_html,
         model="gemini-2.5-flash-image",
-        usage={},
+        token_usage={},
     )
 
     # Save final output
