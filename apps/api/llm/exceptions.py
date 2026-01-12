@@ -153,13 +153,17 @@ class LLMValidationError(LLMError):
         provider: str | None = None,
         model: str | None = None,
         validation_errors: list[str] | None = None,
+        raw_output: str | None = None,
     ) -> None:
+        details: dict[str, list[str] | str] = {"validation_errors": validation_errors or []}
+        if raw_output is not None:
+            details["raw_output"] = raw_output
         super().__init__(
             message=message,
             category=ErrorCategory.VALIDATION_FAIL,
             provider=provider,
             model=model,
-            details={"validation_errors": validation_errors or []},
+            details=details,
         )
 
 
