@@ -32,13 +32,36 @@ router = APIRouter(prefix="/api/runs/{run_id}/step12", tags=["step12"])
 
 
 class ArticleMetadata(BaseModel):
-    """記事メタデータ."""
+    """記事メタデータ.
+
+    VULN-018: ダウンロード時は必須フィールドが設定されている必要がある
+    - titleは必須（空文字でもWordPress投稿は可能だが推奨されない）
+    - slugは必須（WordPressのURL生成に必要）
+    """
 
     title: str = ""
     meta_description: str = ""
     focus_keyword: str = ""
     word_count: int = 0
     slug: str = ""
+
+    def is_complete_for_download(self) -> bool:
+        """Check if metadata is complete for download/export."""
+        return bool(self.title and self.slug)
+
+    def validate_for_download(self) -> list[str]:
+        """Validate metadata for download and return list of issues.
+
+        VULN-018: ダウンロード前の検証
+        """
+        issues: list[str] = []
+        if not self.title:
+            issues.append("title is required")
+        if not self.slug:
+            issues.append("slug is required")
+        if self.word_count <= 0:
+            issues.append("word_count should be positive")
+        return issues
 
 
 class WordPressArticleResponse(BaseModel):
@@ -195,7 +218,7 @@ async def _get_step12_data(
                 return json.loads(data.decode("utf-8"))
             except json.JSONDecodeError as e:
                 logger.error(f"Corrupted step12 output JSON for run {run_id}: {e}")
-                return None
+                raise HTTPException(status_code=500, detail="Step12 data corrupted") from e
     except Exception as e:
         logger.warning(f"Failed to load step12 output: {e}")
     return None
@@ -483,6 +506,23 @@ async def download_all(
                 detail="Step12 has not been completed. Please wait for workflow completion.",
             )
 
+        # VULN-018: メタデータの検証
+        validation_warnings: list[str] = []
+        for article in step12_data.get("articles", []):
+            metadata_dict = article.get("metadata", {})
+            metadata = ArticleMetadata(**metadata_dict) if metadata_dict else ArticleMetadata()
+            issues = metadata.validate_for_download()
+            if issues:
+                article_num = article.get("article_number", "?")
+                validation_warnings.extend([f"Article {article_num}: {issue}" for issue in issues])
+
+        if validation_warnings:
+            logger.warning(
+                f"Metadata validation warnings for download: run_id={run_id}",
+                extra={"warnings": validation_warnings},
+            )
+            # 警告のみ - ダウンロードは許可（ワークフロー完了後のデータなので）
+
         # 監査ログを記録
         audit = AuditLogger(session)
         await audit.log(
@@ -506,7 +546,7 @@ async def download_all(
             zip_file.writestr(filename, content)
 
         # メタデータも含める
-        metadata = {
+        zip_metadata = {
             "run_id": run_id,
             "generated_at": step12_data.get("generation_metadata", {}).get("generated_at", ""),
             "wordpress_version_target": "6.0+",
@@ -518,7 +558,7 @@ async def download_all(
                 for a in step12_data.get("articles", [])
             ],
         }
-        zip_file.writestr("metadata.json", json.dumps(metadata, ensure_ascii=False, indent=2))
+        zip_file.writestr("metadata.json", json.dumps(zip_metadata, ensure_ascii=False, indent=2))
 
     zip_buffer.seek(0)
 
