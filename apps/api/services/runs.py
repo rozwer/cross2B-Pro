@@ -71,6 +71,8 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
                     attempts=[],
                     started_at=step_orm.started_at.isoformat() if step_orm.started_at else None,
                     completed_at=step_orm.completed_at.isoformat() if step_orm.completed_at else None,
+                    error_code=step_orm.error_code,
+                    error_message=step_orm.error_message,
                 )
             )
 
