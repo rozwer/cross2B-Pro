@@ -88,6 +88,8 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
 
     This endpoint is called by Temporal Worker to record step progress.
     No authentication required - assumes Docker network isolation.
+
+    Also updates the runs table current_step and status to keep UI in sync.
     """
     logger.info(
         "Updating step status",
@@ -144,6 +146,27 @@ async def update_step_status(request: StepUpdateRequest) -> dict[str, bool]:
                     "retry_count": request.retry_count,
                 },
             )
+
+            # Also update runs table current_step and status for UI sync
+            # Only update if step is running (starting a new step)
+            if request.status == "running":
+                await session.execute(
+                    text("""
+                        UPDATE runs
+                        SET current_step = CAST(:step_name AS VARCHAR),
+                            status = 'running',
+                            updated_at = NOW()
+                        WHERE id = CAST(:run_id AS UUID)
+                          AND tenant_id = :tenant_id
+                          AND status NOT IN ('completed', 'failed', 'cancelled')
+                    """),
+                    {
+                        "run_id": request.run_id,
+                        "step_name": request.step_name,
+                        "tenant_id": tenant_id,
+                    },
+                )
+
             await session.commit()
 
         return {"ok": True}

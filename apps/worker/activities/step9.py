@@ -495,12 +495,25 @@ class Step9FinalRewrite(BaseActivity):
         wc_data = parsed_data.get("word_count_final")
         word_count_final = None
         if wc_data:
+            # Normalize status from LLM (may return English values)
+            status_map = {
+                "achieved": "achieved",
+                "under_target_but_optimized": "補筆推奨",
+                "under_target": "補筆推奨",
+                "補筆推奨": "補筆推奨",
+                "under_target_critical": "補筆必須",
+                "補筆必須": "補筆必須",
+                "over_target": "要約必須",
+                "要約必須": "要約必須",
+            }
+            raw_status = wc_data.get("status", "achieved")
+            normalized_status = status_map.get(raw_status, "achieved")
             word_count_final = WordCountFinal(
                 target=wc_data.get("target", target_word_count),
                 actual=wc_data.get("actual", text_metrics.word_count),
                 variance=wc_data.get("variance", text_metrics.word_count - target_word_count),
                 variance_percent=wc_data.get("variance_percent", 0.0),
-                status=wc_data.get("status", "achieved"),
+                status=normalized_status,
                 compression_applied=wc_data.get("compression_applied", False),
             )
         else:

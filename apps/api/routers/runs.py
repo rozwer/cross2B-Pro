@@ -850,6 +850,7 @@ async def retry_step(
                 if run and run.status == RunStatus.WORKFLOW_STARTING.value:
                     run.status = RunStatus.RUNNING.value
                     run.updated_at = datetime.now()
+                    await session.commit()
                     logger.info("Run status updated to RUNNING after workflow start", extra={"run_id": run_id})
 
         except Exception as wf_error:
@@ -1128,6 +1129,7 @@ async def resume_from_step(
                 if run and run.status == RunStatus.WORKFLOW_STARTING.value:
                     run.status = RunStatus.RUNNING.value
                     run.updated_at = datetime.now()
+                    await session.commit()
                     logger.info("Run status updated to RUNNING after workflow start", extra={"run_id": run_id})
 
         except Exception as wf_error:
