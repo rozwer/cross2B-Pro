@@ -54,6 +54,7 @@ class QualityRetryLoop:
         validator: QualityValidator,
         enhance_prompt: Callable[[str, list[str]], str] | None = None,
         extract_content: Callable[[T], str] | None = None,
+        on_retry: Callable[[int], Awaitable[None]] | None = None,
     ) -> RetryLoopResult:
         """
         Execute LLM call with quality checking.
@@ -67,6 +68,9 @@ class QualityRetryLoop:
                 - Returns: Improved prompt
             extract_content: Function to extract content from LLM result
                 - Default: str(result)
+            on_retry: Callback for retry status updates
+                - Args: (retry_attempt_number starting from 1)
+                - Use to update step status to "retrying"
 
         Returns:
             RetryLoopResult:
@@ -120,6 +124,10 @@ class QualityRetryLoop:
             # Log retry attempt
             if not is_final_attempt:
                 logger.warning(f"Quality retry {attempt + 1}/{self.max_retries}: {quality.issues}")
+
+                # Notify retry status
+                if on_retry is not None:
+                    await on_retry(attempt + 1)
 
                 # Enhance prompt for next attempt
                 if enhance_prompt is not None:

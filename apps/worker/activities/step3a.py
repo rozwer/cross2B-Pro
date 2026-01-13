@@ -286,7 +286,8 @@ class Step3AQueryAnalysis(BaseActivity):
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config (V2モードでは出力が長くなるため、max_tokensを増加)
-        default_max_tokens = 6000 if is_v2 else 3000
+        # 出力が途中で切れないよう、十分な上限を設定
+        default_max_tokens = 16000 if is_v2 else 12000
         llm_config = LLMRequestConfig(
             max_tokens=config.get("max_tokens", default_max_tokens),
             temperature=config.get("temperature", 0.7),
@@ -300,12 +301,13 @@ class Step3AQueryAnalysis(BaseActivity):
 
         # Define LLM call function for retry loop
         async def llm_call(prompt: str) -> Any:
+            json_instruction = " CRITICAL: Output ONLY valid JSON. No explanations, no preamble. Start with '{' and end with '}'."
             system_prompt = (
                 "You are an expert in search query analysis, behavioral economics, "
                 "and user psychology. Analyze the search query and build detailed "
-                "user personas with psychological profiles."
+                "user personas with psychological profiles." + json_instruction
                 if is_v2
-                else "You are a search query analysis expert."
+                else "You are a search query analysis expert." + json_instruction
             )
             try:
                 return await llm.generate(

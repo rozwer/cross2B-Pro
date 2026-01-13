@@ -370,7 +370,8 @@ async def step3_parallel_execute(
             )
             return {
                 "step": "step3a",
-                "analysis": response.content,
+                "query_analysis": response.content,  # UI expects query_analysis field
+                "model": response.model,
                 "usage": {
                     "input_tokens": response.token_usage.input,
                     "output_tokens": response.token_usage.output,
@@ -403,7 +404,8 @@ async def step3_parallel_execute(
             )
             return {
                 "step": "step3b",
-                "analysis": response.content,
+                "cooccurrence_analysis": response.content,  # UI expects cooccurrence_analysis field
+                "model": response.model,
                 "usage": {
                     "input_tokens": response.token_usage.input,
                     "output_tokens": response.token_usage.output,
@@ -427,7 +429,8 @@ async def step3_parallel_execute(
                 keyword=keyword,
                 competitors=competitors,
             )
-            llm_config = LLMRequestConfig(max_tokens=3000)
+            # step3c requires more tokens for complex 4-pillar analysis output
+            llm_config = LLMRequestConfig(max_tokens=8000)
             response = await llm.generate(
                 messages=[{"role": "user", "content": p}],
                 system_prompt="You are a competitor analysis expert.",
@@ -436,7 +439,8 @@ async def step3_parallel_execute(
             )
             return {
                 "step": "step3c",
-                "analysis": response.content,
+                "competitor_analysis": response.content,  # UI expects competitor_analysis field
+                "model": response.model,
                 "usage": {
                     "input_tokens": response.token_usage.input,
                     "output_tokens": response.token_usage.output,

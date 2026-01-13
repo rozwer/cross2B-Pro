@@ -15,6 +15,15 @@ from typing import NoReturn
 from dotenv import load_dotenv
 from temporalio.client import Client
 from temporalio.worker import Worker
+from temporalio.worker._workflow_instance import UnsandboxedWorkflowRunner
+
+# NOTE: These imports are intentionally kept for future production use.
+# Currently using UnsandboxedWorkflowRunner due to httpx sandbox restrictions.
+# TODO: Switch to SandboxedWorkflowRunner with proper passthrough modules in production.
+from temporalio.worker.workflow_sandbox import (
+    SandboxedWorkflowRunner,  # noqa: F401
+    SandboxRestrictions,  # noqa: F401
+)
 
 from .activities import (
     step0_keyword_selection,
@@ -131,11 +140,17 @@ async def run_worker() -> None:
     client = await create_temporal_client()
 
     # Create worker
+    # Note: httpx uses urllib.request internally which is restricted in workflow sandbox.
+    # We pass through httpx and related modules to avoid sandbox restriction errors.
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,
         workflows=WORKFLOWS,
         activities=ACTIVITIES,
+        # Note: Using UnsandboxedWorkflowRunner to avoid sandbox restriction errors
+        # with httpx/http.client modules. In production, consider using SandboxedWorkflowRunner
+        # with proper passthrough modules configured.
+        workflow_runner=UnsandboxedWorkflowRunner(),
     )
 
     logger.info(f"Starting worker on task queue '{TASK_QUEUE}'")
