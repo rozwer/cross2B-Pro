@@ -28,6 +28,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from sqlalchemy import select
 
@@ -495,7 +496,8 @@ async def generate_image(
         image_digest = hashlib.sha256(image_bytes).hexdigest()
 
         # MinIO に保存（storage/{tenant}/{run}/step11/images/ に統一）
-        image_path = store.build_path(tenant_id, run_id, "step11", f"images/image_{index}.png")
+        # build_nested_path を使用してスラッシュを含むパスを正しく処理
+        image_path = store.build_nested_path(tenant_id, run_id, "step11", "images", f"image_{index}.png")
         await store.put(image_bytes, image_path, "image/png")
 
         logger.info(
@@ -596,6 +598,7 @@ async def insert_images_into_article(
     markdown_content: str,
     images: list[GeneratedImage],
     positions: list[ImagePosition],
+    run_id: str | None = None,
 ) -> tuple[str, str]:
     """画像を記事に挿入
 
@@ -603,24 +606,42 @@ async def insert_images_into_article(
         markdown_content: 元のMarkdownコンテンツ
         images: 生成された画像リスト
         positions: 画像挿入位置リスト
+        run_id: Run ID（API URL生成用、オプション）
 
     Returns:
         tuple[str, str]: (画像挿入済みMarkdown, HTML)
     """
+    store = ArtifactStore()
 
     result_md = markdown_content
     lines = result_md.split("\n")
 
     # 画像をセクションに挿入（セクションタイトルを探して挿入）
     for img in images:
-        if not img.image_base64 or img.status == "failed":
+        if img.status == "failed":
             continue  # 生成に失敗した画像はスキップ
+
+        # image_base64 がない場合は image_path から取得
+        image_base64 = img.image_base64
+        mime_type = img.mime_type or "image/png"
+
+        if not image_base64 and img.image_path:
+            try:
+                image_data = await store.get_raw(img.image_path)
+                if image_data:
+                    image_base64 = base64.b64encode(image_data).decode("utf-8")
+            except Exception as e:
+                logger.warning(f"Failed to load image from path {img.image_path}: {e}")
+                continue
+
+        if not image_base64:
+            continue  # 画像データがない場合はスキップ
 
         pos = img.position
         section_title = pos.section_title
 
         # Base64画像タグを作成
-        img_tag = f"\n\n![{img.alt_text}](data:{img.mime_type};base64,{img.image_base64})\n\n"
+        img_tag = f"\n\n![{img.alt_text}](data:{mime_type};base64,{image_base64})\n\n"
 
         # セクションタイトルを探して挿入
         inserted = False
@@ -758,12 +779,46 @@ async def submit_settings(
 
         await session.commit()
 
+    # Send Temporal signal to start step11 workflow
+    try:
+        temporal_client = await get_temporal_client()
+        workflow_handle = temporal_client.get_workflow_handle(run_id)
+        signal_payload = {
+            "image_count": data.image_count,
+            "position_request": data.position_request or "",
+        }
+        await workflow_handle.signal("step11_start_settings", signal_payload)
+        logger.info("Temporal step11_start_settings signal sent", extra={"run_id": run_id})
+    except Exception as sig_error:
+        # Log but don't fail - DB state is already updated
+        logger.warning(f"Failed to send step11_start_settings signal (may be expected for completed runs): {sig_error}")
+
     return {
         "success": True,
         "phase": "11B",
         "positions": [p.model_dump() for p in positions],
         "sections": sections,
         "analysis_summary": summary,
+    }
+
+
+@router.get("/state")
+async def get_state(
+    run_id: str,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Step11の現在の状態を取得（ウィザード復元用）"""
+    run, state = await get_run_and_state(run_id, user)
+
+    return {
+        "phase": state.phase,
+        "settings": state.settings.model_dump() if state.settings else None,
+        "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions],
+        "instructions": [i.model_dump() if isinstance(i, ImageInstruction) else i for i in state.instructions],
+        "images": [img.model_dump() if isinstance(img, GeneratedImage) else img for img in state.images],
+        "sections": state.sections,
+        "analysis_summary": state.analysis_summary,
+        "error": state.error,
     }
 
 
@@ -947,6 +1002,46 @@ async def get_images(
         "images": [img.model_dump() if isinstance(img, GeneratedImage) else img for img in state.images],
         "warnings": warnings,
     }
+
+
+@router.get("/images/{index}/content")
+async def get_image_content(
+    run_id: str,
+    index: int,
+    user: AuthUser = Depends(get_current_user),
+) -> Response:
+    """11D: 画像バイナリを取得"""
+    run, state = await get_run_and_state(run_id, user)
+
+    if index < 0 or index >= len(state.images):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    image = state.images[index]
+    image_path = image.image_path if isinstance(image, GeneratedImage) else image.get("image_path")
+
+    if not image_path:
+        raise HTTPException(status_code=404, detail="Image path not found")
+
+    # MinIO から画像を取得
+    store = ArtifactStore()
+    try:
+        image_data = await store.get_raw(image_path)
+        if not image_data:
+            raise HTTPException(status_code=404, detail="Image not found in storage")
+
+        # MIME typeを判定
+        mime_type = "image/png"
+        if image_path.endswith(".jpg") or image_path.endswith(".jpeg"):
+            mime_type = "image/jpeg"
+        elif image_path.endswith(".webp"):
+            mime_type = "image/webp"
+
+        return Response(content=image_data, media_type=mime_type)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get image from storage: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve image") from e
 
 
 @router.post("/images/retry")

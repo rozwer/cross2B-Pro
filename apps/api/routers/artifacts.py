@@ -514,49 +514,48 @@ async def get_run_preview(
 
             html_content = None
 
-            # First priority: Step12 output (if completed)
-            try:
-                step12_bytes = await store.get_by_path(
-                    tenant_id=tenant_id,
-                    run_id=run_id,
-                    step="step12",
-                    filename="output.json",
-                )
-                if step12_bytes:
-                    step12_data = json.loads(step12_bytes.decode("utf-8"))
-                    step12_articles = step12_data.get("articles", [])
-                    if step12_articles and article <= len(step12_articles):
-                        target_article = step12_articles[article - 1]
-                        html_content = target_article.get("html_content", target_article.get("gutenberg_blocks", ""))
-                        if html_content:
-                            logger.debug(f"Found HTML for article {article} at step12/output.json")
-            except Exception as e:
-                logger.debug(f"Could not get step12 output: {e}")
+            # First priority: Step11 output with base64 images (if completed)
+            # Step11のhtml_with_imagesはbase64埋め込みなのでプレビューに最適
+            step11_state = run.step11_state or {}
+            if step11_state.get("phase") == "completed":
+                try:
+                    step11_bytes = await store.get_by_path(
+                        tenant_id=tenant_id,
+                        run_id=run_id,
+                        step="step11",
+                        filename="output.json",
+                    )
 
-            # Second priority: Step11 output with images (if completed)
+                    if step11_bytes:
+                        step11_data = json.loads(step11_bytes.decode("utf-8"))
+                        # html_with_imagesはbase64埋め込みなのでプレビューに使用
+                        step11_html = step11_data.get("html_with_images")
+                        # base64画像が含まれている場合のみ使用
+                        if step11_html and "data:image" in step11_html:
+                            html_content = step11_html
+                            logger.debug("Found HTML with base64 images at step11/output.json")
+                except Exception as e:
+                    logger.debug(f"Could not get step11 output: {e}")
+
+            # Second priority: Step12 output (WordPress形式、画像はパス参照)
             if not html_content:
-                step11_state = run.step11_state or {}
-                if step11_state.get("phase") == "completed":
-                    try:
-                        step11_bytes = await store.get_by_path(
-                            tenant_id=tenant_id,
-                            run_id=run_id,
-                            step="step11",
-                            filename="output.json",
-                        )
-
-                        if step11_bytes:
-                            step11_data = json.loads(step11_bytes.decode("utf-8"))
-                            # Multi-article support: Step11 stores per-article preview HTMLs
-                            # Images are filtered by article_number in step12; here we use html_with_images
-                            step11_images = step11_data.get("images", [])
-                            # For legacy single article or when images exist, use html_with_images directly
-                            if article == 1 or not step11_images:
-                                html_content = step11_data.get("html_with_images")
+                try:
+                    step12_bytes = await store.get_by_path(
+                        tenant_id=tenant_id,
+                        run_id=run_id,
+                        step="step12",
+                        filename="output.json",
+                    )
+                    if step12_bytes:
+                        step12_data = json.loads(step12_bytes.decode("utf-8"))
+                        step12_articles = step12_data.get("articles", [])
+                        if step12_articles and article <= len(step12_articles):
+                            target_article = step12_articles[article - 1]
+                            html_content = target_article.get("html_content", target_article.get("gutenberg_blocks", ""))
                             if html_content:
-                                logger.debug(f"Found HTML for article {article} at step11/output.json")
-                    except Exception as e:
-                        logger.debug(f"Could not get step11 output: {e}")
+                                logger.debug(f"Found HTML for article {article} at step12/output.json")
+                except Exception as e:
+                    logger.debug(f"Could not get step12 output: {e}")
 
             # Third priority: step10/preview.html
             if not html_content:

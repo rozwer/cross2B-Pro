@@ -307,15 +307,22 @@ def _determine_step_status(
         return StepStatus.COMPLETED
 
     # Special handling for parent steps (step3): derive from children
+    # step3 represents "構成" (outline/structure) which completes when parallel execution starts
+    # Once step3a/b/c start running, step3 should show as COMPLETED
     if step_name in parent_child_groups:
         children = parent_child_groups[step_name]
         all_children_completed = all(child in completed_steps for child in children)
         if all_children_completed:
             return StepStatus.COMPLETED
-        if current_step in children:
-            if run_status == RunStatus.FAILED.value:
-                return StepStatus.FAILED
-            return StepStatus.RUNNING
+        # If parallel execution has started (step3_parallel) or any child has started/completed,
+        # the parent step (step3) should be COMPLETED (not RUNNING)
+        # This matches user expectation: "構成" completes before "3-A/3-B/3-C" run
+        if current_step == "step3_parallel" or current_step in children:
+            return StepStatus.COMPLETED
+        # Check if any child has completed (means parallel phase has progressed)
+        any_child_completed = any(child in completed_steps for child in children)
+        if any_child_completed:
+            return StepStatus.COMPLETED
         return StepStatus.PENDING
 
     # Special handling for parallel steps (step3a/b/c, step7a/b)
@@ -466,12 +473,28 @@ def _handle_running_workflow(
             logger.info(f"Run {run.id} marked as waiting_approval from Temporal sync")
 
     # Check if waiting for image input (Step11)
+    # But skip if step11 is already completed (finalize was called)
     elif current_step in step11_waiting_states:
-        if run.status != RunStatus.WAITING_IMAGE_INPUT.value:
-            run.status = RunStatus.WAITING_IMAGE_INPUT.value
-            run.updated_at = now
-            db_updated = True
-            logger.info(f"Run {run.id} marked as waiting_image_input from Temporal sync")
+        # Check if step11 is already finalized
+        step11_phase = None
+        if run.step11_state and isinstance(run.step11_state, dict):
+            step11_phase = run.step11_state.get("phase")
+        logger.debug(f"Run {run.id} step11 check: current_step={current_step}, step11_phase={step11_phase}, status={run.status}")
+
+        # Only set waiting_image_input if step11 is not completed/skipped
+        if step11_phase not in ("completed", "skipped"):
+            if run.status != RunStatus.WAITING_IMAGE_INPUT.value:
+                run.status = RunStatus.WAITING_IMAGE_INPUT.value
+                run.updated_at = now
+                db_updated = True
+                logger.info(f"Run {run.id} marked as waiting_image_input from Temporal sync")
+        else:
+            # Step11 is completed, keep status as RUNNING
+            if run.status == RunStatus.WAITING_IMAGE_INPUT.value:
+                run.status = RunStatus.RUNNING.value
+                run.updated_at = now
+                db_updated = True
+                logger.info(f"Run {run.id} step11 completed, changing to running from Temporal sync")
 
     elif rejected:
         if run.status != RunStatus.FAILED.value:

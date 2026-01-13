@@ -550,6 +550,29 @@ class ArtifactStore:
                 return None
             raise ArtifactStoreError(f"Failed to retrieve artifact: {e}") from e
 
+    async def get_raw(self, path: str) -> bytes | None:
+        """フルパスから直接アーティファクトを取得
+
+        Args:
+            path: ストレージ内のフルパス（例: storage/tenant/run/step/file.png）
+
+        Returns:
+            アーティファクトのバイトデータ、存在しない場合はNone
+        """
+        try:
+            response = self.client.get_object(
+                bucket_name=self.bucket,
+                object_name=path,
+            )
+            content = response.read()
+            response.close()
+            response.release_conn()
+            return content
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                return None
+            raise ArtifactStoreError(f"Failed to retrieve artifact: {e}") from e
+
     async def list_step_artifacts(
         self,
         tenant_id: str,

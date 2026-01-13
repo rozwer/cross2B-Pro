@@ -411,7 +411,12 @@ async def get_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> Ru
 
             # Sync with Temporal state if workflow is active
             db_updated = False
-            if run.status in (RunStatus.RUNNING.value, RunStatus.WAITING_APPROVAL.value, RunStatus.PENDING.value):
+            if run.status in (
+                RunStatus.RUNNING.value,
+                RunStatus.WAITING_APPROVAL.value,
+                RunStatus.PENDING.value,
+                RunStatus.WAITING_IMAGE_INPUT.value,
+            ):
                 db_updated = await sync_run_with_temporal(run, temporal_client)
 
             if db_updated:
