@@ -106,6 +106,8 @@ export function WorkflowPattern3_DifyStyle({
         };
       case "running":
         return { label: "実行中", bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" };
+      case "retrying":
+        return { label: "リトライ中", bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" };
       case "failed":
         return { label: "失敗", bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500" };
       default:

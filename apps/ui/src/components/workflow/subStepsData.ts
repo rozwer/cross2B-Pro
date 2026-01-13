@@ -116,7 +116,7 @@ export function getSubStepStatus(
   parentStatus: string | undefined,
   subStepIndex: number,
   totalSubSteps: number,
-): "completed" | "running" | "failed" | "pending" {
+): "completed" | "running" | "retrying" | "failed" | "pending" {
   if (!parentStatus) return "pending";
   if (parentStatus === "completed") return "completed";
   if (parentStatus === "failed") {
@@ -127,6 +127,11 @@ export function getSubStepStatus(
     // When parent is running, show first sub-step as running
     // This is a simplified view since we don't have granular sub-step tracking
     if (subStepIndex === 0) return "running";
+    return "pending";
+  }
+  if (parentStatus === "retrying") {
+    // When parent is retrying, show first sub-step as retrying
+    if (subStepIndex === 0) return "retrying";
     return "pending";
   }
   return "pending";

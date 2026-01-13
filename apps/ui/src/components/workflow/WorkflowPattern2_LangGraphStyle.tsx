@@ -112,6 +112,13 @@ export function WorkflowPattern2_LangGraphStyle({
           text: "text-blue-700",
           icon: "text-blue-500",
         };
+      case "retrying":
+        return {
+          border: "border-orange-400",
+          bg: "bg-orange-50",
+          text: "text-orange-700",
+          icon: "text-orange-500",
+        };
       case "failed":
         return {
           border: "border-red-400",
@@ -135,6 +142,7 @@ export function WorkflowPattern2_LangGraphStyle({
       case "completed":
         return <CheckCircle className="w-3.5 h-3.5" />;
       case "running":
+      case "retrying":
         return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
       case "failed":
         return <XCircle className="w-3.5 h-3.5" />;
