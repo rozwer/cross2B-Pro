@@ -13,6 +13,9 @@ import {
 import { cn } from "@/lib/utils";
 import type { GeneratedImage } from "@/lib/types";
 
+// APIベースURL
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
+
 interface ImageReview {
   index: number;
   accepted: boolean;
@@ -21,20 +24,25 @@ interface ImageReview {
 }
 
 interface Phase11D_ReviewProps {
+  runId: string;
   images: GeneratedImage[];
   warnings: string[];
   maxRetries?: number;
   onSubmit: (reviews: ImageReview[]) => void;
   onBack: () => void;
+  /** 指定フェーズから再開（再生成なしで戻る） */
+  onRestartFrom?: (phase: string) => void;
   loading?: boolean;
 }
 
 export function Phase11D_Review({
+  runId,
   images,
   warnings,
   maxRetries = 3,
   onSubmit,
   onBack,
+  onRestartFrom,
   loading = false,
 }: Phase11D_ReviewProps) {
   const [reviews, setReviews] = useState<Map<number, ImageReview>>(
@@ -50,6 +58,7 @@ export function Phase11D_Review({
     () => new Map()
   );
   const [showRetryInput, setShowRetryInput] = useState<number | null>(null);
+  const [showBackOptions, setShowBackOptions] = useState(false);
 
   // Reset state when images change (e.g., after retry)
   // This includes reviews, retryInputs, and showRetryInput to prevent stale data
@@ -161,10 +170,18 @@ export function Phase11D_Review({
             >
               {/* 画像 */}
               <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                {image.image_base64 ? (
+                {image.image_path || image.image_base64 ? (
                   <img
-                    src={`data:${image.mime_type};base64,${image.image_base64}`}
-                    alt={image.alt_text}
+                    src={
+                      // image_pathがあればAPI経由で取得（パフォーマンス優先）
+                      // image_base64は大きすぎてdata URIだとブラウザが重くなる可能性
+                      image.image_path
+                        ? `${API_BASE}/api/runs/${runId}/step11/images/${image.index}/content`
+                        : image.image_base64
+                          ? `data:${image.mime_type || "image/png"};base64,${image.image_base64}`
+                          : ""
+                    }
+                    alt={image.alt_text || `画像 ${image.index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -275,15 +292,58 @@ export function Phase11D_Review({
         })}
       </div>
 
+      {/* 戻るオプション */}
+      {showBackOptions && onRestartFrom && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg space-y-3">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            どのように戻りますか？
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setShowBackOptions(false);
+                onRestartFrom("11C");
+              }}
+              disabled={loading}
+              className="px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              指示を修正して再生成
+            </button>
+            <button
+              onClick={() => {
+                setShowBackOptions(false);
+                onBack();
+              }}
+              disabled={loading}
+              className="px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              そのまま指示画面へ（画像保持）
+            </button>
+          </div>
+          <button
+            onClick={() => setShowBackOptions(false)}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            キャンセル
+          </button>
+        </div>
+      )}
+
       {/* アクションボタン */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
-          onClick={onBack}
-          disabled={loading}
+          onClick={() => {
+            if (onRestartFrom) {
+              setShowBackOptions(true);
+            } else {
+              onBack();
+            }
+          }}
+          disabled={loading || showBackOptions}
           className={cn(
             "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors",
             "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700",
-            loading && "opacity-50 cursor-not-allowed"
+            (loading || showBackOptions) && "opacity-50 cursor-not-allowed"
           )}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -293,6 +353,7 @@ export function Phase11D_Review({
         <button
           onClick={handleSubmit}
           disabled={loading}
+          aria-busy={loading}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
             "bg-primary-600 text-white hover:bg-primary-700",

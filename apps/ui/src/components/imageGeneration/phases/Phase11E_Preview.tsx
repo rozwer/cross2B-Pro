@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Check,
   Loader2,
@@ -8,33 +8,7 @@ import {
   Code,
   Eye,
 } from "lucide-react";
-import DOMPurify from "dompurify";
 import { cn } from "@/lib/utils";
-
-// DOMPurify 許可設定（HtmlPreview.tsx と同様）
-const DOMPURIFY_CONFIG = {
-  ALLOWED_TAGS: [
-    "p", "div", "span", "br", "hr",
-    "h1", "h2", "h3", "h4", "h5", "h6",
-    "ul", "ol", "li",
-    "table", "thead", "tbody", "tr", "th", "td",
-    "strong", "em", "b", "i", "u", "s", "del",
-    "a", "img",
-    "blockquote", "pre", "code",
-    "figure", "figcaption",
-    "article", "section", "header", "footer", "main",
-  ],
-  ALLOWED_ATTR: [
-    "class", "id", "style",
-    "href", "target", "rel",
-    "src", "alt", "title", "width", "height",
-    "colspan", "rowspan",
-  ],
-  FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input", "button"],
-  FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
-  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-  ALLOW_DATA_ATTR: false,
-};
 
 interface Phase11E_PreviewProps {
   previewHtml: string;
@@ -53,12 +27,6 @@ export function Phase11E_Preview({
 }: Phase11E_PreviewProps) {
   const [viewMode, setViewMode] = useState<"preview" | "html">("preview");
   const [showRestartOptions, setShowRestartOptions] = useState(false);
-
-  // DOMPurify でサニタイズ（XSS対策）
-  const sanitizedHtml = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    return DOMPurify.sanitize(previewHtml, DOMPURIFY_CONFIG);
-  }, [previewHtml]);
 
   return (
     <div className="space-y-6">
@@ -105,9 +73,12 @@ export function Phase11E_Preview({
             プレビューを読み込み中...
           </div>
         ) : viewMode === "preview" ? (
-          <div
-            className="w-full h-96 overflow-auto p-4 prose prose-sm dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+          // 完全なHTMLドキュメントなのでiframeで表示
+          <iframe
+            srcDoc={previewHtml}
+            title="記事プレビュー"
+            className="w-full h-96 bg-white"
+            sandbox="allow-same-origin"
           />
         ) : (
           <pre className="p-4 h-96 overflow-auto text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
@@ -123,6 +94,13 @@ export function Phase11E_Preview({
             どこからやり直しますか？
           </p>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onRestartFrom("11D")}
+              disabled={loading}
+              className="px-3 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              画像確認に戻る（11D）
+            </button>
             <button
               onClick={() => onRestartFrom("11C")}
               disabled={loading}

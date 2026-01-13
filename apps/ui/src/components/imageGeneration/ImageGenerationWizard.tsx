@@ -109,6 +109,63 @@ export function ImageGenerationWizard({
     }
   }, [isOpen]);
 
+  // ダイアログが開いたときにDBから状態を復元
+  const hasLoadedStateRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen || hasLoadedStateRef.current) return;
+
+    const loadState = async () => {
+      try {
+        setState((prev) => ({ ...prev, loading: true }));
+        const data = await api.runs.getStep11State(runId);
+
+        // DBの状態からUIフェーズにマッピング
+        const phaseMap: Record<string, Step11Phase> = {
+          idle: "waiting_11A",
+          "11A": "waiting_11A",
+          "11B": "waiting_11B",
+          "11C": "waiting_11C",
+          "11D": "waiting_11D",
+          "11E": "waiting_11E",
+          completed: "completed",
+          skipped: "skipped",
+        };
+
+        const uiPhase = phaseMap[data.phase] || currentPhase || "waiting_11A";
+
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          phase: uiPhase,
+          settings: data.settings
+            ? { imageCount: data.settings.image_count, positionRequest: data.settings.position_request }
+            : null,
+          positions: data.positions,
+          sections: data.sections,
+          analysisSummary: data.analysis_summary,
+          images: data.images,
+          warnings: [],
+          error: data.error,
+        }));
+
+        hasLoadedStateRef.current = true;
+      } catch (err) {
+        console.warn("Failed to load step11 state:", err);
+        setState((prev) => ({ ...prev, loading: false }));
+        hasLoadedStateRef.current = true;
+      }
+    };
+
+    loadState();
+  }, [isOpen, runId, currentPhase]);
+
+  // ダイアログが閉じたらフラグをリセット
+  useEffect(() => {
+    if (!isOpen) {
+      hasLoadedStateRef.current = false;
+    }
+  }, [isOpen]);
+
   // Fetch data based on current phase (only when phase actually changes)
   useEffect(() => {
     if (!isOpen) return;
@@ -125,6 +182,8 @@ export function ImageGenerationWizard({
       try {
         switch (state.phase) {
           case "waiting_11B": {
+            // すでにpositionsがあればスキップ（戻るボタンで戻った場合）
+            if (state.positions.length > 0) break;
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Positions(runId);
             if (abortController.signal.aborted) return;
@@ -138,6 +197,8 @@ export function ImageGenerationWizard({
             break;
           }
           case "waiting_11D": {
+            // すでにimagesがあればスキップ（戻るボタンで戻った場合）
+            if (state.images.length > 0) break;
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Images(runId);
             if (abortController.signal.aborted) return;
@@ -150,6 +211,8 @@ export function ImageGenerationWizard({
             break;
           }
           case "waiting_11E": {
+            // すでにpreviewHtmlがあればスキップ（戻るボタンで戻った場合）
+            if (state.previewHtml) break;
             setState((prev) => ({ ...prev, loading: true }));
             const data = await api.runs.getStep11Preview(runId);
             if (abortController.signal.aborted) return;
@@ -275,7 +338,8 @@ export function ImageGenerationWizard({
 
   const handleInstructionsSubmit = useCallback(
     async (instructions: Array<{ index: number; instruction: string }>) => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      // 新規生成を選んだ場合は画像をクリアして生成
+      setState((prev) => ({ ...prev, loading: true, error: null, images: [], previewHtml: "" }));
       try {
         await api.runs.submitImageInstructions(runId, { instructions });
         setState((prev) => ({ ...prev, loading: false, phase: "11D_generating" }));
@@ -351,23 +415,47 @@ export function ImageGenerationWizard({
   }, [runId, onComplete]);
 
   const handleRestartFrom = useCallback(
-    async (phase: string) => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
-      try {
-        await api.runs.finalizeStep11(runId, {
-          confirmed: false,
-          restart_from: phase,
-        });
+    async (phase: string, clearImages: boolean = false) => {
+      // 11D に戻る場合、または画像を保持したまま戻る場合は API を呼ばない
+      if (phase === "11D") {
+        setState((prev) => ({ ...prev, phase: "waiting_11D" }));
+        return;
+      }
+
+      // 画像をクリアして再生成する場合のみ API を呼ぶ
+      if (clearImages) {
+        setState((prev) => ({ ...prev, loading: true, error: null }));
+        try {
+          await api.runs.finalizeStep11(runId, {
+            confirmed: false,
+            restart_from: phase,
+          });
+          setState((prev) => ({
+            ...prev,
+            loading: false,
+            phase: phase === "11C" ? "waiting_11C" : "waiting_11A",
+            images: [], // 画像をクリア
+            previewHtml: "", // プレビューもクリア
+          }));
+        } catch (err) {
+          setState((prev) => ({
+            ...prev,
+            loading: false,
+            error: err instanceof Error ? err.message : "再開に失敗しました",
+          }));
+        }
+      } else {
+        // 画像を保持したまま戻る
+        const phaseMap: Record<string, Step11Phase> = {
+          "11A": "waiting_11A",
+          "11B": "waiting_11B",
+          "11C": "waiting_11C",
+          "11D": "waiting_11D",
+          "11E": "waiting_11E",
+        };
         setState((prev) => ({
           ...prev,
-          loading: false,
-          phase: phase === "11C" ? "waiting_11C" : "waiting_11A",
-        }));
-      } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          error: err instanceof Error ? err.message : "再開に失敗しました",
+          phase: phaseMap[phase] || "waiting_11C",
         }));
       }
     },
@@ -518,6 +606,8 @@ export function ImageGenerationWizard({
               positions={state.confirmedPositions.length > 0 ? state.confirmedPositions : state.positions}
               onSubmit={handleInstructionsSubmit}
               onBack={handleBack}
+              hasExistingImages={state.images.length > 0}
+              onUseExistingImages={() => setState((prev) => ({ ...prev, phase: "waiting_11D" }))}
               loading={state.loading}
             />
           )}
@@ -525,11 +615,13 @@ export function ImageGenerationWizard({
           {/* Phase 11D: 画像確認 */}
           {state.phase === "waiting_11D" && (
             <Phase11D_Review
+              runId={runId}
               images={state.images}
               warnings={state.warnings}
               maxRetries={3}
               onSubmit={handleImagesReview}
               onBack={handleBack}
+              onRestartFrom={handleRestartFrom}
               loading={state.loading}
             />
           )}
