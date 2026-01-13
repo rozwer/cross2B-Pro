@@ -99,6 +99,7 @@ export function Phase11A_Settings({
         <button
           onClick={handleSubmit}
           disabled={loading}
+          aria-busy={loading}
           className={cn(
             "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
             "bg-primary-600 text-white hover:bg-primary-700",

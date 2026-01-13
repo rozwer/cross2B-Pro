@@ -19,6 +19,10 @@ interface Phase11C_InstructionsProps {
   positions: ImagePosition[];
   onSubmit: (instructions: ImageInstruction[]) => void;
   onBack: () => void;
+  /** 既存画像がある場合、再生成せずに進むオプションを表示 */
+  hasExistingImages?: boolean;
+  /** 既存画像を使って次へ進む（再生成なし） */
+  onUseExistingImages?: () => void;
   loading?: boolean;
 }
 
@@ -26,6 +30,8 @@ export function Phase11C_Instructions({
   positions,
   onSubmit,
   onBack,
+  hasExistingImages = false,
+  onUseExistingImages,
   loading = false,
 }: Phase11C_InstructionsProps) {
   const [instructions, setInstructions] = useState<string[]>(
@@ -162,27 +168,42 @@ export function Phase11C_Instructions({
           戻る
         </button>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !allFilled}
-          className={cn(
-            "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
-            "bg-primary-600 text-white hover:bg-primary-700",
-            (loading || !allFilled) && "opacity-50 cursor-not-allowed"
+        <div className="flex items-center gap-2">
+          {hasExistingImages && onUseExistingImages && (
+            <button
+              onClick={onUseExistingImages}
+              disabled={loading}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600",
+                loading && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              既存画像を使う
+            </button>
           )}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              生成中...
-            </>
-          ) : (
-            <>
-              <ImageIcon className="h-4 w-4" />
-              画像を生成
-            </>
-          )}
-        </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !allFilled}
+            className={cn(
+              "inline-flex items-center gap-2 px-6 py-2 text-sm font-medium rounded-lg transition-colors",
+              "bg-primary-600 text-white hover:bg-primary-700",
+              (loading || !allFilled) && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-4 w-4" />
+                {hasExistingImages ? "新規生成" : "画像を生成"}
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {!allFilled && (
