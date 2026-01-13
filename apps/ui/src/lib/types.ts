@@ -11,7 +11,7 @@ export type RunStatus =
   | "failed"
   | "cancelled";
 
-export type StepStatus = "pending" | "running" | "completed" | "failed" | "skipped";
+export type StepStatus = "pending" | "running" | "retrying" | "completed" | "failed" | "skipped";
 
 // ============================================
 // Model Configuration Types
@@ -42,6 +42,7 @@ export interface ToolConfig {
 
 // Legacy RunInput (for backward compatibility)
 export interface LegacyRunInput {
+  format_type: "legacy";  // Required for discriminated union
   keyword: string;
   target_audience?: string;
   competitor_urls?: string[];
@@ -91,6 +92,8 @@ export interface KeywordInput {
   theme_topics?: string;
   selected_keyword?: SelectedKeyword;
   related_keywords?: RelatedKeyword[];
+  /** Raw text for related keywords textarea (preserves line breaks during editing) */
+  related_keywords_text?: string;
 }
 
 export interface StrategyInput {
@@ -130,6 +133,7 @@ export interface CTAInput {
 }
 
 export interface ArticleHearingInput {
+  format_type: "article_hearing_v1";  // Required for discriminated union
   business: BusinessInput;
   keyword: KeywordInput;
   strategy: StrategyInput;
@@ -664,6 +668,8 @@ export function getStatusColor(status: RunStatus | StepStatus): string {
       return "bg-gray-100 text-gray-800";
     case "running":
       return "bg-blue-100 text-blue-800";
+    case "retrying":
+      return "bg-orange-100 text-orange-800";
     case "waiting_approval":
       return "bg-yellow-100 text-yellow-800";
     case "completed":
@@ -684,6 +690,8 @@ export function getStatusIcon(status: RunStatus | StepStatus): string {
       return "○";
     case "running":
       return "◐";
+    case "retrying":
+      return "↻";
     case "waiting_approval":
       return "⏸";
     case "completed":

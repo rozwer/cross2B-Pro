@@ -99,6 +99,11 @@ const STEP_STATUS_CONFIG: Record<StepStatus, { bg: string; text: string; icon: R
       text: "text-blue-700",
       icon: <Play className="h-3.5 w-3.5 text-blue-500 animate-pulse" />,
     },
+    retrying: {
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      icon: <Play className="h-3.5 w-3.5 text-orange-500 animate-pulse" />,
+    },
     completed: {
       bg: "bg-green-50",
       text: "text-green-700",

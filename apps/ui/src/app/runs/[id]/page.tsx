@@ -69,6 +69,19 @@ export default function RunDetailPage({
   const [imageGenLoading, setImageGenLoading] = useState(false);
 
   const { run, loading, error, fetch, approve, reject, retry, resume, isPolling } = useRun(id);
+  const { artifacts, fetch: fetchArtifacts } = useArtifacts(id);
+
+  // 自動ポップアップは無効化 - 手動で開く必要あり
+  // useEffect(() => {
+  //   if (run?.status === "waiting_image_input" && !showImageGenDialog) {
+  //     setShowImageGenDialog(true);
+  //   }
+  // }, [run?.status, showImageGenDialog]);
+
+  // Ref to access fetchArtifacts in event handler without stale closure
+  const fetchArtifactsRef = useRef(fetchArtifacts);
+  fetchArtifactsRef.current = fetchArtifacts;
+
   const { events, wsStatus } = useRunProgress(id, {
     onEvent: (event) => {
       if (
@@ -77,10 +90,11 @@ export default function RunDetailPage({
         event.type === "run_completed"
       ) {
         fetch();
+        // Also refresh artifacts when steps complete
+        fetchArtifactsRef.current();
       }
     },
   });
-  const { artifacts, fetch: fetchArtifacts } = useArtifacts(id);
 
   const handleRetry = useCallback(
     async (stepName: string) => {
@@ -286,7 +300,10 @@ export default function RunDetailPage({
             ) : run.status === "waiting_approval" ? (
               /* step3完了後の承認待ちの場合は承認ボタン */
               <button
-                onClick={() => setShowApprovalDialog(true)}
+                onClick={() => {
+                  fetchArtifacts();  // Ensure artifacts are loaded before showing dialog
+                  setShowApprovalDialog(true);
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
               >
                 承認待ち

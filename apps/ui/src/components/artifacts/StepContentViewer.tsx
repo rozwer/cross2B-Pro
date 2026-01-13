@@ -51,12 +51,6 @@ export function StepContentViewer({ content, stepName }: StepContentViewerProps)
   // 工程に応じたビューを選択
   const step = parsed.step || stepName;
 
-  // デバッグ: ステップ判定ログ
-  console.log("[StepContentViewer] stepName prop:", stepName);
-  console.log("[StepContentViewer] parsed.step:", parsed.step);
-  console.log("[StepContentViewer] final step:", step);
-  console.log("[StepContentViewer] data keys:", Object.keys(parsed));
-
   switch (step) {
     case "step0":
       return <Step0Viewer data={parsed} />;
@@ -192,14 +186,59 @@ function RemainingFields({ data, excludeKeys }: { data: ParsedContent; excludeKe
 
 // コードブロックからJSONを抽出
 function extractJsonFromMarkdown(text: string): unknown | null {
+  // Try with closing backticks first
   const match = text.match(/```json\n?([\s\S]*?)\n?```/);
   if (match) {
     try {
       return JSON.parse(match[1]);
     } catch {
-      return null;
+      // Fall through to try without closing backticks
     }
   }
+
+  // Try without closing backticks (truncated output)
+  const matchTruncated = text.match(/```json\n?([\s\S]*)/);
+  if (matchTruncated) {
+    try {
+      // Try to parse as-is first
+      return JSON.parse(matchTruncated[1]);
+    } catch {
+      // Try to repair truncated JSON
+      let jsonStr = matchTruncated[1].trim();
+
+      // Remove trailing incomplete parts
+      // Find the last complete property
+      const lastCompleteIndex = Math.max(
+        jsonStr.lastIndexOf('",'),
+        jsonStr.lastIndexOf('"],'),
+        jsonStr.lastIndexOf('},'),
+        jsonStr.lastIndexOf('}],'),
+      );
+
+      if (lastCompleteIndex > 0) {
+        jsonStr = jsonStr.substring(0, lastCompleteIndex + 1);
+        // Close any open braces/brackets
+        const openBraces = (jsonStr.match(/{/g) || []).length;
+        const closeBraces = (jsonStr.match(/}/g) || []).length;
+        const openBrackets = (jsonStr.match(/\[/g) || []).length;
+        const closeBrackets = (jsonStr.match(/]/g) || []).length;
+
+        for (let i = 0; i < openBrackets - closeBrackets; i++) {
+          jsonStr += ']';
+        }
+        for (let i = 0; i < openBraces - closeBraces; i++) {
+          jsonStr += '}';
+        }
+
+        try {
+          return JSON.parse(jsonStr);
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -764,76 +803,82 @@ function Step3bMetricsSection({ metrics, quality }: { metrics: unknown; quality:
 
 // Step3b: 共起語分析
 function Step3bViewer({ data }: { data: ParsedContent }) {
-  // デバッグ: 入力データの確認
-  console.log("[Step3bViewer] === START ===");
-  console.log("[Step3bViewer] data keys:", Object.keys(data));
-  console.log("[Step3bViewer] data.parsed_data:", data.parsed_data);
-  console.log("[Step3bViewer] data.cooccurrence_analysis type:", typeof data.cooccurrence_analysis);
-
   const cooccurrenceAnalysis = typeof data.cooccurrence_analysis === "string" ? data.cooccurrence_analysis : null;
   const competitorCount = typeof data.competitor_count === "number" ? data.competitor_count : null;
 
-  // 新形式: parsed_data に構造化データ
-  // cooccurrence_keywords は string[] またはカテゴリ別オブジェクト
+  // 新形式: parsed_data に構造化データ（バックエンドの実際の構造に合わせる）
+  interface KeywordItem {
+    keyword: string;
+    category?: string;
+    importance?: number;
+    frequency?: number;
+    phase?: number;
+  }
+
   const rawParsedData = data.parsed_data as {
-    cooccurrence_keywords?: string[] | Record<string, string[]>;
-    semantic_clusters?: Array<{ cluster: string; keywords: string[] }>;
-    content_gaps?: string[];
+    cooccurrence_keywords?: KeywordItem[];
+    lsi_keywords?: KeywordItem[];
+    related_keywords?: KeywordItem[];
+    three_phase_distribution?: {
+      phase1_keywords?: KeywordItem[];
+      phase2_keywords?: KeywordItem[];
+      phase3_keywords?: KeywordItem[];
+    };
+    llmo_optimized_keywords?: {
+      question_format?: string[];
+      voice_search?: string[];
+    };
+    behavioral_economics_triggers?: Record<string, string[]>;
+    keyword_categorization?: {
+      essential?: KeywordItem[];
+      standard?: KeywordItem[];
+      unique?: KeywordItem[];
+    };
   } | undefined;
 
-  console.log("[Step3bViewer] rawParsedData:", rawParsedData);
-
-  // cooccurrence_keywords をフラットな配列に変換
-  const normalizeKeywords = (keywords: string[] | Record<string, string[]> | undefined): string[] => {
-    if (!keywords) return [];
-    if (Array.isArray(keywords)) return keywords;
-    // オブジェクト形式の場合、全てのカテゴリからキーワードを集約
-    const allKeywords: string[] = [];
-    for (const category of Object.values(keywords)) {
-      if (Array.isArray(category)) {
-        for (const kw of category) {
-          // "- " プレフィックスを除去
-          const cleaned = typeof kw === "string" ? kw.replace(/^-\s*/, "") : kw;
-          allKeywords.push(cleaned);
-        }
-      }
-    }
-    return allKeywords;
+  // キーワードアイテムから文字列を抽出
+  const extractKeywords = (items: KeywordItem[] | undefined): string[] => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map(item => item.keyword).filter(kw => kw && kw !== "--" && !kw.startsWith("**"));
   };
 
-  // カテゴリ別のキーワードを取得（表示用）
-  const getKeywordCategories = (keywords: string[] | Record<string, string[]> | undefined): Array<{ category: string; keywords: string[] }> => {
-    if (!keywords || Array.isArray(keywords)) return [];
-    return Object.entries(keywords).map(([category, kws]) => ({
-      category,
-      keywords: Array.isArray(kws) ? kws.map(kw => typeof kw === "string" ? kw.replace(/^-\s*/, "") : kw) : [],
-    }));
+  // カテゴリ別にグループ化
+  const groupByCategory = (items: KeywordItem[] | undefined): Array<{ category: string; keywords: string[] }> => {
+    if (!items || !Array.isArray(items)) return [];
+    const groups: Record<string, string[]> = {};
+    for (const item of items) {
+      const cat = item.category || "other";
+      if (!groups[cat]) groups[cat] = [];
+      if (item.keyword && item.keyword !== "--" && !item.keyword.startsWith("**")) {
+        groups[cat].push(item.keyword);
+      }
+    }
+    return Object.entries(groups).map(([category, keywords]) => ({ category, keywords }));
   };
 
   const parsedData = rawParsedData ? {
-    cooccurrence_keywords: normalizeKeywords(rawParsedData.cooccurrence_keywords),
-    keyword_categories: getKeywordCategories(rawParsedData.cooccurrence_keywords),
-    semantic_clusters: rawParsedData.semantic_clusters,
-    content_gaps: rawParsedData.content_gaps,
+    cooccurrence_keywords: extractKeywords(rawParsedData.cooccurrence_keywords),
+    lsi_keywords: extractKeywords(rawParsedData.lsi_keywords),
+    related_keywords: extractKeywords(rawParsedData.related_keywords),
+    keyword_categories: groupByCategory(rawParsedData.cooccurrence_keywords),
+    three_phase: rawParsedData.three_phase_distribution ? {
+      phase1: extractKeywords(rawParsedData.three_phase_distribution.phase1_keywords),
+      phase2: extractKeywords(rawParsedData.three_phase_distribution.phase2_keywords),
+      phase3: extractKeywords(rawParsedData.three_phase_distribution.phase3_keywords),
+    } : undefined,
+    llmo: rawParsedData.llmo_optimized_keywords,
   } : undefined;
-
-  // デバッグ: 処理後のデータ確認
-  console.log("[Step3bViewer] parsedData:", parsedData);
-  console.log("[Step3bViewer] cooccurrence_keywords length:", parsedData?.cooccurrence_keywords?.length);
-  console.log("[Step3bViewer] keyword_categories length:", parsedData?.keyword_categories?.length);
-  console.log("[Step3bViewer] semantic_clusters length:", parsedData?.semantic_clusters?.length);
-  console.log("[Step3bViewer] content_gaps length:", parsedData?.content_gaps?.length);
 
   const hasStructuredData = parsedData && (
     (parsedData.cooccurrence_keywords && parsedData.cooccurrence_keywords.length > 0) ||
-    (parsedData.keyword_categories && parsedData.keyword_categories.length > 0) ||
-    (parsedData.semantic_clusters && parsedData.semantic_clusters.length > 0) ||
-    (parsedData.content_gaps && parsedData.content_gaps.length > 0)
+    (parsedData.lsi_keywords && parsedData.lsi_keywords.length > 0) ||
+    (parsedData.related_keywords && parsedData.related_keywords.length > 0) ||
+    (parsedData.three_phase && (
+      parsedData.three_phase.phase1.length > 0 ||
+      parsedData.three_phase.phase2.length > 0 ||
+      parsedData.three_phase.phase3.length > 0
+    ))
   );
-
-  console.log("[Step3bViewer] hasStructuredData:", hasStructuredData);
-  console.log("[Step3bViewer] cooccurrenceAnalysis:", cooccurrenceAnalysis ? "exists" : "null");
-  console.log("[Step3bViewer] === END ===");
 
   return (
     <div className="space-y-4">
@@ -850,26 +895,8 @@ function Step3bViewer({ data }: { data: ParsedContent }) {
 
       {hasStructuredData ? (
         <div className="space-y-4">
-          {/* カテゴリ別キーワード（オブジェクト形式の場合） */}
-          {parsedData.keyword_categories && parsedData.keyword_categories.length > 0 ? (
-            <Section icon={Hash} title="共起・関連キーワード">
-              <div className="space-y-4">
-                {parsedData.keyword_categories.map((cat, i) => (
-                  <div key={i} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                    <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{cat.category}</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {cat.keywords.map((kw, j) => (
-                        <span key={j} className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-xs">
-                          {kw}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          ) : parsedData.cooccurrence_keywords && parsedData.cooccurrence_keywords.length > 0 ? (
-            /* フラット配列形式の場合 */
+          {/* 共起キーワード */}
+          {parsedData.cooccurrence_keywords && parsedData.cooccurrence_keywords.length > 0 && (
             <Section icon={Hash} title="共起キーワード">
               <div className="flex flex-wrap gap-2">
                 {parsedData.cooccurrence_keywords.map((kw, i) => (
@@ -879,39 +906,114 @@ function Step3bViewer({ data }: { data: ParsedContent }) {
                 ))}
               </div>
             </Section>
-          ) : null}
+          )}
 
-          {/* セマンティッククラスター */}
-          {parsedData.semantic_clusters && parsedData.semantic_clusters.length > 0 && (
-            <Section icon={Target} title="セマンティッククラスター">
+          {/* LSIキーワード */}
+          {parsedData.lsi_keywords && parsedData.lsi_keywords.length > 0 && (
+            <Section icon={Hash} title="LSIキーワード">
+              <div className="flex flex-wrap gap-2">
+                {parsedData.lsi_keywords.map((kw, i) => (
+                  <span key={i} className="px-2.5 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-xs">
+                    {kw}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* 関連キーワード */}
+          {parsedData.related_keywords && parsedData.related_keywords.length > 0 && (
+            <Section icon={Hash} title="関連キーワード">
+              <div className="flex flex-wrap gap-2">
+                {parsedData.related_keywords.map((kw, i) => (
+                  <span key={i} className="px-2.5 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-xs">
+                    {kw}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* 3フェーズ分布 */}
+          {parsedData.three_phase && (
+            parsedData.three_phase.phase1.length > 0 ||
+            parsedData.three_phase.phase2.length > 0 ||
+            parsedData.three_phase.phase3.length > 0
+          ) && (
+            <Section icon={Target} title="3フェーズ分布">
               <div className="space-y-3">
-                {parsedData.semantic_clusters.map((cluster, i) => (
-                  <div key={i} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                    <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{cluster.cluster}</h5>
+                {parsedData.three_phase.phase1.length > 0 && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <h5 className="text-sm font-medium text-red-700 dark:text-red-300 mb-2">Phase1: 不安・課題</h5>
                     <div className="flex flex-wrap gap-1.5">
-                      {cluster.keywords.map((kw, j) => (
+                      {parsedData.three_phase.phase1.map((kw, j) => (
+                        <span key={j} className="px-2 py-0.5 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded text-xs">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {parsedData.three_phase.phase2.length > 0 && (
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <h5 className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-2">Phase2: 理解・比較</h5>
+                    <div className="flex flex-wrap gap-1.5">
+                      {parsedData.three_phase.phase2.map((kw, j) => (
+                        <span key={j} className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-800/30 text-yellow-700 dark:text-yellow-300 rounded text-xs">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {parsedData.three_phase.phase3.length > 0 && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <h5 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Phase3: 行動・決定</h5>
+                    <div className="flex flex-wrap gap-1.5">
+                      {parsedData.three_phase.phase3.map((kw, j) => (
+                        <span key={j} className="px-2 py-0.5 bg-green-100 dark:bg-green-800/30 text-green-700 dark:text-green-300 rounded text-xs">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* LLMO最適化キーワード */}
+          {parsedData.llmo && (
+            (parsedData.llmo.question_format && parsedData.llmo.question_format.length > 0) ||
+            (parsedData.llmo.voice_search && parsedData.llmo.voice_search.length > 0)
+          ) && (
+            <Section icon={Lightbulb} title="LLMO最適化キーワード">
+              <div className="space-y-3">
+                {parsedData.llmo.question_format && parsedData.llmo.question_format.length > 0 && (
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">質問形式</h5>
+                    <div className="flex flex-wrap gap-1.5">
+                      {parsedData.llmo.question_format.map((kw, j) => (
                         <span key={j} className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
                           {kw}
                         </span>
                       ))}
                     </div>
                   </div>
-                ))}
+                )}
+                {parsedData.llmo.voice_search && parsedData.llmo.voice_search.length > 0 && (
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">音声検索</h5>
+                    <div className="flex flex-wrap gap-1.5">
+                      {parsedData.llmo.voice_search.map((kw, j) => (
+                        <span key={j} className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </Section>
-          )}
-
-          {/* コンテンツギャップ */}
-          {parsedData.content_gaps && parsedData.content_gaps.length > 0 && (
-            <Section icon={Lightbulb} title="コンテンツギャップ">
-              <ul className="space-y-2">
-                {parsedData.content_gaps.map((gap, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    {gap}
-                  </li>
-                ))}
-              </ul>
             </Section>
           )}
         </div>
@@ -962,32 +1064,47 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
     input_tokens?: number;
   } | undefined;
 
-  // 競合データの型定義
+  // 競合データの型定義（実際のstep3c出力に合わせた）
   type CompetitorData = {
     url?: string;
+    title?: string;
     strengths?: string[];
     weaknesses?: string[];
+    content_focus?: string;
+    unique_value?: string;
+    threat_level?: string;
     recommendations?: string[];
   };
 
   // parsed_data から構造化データを取得（存在する場合）
   const parsedDataRaw = data.parsed_data;
-  const parsedData: { competitor_analysis?: CompetitorData[] } | null =
+  type ParsedDataType = {
+    competitor_analysis?: CompetitorData[];
+    competitor_profiles?: CompetitorData[];
+  };
+  const parsedData: ParsedDataType | null =
     parsedDataRaw && typeof parsedDataRaw === "object" && !Array.isArray(parsedDataRaw)
-      ? (parsedDataRaw as { competitor_analysis?: CompetitorData[] })
+      ? (parsedDataRaw as ParsedDataType)
       : null;
 
   // competitor_analysis からJSONを抽出して解析
   const extractedAnalysisRaw = competitorAnalysisRaw ? extractJsonFromMarkdown(competitorAnalysisRaw) : null;
-  const analysisFromExtracted: { competitor_analysis?: CompetitorData[] } | null =
+  const analysisFromExtracted: ParsedDataType | null =
     extractedAnalysisRaw && typeof extractedAnalysisRaw === "object" && !Array.isArray(extractedAnalysisRaw)
-      ? (extractedAnalysisRaw as { competitor_analysis?: CompetitorData[] })
+      ? (extractedAnalysisRaw as ParsedDataType)
       : null;
 
-  // 構造化された競合分析データ（parsed_data優先、次にextracted）
+  // 構造化された競合分析データ（competitor_profiles優先、次にcompetitor_analysis）
   const getStructuredAnalysis = (): CompetitorData[] | null => {
+    // parsed_data.competitor_profiles を優先
+    if (parsedData?.competitor_profiles && Array.isArray(parsedData.competitor_profiles)) {
+      return parsedData.competitor_profiles;
+    }
     if (parsedData?.competitor_analysis && Array.isArray(parsedData.competitor_analysis)) {
       return parsedData.competitor_analysis;
+    }
+    if (analysisFromExtracted?.competitor_profiles && Array.isArray(analysisFromExtracted.competitor_profiles)) {
+      return analysisFromExtracted.competitor_profiles;
     }
     if (analysisFromExtracted?.competitor_analysis && Array.isArray(analysisFromExtracted.competitor_analysis)) {
       return analysisFromExtracted.competitor_analysis;
@@ -1101,82 +1218,120 @@ function Step3cViewer({ data }: { data: ParsedContent }) {
               key={i}
               className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
             >
-              {/* URL ヘッダー */}
-              {competitor.url && (
-                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                  <a
-                    href={competitor.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
-                  >
-                    <Globe className="h-3.5 w-3.5" />
-                    {(() => {
-                      try {
-                        return new URL(competitor.url).hostname;
-                      } catch {
-                        return competitor.url;
-                      }
-                    })()}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+              {/* ヘッダー（タイトル・URL・脅威レベル） */}
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {competitor.url ? (
+                      <a
+                        href={competitor.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 min-w-0"
+                      >
+                        <Globe className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span className="truncate">{competitor.title || (() => {
+                          try {
+                            return new URL(competitor.url).hostname;
+                          } catch {
+                            return competitor.url;
+                          }
+                        })()}</span>
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                      </a>
+                    ) : competitor.title ? (
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{competitor.title}</span>
+                    ) : null}
+                  </div>
+                  {competitor.threat_level && (
+                    <span className={`px-2 py-0.5 text-xs rounded ${
+                      competitor.threat_level === "高" || competitor.threat_level === "high"
+                        ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                        : competitor.threat_level === "中" || competitor.threat_level === "medium"
+                          ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                          : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                    }`}>
+                      脅威: {competitor.threat_level}
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
 
-              <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 強み */}
-                {competitor.strengths && competitor.strengths.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-medium text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      強み
-                    </h5>
-                    <ul className="space-y-1">
-                      {competitor.strengths.map((s, j) => (
-                        <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
-                          <span className="text-green-500 mt-0.5">•</span>
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
+              <div className="p-4 space-y-4">
+                {/* コンテンツフォーカスとユニーク価値 */}
+                {(competitor.content_focus || competitor.unique_value) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {competitor.content_focus && (
+                      <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+                        <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">コンテンツ焦点</h5>
+                        <p className="text-xs text-gray-700 dark:text-gray-300">{competitor.content_focus}</p>
+                      </div>
+                    )}
+                    {competitor.unique_value && (
+                      <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded">
+                        <h5 className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1">独自価値</h5>
+                        <p className="text-xs text-gray-700 dark:text-gray-300">{competitor.unique_value}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* 弱み */}
-                {competitor.weaknesses && competitor.weaknesses.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-1">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      弱み
-                    </h5>
-                    <ul className="space-y-1">
-                      {competitor.weaknesses.map((w, j) => (
-                        <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
-                          <span className="text-red-500 mt-0.5">•</span>
-                          {w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {/* 強み・弱み・推奨 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* 強み */}
+                  {competitor.strengths && competitor.strengths.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-medium text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        強み
+                      </h5>
+                      <ul className="space-y-1">
+                        {competitor.strengths.map((s, j) => (
+                          <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
+                            <span className="text-green-500 mt-0.5">•</span>
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-                {/* 推奨事項 */}
-                {competitor.recommendations && competitor.recommendations.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
-                      <Lightbulb className="h-3.5 w-3.5" />
-                      推奨
-                    </h5>
-                    <ul className="space-y-1">
-                      {competitor.recommendations.map((r, j) => (
-                        <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
-                          <span className="text-blue-500 mt-0.5">•</span>
-                          {r}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                  {/* 弱み */}
+                  {competitor.weaknesses && competitor.weaknesses.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-1">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        弱み
+                      </h5>
+                      <ul className="space-y-1">
+                        {competitor.weaknesses.map((w, j) => (
+                          <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
+                            <span className="text-red-500 mt-0.5">•</span>
+                            {w}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* 推奨事項 */}
+                  {competitor.recommendations && competitor.recommendations.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
+                        <Lightbulb className="h-3.5 w-3.5" />
+                        推奨
+                      </h5>
+                      <ul className="space-y-1">
+                        {competitor.recommendations.map((r, j) => (
+                          <li key={j} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1.5">
+                            <span className="text-blue-500 mt-0.5">•</span>
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -1475,6 +1630,13 @@ function Step5Viewer({ data }: { data: ParsedContent }) {
     failed_queries?: number;
   } | undefined;
 
+  // データ異常検知: LLMパースエラーによるゴミデータの検出
+  const hasParseError = searchQueries?.some(q =>
+    q.includes("```") || q === "{" || q === "}" || q === "[" || q === "]"
+  ) || false;
+  const hasEmptySources = (!sources || sources.length === 0) && (!invalidSources || invalidSources.length === 0);
+  const hasDataIssue = hasParseError || (hasEmptySources && collectionStats && (collectionStats.total_collected ?? 0) > 0);
+
   const hasAnyData = (sources && sources.length > 0) || (invalidSources && invalidSources.length > 0) || searchQueries;
 
   return (
@@ -1496,6 +1658,28 @@ function Step5Viewer({ data }: { data: ParsedContent }) {
           )}
         </div>
       </div>
+
+      {/* データ異常警告 */}
+      {hasDataIssue && (
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                データ異常を検出しました
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                LLMの出力パースに失敗した可能性があります。Step5を再実行してください。
+              </p>
+              {hasParseError && searchQueries && (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                  検出されたゴミデータ: {searchQueries.filter(q => q.includes("```") || q === "{" || q === "}").join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 収集サマリー */}
       {collectionStats && (

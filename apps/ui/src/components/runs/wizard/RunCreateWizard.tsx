@@ -334,6 +334,7 @@ export function RunCreateWizard({
 
     try {
       const input: ArticleHearingInput = {
+        format_type: "article_hearing_v1",  // Required for discriminated union
         business: formData.business,
         keyword: formData.keyword,
         strategy: formData.strategy,
@@ -342,10 +343,16 @@ export function RunCreateWizard({
         confirmed: formData.confirmed,
       };
 
+      // Normalize step_ids: convert dots to underscores (step6.5 -> step6_5)
+      const normalizedStepConfigs = stepConfigs?.map((sc) => ({
+        ...sc,
+        step_id: sc.step_id.replace(/\./g, "_"),
+      }));
+
       const run = await api.runs.create({
         input,
         model_config: modelConfig,
-        step_configs: stepConfigs,
+        step_configs: normalizedStepConfigs,
         tool_config: toolConfig,
         options,
       });
