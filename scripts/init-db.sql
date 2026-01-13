@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS runs (
     step11_state JSONB,
 
     CONSTRAINT valid_status CHECK (status IN (
-        'pending', 'running', 'waiting_approval', 'waiting_image_input',
+        'pending', 'workflow_starting', 'running', 'waiting_approval', 'waiting_image_input',
         'completed', 'failed', 'cancelled'
     ))
 );
