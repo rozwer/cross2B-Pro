@@ -16,12 +16,22 @@ class OutputParser:
     """LLM output parser."""
 
     # Regex patterns for code block extraction
+    # Support both with and without newline after ```json
     _JSON_BLOCK_PATTERN = re.compile(
-        r"```json\s*\n(.*?)\n```",
+        r"```json\s*(.*?)\s*```",
         re.DOTALL,
     )
     _GENERIC_BLOCK_PATTERN = re.compile(
-        r"```\s*\n(.*?)\n```",
+        r"```\s*(.*?)\s*```",
+        re.DOTALL,
+    )
+    # Pattern for truncated JSON blocks (no closing ```)
+    _TRUNCATED_JSON_BLOCK_PATTERN = re.compile(
+        r"```json\s*(.*)",
+        re.DOTALL,
+    )
+    _TRUNCATED_GENERIC_BLOCK_PATTERN = re.compile(
+        r"```\s*(.*)",
         re.DOTALL,
     )
 
@@ -126,16 +136,28 @@ class OutputParser:
         """
         Extract content from code block.
 
+        Handles both complete and truncated code blocks.
+
         Returns:
             tuple[str, bool]: (extracted content, whether extraction occurred)
         """
-        # Try ```json block first
+        # Try ```json block first (complete)
         match = self._JSON_BLOCK_PATTERN.search(content)
         if match:
             return match.group(1).strip(), True
 
-        # Try generic ``` block
+        # Try generic ``` block (complete)
         match = self._GENERIC_BLOCK_PATTERN.search(content)
+        if match:
+            return match.group(1).strip(), True
+
+        # Try truncated ```json block (no closing ```)
+        match = self._TRUNCATED_JSON_BLOCK_PATTERN.search(content)
+        if match:
+            return match.group(1).strip(), True
+
+        # Try truncated generic ``` block
+        match = self._TRUNCATED_GENERIC_BLOCK_PATTERN.search(content)
         if match:
             return match.group(1).strip(), True
 
@@ -148,6 +170,7 @@ class OutputParser:
 
         Allowed fixes:
         - Trailing comma removal: ,} -> }, ,] -> ]
+        - Truncated JSON repair: close open brackets/braces
 
         Prohibited fixes:
         - Value guessing/completion
@@ -174,10 +197,92 @@ class OutputParser:
             if "trailing_comma_removed" not in fixes_applied:
                 fixes_applied.append("trailing_comma_removed")
 
+        # Try to repair truncated JSON by closing open brackets
+        repaired = self._repair_truncated_json(fixed)
+        if repaired != fixed:
+            fixed = repaired
+            fixes_applied.append("truncated_json_repaired")
+
         if fixes_applied:
             return fixed, fixes_applied
 
         return None, []
+
+    def _repair_truncated_json(self, content: str) -> str:
+        """
+        Attempt to repair truncated JSON by closing unclosed brackets.
+
+        This finds the last complete value and closes all open brackets.
+
+        Args:
+            content: Potentially truncated JSON string
+
+        Returns:
+            str: Repaired JSON string (or original if repair not needed/possible)
+        """
+        # Only try repair if content starts with { or [ but doesn't end properly
+        stripped = content.strip()
+        if not stripped:
+            return content
+
+        # Check if already valid JSON
+        try:
+            json.loads(stripped)
+            return content  # Already valid
+        except json.JSONDecodeError:
+            pass
+
+        # Find the last complete value point
+        # Look for patterns that indicate a complete value:
+        # - "...",
+        # - "..."],
+        # - ...},
+        # - ...}],
+        # - ...", (string followed by comma)
+        # - ...": (start of value - truncate here)
+
+        # Find the last complete entry point
+        last_complete_patterns = [
+            (r'"\s*,\s*$', -1),  # "...",
+            (r'"\s*]\s*,\s*$', -1),  # "..."],
+            (r"}\s*,\s*$", -1),  # ...},
+            (r"}\s*]\s*,\s*$", -1),  # ...}],
+            (r"]\s*,\s*$", -1),  # ...],
+            (r"true\s*,\s*$", -1),  # true,
+            (r"false\s*,\s*$", -1),  # false,
+            (r"null\s*,\s*$", -1),  # null,
+            (r"\d+\s*,\s*$", -1),  # number,
+        ]
+
+        # Try to find the last complete value
+        best_pos = -1
+        for line in stripped.split("\n"):
+            line_end = stripped.rfind(line) + len(line)
+            for pattern, _ in last_complete_patterns:
+                if re.search(pattern, line):
+                    best_pos = max(best_pos, line_end)
+
+        # If we found a truncation point, cut there
+        if best_pos > len(stripped) // 2:  # Only if we found substantial content
+            truncated = stripped[:best_pos]
+            # Remove trailing comma if present
+            truncated = re.sub(r",\s*$", "", truncated)
+        else:
+            # Try different approach: find last complete key-value pair
+            # Look for "key": "value" or "key": number/bool/null patterns
+            truncated = stripped
+
+        # Count open brackets
+        open_braces = truncated.count("{") - truncated.count("}")
+        open_brackets = truncated.count("[") - truncated.count("]")
+
+        # Close them in reverse order of opening
+        # This is a simplification - we close all brackets then all braces
+        if open_brackets > 0 or open_braces > 0:
+            closing = "]" * open_brackets + "}" * open_braces
+            return truncated + closing
+
+        return content
 
     def looks_like_markdown(self, content: str) -> bool:
         """

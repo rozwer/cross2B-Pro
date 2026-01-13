@@ -106,23 +106,42 @@ class Step3BQualityValidator:
     TARGET_RELATED = 30
     MIN_ACCEPTABLE_COOCCURRENCE = 50  # Warn below this
     MIN_ACCEPTABLE_RELATED = 15
+    MIN_OUTPUT_SIZE = 500  # Minimum output size in bytes (relaxed for Gemini)
 
     def validate(self, content: str, **kwargs: str) -> QualityResult:
         """Validate co-occurrence extraction quality.
 
         Checks:
-        1. Presence of keyword list indicators
-        2. Presence of keyword category patterns
-        3. Sufficient keyword count indicators
-        4. 3-phase distribution indicators
+        1. Minimum output size (truncation detection)
+        2. Presence of keyword list indicators
+        3. Presence of keyword category patterns
+        4. Sufficient keyword count indicators
+        5. 3-phase distribution indicators
         """
         issues: list[str] = []
+
+        # Check for minimum output size (truncation detection)
+        content_size = len(content.encode("utf-8"))
+        if content_size < self.MIN_OUTPUT_SIZE:
+            issues.append("output_too_small")
+            logger.warning(f"step3b output too small: {content_size} bytes < {self.MIN_OUTPUT_SIZE} bytes")
 
         # Check for keyword list indicators
         list_indicators = ["・", "-", "*", "1.", "2."]
         has_list = any(ind in content for ind in list_indicators)
         if not has_list:
             issues.append("no_keyword_list")
+
+        # Count actual list items to ensure sufficient keywords
+        list_item_count = 0
+        for line in content.split("\n"):
+            line = line.strip()
+            if line.startswith(("・", "-", "*", "•")) or re.match(r"^\d+\.", line):
+                list_item_count += 1
+
+        if list_item_count < 5:  # At minimum, expect 5 list items (relaxed for Gemini)
+            issues.append("insufficient_keyword_count")
+            logger.warning(f"step3b keyword count too low: {list_item_count} items < 5 minimum")
 
         # Check for keyword category patterns
         keyword_patterns = [
@@ -150,8 +169,13 @@ class Step3BQualityValidator:
         if not found_llmo:
             issues.append("no_llmo_elements")
 
+        # Critical issues that should not be acceptable regardless of count
+        # Note: Relaxed - only no_keyword_list is critical now
+        critical_issues = {"no_keyword_list"}
+        has_critical = bool(set(issues) & critical_issues)
+
         return QualityResult(
-            is_acceptable=len(issues) <= 2,  # Allow up to 2 issues
+            is_acceptable=not has_critical and len(issues) <= 3,  # Allow up to 3 issues
             issues=issues,
         )
 
@@ -298,8 +322,9 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config (expanded max_tokens for larger output)
+        # 100+キーワードの詳細分析には大きな出力が必要
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 8000),  # Increased for 100+ keywords
+            max_tokens=config.get("max_tokens", 24000),  # Increased significantly for 100+ keywords with full details
             temperature=config.get("temperature", 0.5),
         )
         metadata = LLMCallMetadata(
@@ -318,7 +343,9 @@ class Step3BCooccurrenceExtraction(BaseActivity):
                         "You are a co-occurrence keyword analysis expert. "
                         "Extract 100-150 co-occurrence keywords and 30-50 related keywords. "
                         "Classify keywords by 3 phases (anxiety, understanding, action) "
-                        "and identify LLMO/behavioral economics triggers."
+                        "and identify LLMO/behavioral economics triggers. "
+                        "CRITICAL: Output ONLY valid JSON. No explanations, no preamble. "
+                        "Start with '{' and end with '}'."
                     ),
                     config=llm_config,
                     metadata=metadata,
@@ -345,7 +372,15 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         def enhance_prompt(prompt: str, issues: list[str]) -> str:
             enhancement = "\n\n【重要】以下の形式で必ず出力してください：\n"
             for issue in issues:
-                if issue == "no_keyword_list":
+                if issue == "output_too_small":
+                    enhancement += "- 【重要】出力が短すぎます。すべてのカテゴリを詳細に記述してください。\n"
+                    enhancement += "- 最低100個以上の共起キーワードを抽出してください。\n"
+                elif issue == "insufficient_keyword_count":
+                    enhancement += "- 【重要】キーワード数が不足しています。\n"
+                    enhancement += (
+                        "- 共起キーワード100個以上、LSIキーワード30個以上、関連キーワード30個以上を箇条書きで出力してください。\n"
+                    )
+                elif issue == "no_keyword_list":
                     enhancement += "- 各キーワードは箇条書き（・、-、*、数字）で列挙\n"
                 elif issue == "no_keyword_categories":
                     enhancement += "- 「共起キーワード」「LSIキーワード」「関連キーワード」のカテゴリを明示\n"
@@ -355,8 +390,20 @@ class Step3BCooccurrenceExtraction(BaseActivity):
                     enhancement += "- LLMO要素（音声検索キーワード、質問形式キーワード）を抽出\n"
             return prompt + enhancement
 
-        # Quality retry loop (strict for heart of workflow)
+        # Quality retry loop
+        # accept_on_final=True: Accept output after retries (avoid infinite loops)
+        # max_retries=2: Try twice before accepting
         retry_loop = QualityRetryLoop(max_retries=2, accept_on_final=True)
+
+        # Callback to update step status to "retrying"
+        async def on_retry(retry_num: int) -> None:
+            await self._update_step_status(
+                run_id=ctx.run_id,
+                tenant_id=ctx.tenant_id,
+                step_name=self.step_id,
+                status="retrying",
+                retry_count=retry_num,
+            )
 
         loop_result = await retry_loop.execute(
             llm_call=llm_call,
@@ -364,6 +411,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
             validator=self.quality_validator,
             enhance_prompt=enhance_prompt,
             extract_content=lambda r: r.content,
+            on_retry=on_retry,
         )
 
         if not loop_result.success or loop_result.result is None:
