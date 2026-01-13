@@ -337,6 +337,33 @@ class ApiClient {
     },
 
     /**
+     * Step11 状態を取得（ウィザード復元用）
+     */
+    getStep11State: async (
+      id: string,
+    ): Promise<{
+      phase: string;
+      settings: { image_count: number; position_request: string } | null;
+      positions: ImagePosition[];
+      instructions: { index: number; instruction: string }[];
+      images: GeneratedImage[];
+      sections: Section[];
+      analysis_summary: string;
+      error: string | null;
+    }> => {
+      return this.request<{
+        phase: string;
+        settings: { image_count: number; position_request: string } | null;
+        positions: ImagePosition[];
+        instructions: { index: number; instruction: string }[];
+        images: GeneratedImage[];
+        sections: Section[];
+        analysis_summary: string;
+        error: string | null;
+      }>(`/api/runs/${id}/step11/state`);
+    },
+
+    /**
      * Step11 位置情報を取得 (Phase 11B)
      */
     getStep11Positions: async (

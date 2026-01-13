@@ -327,13 +327,11 @@ eラーニングの活用事例を紹介したい
         </p>
         <textarea
           rows={3}
-          value={
-            data.related_keywords
-              ?.map((rk) => `${rk.keyword}${rk.volume ? ` (${rk.volume})` : ""}`)
-              .join("\n") || ""
-          }
+          value={data.related_keywords_text ?? ""}
           onChange={(e) => {
-            const lines = e.target.value.split("\n").filter((l) => l.trim());
+            const text = e.target.value;
+            // Parse non-empty lines into structured data
+            const lines = text.split("\n").filter((l) => l.trim());
             const related = lines.map((line) => {
               const match = line.match(/^(.+?)\s*(?:\(([^)]+)\))?$/);
               if (match) {
@@ -344,7 +342,10 @@ eラーニングの活用事例を紹介したい
               }
               return { keyword: line.trim() };
             });
-            onChange({ related_keywords: related.length > 0 ? related : undefined });
+            onChange({
+              related_keywords_text: text,
+              related_keywords: related.length > 0 ? related : undefined,
+            });
           }}
           placeholder={`例:
 派遣社員 研修プログラム (50-100)

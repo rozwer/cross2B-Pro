@@ -45,7 +45,7 @@ export function ApprovalDialog({
   onApprove,
   onReject,
   runId,
-  artifacts,
+  artifacts: externalArtifacts,
   loading = false,
 }: ApprovalDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -55,6 +55,30 @@ export function ApprovalDialog({
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(APPROVAL_TARGET_STEPS));
+
+  // Internal artifacts state - fetched when dialog opens
+  const [internalArtifacts, setInternalArtifacts] = useState<ArtifactRef[]>([]);
+  const [artifactsLoading, setArtifactsLoading] = useState(false);
+
+  // Fetch artifacts when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setArtifactsLoading(true);
+      api.artifacts.list(runId)
+        .then((data) => {
+          setInternalArtifacts(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch artifacts:", err);
+        })
+        .finally(() => {
+          setArtifactsLoading(false);
+        });
+    }
+  }, [isOpen, runId]);
+
+  // Use internal artifacts if available, fallback to external
+  const artifacts = internalArtifacts.length > 0 ? internalArtifacts : externalArtifacts;
 
   // 承認対象ステップの成果物のみフィルタリング
   const approvalArtifacts = useMemo(() => {
@@ -138,6 +162,7 @@ export function ApprovalDialog({
       setRejectReason("");
       setSelectedArtifact(null);
       setContent(null);
+      setInternalArtifacts([]);  // Reset internal artifacts
     }
   }, [isOpen]);
 
@@ -201,7 +226,12 @@ export function ApprovalDialog({
 
           {/* Content Area */}
           <div className="flex-1 flex overflow-hidden min-h-0">
-            {approvalArtifacts.length === 0 ? (
+            {artifactsLoading ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-8">
+                <Loader2 className="h-12 w-12 text-primary-500 animate-spin mb-4" />
+                <p className="text-lg font-medium">成果物を読み込み中...</p>
+              </div>
+            ) : approvalArtifacts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-8">
                 <Package className="h-16 w-16 text-gray-300 mb-4" />
                 <p className="text-lg font-medium">承認対象の成果物がありません</p>

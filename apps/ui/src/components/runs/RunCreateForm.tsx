@@ -85,9 +85,10 @@ export function RunCreateForm() {
       (s) => s.isConfigurable && s.stepId !== "approval",
     );
     // step_configs: 空配列の場合は undefined にする（バックエンドの None と一致させる）
+    // Normalize step_ids: convert dots to underscores (step6.5 -> step6_5)
     const stepConfigsPayload = configurableSteps.length > 0
       ? configurableSteps.map((step) => ({
-          step_id: step.stepId,
+          step_id: step.stepId.replace(/\./g, "_"),
           platform: step.aiModel,
           model: step.modelName,
           temperature: step.temperature,
@@ -101,6 +102,7 @@ export function RunCreateForm() {
 
     const input: CreateRunInput = {
       input: {
+        format_type: "legacy",  // Required for discriminated union
         keyword: data.keyword,
         target_audience: data.target_audience || undefined,
         competitor_urls: competitorUrls.filter((url) => url.trim() !== ""),
