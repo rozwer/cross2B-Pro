@@ -51,12 +51,13 @@ async def create_template(
     manager = get_tenant_manager()
     async with manager.get_session(user.tenant_id) as session:
         # Create new template
+        # mode="json" ensures HttpUrl and other special types are serializable
         db_template = HearingTemplateModel(
             id=str(uuid4()),
             tenant_id=user.tenant_id,
             name=template.name,
             description=template.description,
-            data=template.data.model_dump(),
+            data=template.data.model_dump(mode="json"),
         )
 
         try:
@@ -226,7 +227,7 @@ async def update_template(
 
         if update.data is not None:
             changes["data"] = "updated"
-            template.data = update.data.model_dump()
+            template.data = update.data.model_dump(mode="json")
 
         try:
             await session.flush()

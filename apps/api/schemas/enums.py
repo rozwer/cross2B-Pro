@@ -21,6 +21,7 @@ class StepStatus(str, Enum):
 
     PENDING = "pending"
     RUNNING = "running"
+    RETRYING = "retrying"
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"
