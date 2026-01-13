@@ -148,6 +148,8 @@ export function WorkflowPattern4_VerticalTimeline({
     };
 
     // Check if this is a parent step with parallel children
+    // For step3 (構成): it completes when parallel execution (step3a/b/c) starts
+    // This matches user expectation: "構成" should be completed before "3-A/3-B/3-C" run
     const children = PARALLEL_PARENT_CHILDREN[stepName];
     if (children) {
       // Parent is completed when ALL children are completed
@@ -157,14 +159,18 @@ export function WorkflowPattern4_VerticalTimeline({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running (but check run failure)
-      const anyChildRunning = children.some(
-        (childName) => stepMap.get(childName)?.status === "running"
+      // Parent is completed when any child is running or completed
+      // (parallel phase has started, so parent step is done)
+      const anyChildRunningOrCompleted = children.some(
+        (childName) => {
+          const status = stepMap.get(childName)?.status;
+          return status === "running" || status === "completed";
+        }
       );
-      if (anyChildRunning) {
-        return adjustForRunFailure("running");
+      if (anyChildRunningOrCompleted) {
+        return "completed";
       }
-      // Parent is failed if any child failed (and none running)
+      // Parent is failed only if all children failed (none running/completed)
       const anyChildFailed = children.some(
         (childName) => stepMap.get(childName)?.status === "failed"
       );
@@ -192,6 +198,7 @@ export function WorkflowPattern4_VerticalTimeline({
       case "completed":
         return <CheckCircle className="w-4 h-4" />;
       case "running":
+      case "retrying":
         return <Loader2 className="w-4 h-4 animate-spin" />;
       case "failed":
         return <XCircle className="w-4 h-4" />;
@@ -208,6 +215,8 @@ export function WorkflowPattern4_VerticalTimeline({
         return { bg: "bg-emerald-500", text: "text-emerald-400", glow: "shadow-emerald-500/50" };
       case "running":
         return { bg: "bg-cyan-500", text: "text-cyan-400", glow: "shadow-cyan-500/50" };
+      case "retrying":
+        return { bg: "bg-orange-500", text: "text-orange-400", glow: "shadow-orange-500/50" };
       case "failed":
         return { bg: "bg-red-500", text: "text-red-400", glow: "shadow-red-500/50" };
       default:

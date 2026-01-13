@@ -172,7 +172,7 @@ const FALLBACK_WORKFLOW_STEPS: StepConfig[] = [
   },
   {
     stepId: "step4",
-    label: "アウトライン",
+    label: "執筆準備（アウトライン）",
     description: "戦略的な記事構成の作成",
     aiModel: "anthropic",
     modelName: "claude-sonnet-4-20250514",

@@ -122,6 +122,7 @@ function getStatusIcon(status?: string, isWaiting?: boolean) {
     case "failed":
       return XCircle;
     case "running":
+    case "retrying":
       return Loader2;
     default:
       return Clock;
@@ -165,13 +166,15 @@ export function WorkflowPattern1_N8nStyle({
 
     // Helper to adjust status based on run status
     const adjustForRunFailure = (status: string | undefined): string | undefined => {
-      if (runStatus === "failed" && status === "running") {
+      if (runStatus === "failed" && (status === "running" || status === "retrying")) {
         return "failed";
       }
       return status;
     };
 
     // Check if this is a parent step with parallel children
+    // For step3 (構成): it completes when parallel execution (step3a/b/c) starts
+    // This matches user expectation: "構成" should be completed before "3-A/3-B/3-C" run
     const children = PARALLEL_PARENT_CHILDREN[stepName];
     if (children) {
       // Parent is completed when ALL children are completed
@@ -181,14 +184,18 @@ export function WorkflowPattern1_N8nStyle({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running (but check run failure)
-      const anyChildRunning = children.some(
-        (childName) => stepMap.get(childName)?.status === "running"
+      // Parent is completed when any child is running or completed
+      // (parallel phase has started, so parent step is done)
+      const anyChildRunningOrCompleted = children.some(
+        (childName) => {
+          const status = stepMap.get(childName)?.status;
+          return status === "running" || status === "completed" || status === "retrying";
+        }
       );
-      if (anyChildRunning) {
-        return adjustForRunFailure("running");
+      if (anyChildRunningOrCompleted) {
+        return "completed";
       }
-      // Parent is failed if any child failed (and none running)
+      // Parent is failed only if all children failed (none running/completed)
       const anyChildFailed = children.some(
         (childName) => stepMap.get(childName)?.status === "failed"
       );
@@ -278,6 +285,8 @@ export function WorkflowPattern1_N8nStyle({
                             "bg-emerald-50 dark:bg-white/5 border-emerald-500/50 hover:border-emerald-400",
                           status === "running" &&
                             "bg-cyan-50 dark:bg-white/10 border-cyan-500/50 hover:border-cyan-400",
+                          status === "retrying" &&
+                            "bg-orange-50 dark:bg-orange-500/10 border-orange-500/50 hover:border-orange-400",
                           status === "failed" &&
                             "bg-red-50 dark:bg-white/5 border-red-500/50 hover:border-red-400",
                           isWaiting && "bg-amber-50 dark:bg-amber-500/10 border-amber-500/50 hover:border-amber-400",
@@ -314,6 +323,7 @@ export function WorkflowPattern1_N8nStyle({
                               "w-5 h-5 rounded-full flex items-center justify-center",
                               status === "completed" && "bg-emerald-500",
                               status === "running" && "bg-cyan-500",
+                              status === "retrying" && "bg-orange-500",
                               status === "failed" && "bg-red-500",
                               isWaiting && "bg-amber-500",
                               !status && "bg-gray-600",
@@ -322,7 +332,7 @@ export function WorkflowPattern1_N8nStyle({
                             <StatusIcon
                               className={cn(
                                 "w-3 h-3 text-white",
-                                status === "running" && "animate-spin",
+                                (status === "running" || status === "retrying") && "animate-spin",
                               )}
                             />
                           </div>

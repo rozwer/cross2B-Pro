@@ -144,6 +144,8 @@ export function WorkflowPattern5_RadialProgress({
     };
 
     // Check if this is a parent step with parallel children
+    // For step3 (構成): it completes when parallel execution (step3a/b/c) starts
+    // This matches user expectation: "構成" should be completed before "3-A/3-B/3-C" run
     const children = PARALLEL_PARENT_CHILDREN[stepName];
     if (children) {
       // Parent is completed when ALL children are completed
@@ -153,14 +155,18 @@ export function WorkflowPattern5_RadialProgress({
       if (allChildrenCompleted) {
         return "completed";
       }
-      // Parent is running if any child is running (but check run failure)
-      const anyChildRunning = children.some(
-        (childName) => stepMap.get(childName)?.status === "running"
+      // Parent is completed when any child is running or completed
+      // (parallel phase has started, so parent step is done)
+      const anyChildRunningOrCompleted = children.some(
+        (childName) => {
+          const status = stepMap.get(childName)?.status;
+          return status === "running" || status === "completed";
+        }
       );
-      if (anyChildRunning) {
-        return adjustForRunFailure("running");
+      if (anyChildRunningOrCompleted) {
+        return "completed";
       }
-      // Parent is failed if any child failed (and none running)
+      // Parent is failed only if all children failed (none running/completed)
       const anyChildFailed = children.some(
         (childName) => stepMap.get(childName)?.status === "failed"
       );
@@ -204,6 +210,8 @@ export function WorkflowPattern5_RadialProgress({
         return { stroke: "#10b981", fill: "#10b981", glow: "drop-shadow(0 0 6px #10b981)" };
       case "running":
         return { stroke: "#06b6d4", fill: "#06b6d4", glow: "drop-shadow(0 0 10px #06b6d4)" };
+      case "retrying":
+        return { stroke: "#f97316", fill: "#f97316", glow: "drop-shadow(0 0 10px #f97316)" };
       case "failed":
         return { stroke: "#ef4444", fill: "#ef4444", glow: "drop-shadow(0 0 8px #ef4444)" };
       default:

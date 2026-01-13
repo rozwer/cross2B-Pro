@@ -52,6 +52,12 @@ const statusConfig: Record<
     iconColor: "text-accent-600 dark:text-accent-400",
     lineColor: "bg-accent-300 dark:bg-accent-700",
   },
+  retrying: {
+    icon: Loader2,
+    iconBg: "bg-orange-100 dark:bg-orange-900/40",
+    iconColor: "text-orange-600 dark:text-orange-400",
+    lineColor: "bg-orange-300 dark:bg-orange-700",
+  },
   skipped: {
     icon: Clock,
     iconBg: "bg-gray-100 dark:bg-gray-700",
