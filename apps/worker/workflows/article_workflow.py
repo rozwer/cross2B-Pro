@@ -500,6 +500,14 @@ class ArticleWorkflow:
             while True:
                 self.current_step = "waiting_approval"
 
+                # Sync waiting_approval status to API DB
+                await self._sync_run_status(
+                    tenant_id,
+                    run_id,
+                    "waiting_approval",
+                    "waiting_approval",
+                )
+
                 # Wait for approval, rejection, or step3_review signal (max 7 days)
                 await workflow.wait_condition(
                     lambda: self.approved or self.rejected or self.step3_review_received,
