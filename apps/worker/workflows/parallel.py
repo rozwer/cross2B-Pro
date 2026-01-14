@@ -34,35 +34,41 @@ async def run_parallel_steps(
     tenant_id: str,
     run_id: str,
     config: dict[str, Any],
+    retry_steps: list[str] | None = None,
+    retry_instructions: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Execute step 3A/3B/3C in parallel with retry logic.
 
     Implementation:
-    1. Launch all three steps concurrently
+    1. Launch all three steps (or only retry_steps if specified) concurrently
     2. Collect results, track failures
     3. Retry only failed steps (up to MAX_RETRIES total rounds)
-    4. All three must succeed for the function to return
+    4. All targeted steps must succeed for the function to return
 
     Args:
         tenant_id: Tenant identifier
         run_id: Run identifier
         config: Workflow configuration
+        retry_steps: If specified, only run these steps (for REQ-02 individual retry)
+        retry_instructions: Step-specific retry instructions (REQ-03)
 
     Returns:
-        dict with results from all three steps
+        dict with results from all targeted steps
 
     Raises:
         ParallelStepError: If any step fails after max retries
     """
     max_retry_rounds = 3  # Total retry rounds for the parallel group
-    parallel_steps = ["step3a", "step3b", "step3c"]
+    all_steps = ["step3a", "step3b", "step3c"]
+    parallel_steps = retry_steps if retry_steps else all_steps
     activity_names = {
         "step3a": "step3a_query_analysis",
         "step3b": "step3b_cooccurrence_extraction",
         "step3c": "step3c_competitor_analysis",
     }
 
-    activity_args = {
+    # Base activity args
+    base_activity_args = {
         "tenant_id": tenant_id,
         "run_id": run_id,
         "config": config,
@@ -70,6 +76,12 @@ async def run_parallel_steps(
 
     completed: dict[str, Any] = {}
     last_errors: dict[str, str] = {}
+
+    is_retry_mode = retry_steps is not None
+    if is_retry_mode:
+        workflow.logger.info(
+            f"Step3 retry mode: steps={retry_steps}, instructions={list(retry_instructions.keys()) if retry_instructions else []}"
+        )
 
     for attempt in range(1, max_retry_rounds + 1):
         # Determine which steps still need to run
@@ -83,6 +95,14 @@ async def run_parallel_steps(
         tasks = []
         for step in pending:
             activity_name = activity_names[step]
+            # Build step-specific activity args
+            activity_args = {**base_activity_args}
+
+            # REQ-03: Add retry_instruction if available
+            if retry_instructions and step in retry_instructions:
+                activity_args["retry_instruction"] = retry_instructions[step]
+                workflow.logger.info(f"Step {step} with retry instruction: {retry_instructions[step][:100]}...")
+
             task = workflow.execute_activity(
                 activity_name,
                 activity_args,
@@ -113,7 +133,7 @@ async def run_parallel_steps(
                 completed[step] = result
                 workflow.logger.info(f"{step} succeeded on attempt {attempt}")
 
-    # Check if all steps completed
+    # Check if all targeted steps completed
     if len(completed) < len(parallel_steps):
         failed = [s for s in parallel_steps if s not in completed]
         error_details = {s: last_errors.get(s, "unknown error") for s in failed}
@@ -122,5 +142,5 @@ async def run_parallel_steps(
             message=f"Parallel steps failed after {max_retry_rounds} attempts: {error_details}",
         )
 
-    workflow.logger.info("All parallel steps completed successfully")
+    workflow.logger.info(f"All parallel steps completed successfully: {list(completed.keys())}")
     return completed
