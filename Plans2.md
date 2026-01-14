@@ -1,0 +1,319 @@
+# Plans2.md - GitHub 統合機能
+
+> **最終更新**: 2026-01-14
+> **目的**: 各工程の成果物を GitHub で管理し、Claude Code (claude-code-action) で編集可能にする
+
+---
+
+## 🎯 概要
+
+### 背景
+
+現在は MinIO + DB で成果物を管理しているが、以下の課題がある：
+- LLM 出力の手動修正が困難
+- JSON 破損時の補完が大変
+- 途中からの再開時に柔軟な修正ができない
+
+### ソリューション
+
+```
+工程完了 → GitHub に push → (必要なら Claude Code で編集) → MinIO に同期 → 再開
+```
+
+### 技術選定
+
+| 項目 | 選定 | 理由 |
+|------|------|------|
+| 認証 | GitHub App | 実装が楽、権限管理が柔軟 |
+| Claude Code 連携 | anthropics/claude-code-action | 公式、PR/Issue で @claude メンションに反応 |
+| 同期方式 | GitHub → MinIO 上書き | 単一ソース（GitHub が正） |
+| テナント | 個人利用前提 | 分離不要 |
+
+---
+
+## 📁 ディレクトリ構造
+
+```
+{repository}/
+└── {タイトル}_{timestamp}/     # run ごとに一意
+    ├── .claude/
+    │   └── CLAUDE.md           # Claude Code 用指示
+    ├── step0/
+    │   └── output.json
+    ├── step1/
+    │   └── output.json
+    ...
+    ├── step11/
+    │   ├── output.json
+    │   └── images/
+    │       └── *.png
+    └── step12/
+        └── output.html
+```
+
+---
+
+## 🔴 フェーズ1: 基盤構築 `cc:DONE`
+
+### 1.1 GitHub App 設定機能
+
+- [ ] GitHub App 作成手順書の作成
+  - 必要な権限: Contents (read/write), Issues (read/write), Pull requests (read/write)
+  - Webhook URL 設定（claude-code-action 用）
+- [ ] Settings 画面に GitHub 設定セクション追加
+  - [ ] GitHub App Client ID / Secret 入力
+  - [ ] デフォルトリポジトリ URL 設定
+  - [ ] 接続テストボタン
+
+### 1.2 GitHubService クラス実装 `[feature:tdd]` ✅
+
+#### テストケース設計
+
+| テストケース | 入力 | 期待出力 | 備考 |
+|-------------|------|---------|------|
+| 正常系: リポジトリアクセス確認 | 有効な repo URL | True | 権限チェック |
+| 正常系: リポジトリ作成 | repo 名 | 新規 repo URL | API 経由 |
+| 正常系: ファイル push | path, content | commit SHA | 単一ファイル |
+| 正常系: 複数ファイル push | files[] | commit SHA | バッチ |
+| 異常系: 無効な URL | 不正 URL | ValidationError | |
+| 異常系: 権限不足 | 読み取り専用 repo | PermissionError | |
+| 異常系: レート制限 | 連続リクエスト | RateLimitError | リトライ |
+
+#### 実装タスク
+
+- [x] `apps/api/services/github.py` 作成
+- [x] テスト作成: `tests/unit/test_github_service.py` (18 tests passed)
+- [x] GitHub API クライアント（httpx 直接）
+- [x] API エンドポイント: `apps/api/routers/github.py`
+
+### 1.3 DB スキーマ拡張 ✅
+
+- [x] `runs` テーブルに追加カラム (`github_repo_url`, `github_dir_path`)
+- [x] `github_sync_status` テーブル作成
+- [x] インデックス追加 (`idx_github_sync_status_run_id`, `idx_github_sync_status_status`, `idx_runs_github_repo`)
+
+---
+
+## 🔴 フェーズ2: リポジトリ設定 UI `cc:DONE`
+
+### 2.1 ワークフロー開始前のリポジトリ設定 ✅
+
+- [x] `apps/ui/src/components/github/RepoSelector.tsx` 作成
+  - 既存リポジトリ選択モード
+    - URL 入力フィールド
+    - アクセス確認ボタン（実際に API 叩く）
+    - 失敗時はエラー表示、次ステップ進めない
+  - 新規リポジトリ作成モード
+    - リポジトリ名入力
+    - 作成ボタン（API 経由で作成）
+    - 失敗時はエラー表示
+- [x] RunCreateWizard の Step6Confirm に RepoSelector を統合
+- [ ] Settings からのデフォルト値読み込み（将来対応）
+
+### 2.2 API エンドポイント ✅
+
+- [x] `POST /api/github/check-access`
+  ```json
+  {
+    "repo_url": "https://github.com/owner/repo"
+  }
+  // Response: { "accessible": true, "permissions": ["read", "write"] }
+  ```
+- [x] `POST /api/github/create-repo`
+  ```json
+  {
+    "name": "my-seo-articles"
+  }
+  // Response: { "repo_url": "https://github.com/owner/my-seo-articles" }
+  ```
+- [x] `POST /api/runs` の拡張
+  - `github_repo_url` パラメータ追加
+  - ディレクトリ名生成: `{keyword_slug}_{timestamp}`
+- [x] UI API クライアント (`apps/ui/src/lib/api.ts`) に GitHub 関数追加
+- [x] 型定義 (`CreateRunInput`) に `github_repo_url` 追加
+
+---
+
+## 🟢 フェーズ3: 自動 push 機能 `cc:IN_PROGRESS`
+
+### 3.1 Activity 完了時の GitHub push ✅
+
+- [x] `BaseActivity._store_output()` 拡張
+  - MinIO 保存後に GitHub push を追加
+  - 失敗時はログ出力のみ（MinIO が正なのでブロックしない）
+  - `_push_to_github()`: 非ブロッキングでGitHub pushを実行
+  - `_get_github_config()`: API経由でrun設定を取得
+- [x] `GitHubPushActivity` 作成 (`apps/worker/activities/github_push.py`)
+  - `push_step_output()`: 個別ステップ出力のpush
+  - `setup_claude_assets()`: 初期CLAUDE.md配置
+  - 冪等性: SHA256 digest比較でスキップ
+
+### 3.2 初期ファイル配置 ✅
+
+- [x] CLAUDE.md テンプレート作成（`github_push.py`内）
+  - 13工程の説明とファイル形式
+  - ディレクトリ構造
+  - 編集ガイドライン
+  - 同期手順
+- [ ] run開始時の自動配置（Workflow統合時に実装）
+
+### 3.3 コミットメッセージ ✅
+
+```
+step{N}: output
+
+Run: {run_id}
+Tenant: {tenant_id}
+```
+
+### 3.4 APIスキーマ拡張 ✅
+
+- [x] `RunResponse` に `github_repo_url`, `github_dir_path` フィールド追加
+- [x] `run_orm_to_response()` でフィールドを返却
+- [x] フロントエンド `Run` 型にフィールド追加
+
+---
+
+## 🔵 フェーズ4: 成果物ページ連携 `cc:TODO`
+
+### 4.1 Claude Code 連携ボタン
+
+- [ ] `apps/ui/src/components/artifacts/GitHubActions.tsx` 作成
+  - 「Claude Code で編集」ボタン
+    - GitHub Issue 作成（@claude メンション付き）
+    - 編集指示入力モーダル
+  - 「GitHub で開く」リンク
+  - 「差分を確認」ボタン
+
+### 4.2 Issue 作成 API
+
+- [ ] `POST /api/github/create-issue`
+  ```json
+  {
+    "run_id": "xxx",
+    "step": "step5",
+    "instruction": "見出しを改善してください"
+  }
+  // Creates: Issue with @claude mention and file reference
+  ```
+
+### 4.3 Diff 表示
+
+- [ ] `GET /api/github/diff/{run_id}/{step}`
+  - GitHub 上のファイルと MinIO を比較
+  - 差分を unified diff 形式で返却
+- [ ] UI: diff 表示コンポーネント（react-diff-viewer 等）
+
+---
+
+## 🟣 フェーズ5: 同期管理 `cc:TODO`
+
+### 5.1 差異検知
+
+- [ ] `github_sync_status` テーブル更新ロジック
+  - ポーリング or Webhook
+  - 差異検知時に `status = 'diverged'`
+- [ ] UI: 差異がある場合に警告バッジ表示
+
+### 5.2 Pull 同期機能
+
+- [ ] `POST /api/github/sync/{run_id}/{step}`
+  - GitHub → MinIO 上書き
+  - `github_sync_status` 更新
+- [ ] UI: 「最新を反映」ボタン
+  - 確認ダイアログ（上書きされる旨）
+  - 成功時にプレビュー更新
+
+### 5.3 自動同期オプション
+
+- [ ] Settings: 「編集終了時に自動同期」チェックボックス
+- [ ] Webhook: claude-code-action 完了時に自動 pull
+
+---
+
+## 🔶 フェーズ6: claude-code-action 設定 `cc:TODO`
+
+### 6.1 GitHub Actions ワークフロー
+
+- [ ] `.github/workflows/claude-code.yml` テンプレート作成
+  ```yaml
+  name: Claude Code
+  on:
+    issue_comment:
+      types: [created]
+    pull_request_review_comment:
+      types: [created]
+
+  jobs:
+    claude:
+      if: contains(github.event.comment.body, '@claude')
+      runs-on: ubuntu-latest
+      steps:
+        - uses: anthropics/claude-code-action@v1
+          with:
+            anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+  ```
+
+### 6.2 セットアップガイド
+
+- [ ] ドキュメント作成: `docs/github-integration.md`
+  - GitHub App 作成手順
+  - claude-code-action 設定手順
+  - Secrets 設定（ANTHROPIC_API_KEY）
+  - 使用例
+
+---
+
+## 📊 技術詳細
+
+### GitHub API 使用量
+
+| 操作 | API コール | レート制限 |
+|------|-----------|-----------|
+| ファイル push | 1 / file | 5,000 req/hour |
+| ファイル取得 | 1 / file | 5,000 req/hour |
+| Issue 作成 | 1 | 5,000 req/hour |
+| リポジトリ作成 | 1 | 5,000 req/hour |
+
+→ 通常使用では問題なし
+
+### エラーハンドリング
+
+| エラー | 対応 |
+|--------|------|
+| 401 Unauthorized | トークン再取得を促す |
+| 403 Rate Limited | 指数バックオフでリトライ |
+| 404 Not Found | リポジトリ/ファイル存在確認 |
+| 422 Validation | 入力値チェック |
+| 5xx Server Error | リトライ（最大3回） |
+
+### セキュリティ考慮
+
+- GitHub App 秘密鍵は環境変数で管理
+- リポジトリ URL はユーザー入力なのでバリデーション必須
+- Issue 作成時の XSS 対策（ユーザー入力のエスケープ）
+
+---
+
+## 📋 依存関係
+
+```
+フェーズ1（基盤）
+    ↓
+フェーズ2（UI）+ フェーズ6（claude-code-action）
+    ↓
+フェーズ3（自動push）
+    ↓
+フェーズ4（成果物連携）
+    ↓
+フェーズ5（同期管理）
+```
+
+---
+
+## 🚀 次のアクション
+
+1. `/work` でフェーズ1から実装開始
+2. GitHub App 作成（手動、ドキュメント参照）
+3. Settings 画面で接続設定
+4. テスト run で動作確認

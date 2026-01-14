@@ -32,11 +32,15 @@ from apps.api.schemas.article_hearing import ArticleHearingInput, KeywordStatus
 from apps.api.schemas.enums import RunStatus, StepStatus
 from apps.api.schemas.runs import (
     DEFAULT_MODEL_CONFIG,
+    STEP3_RETRY_LIMIT,
+    STEP3_VALID_STEPS,
     CreateRunInput,
     ModelConfig,
     RejectRunInput,
     RunOptions,
     RunResponse,
+    Step3ReviewInput,
+    Step3ReviewResponse,
     StepModelConfig,
     ToolConfig,
 )
@@ -239,6 +243,14 @@ async def create_run(
     ws_manager = _get_ws_manager()
     task_queue = _get_temporal_task_queue()
 
+    # Generate GitHub directory path if repo URL provided
+    github_dir_path: str | None = None
+    if data.github_repo_url:
+        # Generate directory name: {keyword_slug}_{timestamp}
+        keyword_slug = effective_keyword.replace(" ", "_").replace("/", "_")[:50]
+        timestamp = now.strftime("%Y%m%d_%H%M%S")
+        github_dir_path = f"{keyword_slug}_{timestamp}"
+
     try:
         # Phase 1: Create run record and commit to DB
         run_response: RunResponse | None = None
@@ -251,6 +263,8 @@ async def create_run(
                 current_step=None,
                 input_data=input_data,
                 config=workflow_config,
+                github_repo_url=data.github_repo_url,
+                github_dir_path=github_dir_path,
                 created_at=now,
                 updated_at=now,
             )
@@ -537,21 +551,42 @@ async def reject_run(
     data: RejectRunInput,
     expected_updated_at: str | None = None,
     user: AuthUser = Depends(get_current_user),
-) -> dict[str, bool]:
+) -> dict[str, bool | str | list[str]]:
     """Reject a run waiting for approval.
+
+    Supports two modes:
+    1. Simple rejection (default): Workflow terminates with failed status
+    2. Rejection with retry: When retry_with_instructions=True and step_instructions provided,
+       Step3 is retried with the given feedback instructions
 
     Args:
         run_id: Run identifier
-        data: Rejection reason
-        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
-            If provided and doesn't match current value, returns 409 Conflict.
+        data: Rejection data including:
+            - reason: Rejection reason
+            - retry_with_instructions: If True, retry step3 with instructions
+            - step_instructions: Dict of step -> instruction for retry
+        expected_updated_at: Optional optimistic lock
         user: Authenticated user
+
+    Returns:
+        - For simple rejection: {"success": True}
+        - For retry: {"success": True, "mode": "retry", "retrying": ["step3a", ...]}
     """
     reason = data.reason
+    retry_mode = data.retry_with_instructions
+    step_instructions = data.step_instructions or {}
     tenant_id = user.tenant_id
+
     logger.info(
         "Rejecting run",
-        extra={"run_id": run_id, "tenant_id": tenant_id, "reason": reason, "user_id": user.user_id},
+        extra={
+            "run_id": run_id,
+            "tenant_id": tenant_id,
+            "reason": reason,
+            "user_id": user.user_id,
+            "retry_mode": retry_mode,
+            "step_instructions": list(step_instructions.keys()) if step_instructions else [],
+        },
     )
 
     db_manager = _get_tenant_db_manager()
@@ -577,34 +612,394 @@ async def reject_run(
                 raise HTTPException(status_code=400, detail=f"Run is not waiting for approval (current status: {run.status})")
 
             audit = AuditLogger(session)
+
+            if retry_mode and step_instructions:
+                # Rejection with retry mode
+                # Validate step names
+                invalid_steps = set(step_instructions.keys()) - STEP3_VALID_STEPS
+                if invalid_steps:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid step names: {invalid_steps}. Valid: {sorted(STEP3_VALID_STEPS)}",
+                    )
+
+                # Check retry limits
+                config = run.config or {}
+                step3_retry_counts: dict[str, int] = config.get("step3_retry_counts", {})
+
+                for step in step_instructions.keys():
+                    current_count = step3_retry_counts.get(step, 0)
+                    if current_count >= STEP3_RETRY_LIMIT:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Retry limit ({STEP3_RETRY_LIMIT}) exceeded for {step}",
+                        )
+                    step3_retry_counts[step] = current_count + 1
+
+                # Update config
+                config["step3_retry_counts"] = step3_retry_counts
+                run.config = config
+                run.updated_at = datetime.now()
+
+                await audit.log(
+                    user_id=user.user_id,
+                    action="reject_with_instructions",
+                    resource_type="run",
+                    resource_id=run_id,
+                    details={
+                        "reason": reason,
+                        "step_instructions": step_instructions,
+                        "retry_counts": step3_retry_counts,
+                    },
+                )
+
+                # Send step3_review signal for retry
+                if temporal_client is not None:
+                    try:
+                        workflow_handle = temporal_client.get_workflow_handle(run_id)
+                        payload = {
+                            "reviews": [
+                                {"step": step, "accepted": False, "retry": True, "retry_instruction": instr}
+                                for step, instr in step_instructions.items()
+                            ],
+                            "retrying": list(step_instructions.keys()),
+                            "step_instructions": step_instructions,
+                            "rejection_reason": reason,
+                        }
+                        await workflow_handle.signal("step3_review", payload)
+                        logger.info(
+                            "Temporal step3_review signal sent (from reject)",
+                            extra={"run_id": run_id, "retrying": list(step_instructions.keys())},
+                        )
+                    except Exception as sig_error:
+                        logger.error(f"Failed to send step3_review signal: {sig_error}", exc_info=True)
+                        raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+                else:
+                    raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="run.step3_retry_requested",
+                    status=run.status,
+                    message=f"Step3 retry requested: {list(step_instructions.keys())}",
+                    tenant_id=tenant_id,
+                )
+
+                await session.commit()
+                return {
+                    "success": True,
+                    "mode": "retry",
+                    "retrying": list(step_instructions.keys()),
+                }
+
+            else:
+                # Simple rejection mode (original behavior)
+                await audit.log(
+                    user_id=user.user_id,
+                    action="reject",
+                    resource_type="run",
+                    resource_id=run_id,
+                    details={"reason": reason, "previous_status": run.status},
+                )
+
+                if temporal_client is not None:
+                    try:
+                        workflow_handle = temporal_client.get_workflow_handle(run_id)
+                        await workflow_handle.signal("reject", reason or "Rejected by reviewer")
+                        logger.info("Temporal rejection signal sent", extra={"run_id": run_id})
+                    except Exception as sig_error:
+                        logger.error(f"Failed to send rejection signal: {sig_error}", exc_info=True)
+                        raise HTTPException(status_code=503, detail=f"Failed to send rejection signal to workflow: {sig_error}")
+                else:
+                    logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
+                    raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+                logger.info("Run rejection signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+                await ws_manager.broadcast_run_update(
+                    run_id=run_id,
+                    event_type="run.rejected",
+                    status=run.status,
+                    error={"code": "REJECTED", "message": reason or "Rejected by reviewer"},
+                    message="Rejection signal sent; waiting for workflow update",
+                    tenant_id=tenant_id,
+                )
+
+                await session.commit()
+                return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to reject run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reject run") from e
+
+
+@router.post("/{run_id}/step3/review")
+async def review_step3(
+    run_id: str,
+    data: Step3ReviewInput,
+    expected_updated_at: str | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> Step3ReviewResponse:
+    """Review Step3 (3A/3B/3C) results with individual approval/retry per step.
+
+    Similar to Step11's image review, allows users to:
+    - Approve individual steps (3A, 3B, 3C)
+    - Request retry with feedback instructions
+
+    REQ-01: 指示付き却下
+    REQ-02: ステップ個別リトライ
+    REQ-03: 修正指示の反映
+    REQ-04: 再レビュー
+    REQ-05: リトライ上限
+
+    Args:
+        run_id: Run identifier
+        data: Review items for each step (step3a, step3b, step3c)
+        expected_updated_at: Optional optimistic lock
+        user: Authenticated user
+
+    Returns:
+        Step3ReviewResponse with retrying steps, approved steps, and next action
+    """
+    tenant_id = user.tenant_id
+    logger.info(
+        "Reviewing step3",
+        extra={
+            "run_id": run_id,
+            "tenant_id": tenant_id,
+            "user_id": user.user_id,
+            "reviews": [r.model_dump() for r in data.reviews],
+        },
+    )
+
+    db_manager = _get_tenant_db_manager()
+    temporal_client = _get_temporal_client()
+    ws_manager = _get_ws_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
+
+            # Only allow review when waiting for approval
+            if run.status != RunStatus.WAITING_APPROVAL.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for approval (current status: {run.status})",
+                )
+
+            # Get step3 retry counts from run's config (or initialize)
+            config = run.config or {}
+            step3_retry_counts: dict[str, int] = config.get("step3_retry_counts", {})
+
+            # Process reviews
+            retrying: list[str] = []
+            approved: list[str] = []
+            step_instructions: dict[str, str] = {}
+
+            for review in data.reviews:
+                step = review.step
+                current_retry_count = step3_retry_counts.get(step, 0)
+
+                if review.retry:
+                    # REQ-05: Check retry limit
+                    if current_retry_count >= STEP3_RETRY_LIMIT:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Retry limit ({STEP3_RETRY_LIMIT}) exceeded for {step}. Current count: {current_retry_count}",
+                        )
+                    retrying.append(step)
+                    step_instructions[step] = review.retry_instruction
+                    step3_retry_counts[step] = current_retry_count + 1
+                elif review.accepted:
+                    approved.append(step)
+
+            # Update config with new retry counts
+            config["step3_retry_counts"] = step3_retry_counts
+            run.config = config
+            run.updated_at = datetime.now()
+
+            # Determine next action
+            if retrying:
+                next_action = "waiting_retry_completion"
+            elif len(approved) == len(STEP3_VALID_STEPS):
+                # All steps approved
+                next_action = "proceed_to_step3_5"
+            else:
+                # Some steps not reviewed yet
+                next_action = "waiting_approval"
+
+            # Audit log
+            audit = AuditLogger(session)
             await audit.log(
                 user_id=user.user_id,
-                action="reject",
+                action="step3_review",
                 resource_type="run",
                 resource_id=run_id,
-                details={"reason": reason, "previous_status": run.status},
+                details={
+                    "retrying": retrying,
+                    "approved": approved,
+                    "step_instructions": step_instructions,
+                    "retry_counts": step3_retry_counts,
+                    "next_action": next_action,
+                },
+            )
+
+            # Send Temporal signal if there are retries or all approved
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    if retrying:
+                        # Send step3_review signal with retry instructions
+                        payload = {
+                            "reviews": [r.model_dump() for r in data.reviews],
+                            "retrying": retrying,
+                            "step_instructions": step_instructions,
+                        }
+                        await workflow_handle.signal("step3_review", payload)
+                        logger.info(
+                            "Temporal step3_review signal sent",
+                            extra={"run_id": run_id, "retrying": retrying},
+                        )
+                    elif next_action == "proceed_to_step3_5":
+                        # All approved - send approve signal
+                        await workflow_handle.signal("approve")
+                        logger.info("Temporal approve signal sent (all step3 approved)", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send step3 review signal: {sig_error}", exc_info=True)
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Failed to send signal to workflow: {sig_error}",
+                    )
+            else:
+                logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+            # WebSocket broadcast
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.step3_reviewed",
+                status=run.status,
+                message=f"Step3 review: retrying={retrying}, approved={approved}",
+                tenant_id=tenant_id,
+            )
+
+            await session.commit()
+
+            return Step3ReviewResponse(
+                success=True,
+                retrying=retrying,
+                approved=approved,
+                next_action=next_action,
+                retry_counts=step3_retry_counts,
+            )
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to review step3: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to review step3") from e
+
+
+@router.post("/{run_id}/pause")
+async def pause_run(
+    run_id: str,
+    expected_updated_at: str | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool]:
+    """Request to pause a running workflow.
+
+    The workflow will pause at the next step boundary (after current activity completes).
+
+    Args:
+        run_id: Run identifier
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
+    tenant_id = user.tenant_id
+    logger.info(
+        "Pausing run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    db_manager = _get_tenant_db_manager()
+    temporal_client = _get_temporal_client()
+    ws_manager = _get_ws_manager()
+
+    # Import PAUSABLE_STATUSES from constants
+    from apps.api.constants import PAUSABLE_STATUSES
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
+
+            if run.status not in PAUSABLE_STATUSES:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"Run cannot be paused (current status: {run.status}). "
+                        "Only running, waiting_approval, or waiting_image_input runs can be paused."
+                    ),
+                )
+
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="pause",
+                resource_type="run",
+                resource_id=run_id,
+                details={"previous_status": run.status},
             )
 
             if temporal_client is not None:
                 try:
                     workflow_handle = temporal_client.get_workflow_handle(run_id)
-                    await workflow_handle.signal("reject", reason or "Rejected by reviewer")
-                    logger.info("Temporal rejection signal sent", extra={"run_id": run_id})
+                    await workflow_handle.signal("pause")
+                    logger.info("Temporal pause signal sent", extra={"run_id": run_id})
                 except Exception as sig_error:
-                    logger.error(f"Failed to send rejection signal: {sig_error}", exc_info=True)
-                    raise HTTPException(status_code=503, detail=f"Failed to send rejection signal to workflow: {sig_error}")
+                    logger.error(f"Failed to send pause signal: {sig_error}", exc_info=True)
+                    raise HTTPException(status_code=503, detail=f"Failed to send pause signal to workflow: {sig_error}")
             else:
                 logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
                 raise HTTPException(status_code=503, detail="Temporal service unavailable")
 
-            logger.info("Run rejection signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
+            logger.info("Run pause signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
 
             await ws_manager.broadcast_run_update(
                 run_id=run_id,
-                event_type="run.rejected",
+                event_type="run.pause_requested",
                 status=run.status,
-                error={"code": "REJECTED", "message": reason or "Rejected by reviewer"},
-                message="Rejection signal sent; waiting for workflow update",
+                message="Pause signal sent; will pause at next step boundary",
                 tenant_id=tenant_id,
             )
 
@@ -617,8 +1012,99 @@ async def reject_run(
         logger.error(f"Invalid tenant_id: {e}")
         raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
     except Exception as e:
-        logger.error(f"Failed to reject run: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to reject run") from e
+        logger.error(f"Failed to pause run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to pause run") from e
+
+
+@router.post("/{run_id}/continue")
+async def continue_run(
+    run_id: str,
+    expected_updated_at: str | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool]:
+    """Continue a paused workflow.
+
+    Resumes execution from the current paused position.
+
+    Args:
+        run_id: Run identifier
+        expected_updated_at: Optional optimistic lock - ISO format timestamp of expected updated_at value.
+            If provided and doesn't match current value, returns 409 Conflict.
+        user: Authenticated user
+    """
+    tenant_id = user.tenant_id
+    logger.info(
+        "Continuing run",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "user_id": user.user_id},
+    )
+
+    db_manager = _get_tenant_db_manager()
+    temporal_client = _get_temporal_client()
+    ws_manager = _get_ws_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
+
+            if run.status != RunStatus.PAUSED.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not paused (current status: {run.status}). Only paused runs can be continued.",
+                )
+
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="continue",
+                resource_type="run",
+                resource_id=run_id,
+                details={"previous_status": run.status, "current_step": run.current_step},
+            )
+
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.signal("resume_from_pause")
+                    logger.info("Temporal resume_from_pause signal sent", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send resume signal: {sig_error}", exc_info=True)
+                    raise HTTPException(status_code=503, detail=f"Failed to send resume signal to workflow: {sig_error}")
+            else:
+                logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+            logger.info("Run continue signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.continued",
+                status=run.status,
+                message="Continue signal sent; resuming workflow",
+                tenant_id=tenant_id,
+            )
+
+            await session.commit()
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to continue run: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to continue run") from e
 
 
 @router.post("/{run_id}/retry/{step}")

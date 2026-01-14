@@ -7,6 +7,7 @@ import {
   WordCountInput,
   CTAInput,
 } from "@/lib/types";
+import { RepoSelector } from "@/components/github/RepoSelector";
 
 interface WizardFormData {
   business: BusinessInput;
@@ -15,11 +16,13 @@ interface WizardFormData {
   word_count: WordCountInput;
   cta: CTAInput;
   confirmed: boolean;
+  github_repo_url: string;
 }
 
 interface Step6ConfirmProps {
   formData: WizardFormData;
   onConfirm: (confirmed: boolean) => void;
+  onGitHubRepoChange: (repoUrl: string) => void;
   errors: string[];
 }
 
@@ -46,9 +49,10 @@ const CTA_POSITION_LABELS: Record<string, string> = {
 export function Step6Confirm({
   formData,
   onConfirm,
+  onGitHubRepoChange,
   errors,
 }: Step6ConfirmProps) {
-  const { business, keyword, strategy, word_count, cta, confirmed } = formData;
+  const { business, keyword, strategy, word_count, cta, confirmed, github_repo_url } = formData;
 
   // Get effective keyword
   const effectiveKeyword =
@@ -257,6 +261,14 @@ export function Step6Confirm({
             )}
           </dl>
         </div>
+      </div>
+
+      {/* GitHub Integration Section */}
+      <div className="border border-gray-200 rounded-lg p-4">
+        <RepoSelector
+          value={github_repo_url}
+          onChange={onGitHubRepoChange}
+        />
       </div>
 
       {/* Confirmation Checkbox */}

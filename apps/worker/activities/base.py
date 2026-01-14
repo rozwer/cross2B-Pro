@@ -655,6 +655,8 @@ class BaseActivity(ABC):
     ) -> ArtifactRef:
         """Store output and return reference.
 
+        Also pushes to GitHub if configured (non-blocking).
+
         Args:
             ctx: Execution context
             output: Output data to store
@@ -663,6 +665,10 @@ class BaseActivity(ABC):
         Returns:
             ArtifactRef to stored content
         """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         # Serialize output
         content = json.dumps(output, ensure_ascii=False, indent=2)
         content_bytes = content.encode("utf-8")
@@ -697,7 +703,90 @@ class BaseActivity(ABC):
             content_type="application/json",
         )
 
+        # Push to GitHub if configured (non-blocking)
+        await self._push_to_github(ctx, content_bytes, logger)
+
         return artifact_ref
+
+    async def _push_to_github(
+        self,
+        ctx: ExecutionContext,
+        content: bytes,
+        logger: Any,
+    ) -> None:
+        """Push output to GitHub if repository is configured.
+
+        Non-blocking: failures are logged but don't stop workflow.
+
+        Args:
+            ctx: Execution context
+            content: Content bytes to push
+            logger: Logger instance
+        """
+        try:
+            # Get run info to check for GitHub config
+            github_config = await self._get_github_config(ctx.tenant_id, ctx.run_id)
+            if not github_config:
+                return
+
+            repo_url = github_config.get("github_repo_url")
+            dir_path = github_config.get("github_dir_path")
+
+            if not repo_url or not dir_path:
+                return
+
+            logger.info(f"[BaseActivity] Pushing {self.step_id} to GitHub: {repo_url}")
+
+            from apps.api.services.github import GitHubService
+
+            github = GitHubService()
+
+            # Build file path
+            file_path = f"{dir_path}/{self.step_id}/output.json"
+            commit_message = f"{self.step_id}: output\n\nRun: {ctx.run_id}\nTenant: {ctx.tenant_id}"
+
+            # Push (idempotent - will update if exists)
+            sha = await github.push_file(
+                repo_url=repo_url,
+                path=file_path,
+                content=content,
+                message=commit_message,
+            )
+            logger.info(f"[BaseActivity] GitHub push successful: {sha[:8]}")
+
+        except Exception as e:
+            # Non-blocking: log and continue
+            logger.warning(f"[BaseActivity] GitHub push failed (non-blocking): {e}")
+
+    async def _get_github_config(
+        self,
+        tenant_id: str,
+        run_id: str,
+    ) -> dict[str, Any] | None:
+        """Get GitHub configuration for a run.
+
+        Args:
+            tenant_id: Tenant identifier
+            run_id: Run identifier
+
+        Returns:
+            dict with github_repo_url and github_dir_path, or None
+        """
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(
+                    f"{API_BASE_URL}/api/runs/{run_id}",
+                    headers={"X-Tenant-ID": tenant_id},
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return {
+                        "github_repo_url": data.get("github_repo_url"),
+                        "github_dir_path": data.get("github_dir_path"),
+                    }
+        except Exception:
+            pass
+        return None
 
     async def _emit_event(
         self,

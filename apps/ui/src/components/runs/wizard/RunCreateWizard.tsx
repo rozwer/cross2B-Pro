@@ -75,6 +75,8 @@ interface WizardFormData {
   word_count: WordCountInput;
   cta: CTAInput;
   confirmed: boolean;
+  // GitHub integration (Phase 2)
+  github_repo_url: string;
 }
 
 interface RunCreateWizardProps {
@@ -106,6 +108,7 @@ export function RunCreateWizard({
     word_count: DEFAULT_WORD_COUNT,
     cta: DEFAULT_CTA,
     confirmed: false,
+    github_repo_url: "",
   });
 
   // Keyword suggestions state
@@ -289,6 +292,7 @@ export function RunCreateWizard({
         word_count: template.data.word_count,
         cta: template.data.cta,
         confirmed: false, // Always reset confirmation
+        github_repo_url: "", // Reset GitHub repo on template load
       });
       // Clear any validation errors
       setValidationErrors({});
@@ -355,6 +359,8 @@ export function RunCreateWizard({
         step_configs: normalizedStepConfigs,
         tool_config: toolConfig,
         options,
+        // GitHub integration (Phase 2) - only send if set
+        github_repo_url: formData.github_repo_url || undefined,
       });
 
       // Navigate to the run detail page
@@ -420,6 +426,7 @@ export function RunCreateWizard({
           <Step6Confirm
             formData={formData}
             onConfirm={(confirmed: boolean) => setFormData((prev) => ({ ...prev, confirmed }))}
+            onGitHubRepoChange={(repoUrl: string) => setFormData((prev) => ({ ...prev, github_repo_url: repoUrl }))}
             errors={validationErrors[6] || []}
           />
         );

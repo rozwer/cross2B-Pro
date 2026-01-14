@@ -115,6 +115,9 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
         started_at=run.started_at.isoformat() if run.started_at else None,
         completed_at=run.completed_at.isoformat() if run.completed_at else None,
         error=error,
+        # GitHub integration (Phase 3)
+        github_repo_url=run.github_repo_url,
+        github_dir_path=run.github_dir_path,
     )
 
 
