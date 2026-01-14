@@ -41,18 +41,26 @@ def _get_github_service() -> GitHubService:
     return GitHubService()
 
 
-def _get_tenant_db_manager():
+def _get_tenant_db_manager() -> "TenantDBManager":
     """Get tenant DB manager."""
     from apps.api.db.tenant import get_tenant_manager
 
     return get_tenant_manager()
 
 
-def _get_artifact_store():
+# Type alias for lazy import
+TenantDBManager = object  # Actual type imported lazily
+
+
+def _get_artifact_store() -> "ArtifactStore":
     """Get artifact store instance."""
     from apps.api.main import get_artifact_store
 
     return get_artifact_store()
+
+
+# Type alias for lazy import
+ArtifactStore = object  # Actual type imported lazily
 
 
 # =============================================================================
@@ -137,7 +145,7 @@ class DiffResponse(BaseModel):
 async def check_access(
     request: CheckAccessRequest,
     user: AuthUser = Depends(get_current_user),
-):
+) -> CheckAccessResponse:
     """Check access permissions for a GitHub repository.
 
     Verifies that the authenticated user has access to the specified repository
@@ -190,7 +198,7 @@ async def check_access(
 async def create_repo(
     request: CreateRepoRequest,
     user: AuthUser = Depends(get_current_user),
-):
+) -> CreateRepoResponse:
     """Create a new GitHub repository.
 
     Creates a private repository by default with auto-initialization.
@@ -231,7 +239,7 @@ async def create_repo(
 async def create_issue(
     request: CreateIssueRequest,
     user: AuthUser = Depends(get_current_user),
-):
+) -> CreateIssueResponse:
     """Create a GitHub issue for Claude Code to process.
 
     Creates an issue with @claude mention and file reference.
@@ -305,7 +313,7 @@ async def get_diff(
     run_id: UUID,
     step: str,
     user: AuthUser = Depends(get_current_user),
-):
+) -> DiffResponse:
     """Get diff between GitHub and MinIO content for a step.
 
     Compares the file in GitHub with the artifact in MinIO storage.
@@ -383,7 +391,7 @@ async def sync_from_github(
     run_id: UUID,
     step: str,
     user: AuthUser = Depends(get_current_user),
-):
+) -> SyncResponse:
     """Sync content from GitHub to MinIO.
 
     Downloads the file from GitHub and overwrites the MinIO artifact.
