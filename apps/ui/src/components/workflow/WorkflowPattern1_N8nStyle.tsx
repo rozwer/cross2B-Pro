@@ -462,8 +462,22 @@ export function WorkflowPattern1_N8nStyle({
                             stepName !== "step11" && (
                             <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10 space-y-2">
                               {status === "failed" && (
-                                <div className="text-xs font-medium text-red-500 dark:text-red-400 mb-2">
-                                  このステップで失敗しました
+                                <div className="space-y-1 mb-2">
+                                  <div className="text-xs font-medium text-red-500 dark:text-red-400">
+                                    このステップで失敗しました
+                                  </div>
+                                  {step?.error_code && (
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      <span className="font-mono bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
+                                        {step.error_code}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {step?.error_message && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 break-words max-w-[200px]">
+                                      {step.error_message}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {/* Retry button - only for failed */}

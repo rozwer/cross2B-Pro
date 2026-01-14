@@ -125,6 +125,7 @@ export function WorkflowPattern5_RadialProgress({
 
   // Selected step for detail view
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const selectedStepData = selectedStep ? stepMap.get(selectedStep) : null;
 
   // Helper: Get effective status for a step (handles parent-child relationships)
   // If the run has failed, treat "running" steps as "failed"
@@ -553,7 +554,23 @@ export function WorkflowPattern5_RadialProgress({
                 >
                   {selectedEffectiveStatus === "completed" && "✓ 完了"}
                   {selectedEffectiveStatus === "running" && "処理中..."}
-                  {selectedEffectiveStatus === "failed" && "エラー発生"}
+                  {selectedEffectiveStatus === "failed" && (
+                    <div className="space-y-1">
+                      <div className="font-medium">エラー発生</div>
+                      {selectedStepData?.error_code && (
+                        <div>
+                          <span className="font-mono bg-red-200 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1 py-0.5 rounded text-[10px]">
+                            {selectedStepData.error_code}
+                          </span>
+                        </div>
+                      )}
+                      {selectedStepData?.error_message && (
+                        <div className="text-red-500 dark:text-red-400/80 break-words">
+                          {selectedStepData.error_message}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {!selectedEffectiveStatus && "待機中"}
                 </div>
 

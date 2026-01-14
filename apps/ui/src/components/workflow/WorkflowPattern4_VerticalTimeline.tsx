@@ -469,9 +469,23 @@ export function WorkflowPattern4_VerticalTimeline({
                                 )}
                                 {status === "failed" && (
                                   <div className="p-3 rounded-lg bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                                    <p className="text-xs text-red-600 dark:text-red-400 mb-2">
-                                      エラーが発生しました
-                                    </p>
+                                    <div className="space-y-1 mb-2">
+                                      <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                                        エラーが発生しました
+                                      </p>
+                                      {step?.error_code && (
+                                        <div className="text-xs">
+                                          <span className="font-mono bg-red-200 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded">
+                                            {step.error_code}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {step?.error_message && (
+                                        <p className="text-xs text-red-500 dark:text-red-400/80 break-words">
+                                          {step.error_message}
+                                        </p>
+                                      )}
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                       {onRetry && stepName !== "step11" && (
                                         <button
