@@ -233,8 +233,9 @@ export default function RunDetailPage({
 
     // waiting_approval状態で、かつcurrent_stepがstep3関連の場合
     if (run.status === "waiting_approval") {
-      // current_stepがstep3a/3b/3c、waiting_step3_approval、またはpost_step3のいずれか
-      const step3RelatedSteps = ["step3a", "step3b", "step3c", "waiting_step3_approval", "post_step3"];
+      // current_stepがstep3a/3b/3c、waiting_approval、waiting_step3_approval、またはpost_step3のいずれか
+      // Note: waiting_approvalは承認待ち状態を表す（ワークフローがこの値を設定）
+      const step3RelatedSteps = ["step3a", "step3b", "step3c", "waiting_approval", "waiting_step3_approval", "post_step3"];
       if (step3RelatedSteps.includes(run.current_step ?? "")) {
         return true;
       }
