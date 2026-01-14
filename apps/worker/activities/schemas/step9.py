@@ -228,6 +228,7 @@ class Step9Output(StepOutputBase):
     )
     quality_warnings: list[str] = Field(default_factory=list)
     model: str = Field(default="")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
 
     # 新規フィールド（blog.System統合）
     factcheck_corrections: list[FactcheckCorrection] = Field(default_factory=list, description="ファクトチェック修正記録")

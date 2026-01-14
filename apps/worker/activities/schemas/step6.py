@@ -89,6 +89,7 @@ class Step6Output(StepOutputBase):
     quality: EnhancedOutlineQuality = Field(default_factory=EnhancedOutlineQuality)
     sources_used: int = 0
     model: str = ""
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System 統合用フィールド（オプショナル）

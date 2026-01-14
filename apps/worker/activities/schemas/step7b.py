@@ -52,6 +52,7 @@ class Step7bOutput(StepOutputBase):
     polish_metrics: PolishMetrics = Field(default_factory=PolishMetrics)
     quality_warnings: list[str] = Field(default_factory=list)
     model: str = Field(default="")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
 
 
 # =============================================================================

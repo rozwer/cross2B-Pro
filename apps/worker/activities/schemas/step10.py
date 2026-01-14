@@ -110,6 +110,7 @@ class Step10Metadata(BaseModel):
 
     generated_at: datetime | None = Field(default=None, description="生成日時（Activity側で設定）")
     model: str = Field(default="", description="使用したLLMモデル")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     total_word_count: int = Field(default=0, description="全記事の合計文字数")
     generation_order: list[int] = Field(
         default_factory=lambda: [1, 2, 3, 4],
