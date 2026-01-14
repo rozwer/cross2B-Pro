@@ -551,3 +551,271 @@ async def get_sync_status(
         ]
 
         return SyncStatusResponse(run_id=str(run_id), statuses=statuses)
+
+
+# =============================================================================
+# Review API Models
+# =============================================================================
+
+
+class CreateReviewRequest(BaseModel):
+    """Request to create a review issue for Claude Code."""
+
+    review_type: str = Field(
+        default="all",
+        description="Review type: fact_check, seo, quality, or all",
+    )
+
+
+class CreateReviewResponse(BaseModel):
+    """Response with created review issue details."""
+
+    issue_number: int
+    issue_url: str
+    review_type: str
+    output_path: str
+
+
+class ReviewResultRequest(BaseModel):
+    """Request to save review result."""
+
+    review_data: dict[str, object] = Field(..., description="Review result JSON data")
+    issue_number: int | None = Field(None, description="Issue number to comment on")
+
+
+class ReviewResultResponse(BaseModel):
+    """Response with saved review result."""
+
+    saved: bool
+    path: str
+    digest: str
+    comment_posted: bool = False
+
+
+class ReviewStatusResponse(BaseModel):
+    """Response with review status."""
+
+    status: str  # pending, in_progress, completed, failed
+    issue_number: int | None = None
+    issue_url: str | None = None
+    has_result: bool = False
+    result_path: str | None = None
+
+
+# =============================================================================
+# Review API Endpoints
+# =============================================================================
+
+
+@router.post("/review/{run_id}/{step}", response_model=CreateReviewResponse)
+async def create_review_issue(
+    run_id: UUID,
+    step: str,
+    request: CreateReviewRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> CreateReviewResponse:
+    """Create a GitHub issue for Claude Code to review an article.
+
+    Creates an issue with @claude mention and review instructions.
+    Supports different review types: fact_check, seo, quality, or all.
+    """
+    from apps.api.services.review_prompts import ReviewType, get_review_prompt, get_review_title
+
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    # Validate review type
+    try:
+        review_type = ReviewType(request.review_type)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid review type: {request.review_type}. Must be one of: fact_check, seo, quality, all",
+        )
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        repo_url = run.github_repo_url
+        dir_path = run.github_dir_path or str(run_id)
+
+    # Build file paths
+    file_path = f"{dir_path}/{step}/output.json"
+    output_path = f"{dir_path}/{step}/review.json"
+
+    # Generate review prompt
+    issue_body = get_review_prompt(
+        review_type=review_type,
+        file_path=file_path,
+        output_path=output_path,
+        run_id=str(run_id),
+        step=step,
+    )
+
+    # Generate issue title
+    issue_title = get_review_title(review_type, step, dir_path)
+
+    try:
+        issue_data = await github.create_issue(
+            repo_url=repo_url,
+            title=issue_title,
+            body=issue_body,
+            labels=["claude-code", "review", f"review-{review_type.value}"],
+        )
+
+        return CreateReviewResponse(
+            issue_number=issue_data["number"],
+            issue_url=issue_data["html_url"],
+            review_type=review_type.value,
+            output_path=output_path,
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot create issue.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+
+
+@router.post("/review-result/{run_id}/{step}", response_model=ReviewResultResponse)
+async def save_review_result(
+    run_id: UUID,
+    step: str,
+    request: ReviewResultRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> ReviewResultResponse:
+    """Save review result to MinIO and optionally post to GitHub issue.
+
+    Saves the review result JSON to MinIO storage and optionally
+    posts a summary comment to the associated GitHub issue.
+    """
+    import hashlib
+    import json
+
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+    store = _get_artifact_store()
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        repo_url = run.github_repo_url
+        dir_path = run.github_dir_path or str(run_id)
+
+    # Prepare review data
+    review_json = json.dumps(request.review_data, ensure_ascii=False, indent=2)
+    review_bytes = review_json.encode("utf-8")
+    digest = hashlib.sha256(review_bytes).hexdigest()
+
+    # Save to MinIO
+    path = f"{user.tenant_id}/{run_id}/{step}/review.json"
+    await store.put(review_bytes, path, "application/json")
+
+    # Post comment to GitHub issue if issue_number provided
+    comment_posted = False
+    if request.issue_number and repo_url:
+        try:
+            summary = request.review_data.get("summary", {})
+            total = summary.get("total_issues", 0)
+            high = summary.get("high", 0)
+            medium = summary.get("medium", 0)
+            low = summary.get("low", 0)
+            assessment = summary.get("overall_assessment", "レビュー完了")
+            passed = request.review_data.get("passed", False)
+
+            status_emoji = "✅" if passed else "⚠️"
+
+            comment_body = f"""## {status_emoji} レビュー完了
+
+**結果サマリー:**
+- 総検出数: {total}件
+- 🔴 高: {high}件 / 🟡 中: {medium}件 / 🟢 低: {low}件
+
+**全体評価:** {assessment}
+
+---
+*詳細は `{dir_path}/{step}/review.json` を参照してください。*
+"""
+            await github.add_issue_comment(
+                repo_url=repo_url,
+                issue_number=request.issue_number,
+                body=comment_body,
+            )
+            comment_posted = True
+        except Exception as e:
+            logger.warning(f"Failed to post review comment: {e}")
+
+    return ReviewResultResponse(
+        saved=True,
+        path=path,
+        digest=digest,
+        comment_posted=comment_posted,
+    )
+
+
+@router.get("/review-status/{run_id}/{step}", response_model=ReviewStatusResponse)
+async def get_review_status(
+    run_id: UUID,
+    step: str,
+    user: AuthUser = Depends(get_current_user),
+) -> ReviewStatusResponse:
+    """Get review status for a step.
+
+    Checks if a review issue exists and whether results have been saved.
+    """
+    db_manager = _get_tenant_db_manager()
+    store = _get_artifact_store()
+
+    # Check if review result exists in MinIO
+    review_path = f"{user.tenant_id}/{run_id}/{step}/review.json"
+    has_result = await store.exists(review_path)
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        # TODO: Track review issue number in database
+        # For now, return status based on result file existence
+
+    if has_result:
+        return ReviewStatusResponse(
+            status="completed",
+            has_result=True,
+            result_path=review_path,
+        )
+
+    # No result yet
+    return ReviewStatusResponse(
+        status="pending",
+        has_result=False,
+    )

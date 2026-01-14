@@ -1022,6 +1022,80 @@ class ApiClient {
         }>;
       }>(`/api/github/sync-status/${runId}`);
     },
+
+    /**
+     * Create a review issue for Claude Code to review an article
+     */
+    createReview: async (
+      runId: string,
+      step: string,
+      reviewType: "fact_check" | "seo" | "quality" | "all" = "all"
+    ): Promise<{
+      issue_number: number;
+      issue_url: string;
+      review_type: string;
+      output_path: string;
+    }> => {
+      return this.request<{
+        issue_number: number;
+        issue_url: string;
+        review_type: string;
+        output_path: string;
+      }>(`/api/github/review/${runId}/${step}`, {
+        method: "POST",
+        body: JSON.stringify({ review_type: reviewType }),
+      });
+    },
+
+    /**
+     * Save review result to MinIO and post comment to GitHub issue
+     */
+    saveReviewResult: async (
+      runId: string,
+      step: string,
+      reviewData: Record<string, unknown>,
+      issueNumber?: number
+    ): Promise<{
+      saved: boolean;
+      path: string;
+      digest: string;
+      comment_posted: boolean;
+    }> => {
+      return this.request<{
+        saved: boolean;
+        path: string;
+        digest: string;
+        comment_posted: boolean;
+      }>(`/api/github/review-result/${runId}/${step}`, {
+        method: "POST",
+        body: JSON.stringify({
+          review_data: reviewData,
+          issue_number: issueNumber,
+        }),
+      });
+    },
+
+    /**
+     * Get review status for a step
+     */
+    getReviewStatus: async (
+      runId: string,
+      step: string
+    ): Promise<{
+      status: "pending" | "in_progress" | "completed" | "failed";
+      issue_number: number | null;
+      issue_url: string | null;
+      has_result: boolean;
+      result_path: string | null;
+    }> => {
+      return this.request<{
+        status: "pending" | "in_progress" | "completed" | "failed";
+        issue_number: number | null;
+        issue_url: string | null;
+        has_result: boolean;
+        result_path: string | null;
+      }>(`/api/github/review-status/${runId}/${step}`);
+    },
   };
 }
 
