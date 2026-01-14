@@ -28,6 +28,51 @@ GITHUB_API_URL = "https://api.github.com"
 # URL validation pattern
 GITHUB_REPO_URL_PATTERN = re.compile(r"^https://github\.com/(?P<owner>[a-zA-Z0-9_-]+)/(?P<repo>[a-zA-Z0-9._-]+)$")
 
+# Claude Code Action workflow template
+CLAUDE_CODE_WORKFLOW = """# Claude Code Action Workflow
+#
+# This workflow enables Claude Code to automatically edit files when @claude is mentioned
+# in GitHub Issues or PR comments.
+#
+# Requirements:
+# - ANTHROPIC_API_KEY must be set in repository secrets
+
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+"""
+
 
 class GitHubError(Exception):
     """Base exception for GitHub operations."""
@@ -238,6 +283,7 @@ class GitHubService:
         name: str,
         description: str = "",
         private: bool = True,
+        setup_claude_workflow: bool = True,
     ) -> str:
         """Create a new GitHub repository.
 
@@ -245,6 +291,7 @@ class GitHubService:
             name: Repository name
             description: Repository description
             private: Whether the repository should be private
+            setup_claude_workflow: Whether to add claude-code-action workflow
 
         Returns:
             URL of the created repository
@@ -267,7 +314,23 @@ class GitHubService:
             )
             data = await self._handle_response(response)
 
-        return data["html_url"]
+        repo_url = data["html_url"]
+
+        # Setup Claude Code Action workflow if requested
+        if setup_claude_workflow:
+            try:
+                await self.push_file(
+                    repo_url=repo_url,
+                    path=".github/workflows/claude-code.yml",
+                    content=CLAUDE_CODE_WORKFLOW.encode("utf-8"),
+                    message="chore: add claude-code-action workflow",
+                )
+                logger.info(f"Claude Code workflow added to {repo_url}")
+            except Exception as e:
+                # Log but don't fail repo creation
+                logger.warning(f"Failed to add Claude Code workflow: {e}")
+
+        return repo_url
 
     async def push_file(
         self,

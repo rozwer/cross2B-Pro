@@ -120,6 +120,8 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # GitHub Integration
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
@@ -170,6 +172,8 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       # Tool API Keys
       SERP_API_KEY: ${SERP_API_KEY:-}
+      # GitHub Integration
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # Authentication (dev mode)
