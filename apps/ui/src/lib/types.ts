@@ -246,6 +246,20 @@ export interface Run {
   github_dir_path?: string;
 }
 
+// ============================================
+// GitHub Sync Status Types (Phase 5)
+// ============================================
+
+export type GitHubSyncStatus = "synced" | "diverged" | "unknown" | "github_only" | "minio_only";
+
+export interface GitHubSyncStatusItem {
+  step: string;
+  status: GitHubSyncStatus;
+  github_sha: string | null;
+  minio_digest: string | null;
+  synced_at: string | null;
+}
+
 export interface RunError {
   code: string;
   message: string;

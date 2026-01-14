@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FileText,
   Code,
@@ -12,8 +12,9 @@ import {
   Eye,
   Package,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
-import type { ArtifactRef, ArtifactContent } from "@/lib/types";
+import type { ArtifactRef, ArtifactContent, GitHubSyncStatus } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatBytes, formatDate } from "@/lib/utils";
@@ -87,6 +88,36 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  // GitHub sync status tracking (Phase 5)
+  const [syncStatuses, setSyncStatuses] = useState<Record<string, GitHubSyncStatus>>({});
+
+  // Load sync status when GitHub is configured
+  useEffect(() => {
+    if (!githubRepoUrl || !githubDirPath) return;
+
+    const loadSyncStatus = async () => {
+      try {
+        const result = await api.github.getSyncStatus(runId);
+        const statusMap: Record<string, GitHubSyncStatus> = {};
+        for (const item of result.statuses) {
+          statusMap[item.step] = item.status as GitHubSyncStatus;
+        }
+        setSyncStatuses(statusMap);
+      } catch (err) {
+        console.error("Failed to load sync status:", err);
+      }
+    };
+
+    loadSyncStatus();
+    // Polling every 30 seconds
+    const interval = setInterval(loadSyncStatus, 30000);
+    return () => clearInterval(interval);
+  }, [runId, githubRepoUrl, githubDirPath]);
+
+  // Callback to update sync status from GitHubActions
+  const handleSyncStatusChange = useCallback((step: string, status: GitHubSyncStatus) => {
+    setSyncStatuses((prev) => ({ ...prev, [step]: status }));
+  }, []);
 
   // step_nameでグループ化し、STEP_ORDERでソート
   const groupedArtifacts = useMemo(() => {
@@ -232,8 +263,14 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
                     <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                   )}
                   <div className="flex-1 text-left min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-1.5">
                       {getStepLabel(stepKey)}
+                      {/* GitHub sync status badge (Phase 5) */}
+                      {githubRepoUrl && syncStatuses[stepKey] === "diverged" && (
+                        <span title="GitHub と差分あり">
+                          <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {stepKey} · {stepArtifacts.length} ファイル
@@ -334,6 +371,8 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
                         step={selectedArtifact.step_name || selectedArtifact.step_id}
                         githubRepoUrl={githubRepoUrl}
                         githubDirPath={githubDirPath}
+                        initialSyncStatus={syncStatuses[selectedArtifact.step_name || selectedArtifact.step_id]}
+                        onSyncStatusChange={handleSyncStatusChange}
                       />
                     </div>
                   )}

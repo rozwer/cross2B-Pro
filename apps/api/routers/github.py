@@ -482,3 +482,72 @@ async def sync_from_github(
             status_code=404,
             detail=f"File not found in GitHub: {file_path}",
         )
+
+
+class SyncStatusItem(BaseModel):
+    """Sync status for a single step."""
+
+    step: str
+    status: str  # 'synced', 'diverged', 'unknown', 'github_only', 'minio_only'
+    github_sha: str | None = None
+    minio_digest: str | None = None
+    synced_at: str | None = None
+
+
+class SyncStatusResponse(BaseModel):
+    """Response with sync status for all steps."""
+
+    run_id: str
+    statuses: list[SyncStatusItem]
+
+
+@router.get("/sync-status/{run_id}", response_model=SyncStatusResponse)
+async def get_sync_status(
+    run_id: UUID,
+    user: AuthUser = Depends(get_current_user),
+) -> SyncStatusResponse:
+    """Get sync status for all steps of a run.
+
+    Returns the sync status between GitHub and MinIO for each step.
+    Used to display warning badges when files are out of sync.
+    """
+    db_manager = _get_tenant_db_manager()
+
+    async with db_manager.session(user.tenant_id) as session:
+        # Check if run exists and has GitHub configured
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            # No GitHub configured, return empty statuses
+            return SyncStatusResponse(run_id=str(run_id), statuses=[])
+
+        # Get sync status from DB
+        status_result = await session.execute(
+            text(
+                """
+                SELECT step, status, github_sha, minio_digest, synced_at
+                FROM github_sync_status
+                WHERE run_id = :run_id
+                ORDER BY step
+            """
+            ),
+            {"run_id": str(run_id)},
+        )
+        rows = status_result.fetchall()
+
+        statuses = [
+            SyncStatusItem(
+                step=row[0],
+                status=row[1],
+                github_sha=row[2],
+                minio_digest=row[3],
+                synced_at=row[4].isoformat() if row[4] else None,
+            )
+            for row in rows
+        ]
+
+        return SyncStatusResponse(run_id=str(run_id), statuses=statuses)

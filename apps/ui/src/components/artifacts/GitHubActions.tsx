@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
+import type { GitHubSyncStatus } from "@/lib/types";
 
 interface GitHubActionsProps {
   runId: string;
@@ -9,6 +10,10 @@ interface GitHubActionsProps {
   githubRepoUrl?: string;
   githubDirPath?: string;
   disabled?: boolean;
+  /** Initial sync status (from parent) to avoid redundant API calls */
+  initialSyncStatus?: GitHubSyncStatus;
+  /** Callback when sync status changes */
+  onSyncStatusChange?: (step: string, status: GitHubSyncStatus) => void;
 }
 
 interface DiffResult {
@@ -33,6 +38,8 @@ export function GitHubActions({
   githubRepoUrl,
   githubDirPath,
   disabled = false,
+  initialSyncStatus,
+  onSyncStatusChange,
 }: GitHubActionsProps) {
   // State
   const [isCreatingIssue, setIsCreatingIssue] = useState(false);
@@ -44,6 +51,12 @@ export function GitHubActions({
   const [showDiffModal, setShowDiffModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<GitHubSyncStatus | undefined>(initialSyncStatus);
+
+  // Update sync status when initialSyncStatus changes
+  useEffect(() => {
+    setSyncStatus(initialSyncStatus);
+  }, [initialSyncStatus]);
 
   // GitHub が設定されていない場合は表示しない
   if (!githubRepoUrl || !githubDirPath) {
@@ -87,12 +100,16 @@ export function GitHubActions({
       const result = await api.github.getDiff(runId, step);
       setDiffResult(result);
       setShowDiffModal(true);
+      // Update sync status based on diff result
+      const newStatus: GitHubSyncStatus = result.has_diff ? "diverged" : "synced";
+      setSyncStatus(newStatus);
+      onSyncStatusChange?.(step, newStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : "差分の取得に失敗しました");
     } finally {
       setIsCheckingDiff(false);
     }
-  }, [runId, step]);
+  }, [runId, step, onSyncStatusChange]);
 
   // 同期（GitHub → MinIO）
   const handleSync = useCallback(async () => {
@@ -108,6 +125,9 @@ export function GitHubActions({
       if (result.synced) {
         setSuccessMessage("同期が完了しました");
         setDiffResult(null);
+        // Update sync status to synced
+        setSyncStatus("synced");
+        onSyncStatusChange?.(step, "synced");
       } else {
         setSuccessMessage(result.message);
       }
@@ -116,7 +136,7 @@ export function GitHubActions({
     } finally {
       setIsSyncing(false);
     }
-  }, [runId, step]);
+  }, [runId, step, onSyncStatusChange]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -143,6 +163,42 @@ export function GitHubActions({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* 同期状態バッジ (Phase 5) */}
+      {syncStatus && syncStatus !== "unknown" && (
+        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+          syncStatus === "synced"
+            ? "bg-green-50 text-green-700 border border-green-200"
+            : syncStatus === "diverged"
+            ? "bg-orange-50 text-orange-700 border border-orange-200"
+            : "bg-gray-50 text-gray-700 border border-gray-200"
+        }`}>
+          {syncStatus === "synced" && (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              同期済み
+            </>
+          )}
+          {syncStatus === "diverged" && (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              差分あり
+            </>
+          )}
+          {(syncStatus === "github_only" || syncStatus === "minio_only") && (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {syncStatus === "github_only" ? "GitHub のみ" : "MinIO のみ"}
+            </>
+          )}
         </div>
       )}
 
@@ -192,8 +248,8 @@ export function GitHubActions({
           差分を確認
         </button>
 
-        {/* 同期ボタン（差分がある場合のみ表示） */}
-        {diffResult?.has_diff && (
+        {/* 同期ボタン（差分がある場合またはsyncStatusがdivergedの場合に表示） */}
+        {(diffResult?.has_diff || syncStatus === "diverged") && (
           <button
             onClick={handleSync}
             disabled={disabled || isSyncing}
