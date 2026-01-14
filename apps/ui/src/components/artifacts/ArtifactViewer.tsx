@@ -22,11 +22,15 @@ import { JsonViewer } from "./JsonViewer";
 import { MarkdownViewer } from "./MarkdownViewer";
 import { HtmlPreview } from "./HtmlPreview";
 import { StepContentViewer } from "./StepContentViewer";
+import { GitHubActions } from "./GitHubActions";
 import { Loading } from "@/components/common/Loading";
 
 interface ArtifactViewerProps {
   runId: string;
   artifacts: ArtifactRef[];
+  // GitHub integration (Phase 4)
+  githubRepoUrl?: string;
+  githubDirPath?: string;
 }
 
 // ステップの順序を定義（アンダースコアとドット表記の両方をサポート）
@@ -78,7 +82,7 @@ function getStepSortValue(stepName: string): number {
   return num;
 }
 
-export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
+export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath }: ArtifactViewerProps) {
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactRef | null>(null);
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
@@ -322,6 +326,17 @@ export function ArtifactViewer({ runId, artifacts }: ArtifactViewerProps) {
                       ダウンロード
                     </button>
                   </div>
+                  {/* GitHub Actions (Phase 4) */}
+                  {githubRepoUrl && githubDirPath && (
+                    <div className="mt-2">
+                      <GitHubActions
+                        runId={runId}
+                        step={selectedArtifact.step_name || selectedArtifact.step_id}
+                        githubRepoUrl={githubRepoUrl}
+                        githubDirPath={githubDirPath}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* コンテンツエリア */}

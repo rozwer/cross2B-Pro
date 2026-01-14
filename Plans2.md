@@ -174,20 +174,24 @@ Tenant: {tenant_id}
 
 ---
 
-## 🔵 フェーズ4: 成果物ページ連携 `cc:TODO`
+## 🔵 フェーズ4: 成果物ページ連携 `cc:DONE`
 
-### 4.1 Claude Code 連携ボタン
+### 4.1 Claude Code 連携ボタン ✅
 
-- [ ] `apps/ui/src/components/artifacts/GitHubActions.tsx` 作成
+- [x] `apps/ui/src/components/artifacts/GitHubActions.tsx` 作成
   - 「Claude Code で編集」ボタン
     - GitHub Issue 作成（@claude メンション付き）
     - 編集指示入力モーダル
   - 「GitHub で開く」リンク
   - 「差分を確認」ボタン
+  - 「GitHub から同期」ボタン（差分検出時）
+- [x] ArtifactViewer に GitHubActions を統合
+  - `githubRepoUrl`, `githubDirPath` props 追加
+  - ファイル情報ヘッダーにアクションボタン表示
 
-### 4.2 Issue 作成 API
+### 4.2 Issue 作成 API ✅
 
-- [ ] `POST /api/github/create-issue`
+- [x] `POST /api/github/create-issue` (既に実装済み)
   ```json
   {
     "run_id": "xxx",
@@ -197,12 +201,20 @@ Tenant: {tenant_id}
   // Creates: Issue with @claude mention and file reference
   ```
 
-### 4.3 Diff 表示
+### 4.3 Diff 表示 ✅
 
-- [ ] `GET /api/github/diff/{run_id}/{step}`
+- [x] `GET /api/github/diff/{run_id}/{step}` (既に実装済み)
   - GitHub 上のファイルと MinIO を比較
   - 差分を unified diff 形式で返却
-- [ ] UI: diff 表示コンポーネント（react-diff-viewer 等）
+- [x] UI: diff 表示モーダル（GitHubActions 内）
+  - 差分ある場合: unified diff 表示 + 同期ボタン
+  - 差分ない場合: 同期済みメッセージ
+
+### 4.4 同期機能 ✅
+
+- [x] `POST /api/github/sync/{run_id}/{step}` (既に実装済み)
+  - GitHub → MinIO 上書き
+  - `github_sync_status` テーブル更新
 
 ---
 
