@@ -590,6 +590,10 @@ class Step9FinalRewrite(BaseActivity):
             internal_link_suggestions=parsed_data.get("internal_link_suggestions", []),
             quality_warnings=quality_warnings,
             model=response.model,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage={
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,

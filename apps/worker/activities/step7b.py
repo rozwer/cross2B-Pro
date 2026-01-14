@@ -399,6 +399,10 @@ class Step7BBrushUp(BaseActivity):
             "polish_metrics": polish_metrics.model_dump(),
             "quality_warnings": quality_warnings,
             "model": response.model,
+            "model_config_data": {
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             "token_usage": {
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,
