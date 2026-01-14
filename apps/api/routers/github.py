@@ -248,7 +248,7 @@ async def create_issue(
     db_manager = _get_tenant_db_manager()
 
     # Get run to find GitHub repo URL
-    async with db_manager.session(user.tenant_id) as session:
+    async with db_manager.get_session(user.tenant_id) as session:
         result = await session.execute(select(Run).where(Run.id == request.run_id))
         run = result.scalar_one_or_none()
 
@@ -323,7 +323,7 @@ async def get_diff(
     store = _get_artifact_store()
 
     # Get run to find GitHub repo URL
-    async with db_manager.session(user.tenant_id) as session:
+    async with db_manager.get_session(user.tenant_id) as session:
         result = await session.execute(select(Run).where(Run.id == run_id))
         run = result.scalar_one_or_none()
 
@@ -402,7 +402,7 @@ async def sync_from_github(
     store = _get_artifact_store()
 
     # Get run to find GitHub repo URL
-    async with db_manager.session(user.tenant_id) as session:
+    async with db_manager.get_session(user.tenant_id) as session:
         result = await session.execute(select(Run).where(Run.id == run_id))
         run = result.scalar_one_or_none()
 
@@ -442,7 +442,7 @@ async def sync_from_github(
         await store.put(github_content, path, "application/json")
 
         # Update sync status
-        async with db_manager.session(user.tenant_id) as session:
+        async with db_manager.get_session(user.tenant_id) as session:
             await session.execute(
                 text(
                     """
@@ -513,7 +513,7 @@ async def get_sync_status(
     """
     db_manager = _get_tenant_db_manager()
 
-    async with db_manager.session(user.tenant_id) as session:
+    async with db_manager.get_session(user.tenant_id) as session:
         # Check if run exists and has GitHub configured
         result = await session.execute(select(Run).where(Run.id == run_id))
         run = result.scalar_one_or_none()
