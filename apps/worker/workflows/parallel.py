@@ -27,7 +27,9 @@ class ParallelStepError(Exception):
 
 
 # Timeout per parallel step
-PARALLEL_STEP_TIMEOUT = timedelta(seconds=120)
+# Note: LLM API calls can take 60-90+ seconds, especially for complex analysis
+# Set timeout to 5 minutes to avoid premature timeout and retry loops
+PARALLEL_STEP_TIMEOUT = timedelta(seconds=300)
 
 
 async def run_parallel_steps(
