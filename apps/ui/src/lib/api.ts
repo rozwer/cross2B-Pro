@@ -995,6 +995,33 @@ class ApiClient {
         method: "POST",
       });
     },
+
+    /**
+     * Get sync status for all steps of a run
+     */
+    getSyncStatus: async (
+      runId: string
+    ): Promise<{
+      run_id: string;
+      statuses: Array<{
+        step: string;
+        status: string;
+        github_sha: string | null;
+        minio_digest: string | null;
+        synced_at: string | null;
+      }>;
+    }> => {
+      return this.request<{
+        run_id: string;
+        statuses: Array<{
+          step: string;
+          status: string;
+          github_sha: string | null;
+          minio_digest: string | null;
+          synced_at: string | null;
+        }>;
+      }>(`/api/github/sync-status/${runId}`);
+    },
   };
 }
 

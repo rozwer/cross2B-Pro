@@ -218,25 +218,30 @@ Tenant: {tenant_id}
 
 ---
 
-## 🟣 フェーズ5: 同期管理 `cc:TODO`
+## 🟣 フェーズ5: 同期管理 `cc:DONE`
 
-### 5.1 差異検知
+### 5.1 差異検知 ✅
 
-- [ ] `github_sync_status` テーブル更新ロジック
-  - ポーリング or Webhook
-  - 差異検知時に `status = 'diverged'`
-- [ ] UI: 差異がある場合に警告バッジ表示
+- [x] `github_sync_status` テーブル更新ロジック
+  - ポーリング実装（30秒間隔）
+  - 差分確認時に `status` 更新
+- [x] UI: 差異がある場合に警告バッジ表示
+  - ステップリストにオレンジ警告アイコン
+  - GitHubActionsコンポーネントに同期状態バッジ
+- [x] `GET /api/github/sync-status/{run_id}` エンドポイント追加
+  - 全ステップの同期状態を一括取得
+  - ArtifactViewerでポーリング
 
-### 5.2 Pull 同期機能
+### 5.2 Pull 同期機能 ✅ (フェーズ4で実装済み)
 
-- [ ] `POST /api/github/sync/{run_id}/{step}`
+- [x] `POST /api/github/sync/{run_id}/{step}`
   - GitHub → MinIO 上書き
   - `github_sync_status` 更新
-- [ ] UI: 「最新を反映」ボタン
+- [x] UI: 「GitHub から同期」ボタン
   - 確認ダイアログ（上書きされる旨）
   - 成功時にプレビュー更新
 
-### 5.3 自動同期オプション
+### 5.3 自動同期オプション (将来対応)
 
 - [ ] Settings: 「編集終了時に自動同期」チェックボックス
 - [ ] Webhook: claude-code-action 完了時に自動 pull
