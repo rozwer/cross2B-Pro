@@ -145,6 +145,11 @@ class Step7ADraftGeneration(BaseActivity):
         integration_package = step6_5_data.get("integration_package", "")
         human_touch_elements = self._extract_human_touch_elements(step3_5_data)
 
+        # モデル設定を取得（成果物に保存用）
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
+        llm_model = model_config.get("model", config.get("llm_model"))
+
         # === CheckpointManager統合: 部分生成のチェックポイント ===
         draft_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress")
 
@@ -324,6 +329,10 @@ class Step7ADraftGeneration(BaseActivity):
             },
             continued=continuation_used,
             model=model_name,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage=token_usage,
             # blog.System Ver8.3 extensions
             section_word_counts=[SectionWordCount(**swc) for swc in section_word_counts],

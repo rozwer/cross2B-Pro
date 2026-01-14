@@ -594,6 +594,10 @@ class Step10FinalOutput(BaseActivity):
         metadata = Step10Metadata(
             generated_at=datetime.now(UTC),
             model=llm_provider,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             total_word_count=sum(a.word_count for a in articles),
             generation_order=[a.article_number for a in articles],
         )

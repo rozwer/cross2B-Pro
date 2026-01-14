@@ -687,6 +687,10 @@ class Step8FactCheck(BaseActivity):
             critical_issues=critical_issues,
             recommend_rejection=recommend_rejection,
             model=llm_model or "default",
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage={
                 "input": 0,  # Token tracking simplified
                 "output": 0,

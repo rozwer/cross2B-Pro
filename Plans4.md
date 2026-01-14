@@ -23,6 +23,8 @@
 
 ## 修正対象ファイル
 
+### Phase 1: モデル設定取得 + 成果物追加（初回修正）
+
 | ファイル | 修正内容 | 状態 |
 |----------|----------|------|
 | `apps/worker/activities/step0.py` | model_config から取得に統一 | `cc:DONE` |
@@ -30,6 +32,29 @@
 | `apps/worker/activities/step3b.py` | model_config から取得 + 成果物にplatform追加 | `cc:DONE` |
 | `apps/worker/activities/step3c.py` | model_config から取得 + 成果物にplatform追加 | `cc:DONE` |
 | `apps/worker/activities/step3_5.py` | model_config から取得 + 成果物にplatform追加 | `cc:DONE` |
+
+### Phase 2: 成果物への model_config_data 追加（追加修正）
+
+| ファイル | 修正内容 | 状態 |
+|----------|----------|------|
+| `apps/worker/activities/schemas/step4.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step4.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step5.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step5.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step6.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step6.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step6_5.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step6_5.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step7a.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step7a.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step7b.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step7b.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step8.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step8.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step9.py` | スキーマに model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step9.py` | 成果物に model_config_data 追加 | `cc:DONE` |
+| `apps/worker/activities/schemas/step10.py` | Step10Metadata に model_config_data フィールド追加 | `cc:DONE` |
+| `apps/worker/activities/step10.py` | metadata に model_config_data 追加 | `cc:DONE` |
 
 ---
 
@@ -64,7 +89,7 @@ result = {
 ```python
 result = {
     "model": response.model,  # LLMが返した実際のモデル名
-    "model_config": {
+    "model_config_data": {
         "platform": llm_provider,  # 設定されたプラットフォーム
         "model": llm_model,        # 設定されたモデル名
     },
@@ -74,19 +99,9 @@ result = {
 
 ---
 
-## 作業順序
-
-1. [x] `step0.py` - モデル設定取得の修正 `cc:DONE`
-2. [x] `step3a.py` - モデル設定取得 + 成果物修正 `cc:DONE`
-3. [x] `step3b.py` - モデル設定取得 + 成果物修正 `cc:DONE`
-4. [x] `step3c.py` - モデル設定取得 + 成果物修正 `cc:DONE`
-5. [x] `step3_5.py` - モデル設定取得 + 成果物修正 `cc:DONE`
-6. [ ] 動作確認（ワークフロー実行テスト）`cc:TODO`
-
----
-
 ## 完了条件
 
 - [x] すべてのActivityで `model_config` からモデル設定を取得
-- [x] 成果物に `platform` と `model` が正しく記録される
+- [x] すべてのスキーマに `model_config_data` フィールド追加
+- [x] すべての成果物に `platform` と `model` が正しく記録される
 - [ ] UIで設定したモデルが成果物に表示される（要動作確認）
