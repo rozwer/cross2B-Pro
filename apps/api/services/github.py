@@ -660,3 +660,30 @@ class GitHubService:
 
         diff_text = "".join(diff)
         return diff_text if diff_text else None
+
+    async def add_issue_comment(
+        self,
+        repo_url: str,
+        issue_number: int,
+        body: str,
+    ) -> dict[str, Any]:
+        """Add a comment to a GitHub issue.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            issue_number: Issue number to comment on
+            body: Comment body text
+
+        Returns:
+            Comment data including id and URL
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}/comments",
+                headers=self._get_headers(),
+                json={"body": body},
+                timeout=30.0,
+            )
+            return await self._handle_response(response)
