@@ -325,6 +325,7 @@ class Step8Output(StepOutputBase):
         description="Whether rejection is recommended",
     )
     model: str = Field(default="")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
 
     # blog.System Ver8.3 extensions
     verification_categories: VerificationCategories | None = Field(

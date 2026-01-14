@@ -141,6 +141,7 @@ class Step6_5Output(StepOutputBase):
     quality_score: float = Field(default=0.0, ge=0.0, le=1.0)
     handoff_notes: list[str] = Field(default_factory=list)
     model: str = ""
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System Ver8.3 対応フィールド（後方互換性のため Optional）

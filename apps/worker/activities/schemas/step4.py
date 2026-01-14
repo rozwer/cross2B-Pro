@@ -185,6 +185,7 @@ class Step4Output(BaseModel):
     metrics: OutlineMetrics
     quality: OutlineQuality
     model: str = ""
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     token_usage: dict[str, int] = Field(default_factory=dict)
 
     # blog.System Ver8.3 対応フィールド（後方互換性のため Optional）

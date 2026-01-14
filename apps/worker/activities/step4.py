@@ -387,6 +387,10 @@ class Step4StrategicOutline(BaseActivity):
             metrics=metrics,
             quality=quality,
             model=model_name,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage=token_usage,
             # V2フィールド
             title_metadata=title_metadata,
