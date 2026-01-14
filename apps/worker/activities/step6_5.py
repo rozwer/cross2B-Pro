@@ -268,6 +268,10 @@ class Step65IntegrationPackage(BaseActivity):
             quality_score=quality_score,
             handoff_notes=quality.warnings,
             model=response.model,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage={
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,

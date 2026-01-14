@@ -1,7 +1,16 @@
 # Plans.md
 
-> **最終更新**: 2026-01-13
+> **最終更新**: 2026-01-14
 > **アーカイブ**: 詳細な修正計画は `.claude/memory/archive/Plans-2026-01-13-full-review.md` を参照
+
+---
+
+## ✅ ワークフロー一時停止機能 `cc:DONE` (2026-01-14)
+
+実装完了。詳細は以下のファイルを参照：
+- BE: `apps/api/routers/runs.py` (pause/continue endpoints)
+- Workflow: `apps/worker/workflows/article_workflow.py` (pause/resume_from_pause signals)
+- FE: `apps/ui/src/app/runs/[id]/page.tsx` (一時停止/続行ボタン)
 
 ---
 
