@@ -134,6 +134,8 @@ class CreateRunInput(BaseModel):
     step_configs: list[StepModelConfig] | None = None
     tool_config: ToolConfig | None = None
     options: RunOptions | None = None
+    # GitHub integration (Phase 2)
+    github_repo_url: str | None = Field(default=None, description="GitHub repository URL for artifact storage")
 
     class Config:
         populate_by_name = True
@@ -190,9 +192,83 @@ class CreateRunInput(BaseModel):
 
 
 class RejectRunInput(BaseModel):
-    """Request body for rejecting a run."""
+    """Request body for rejecting a run.
+
+    Supports two modes:
+    1. Simple rejection: reason only → workflow terminates with failed status
+    2. Rejection with retry: reason + step_instructions → step3 retries with feedback
+    """
 
     reason: str = ""
+    # Step3 指示付きリトライ用（REQ-01）
+    retry_with_instructions: bool = False
+    step_instructions: dict[str, str] | None = None  # {"step3a": "修正指示...", ...}
+
+
+# Step3 Review Types (REQ-01 ~ REQ-05)
+STEP3_VALID_STEPS: frozenset[str] = frozenset(["step3a", "step3b", "step3c"])
+STEP3_RETRY_LIMIT: int = 3
+
+
+class Step3ReviewItem(BaseModel):
+    """Individual step review item for Step3 (3A/3B/3C).
+
+    REQ-02: ステップ個別リトライ
+    """
+
+    step: str  # step3a, step3b, step3c
+    accepted: bool
+    retry: bool = False
+    retry_instruction: str = ""
+
+    @field_validator("step")
+    @classmethod
+    def validate_step(cls, v: str) -> str:
+        """Validate step is one of step3a, step3b, step3c."""
+        if v not in STEP3_VALID_STEPS:
+            raise ValueError(f"Invalid step: {v}. Must be one of: {sorted(STEP3_VALID_STEPS)}")
+        return v
+
+    @field_validator("retry_instruction")
+    @classmethod
+    def validate_retry_instruction(cls, v: str, info: Any) -> str:
+        """Ensure retry_instruction is provided when retry is True."""
+        # Note: Pydantic v2 uses info.data instead of values
+        data = info.data if hasattr(info, "data") else {}
+        if data.get("retry") and not v:
+            raise ValueError("retry_instruction is required when retry is True")
+        return v
+
+
+class Step3ReviewInput(BaseModel):
+    """Request body for Step3 review (REQ-01 ~ REQ-05).
+
+    Allows individual approval/retry for each step in the parallel phase (3A/3B/3C).
+    Like Step11's image review, users can provide feedback for retry.
+    """
+
+    reviews: list[Step3ReviewItem]
+
+    @field_validator("reviews")
+    @classmethod
+    def validate_reviews(cls, v: list[Step3ReviewItem]) -> list[Step3ReviewItem]:
+        """Validate reviews list has unique steps."""
+        seen_steps: set[str] = set()
+        for item in v:
+            if item.step in seen_steps:
+                raise ValueError(f"Duplicate step in reviews: {item.step}")
+            seen_steps.add(item.step)
+        return v
+
+
+class Step3ReviewResponse(BaseModel):
+    """Response for Step3 review request."""
+
+    success: bool
+    retrying: list[str] = []  # Steps that will be retried
+    approved: list[str] = []  # Steps that were approved
+    next_action: str  # "waiting_retry_completion" | "proceed_to_step3_5" | "waiting_approval"
+    retry_counts: dict[str, int] = {}  # Current retry count per step
 
 
 class StepError(BaseModel):
@@ -365,6 +441,9 @@ class RunResponse(BaseModel):
     started_at: str | None = None
     completed_at: str | None = None
     error: RunError | None = None
+    # GitHub integration (Phase 3)
+    github_repo_url: str | None = None
+    github_dir_path: str | None = None
 
     class Config:
         populate_by_name = True

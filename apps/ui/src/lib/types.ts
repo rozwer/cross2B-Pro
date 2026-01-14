@@ -4,7 +4,9 @@
 
 export type RunStatus =
   | "pending"
+  | "workflow_starting"  // Temporal Workflow開始処理中（競合状態対策）
   | "running"
+  | "paused"  // ユーザーによる一時停止（次ステップ開始前に停止）
   | "waiting_approval"
   | "waiting_image_input"  // Step11画像生成のユーザー入力待ち
   | "completed"
@@ -182,6 +184,8 @@ export interface CreateRunInput {
     retry_limit?: number;
     repair_enabled?: boolean;
   };
+  // GitHub integration (Phase 2)
+  github_repo_url?: string;
 }
 
 // Helper to check if input is ArticleHearingInput
@@ -237,6 +241,9 @@ export interface Run {
   started_at?: string;
   completed_at?: string;
   error?: RunError;
+  // GitHub integration (Phase 3)
+  github_repo_url?: string;
+  github_dir_path?: string;
 }
 
 export interface RunError {
@@ -665,11 +672,14 @@ export interface Step12GenerateResponse {
 export function getStatusColor(status: RunStatus | StepStatus): string {
   switch (status) {
     case "pending":
+    case "workflow_starting":
       return "bg-gray-100 text-gray-800";
     case "running":
       return "bg-blue-100 text-blue-800";
     case "retrying":
       return "bg-orange-100 text-orange-800";
+    case "paused":
+      return "bg-amber-100 text-amber-800";
     case "waiting_approval":
       return "bg-yellow-100 text-yellow-800";
     case "completed":
@@ -687,11 +697,14 @@ export function getStatusColor(status: RunStatus | StepStatus): string {
 export function getStatusIcon(status: RunStatus | StepStatus): string {
   switch (status) {
     case "pending":
+    case "workflow_starting":
       return "○";
     case "running":
       return "◐";
     case "retrying":
       return "↻";
+    case "paused":
+      return "⏸";
     case "waiting_approval":
       return "⏸";
     case "completed":
@@ -745,4 +758,40 @@ export interface HearingTemplateList {
   total: number;
   limit: number;
   offset: number;
+}
+
+// ============================================
+// Step3 Review Types (REQ-01 ~ REQ-05)
+// ============================================
+
+/** Valid Step3 step names */
+export type Step3StepName = "step3a" | "step3b" | "step3c";
+
+/** Individual step review item */
+export interface Step3ReviewItem {
+  step: Step3StepName;
+  accepted: boolean;
+  retry: boolean;
+  retry_instruction: string;
+}
+
+/** Request body for Step3 review */
+export interface Step3ReviewInput {
+  reviews: Step3ReviewItem[];
+}
+
+/** Response from Step3 review endpoint */
+export interface Step3ReviewResponse {
+  success: boolean;
+  retrying: string[];
+  approved: string[];
+  next_action: "waiting_retry_completion" | "proceed_to_step3_5" | "waiting_approval";
+  retry_counts: Record<string, number>;
+}
+
+/** Extended reject input with retry instructions */
+export interface RejectWithRetryInput {
+  reason: string;
+  retry_with_instructions: boolean;
+  step_instructions: Record<Step3StepName, string>;
 }

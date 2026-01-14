@@ -126,6 +126,9 @@ class Run(Base):
     # Step11 画像生成の状態を保持するJSON。詳細構造は apps.api.routers.step11.Step11State を参照。
     # フィールド: phase, settings, positions, instructions, images, analysis_summary, sections, error
     step11_state: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    # GitHub integration (Phase 2)
+    github_repo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    github_dir_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

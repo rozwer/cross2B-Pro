@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS runs (
     error_message TEXT,
     error_code VARCHAR(100),
     step11_state JSONB,
+    -- GitHub integration columns
+    github_repo_url TEXT,                    -- e.g., https://github.com/owner/repo
+    github_dir_path TEXT,                    -- e.g., keyword_20260114_123456
 
     CONSTRAINT valid_status CHECK (status IN (
         'pending', 'workflow_starting', 'running', 'waiting_approval', 'waiting_image_input',
@@ -199,6 +202,22 @@ CREATE TABLE IF NOT EXISTS hearing_templates (
     CONSTRAINT uq_hearing_template_tenant_name UNIQUE (tenant_id, name)
 );
 
+-- GitHub sync status table: tracks sync between GitHub and MinIO
+CREATE TABLE IF NOT EXISTS github_sync_status (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    run_id UUID NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    step VARCHAR(20) NOT NULL,
+    github_sha VARCHAR(40),              -- Git commit SHA
+    minio_digest VARCHAR(64),            -- SHA256 digest of MinIO content
+    synced_at TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+
+    CONSTRAINT valid_sync_status CHECK (status IN (
+        'pending', 'synced', 'diverged', 'github_only', 'minio_only'
+    )),
+    CONSTRAINT uq_github_sync_run_step UNIQUE (run_id, step)
+);
+
 -- =============================================================================
 -- Indexes
 -- =============================================================================
@@ -232,6 +251,10 @@ CREATE INDEX IF NOT EXISTS idx_diagnostic_reports_run_id ON diagnostic_reports(r
 
 CREATE INDEX IF NOT EXISTS idx_hearing_templates_tenant_id ON hearing_templates(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_hearing_templates_name ON hearing_templates(name);
+
+CREATE INDEX IF NOT EXISTS idx_github_sync_status_run_id ON github_sync_status(run_id);
+CREATE INDEX IF NOT EXISTS idx_github_sync_status_status ON github_sync_status(status);
+CREATE INDEX IF NOT EXISTS idx_runs_github_repo ON runs(github_repo_url) WHERE github_repo_url IS NOT NULL;
 
 -- =============================================================================
 -- Functions

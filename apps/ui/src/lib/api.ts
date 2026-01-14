@@ -202,6 +202,58 @@ class ApiClient {
       });
     },
 
+    /**
+     * Reject with retry instructions for Step3 (指示付きリトライ)
+     */
+    rejectWithRetry: async (
+      id: string,
+      reason: string,
+      stepInstructions: Record<string, string>,
+    ): Promise<{ success: boolean; mode: string; retrying: string[] }> => {
+      return this.request<{ success: boolean; mode: string; retrying: string[] }>(
+        `/api/runs/${id}/reject`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            reason,
+            retry_with_instructions: true,
+            step_instructions: stepInstructions,
+          }),
+        },
+      );
+    },
+
+    /**
+     * Review Step3 results with individual approval/retry per step
+     * REQ-01 ~ REQ-05: 指示付きリトライ機能
+     */
+    step3Review: async (
+      id: string,
+      reviews: Array<{
+        step: string;
+        accepted: boolean;
+        retry: boolean;
+        retry_instruction: string;
+      }>,
+    ): Promise<{
+      success: boolean;
+      retrying: string[];
+      approved: string[];
+      next_action: string;
+      retry_counts: Record<string, number>;
+    }> => {
+      return this.request<{
+        success: boolean;
+        retrying: string[];
+        approved: string[];
+        next_action: string;
+        retry_counts: Record<string, number>;
+      }>(`/api/runs/${id}/step3/review`, {
+        method: "POST",
+        body: JSON.stringify({ reviews }),
+      });
+    },
+
     cancel: async (id: string): Promise<{ success: boolean }> => {
       return this.request<{ success: boolean }>(`/api/runs/${id}`, {
         method: "DELETE",
@@ -248,6 +300,26 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify(overrides || {}),
       });
+    },
+
+    /**
+     * ワークフローを一時停止（次のステップ境界で停止）
+     */
+    pause: async (id: string): Promise<{ success: boolean; message: string }> => {
+      return this.request<{ success: boolean; message: string }>(
+        `/api/runs/${id}/pause`,
+        { method: "POST" },
+      );
+    },
+
+    /**
+     * 停止状態のワークフローを続行
+     */
+    continue: async (id: string): Promise<{ success: boolean; message: string }> => {
+      return this.request<{ success: boolean; message: string }>(
+        `/api/runs/${id}/continue`,
+        { method: "POST" },
+      );
     },
 
     bulkDelete: async (
@@ -820,6 +892,107 @@ class ApiClient {
     delete: async (id: string): Promise<{ success: boolean; message: string }> => {
       return this.request<{ success: boolean; message: string }>(`/api/hearing/templates/${id}`, {
         method: "DELETE",
+      });
+    },
+  };
+
+  // ============================================
+  // GitHub API
+  // ============================================
+
+  github = {
+    /**
+     * リポジトリへのアクセス権限を確認
+     */
+    checkAccess: async (repoUrl: string): Promise<{
+      accessible: boolean;
+      permissions: string[];
+      error?: string;
+    }> => {
+      return this.request<{
+        accessible: boolean;
+        permissions: string[];
+        error?: string;
+      }>("/api/github/check-access", {
+        method: "POST",
+        body: JSON.stringify({ repo_url: repoUrl }),
+      });
+    },
+
+    /**
+     * 新しいリポジトリを作成
+     */
+    createRepo: async (
+      name: string,
+      description?: string,
+      isPrivate?: boolean
+    ): Promise<{ repo_url: string }> => {
+      return this.request<{ repo_url: string }>("/api/github/create-repo", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          description: description || "",
+          private: isPrivate ?? true,
+        }),
+      });
+    },
+
+    /**
+     * Claude Code 用の Issue を作成
+     */
+    createIssue: async (
+      runId: string,
+      step: string,
+      instruction: string
+    ): Promise<{ issue_number: number; issue_url: string }> => {
+      return this.request<{ issue_number: number; issue_url: string }>(
+        "/api/github/create-issue",
+        {
+          method: "POST",
+          body: JSON.stringify({ run_id: runId, step, instruction }),
+        }
+      );
+    },
+
+    /**
+     * GitHub と MinIO の差分を取得
+     */
+    getDiff: async (
+      runId: string,
+      step: string
+    ): Promise<{
+      has_diff: boolean;
+      diff: string | null;
+      github_sha: string | null;
+      minio_digest: string | null;
+    }> => {
+      return this.request<{
+        has_diff: boolean;
+        diff: string | null;
+        github_sha: string | null;
+        minio_digest: string | null;
+      }>(`/api/github/diff/${runId}/${step}`);
+    },
+
+    /**
+     * GitHub から MinIO へ同期
+     */
+    sync: async (
+      runId: string,
+      step: string
+    ): Promise<{
+      synced: boolean;
+      github_sha: string | null;
+      minio_digest: string | null;
+      message: string;
+    }> => {
+      return this.request<{
+        synced: boolean;
+        github_sha: string | null;
+        minio_digest: string | null;
+        message: string;
+      }>(`/api/github/sync/${runId}/${step}`, {
+        method: "POST",
       });
     },
   };
