@@ -41,7 +41,7 @@ export function GitHubActions({
   initialSyncStatus,
   onSyncStatusChange,
 }: GitHubActionsProps) {
-  // State
+  // State - All hooks must be called before any conditional returns
   const [isCreatingIssue, setIsCreatingIssue] = useState(false);
   const [isCheckingDiff, setIsCheckingDiff] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -58,16 +58,9 @@ export function GitHubActions({
     setSyncStatus(initialSyncStatus);
   }, [initialSyncStatus]);
 
-  // GitHub が設定されていない場合は表示しない
-  if (!githubRepoUrl || !githubDirPath) {
-    return null;
-  }
-
-  // GitHub ファイルの URL を構築
-  const githubFileUrl = `${githubRepoUrl}/blob/main/${githubDirPath}/${step}/output.json`;
-
   // Claude Code で編集（Issue 作成）
   const handleCreateIssue = useCallback(async () => {
+    if (!githubRepoUrl || !githubDirPath) return;
     if (!instruction.trim()) {
       setError("編集指示を入力してください");
       return;
@@ -89,10 +82,11 @@ export function GitHubActions({
     } finally {
       setIsCreatingIssue(false);
     }
-  }, [runId, step, instruction]);
+  }, [runId, step, instruction, githubRepoUrl, githubDirPath]);
 
   // 差分を確認
   const handleCheckDiff = useCallback(async () => {
+    if (!githubRepoUrl || !githubDirPath) return;
     setIsCheckingDiff(true);
     setError(null);
 
@@ -109,10 +103,11 @@ export function GitHubActions({
     } finally {
       setIsCheckingDiff(false);
     }
-  }, [runId, step, onSyncStatusChange]);
+  }, [runId, step, onSyncStatusChange, githubRepoUrl, githubDirPath]);
 
   // 同期（GitHub → MinIO）
   const handleSync = useCallback(async () => {
+    if (!githubRepoUrl || !githubDirPath) return;
     if (!confirm("GitHub の内容で MinIO を上書きします。よろしいですか？")) {
       return;
     }
@@ -136,7 +131,16 @@ export function GitHubActions({
     } finally {
       setIsSyncing(false);
     }
-  }, [runId, step, onSyncStatusChange]);
+  }, [runId, step, onSyncStatusChange, githubRepoUrl, githubDirPath]);
+
+  // GitHub が設定されていない場合は表示しない
+  // Note: This must be AFTER all hooks are called
+  if (!githubRepoUrl || !githubDirPath) {
+    return null;
+  }
+
+  // GitHub ファイルの URL を構築
+  const githubFileUrl = `${githubRepoUrl}/blob/main/${githubDirPath}/${step}/output.json`;
 
   return (
     <div className="flex flex-col gap-2">
