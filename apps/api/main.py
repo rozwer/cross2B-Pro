@@ -25,6 +25,7 @@ from apps.api.routers import (
     cost,
     diagnostics,
     events,
+    github,
     health,
     hearing,
     internal,
@@ -224,6 +225,7 @@ app.include_router(hearing.router)
 app.include_router(keywords.router)
 app.include_router(step11.router)
 app.include_router(step12.router)
+app.include_router(github.router)
 
 
 # =============================================================================

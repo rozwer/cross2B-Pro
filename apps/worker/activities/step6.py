@@ -330,6 +330,10 @@ class Step6EnhancedOutline(BaseActivity):
             quality=quality,
             sources_used=len(source_summaries),
             model=model_name,
+            model_config_data={
+                "platform": llm_provider,
+                "model": llm_model or "",
+            },
             token_usage=token_usage,
             warnings=enhancement_quality.warnings,
             # blog.System 統合フィールド
