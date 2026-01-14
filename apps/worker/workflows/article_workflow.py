@@ -78,6 +78,15 @@ class ArticleWorkflow:
         self.rejection_reason: str | None = None
         self.current_step: str = "init"
         self.config: dict[str, Any] = {}
+        # Pause/Resume state
+        self.pause_requested: bool = False  # 一時停止リクエスト受信フラグ
+        self.paused: bool = False  # 実際に停止中かどうか
+        # Step3 Review state (REQ-01 ~ REQ-05)
+        self.step3_review_received: bool = False
+        self.step3_reviews: list[dict[str, Any]] = []
+        self.step3_retrying: list[str] = []  # Steps to retry: ["step3a", "step3c"]
+        self.step3_retry_instructions: dict[str, str] = {}  # {step: instruction}
+        self.step3_retry_counts: dict[str, int] = {}  # {step: count}
         # Step11 (image generation) state - Legacy (backward compatibility for existing runs)
         # DEPRECATED: Use step11_* state for new runs
         # TODO: Remove after migration completes (all existing runs finished)
@@ -125,6 +134,66 @@ class ArticleWorkflow:
             return
         self.rejected = True
         self.rejection_reason = reason
+
+    @workflow.signal
+    async def step3_review(self, payload: dict[str, Any]) -> None:
+        """Signal handler for Step3 review with individual approval/retry.
+
+        REQ-01 ~ REQ-05: Like Step11's image review, allows users to:
+        - Approve individual steps (3A, 3B, 3C)
+        - Request retry with feedback instructions
+
+        Args:
+            payload: Review data with:
+                - reviews: list[{step, accepted, retry, retry_instruction}]
+                - retrying: list[str] - Steps to retry
+                - step_instructions: dict[str, str] - Instructions per step
+                - rejection_reason: str (optional) - Reason for rejection
+        """
+        if self.approved:
+            workflow.logger.warning("Step3 review signal ignored: already approved")
+            return
+        if self.rejected:
+            workflow.logger.warning("Step3 review signal ignored: already rejected")
+            return
+
+        self.step3_review_received = True
+        self.step3_reviews = payload.get("reviews", [])
+        self.step3_retrying = payload.get("retrying", [])
+        self.step3_retry_instructions = payload.get("step_instructions", {})
+
+        workflow.logger.info(
+            f"Step3 review received: retrying={self.step3_retrying}, instructions={list(self.step3_retry_instructions.keys())}"
+        )
+
+    @workflow.signal
+    async def pause(self) -> None:
+        """Signal handler for pause request.
+
+        Sets pause_requested flag. The workflow will pause at the next step boundary
+        (after current activity completes, before next activity starts).
+        """
+        if self.current_step == "completed":
+            workflow.logger.warning("Pause signal ignored: workflow already completed")
+            return
+        if self.paused:
+            workflow.logger.warning("Pause signal ignored: already paused")
+            return
+        self.pause_requested = True
+        workflow.logger.info("Pause requested, will pause at next step boundary")
+
+    @workflow.signal
+    async def resume_from_pause(self) -> None:
+        """Signal handler to resume from paused state.
+
+        Only effective when workflow is actually paused.
+        """
+        if not self.paused:
+            workflow.logger.warning("Resume signal ignored: not paused")
+            return
+        self.paused = False
+        self.pause_requested = False
+        workflow.logger.info("Resuming from paused state")
 
     @workflow.signal
     async def start_image_generation(self, config: dict[str, Any]) -> None:
@@ -272,6 +341,12 @@ class ArticleWorkflow:
             "approved": self.approved,
             "rejected": self.rejected,
             "rejection_reason": self.rejection_reason,
+            "paused": self.paused,
+            "pause_requested": self.pause_requested,
+            # Step3 review state (REQ-01 ~ REQ-05)
+            "step3_review_received": self.step3_review_received,
+            "step3_retrying": self.step3_retrying,
+            "step3_retry_counts": self.step3_retry_counts,
             "image_gen_decision_made": self.image_gen_decision_made,
             "image_gen_enabled": self.image_gen_enabled,
             # Step11 multi-phase state
@@ -333,6 +408,7 @@ class ArticleWorkflow:
 
         # Step 0: Keyword Selection
         if self._should_run("step0", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step0"
             step0_result = await self._execute_activity(
                 "step0_keyword_selection",
@@ -343,6 +419,7 @@ class ArticleWorkflow:
 
         # Step 1: Competitor Article Fetch
         if self._should_run("step1", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step1"
             step1_result = await self._execute_activity(
                 "step1_competitor_fetch",
@@ -353,6 +430,7 @@ class ArticleWorkflow:
 
         # Step 1.5: Related Keyword Competitor Extraction (optional)
         if self._should_run("step1_5", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step1_5"
             step1_5_result = await self._execute_activity(
                 "step1_5_related_keyword_extraction",
@@ -363,6 +441,7 @@ class ArticleWorkflow:
 
         # Step 2: CSV Validation
         if self._should_run("step2", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step2"
             step2_result = await self._execute_activity(
                 "step2_csv_validation",
@@ -373,6 +452,7 @@ class ArticleWorkflow:
 
         # Step 3: Parallel Analysis (3A/3B/3C)
         if self._should_run("step3", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step3_parallel"
             try:
                 step3_results = await run_parallel_steps(tenant_id, run_id, config)
@@ -416,30 +496,94 @@ class ArticleWorkflow:
         skip_approval = resume_from is not None and resume_from in post_approval_steps
 
         if not skip_approval:
-            self.current_step = "waiting_approval"
+            # Loop for potential Step3 retries (REQ-04: 再レビュー)
+            while True:
+                self.current_step = "waiting_approval"
 
-            # Wait for approval or rejection signal (max 7 days)
-            # シグナルが来ない場合、永久に待機するのを防ぐ
-            await workflow.wait_condition(
-                lambda: self.approved or self.rejected,
-                timeout=timedelta(days=7),
-            )
-
-            if self.rejected:
-                # Sync rejected status to API DB
-                await self._sync_run_status(
-                    tenant_id,
-                    run_id,
-                    "failed",
-                    "waiting_approval",
-                    error_code="REJECTED",
-                    error_message=self.rejection_reason or "Rejected by reviewer",
+                # Wait for approval, rejection, or step3_review signal (max 7 days)
+                await workflow.wait_condition(
+                    lambda: self.approved or self.rejected or self.step3_review_received,
+                    timeout=timedelta(days=7),
                 )
-                return {
-                    "status": "rejected",
-                    "reason": self.rejection_reason,
-                    "step": "waiting_approval",
-                }
+
+                if self.rejected:
+                    # Sync rejected status to API DB
+                    await self._sync_run_status(
+                        tenant_id,
+                        run_id,
+                        "failed",
+                        "waiting_approval",
+                        error_code="REJECTED",
+                        error_message=self.rejection_reason or "Rejected by reviewer",
+                    )
+                    return {
+                        "status": "rejected",
+                        "reason": self.rejection_reason,
+                        "step": "waiting_approval",
+                    }
+
+                if self.step3_review_received and self.step3_retrying:
+                    # REQ-02, REQ-03: Step3 individual retry with instructions
+                    workflow.logger.info(f"Step3 retry requested for: {self.step3_retrying}")
+                    self.current_step = "step3_retry"
+
+                    # Sync status to DB
+                    await self._sync_run_status(
+                        tenant_id,
+                        run_id,
+                        "running",
+                        "step3_retry",
+                    )
+
+                    # Re-run only the retrying steps with instructions
+                    try:
+                        step3_results = await run_parallel_steps(
+                            tenant_id,
+                            run_id,
+                            config,
+                            retry_steps=self.step3_retrying,
+                            retry_instructions=self.step3_retry_instructions,
+                        )
+                        # Update artifact refs
+                        for step_key in self.step3_retrying:
+                            if step_key in step3_results:
+                                artifact_refs[step_key] = step3_results[step_key].get("artifact_ref", {})
+                    except Exception as e:
+                        workflow.logger.error(f"Step3 retry failed: {e}")
+                        error_message = str(e)[:500]
+                        await self._sync_run_status(
+                            tenant_id,
+                            run_id,
+                            "failed",
+                            "step3_retry",
+                            error_code="STEP3_RETRY_FAILED",
+                            error_message=error_message,
+                        )
+                        raise
+
+                    # Reset for next review cycle
+                    self.step3_review_received = False
+                    self.step3_retrying = []
+                    self.step3_retry_instructions = {}
+
+                    # Sync back to waiting_approval status
+                    await self._sync_run_status(
+                        tenant_id,
+                        run_id,
+                        "waiting_approval",
+                        "waiting_approval",
+                    )
+                    # Continue loop to wait for next signal
+                    continue
+
+                if self.approved:
+                    # All approved, break out of loop
+                    break
+
+                # step3_review_received but no retrying means all approved
+                if self.step3_review_received and not self.step3_retrying:
+                    self.approved = True
+                    break
         else:
             # When resuming from post-approval, mark as approved
             self.approved = True
@@ -449,6 +593,7 @@ class ArticleWorkflow:
 
         # Step 3.5: Human Touch Generation (first post-approval step)
         if self._should_run("step3_5", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step3_5"
             step3_5_result = await self._execute_activity(
                 "step3_5_human_touch_generation",
@@ -459,6 +604,7 @@ class ArticleWorkflow:
 
         # Step 4: Strategic Outline
         if self._should_run("step4", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step4"
             step4_result = await self._execute_activity(
                 "step4_strategic_outline",
@@ -469,6 +615,7 @@ class ArticleWorkflow:
 
         # Step 5: Primary Source Collection
         if self._should_run("step5", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step5"
             step5_result = await self._execute_activity(
                 "step5_primary_collection",
@@ -479,6 +626,7 @@ class ArticleWorkflow:
 
         # Step 6: Enhanced Outline
         if self._should_run("step6", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step6"
             step6_result = await self._execute_activity(
                 "step6_enhanced_outline",
@@ -489,6 +637,7 @@ class ArticleWorkflow:
 
         # Step 6.5: Integration Package
         if self._should_run("step6_5", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step6_5"
             step6_5_result = await self._execute_activity(
                 "step6_5_integration_package",
@@ -499,6 +648,7 @@ class ArticleWorkflow:
 
         # Step 7A: Draft Generation
         if self._should_run("step7a", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step7a"
             step7a_result = await self._execute_activity(
                 "step7a_draft_generation",
@@ -509,6 +659,7 @@ class ArticleWorkflow:
 
         # Step 7B: Brush Up
         if self._should_run("step7b", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step7b"
             step7b_result = await self._execute_activity(
                 "step7b_brush_up",
@@ -519,6 +670,7 @@ class ArticleWorkflow:
 
         # Step 8: Fact Check
         if self._should_run("step8", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step8"
             step8_result = await self._execute_activity(
                 "step8_fact_check",
@@ -529,6 +681,7 @@ class ArticleWorkflow:
 
         # Step 9: Final Rewrite
         if self._should_run("step9", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step9"
             step9_result = await self._execute_activity(
                 "step9_final_rewrite",
@@ -539,6 +692,7 @@ class ArticleWorkflow:
 
         # Step 10: Final Output
         if self._should_run("step10", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step10"
             step10_result = await self._execute_activity(
                 "step10_final_output",
@@ -549,6 +703,7 @@ class ArticleWorkflow:
 
         # ========== STEP 11: MULTI-PHASE IMAGE GENERATION ==========
         if self._should_run("step11", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             try:
                 step11_result = await self._run_step11_multiphase(tenant_id, run_id, config, activity_args, resume_from)
                 artifact_refs["step11"] = step11_result.get("artifact_ref", {})
@@ -571,6 +726,7 @@ class ArticleWorkflow:
 
         # Step 12: WordPress HTML Generation
         if self._should_run("step12", resume_from):
+            await self._check_pause_point(tenant_id, run_id)
             self.current_step = "step12"
             step12_result = await self._execute_activity(
                 "step12_wordpress_html_generation",
@@ -650,6 +806,36 @@ class ArticleWorkflow:
         if step == "step12":
             return config.get("enable_step12", True)
         return True
+
+    async def _check_pause_point(self, tenant_id: str, run_id: str) -> None:
+        """Check if pause was requested and wait until resumed.
+
+        Called at step boundaries (before starting next activity).
+        If pause_requested is True:
+        1. Set paused=True, pause_requested=False
+        2. Sync 'paused' status to DB
+        3. Wait until resume_from_pause signal received
+
+        Args:
+            tenant_id: Tenant identifier for status sync
+            run_id: Run identifier for status sync
+        """
+        if not self.pause_requested:
+            return
+
+        workflow.logger.info(f"Pausing at step boundary: {self.current_step}")
+        self.paused = True
+        self.pause_requested = False
+
+        # Sync paused status to API DB
+        await self._sync_run_status(tenant_id, run_id, "paused", self.current_step)
+
+        # Wait until resumed (resume_from_pause signal sets paused=False)
+        await workflow.wait_condition(lambda: not self.paused)
+
+        workflow.logger.info(f"Resumed from pause at: {self.current_step}")
+        # Sync running status back to API DB
+        await self._sync_run_status(tenant_id, run_id, "running", self.current_step)
 
     async def _execute_activity(
         self,

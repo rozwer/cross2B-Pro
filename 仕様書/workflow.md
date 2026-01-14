@@ -205,6 +205,102 @@ storage/{tenant_id}/{run_id}/{step}/output.json
 
 詳細は @backend/temporal.md#approval を参照。
 
+### 工程3 指示付きリトライ（Step3 Review）
+
+工程3（3A/3B/3C）の成果物に対して、個別に承認/リトライを選択できる。
+
+#### 要件
+
+| ID | 要件 | 詳細 |
+|----|------|------|
+| REQ-01 | 指示付き却下 | 却下時に修正指示を添えられる |
+| REQ-02 | ステップ個別リトライ | 3A/3B/3Cを個別にリトライ可能 |
+| REQ-03 | 修正指示の反映 | リトライ時に修正指示がLLMプロンプトに追加される |
+| REQ-04 | 再レビュー | リトライ後、再度承認待ち状態になる |
+| REQ-05 | リトライ上限 | 各ステップ最大3回までリトライ可能 |
+
+#### API エンドポイント
+
+```
+POST /api/runs/{run_id}/step3/review
+リクエスト:
+{
+  "reviews": [
+    {
+      "step": "step3a",
+      "accepted": false,
+      "retry": true,
+      "retry_instruction": "ペルソナをより具体的に。年齢層と職業を明記してください"
+    },
+    {
+      "step": "step3b",
+      "accepted": true
+    },
+    {
+      "step": "step3c",
+      "accepted": false,
+      "retry": true,
+      "retry_instruction": "競合との差別化ポイントをもっと明確に"
+    }
+  ]
+}
+
+レスポンス:
+{
+  "success": true,
+  "retrying": ["step3a", "step3c"],
+  "approved": ["step3b"],
+  "next_action": "waiting_retry_completion",
+  "retry_counts": {"step3a": 1, "step3c": 1}
+}
+```
+
+#### 状態遷移
+
+```
+[step3完了]
+    ↓
+[waiting_approval]
+    ↓
+┌─────────────────────────────────────┐
+│ step3_review signal                 │
+│     ↓                               │
+│ ┌────────────────────────────────┐  │
+│ │ all approved?                  │  │
+│ │   YES → [post_approval]        │  │
+│ │   NO  → [step3_retry]          │  │
+│ └────────────────────────────────┘  │
+└─────────────────────────────────────┘
+        ↓
+  [step3_retry]
+        ↓
+  [waiting_approval] ← 再度レビュー待ち（REQ-04）
+```
+
+#### Temporal Signal
+
+```python
+@workflow.signal
+async def step3_review(self, payload: dict[str, Any]) -> None:
+    """Step3の個別レビュー結果を受け取る
+
+    payload:
+        reviews: list[{step, accepted, retry, retry_instruction}]
+    """
+    self.step3_reviews = payload.get("reviews", [])
+    self.step3_review_received = True
+```
+
+#### 修正指示のプロンプト反映（REQ-03）
+
+リトライ時、各Activityのプロンプトに以下のセクションが追加される：
+
+```
+【レビューフィードバック】
+前回の出力に対するフィードバックです。以下の点を改善してください:
+{retry_instruction}
+```
+
 ## 4本柱
 
 | 柱         | 説明                                                   |
