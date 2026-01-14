@@ -8,7 +8,6 @@ Endpoints for:
 """
 
 import logging
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,7 +18,6 @@ from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.db import Run
 from apps.api.services.github import (
-    FileEntry,
     GitHubAuthenticationError,
     GitHubNotFoundError,
     GitHubPermissionError,

@@ -7,7 +7,6 @@ Non-blocking: Failures are logged but don't block workflow execution.
 Idempotent: Same content = skip push (uses digest comparison).
 """
 
-import json
 import logging
 from typing import Any
 
@@ -254,7 +253,7 @@ For issues or questions, refer to the main documentation or create an Issue.
             # Check if already exists
             existing = await self.github.get_file(repo_url, claude_path)
             if existing:
-                logger.info(f"[GitHubPush] CLAUDE.md already exists, skipping")
+                logger.info("[GitHubPush] CLAUDE.md already exists, skipping")
                 return {
                     "created": False,
                     "skipped": True,
