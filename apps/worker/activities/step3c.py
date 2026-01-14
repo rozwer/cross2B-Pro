@@ -273,6 +273,17 @@ class Step3CCompetitorAnalysis(BaseActivity):
                 word_count_mode=word_count_mode,
                 competitors=competitor_analysis,
             )
+
+            # REQ-03: Add retry instruction if present
+            retry_instruction = config.get("retry_instruction")
+            if retry_instruction:
+                feedback = (
+                    "\n\n【レビューフィードバック】\n"
+                    "前回の出力に対するフィードバックです。以下の点を改善してください:\n"
+                    f"{retry_instruction}"
+                )
+                initial_prompt += feedback
+                logger.info("Added retry instruction to prompt")
         except Exception as e:
             raise ActivityError(
                 f"Failed to render prompt: {e}",
@@ -280,8 +291,10 @@ class Step3CCompetitorAnalysis(BaseActivity):
             ) from e
 
         # Get LLM client (Gemini for step3c)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config - increased max_tokens for blog.System integration
@@ -425,6 +438,10 @@ class Step3CCompetitorAnalysis(BaseActivity):
             "word_count_statistics": word_count_stats,
             "target_word_count": target_word_count,
             "model": response.model,
+            "model_config": {
+                "platform": llm_provider,
+                "model": llm_model,
+            },
             "token_usage": {
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,
@@ -562,10 +579,24 @@ class Step3CCompetitorAnalysis(BaseActivity):
 
 @activity.defn(name="step3c_competitor_analysis")
 async def step3c_competitor_analysis(args: dict[str, Any]) -> dict[str, Any]:
-    """Temporal activity wrapper for step 3C."""
+    """Temporal activity wrapper for step 3C.
+
+    Args:
+        args: Dict containing:
+            - tenant_id: Tenant identifier
+            - run_id: Run identifier
+            - config: Workflow configuration
+            - retry_instruction: (Optional) User feedback for retry (REQ-03)
+    """
+    # REQ-03: Add retry instruction to config if present
+    config = args["config"].copy()
+    if "retry_instruction" in args:
+        config["retry_instruction"] = args["retry_instruction"]
+        logger.info(f"Step3C running with retry instruction: {args['retry_instruction'][:100]}...")
+
     step = Step3CCompetitorAnalysis()
     return await step.run(
         tenant_id=args["tenant_id"],
         run_id=args["run_id"],
-        config=args["config"],
+        config=config,
     )
