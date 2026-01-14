@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, XCircle, Clock, Loader2, Pause, Ban, SkipForward, ImagePlus } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Loader2, Pause, Ban, SkipForward, ImagePlus, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RunStatus, StepStatus } from "@/lib/types";
 
@@ -27,6 +27,12 @@ const statusConfig: Record<
     textColor: "text-gray-600 dark:text-gray-300",
     icon: Clock,
   },
+  workflow_starting: {
+    label: "開始中",
+    bgColor: "bg-gray-100 dark:bg-gray-700",
+    textColor: "text-gray-600 dark:text-gray-300",
+    icon: Play,
+  },
   running: {
     label: "実行中",
     bgColor: "bg-accent-100 dark:bg-accent-900/40",
@@ -38,6 +44,12 @@ const statusConfig: Record<
     bgColor: "bg-orange-100 dark:bg-orange-900/40",
     textColor: "text-orange-700 dark:text-orange-300",
     icon: Loader2,
+  },
+  paused: {
+    label: "一時停止",
+    bgColor: "bg-amber-100 dark:bg-amber-900/40",
+    textColor: "text-amber-700 dark:text-amber-300",
+    icon: Pause,
   },
   waiting_approval: {
     label: "承認待ち",
@@ -139,8 +151,10 @@ export function StatusDot({
 }) {
   const dotColors: Record<RunStatus | StepStatus, string> = {
     pending: "bg-gray-400",
+    workflow_starting: "bg-gray-400",
     running: "bg-accent-500",
     retrying: "bg-orange-500",
+    paused: "bg-amber-500",
     waiting_approval: "bg-warning-500",
     waiting_image_input: "bg-purple-500",
     completed: "bg-success-500",
@@ -155,7 +169,7 @@ export function StatusDot({
     lg: "w-2.5 h-2.5",
   };
 
-  const shouldPulse = pulse || status === "running" || status === "retrying" || status === "waiting_approval" || status === "waiting_image_input";
+  const shouldPulse = pulse || status === "running" || status === "retrying" || status === "paused" || status === "waiting_approval" || status === "waiting_image_input";
   // フォールバック: 未知のステータスの場合はgray
   const dotColor = dotColors[status] || "bg-gray-400";
 

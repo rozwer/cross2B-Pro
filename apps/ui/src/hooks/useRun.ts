@@ -45,6 +45,10 @@ interface UseRunReturn {
   reject: (reason: string) => Promise<void>;
   retry: (step: string) => Promise<{ new_attempt_id: string }>;
   resume: (step: string) => Promise<{ new_run_id: string }>;
+  /** ワークフローを一時停止（次のステップ境界で停止） */
+  pause: () => Promise<void>;
+  /** 停止状態のワークフローを続行 */
+  continueRun: () => Promise<void>;
   /** ポーリング中かどうか */
   isPolling: boolean;
   /** ポーリングを開始 */
@@ -248,6 +252,30 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
     [runId, fetch],
   );
 
+  const pause = useCallback(async () => {
+    try {
+      setError(null);
+      await api.runs.pause(runId);
+      await fetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to pause run";
+      setError(message);
+      throw err; // Re-throw for caller handling
+    }
+  }, [runId, fetch]);
+
+  const continueRun = useCallback(async () => {
+    try {
+      setError(null);
+      await api.runs.continue(runId);
+      await fetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to continue run";
+      setError(message);
+      throw err; // Re-throw for caller handling
+    }
+  }, [runId, fetch]);
+
   return {
     run,
     loading,
@@ -258,6 +286,8 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
     reject,
     retry,
     resume,
+    pause,
+    continueRun,
     isPolling,
     startPolling,
     stopPolling,

@@ -53,3 +53,24 @@ RESUME_STEP_ORDER: tuple[str, ...] = (
 
 # Steps that cannot be used as resume points
 INVALID_RESUME_STEPS: frozenset[str] = frozenset({"step3b", "step3c"})
+
+# Run statuses that can be paused (一時停止可能なステータス)
+PAUSABLE_STATUSES: frozenset[str] = frozenset(
+    {
+        "running",
+        "waiting_approval",
+        "waiting_image_input",
+    }
+)
+
+# Run statuses that indicate workflow is in progress (進行中ステータス)
+IN_PROGRESS_STATUSES: frozenset[str] = frozenset(
+    {
+        "pending",
+        "workflow_starting",
+        "running",
+        "paused",
+        "waiting_approval",
+        "waiting_image_input",
+    }
+)
