@@ -161,8 +161,10 @@ class Step0KeywordSelection(BaseActivity):
             ) from e
 
         # Get LLM client (Gemini for step0)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm: LLMInterface = get_llm_client(llm_provider, model=llm_model)
 
         # REVIEW-001: LLMCallMetadata を必須で注入（トレーサビリティ確保）
@@ -267,6 +269,10 @@ class Step0KeywordSelection(BaseActivity):
             "competition": step0_input.competition,
             # モデル・使用量・メトリクス
             "model": response.model,
+            "model_config": {
+                "platform": llm_provider,
+                "model": llm_model,
+            },
             "token_usage": {
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,

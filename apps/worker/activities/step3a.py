@@ -274,6 +274,17 @@ class Step3AQueryAnalysis(BaseActivity):
                 render_vars["competitor_data"] = step2_data.get("validated_data", [])
                 render_vars["four_pillars_evaluation"] = step0_data.get("four_pillars_evaluation", {})
             initial_prompt = prompt_template.render(**render_vars)
+
+            # REQ-03: Add retry instruction if present
+            retry_instruction = config.get("retry_instruction")
+            if retry_instruction:
+                feedback = (
+                    "\n\n【レビューフィードバック】\n"
+                    "前回の出力に対するフィードバックです。以下の点を改善してください:\n"
+                    f"{retry_instruction}"
+                )
+                initial_prompt += feedback
+                logger.info("Added retry instruction to prompt")
         except Exception as e:
             raise ActivityError(
                 f"Failed to render prompt: {e}",
@@ -281,8 +292,10 @@ class Step3AQueryAnalysis(BaseActivity):
             ) from e
 
         # Get LLM client (Gemini for step3a)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config (V2モードでは出力が長くなるため、max_tokensを増加)
@@ -396,6 +409,10 @@ class Step3AQueryAnalysis(BaseActivity):
             "parsed_data": parse_result.data if parse_result.success else None,
             "format_detected": parse_result.format_detected,
             "model": response.model,
+            "model_config": {
+                "platform": llm_provider,
+                "model": llm_model,
+            },
             "token_usage": {
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,
@@ -422,10 +439,24 @@ class Step3AQueryAnalysis(BaseActivity):
 
 @activity.defn(name="step3a_query_analysis")
 async def step3a_query_analysis(args: dict[str, Any]) -> dict[str, Any]:
-    """Temporal activity wrapper for step 3A."""
+    """Temporal activity wrapper for step 3A.
+
+    Args:
+        args: Dict containing:
+            - tenant_id: Tenant identifier
+            - run_id: Run identifier
+            - config: Workflow configuration
+            - retry_instruction: (Optional) User feedback for retry (REQ-03)
+    """
+    # REQ-03: Add retry instruction to config if present
+    config = args["config"].copy()
+    if "retry_instruction" in args:
+        config["retry_instruction"] = args["retry_instruction"]
+        logger.info(f"Step3A running with retry instruction: {args['retry_instruction'][:100]}...")
+
     step = Step3AQueryAnalysis()
     return await step.run(
         tenant_id=args["tenant_id"],
         run_id=args["run_id"],
-        config=args["config"],
+        config=config,
     )

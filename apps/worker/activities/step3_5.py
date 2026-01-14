@@ -295,8 +295,10 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             ) from e
 
         # Get LLM client (Gemini for step3_5 - natural expression)
-        llm_provider = config.get("llm_provider", "gemini")
-        llm_model = config.get("llm_model")
+        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
+        model_config = config.get("model_config", {})
+        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+        llm_model = model_config.get("model", config.get("llm_model"))
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config - slightly higher temperature for creativity
@@ -483,6 +485,10 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             "metadata": {
                 "generated_at": ctx.started_at.isoformat(),
                 "model": response.model,
+                "model_config": {
+                    "platform": llm_provider,
+                    "model": llm_model,
+                },
                 "input_files": input_files,
             },
             "quality": {
