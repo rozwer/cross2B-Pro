@@ -216,8 +216,18 @@ export function Step3ReviewDialog({
   const canSubmit = useMemo(() => {
     // 全てのステップに決定が必要
     const allDecided = stepReviews.every((r) => r.decision !== null);
-    // リトライのステップには指示が推奨（空でも許可）
-    return allDecided;
+    // リトライのステップには指示が必須
+    const retryStepsHaveInstructions = stepReviews
+      .filter((r) => r.decision === "retry")
+      .every((r) => r.instruction.trim().length > 0);
+    return allDecided && retryStepsHaveInstructions;
+  }, [stepReviews]);
+
+  // リトライで指示が不足しているステップ
+  const missingInstructionSteps = useMemo(() => {
+    return stepReviews
+      .filter((r) => r.decision === "retry" && r.instruction.trim().length === 0)
+      .map((r) => r.step);
   }, [stepReviews]);
 
   // 送信
@@ -422,13 +432,29 @@ export function Step3ReviewDialog({
 
                               {/* Retry Instruction */}
                               {review?.decision === "retry" && (
-                                <textarea
-                                  value={review.instruction}
-                                  onChange={(e) => updateStepReview(stepKey, { instruction: e.target.value })}
-                                  placeholder="修正指示を入力してください..."
-                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                                  rows={2}
-                                />
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300">
+                                    <span className="text-red-500">*</span>
+                                    <span>修正指示（必須）</span>
+                                  </div>
+                                  <textarea
+                                    value={review.instruction}
+                                    onChange={(e) => updateStepReview(stepKey, { instruction: e.target.value })}
+                                    placeholder="どのように修正してほしいか具体的に入力してください..."
+                                    className={cn(
+                                      "w-full px-2 py-1.5 text-xs rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500",
+                                      review.instruction.trim().length === 0
+                                        ? "border-red-300 dark:border-red-600 border"
+                                        : "border border-gray-300 dark:border-gray-600"
+                                    )}
+                                    rows={2}
+                                  />
+                                  {review.instruction.trim().length === 0 && (
+                                    <p className="text-xs text-red-500">
+                                      リトライするには修正指示が必要です
+                                    </p>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
