@@ -14,6 +14,8 @@ import {
   Network,
   X,
   Loader2,
+  Pause,
+  Play,
 } from "lucide-react";
 import { useRun } from "@/hooks/useRun";
 import { useRunProgress } from "@/hooks/useRunProgress";
@@ -22,6 +24,7 @@ import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
 import { ApprovalDialog } from "@/components/common/ApprovalDialog";
+import { Step3ReviewDialog } from "@/components/approval/Step3ReviewDialog";
 import { ImageGenerationWizard } from "@/components/imageGeneration";
 import { ResumeConfirmDialog } from "@/components/approval/ResumeConfirmDialog";
 import { ArtifactViewer } from "@/components/artifacts/ArtifactViewer";
@@ -67,8 +70,10 @@ export default function RunDetailPage({
   const [previewArticle, setPreviewArticle] = useState(1);
   const [showImageGenDialog, setShowImageGenDialog] = useState(false);
   const [imageGenLoading, setImageGenLoading] = useState(false);
+  const [pauseLoading, setPauseLoading] = useState(false);
+  const [showStep3ReviewDialog, setShowStep3ReviewDialog] = useState(false);
 
-  const { run, loading, error, fetch, approve, reject, retry, resume, isPolling } = useRun(id);
+  const { run, loading, error, fetch, approve, reject, retry, resume, pause, continueRun, isPolling } = useRun(id);
   const { artifacts, fetch: fetchArtifacts } = useArtifacts(id);
 
   // 自動ポップアップは無効化 - 手動で開く必要あり
@@ -194,6 +199,65 @@ export default function RunDetailPage({
     }
   }, [id, fetch, run?.status]);
 
+  const handlePause = useCallback(async () => {
+    setPauseLoading(true);
+    try {
+      await pause();
+    } catch (err) {
+      console.error("Pause failed:", err);
+    } finally {
+      setPauseLoading(false);
+    }
+  }, [pause]);
+
+  const handleContinue = useCallback(async () => {
+    setPauseLoading(true);
+    try {
+      await continueRun();
+    } catch (err) {
+      console.error("Continue failed:", err);
+    } finally {
+      setPauseLoading(false);
+    }
+  }, [continueRun]);
+
+  // Step3レビュー完了ハンドラー
+  const handleStep3ReviewComplete = useCallback(() => {
+    setShowStep3ReviewDialog(false);
+    fetch(); // ステータスを更新
+  }, [fetch]);
+
+  // Step3レビュー待ち状態かどうか判定
+  const isWaitingForStep3Review = useCallback(() => {
+    if (!run) return false;
+
+    // waiting_approval状態で、かつcurrent_stepがstep3関連の場合
+    if (run.status === "waiting_approval") {
+      // current_stepがstep3a/3b/3c、waiting_step3_approval、またはpost_step3のいずれか
+      const step3RelatedSteps = ["step3a", "step3b", "step3c", "waiting_step3_approval", "post_step3"];
+      if (step3RelatedSteps.includes(run.current_step ?? "")) {
+        return true;
+      }
+
+      // Step3a/3b/3cが完了していて、Step4以降がpendingの場合
+      const step3a = run.steps.find((s) => s.step_name === "step3a");
+      const step3b = run.steps.find((s) => s.step_name === "step3b");
+      const step3c = run.steps.find((s) => s.step_name === "step3c");
+      const step4 = run.steps.find((s) => s.step_name === "step4");
+
+      const step3Complete =
+        step3a?.status === "completed" &&
+        step3b?.status === "completed" &&
+        step3c?.status === "completed";
+
+      if (step3Complete && (!step4 || step4.status === "pending")) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [run]);
+
   // Step10完了後、画像生成の判断待ち/マルチフェーズ待ちかどうか判定
   const isWaitingForImageGeneration = useCallback(() => {
     if (!run) return false;
@@ -289,6 +353,35 @@ export default function RunDetailPage({
               <RefreshCw className={cn("h-4 w-4", isPolling && "animate-spin")} />
               更新
             </button>
+            {/* 停止/続行ボタン */}
+            {run.status === "running" && (
+              <button
+                onClick={handlePause}
+                disabled={pauseLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
+              >
+                {pauseLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Pause className="h-4 w-4" />
+                )}
+                一時停止
+              </button>
+            )}
+            {run.status === "paused" && (
+              <button
+                onClick={handleContinue}
+                disabled={pauseLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
+              >
+                {pauseLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                続行
+              </button>
+            )}
             {/* 画像生成待ち（step10完了後）の場合は画像生成ボタン */}
             {isWaitingForImageGeneration() ? (
               <button
@@ -297,8 +390,19 @@ export default function RunDetailPage({
               >
                 画像を生成
               </button>
+            ) : isWaitingForStep3Review() ? (
+              /* Step3レビュー待ちの場合はレビューボタン */
+              <button
+                onClick={() => {
+                  fetchArtifacts();
+                  setShowStep3ReviewDialog(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Step3 レビュー
+              </button>
             ) : run.status === "waiting_approval" ? (
-              /* step3完了後の承認待ちの場合は承認ボタン */
+              /* その他の承認待ちの場合は承認ボタン */
               <button
                 onClick={() => {
                   fetchArtifacts();  // Ensure artifacts are loaded before showing dialog
@@ -400,7 +504,14 @@ export default function RunDetailPage({
         </div>
       )}
 
-      {activeTab === "artifacts" && <ArtifactViewer runId={id} artifacts={artifacts} />}
+      {activeTab === "artifacts" && (
+        <ArtifactViewer
+          runId={id}
+          artifacts={artifacts}
+          githubRepoUrl={run?.github_repo_url}
+          githubDirPath={run?.github_dir_path}
+        />
+      )}
 
       {activeTab === "events" && <EventsList events={events} />}
 
@@ -419,6 +530,13 @@ export default function RunDetailPage({
         runId={id}
         artifacts={artifacts}
         loading={approvalLoading}
+      />
+
+      <Step3ReviewDialog
+        isOpen={showStep3ReviewDialog}
+        onClose={() => setShowStep3ReviewDialog(false)}
+        onComplete={handleStep3ReviewComplete}
+        runId={id}
       />
 
       <ImageGenerationWizard
