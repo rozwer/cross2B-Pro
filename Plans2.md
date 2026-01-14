@@ -248,36 +248,28 @@ Tenant: {tenant_id}
 
 ---
 
-## 🔶 フェーズ6: claude-code-action 設定 `cc:TODO`
+## 🔶 フェーズ6: claude-code-action 設定 `cc:DONE`
 
-### 6.1 GitHub Actions ワークフロー
+### 6.1 GitHub Actions ワークフロー ✅
 
-- [ ] `.github/workflows/claude-code.yml` テンプレート作成
-  ```yaml
-  name: Claude Code
-  on:
-    issue_comment:
-      types: [created]
-    pull_request_review_comment:
-      types: [created]
+- [x] `docs/templates/claude-code.yml` テンプレート作成
+  - Issue/PR コメントで @claude メンション時に起動
+  - `issues: opened` イベントにも対応
+  - 必要な permissions を明示（contents, issues, pull-requests）
+  - モデル・タイムアウト等のオプション設定例を含む
 
-  jobs:
-    claude:
-      if: contains(github.event.comment.body, '@claude')
-      runs-on: ubuntu-latest
-      steps:
-        - uses: anthropics/claude-code-action@v1
-          with:
-            anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-  ```
+### 6.2 セットアップガイド ✅
 
-### 6.2 セットアップガイド
-
-- [ ] ドキュメント作成: `docs/github-integration.md`
-  - GitHub App 作成手順
-  - claude-code-action 設定手順
+- [x] ドキュメント作成: `docs/github-integration.md`
+  - GitHub Personal Access Token 作成手順
+  - 環境変数設定
+  - claude-code-action ワークフロー設定手順
   - Secrets 設定（ANTHROPIC_API_KEY）
-  - 使用例
+  - 使用例（成果物確認、Claude Code 編集、差分管理）
+  - ディレクトリ構造の説明
+  - トラブルシューティング
+  - API リファレンス
+  - セキュリティ考慮事項
 
 ---
 
