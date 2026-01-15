@@ -312,3 +312,34 @@ class HearingTemplate(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
     __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_hearing_template_tenant_name"),)
+
+
+# =============================================================================
+# API Settings Model
+# =============================================================================
+
+
+class ApiSetting(Base):
+    """API/LLM settings per tenant per service.
+
+    Stores API keys (encrypted) and configuration for external services.
+    Supports: gemini, openai, anthropic, serp, google_ads, github
+    """
+
+    __tablename__ = "api_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    service: Mapped[str] = mapped_column(String(32), nullable=False)  # gemini, openai, anthropic, serp, google_ads, github
+    api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)  # AES-256-GCM encrypted
+    default_model: Mapped[str | None] = mapped_column(String(128), nullable=True)  # For LLM providers
+    config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # Service-specific config (grounding, etc.)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Last successful connection test
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "service", name="uq_api_setting_tenant_service"),
+        Index("ix_api_settings_tenant_id", "tenant_id"),
+    )

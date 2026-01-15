@@ -13,7 +13,7 @@
 """
 
 from .anthropic import AnthropicClient
-from .base import LLMInterface
+from .base import LLMInterface, get_llm_client, get_llm_client_with_settings
 from .exceptions import (
     ErrorCategory,
     LLMAuthenticationError,
@@ -51,6 +51,8 @@ from .schemas import (
 __all__ = [
     # Base
     "LLMInterface",
+    "get_llm_client",
+    "get_llm_client_with_settings",
     # Clients
     "AnthropicClient",
     "GeminiClient",

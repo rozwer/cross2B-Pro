@@ -32,6 +32,7 @@ from apps.api.routers import (
     keywords,
     prompts,
     runs,
+    settings,
     step11,
     step12,
     websocket,
@@ -226,6 +227,7 @@ app.include_router(keywords.router)
 app.include_router(step11.router)
 app.include_router(step12.router)
 app.include_router(github.router)
+app.include_router(settings.router)
 
 
 # =============================================================================

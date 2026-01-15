@@ -330,6 +330,13 @@ export interface ArtifactContent {
   encoding: "utf-8" | "base64";
 }
 
+export interface ArtifactUploadResponse {
+  success: boolean;
+  artifact_ref: ArtifactRef;
+  backup_path: string | null;
+  cache_invalidated: boolean;
+}
+
 // ============================================
 // Validation Types
 // ============================================
@@ -390,6 +397,40 @@ export interface ProgressEvent {
   message: string;
   timestamp: string;
   details?: Record<string, unknown>;
+}
+
+// ============================================
+// Event Log Types (DB Persisted)
+// ============================================
+
+export interface EventDetails {
+  run_id?: string;
+  step?: string;
+  tenant_id?: string;
+  attempt?: number;
+  duration_ms?: number;
+  error?: string;
+  error_category?: string;
+  reason?: string;
+  timestamp?: string;
+  extra?: Record<string, unknown>;
+}
+
+export interface EventLogEntry {
+  id: string;
+  event_type: string;
+  step?: string;
+  payload: Record<string, unknown>;
+  details?: EventDetails;
+  created_at: string;
+}
+
+export interface EventLogFilter {
+  step?: string;
+  event_type?: string;
+  since?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // ============================================
@@ -808,4 +849,53 @@ export interface RejectWithRetryInput {
   reason: string;
   retry_with_instructions: boolean;
   step_instructions: Record<Step3StepName, string>;
+}
+
+// ============================================
+// API Settings Types
+// ============================================
+
+/** Supported external services */
+export type ServiceType = "gemini" | "openai" | "anthropic" | "serp" | "google_ads" | "github";
+
+/** LLM provider services */
+export type LLMServiceType = "gemini" | "openai" | "anthropic";
+
+/** Service-specific configuration */
+export interface ServiceConfig {
+  grounding?: boolean;
+  temperature?: number;
+}
+
+/** API setting response */
+export interface ApiSettingResponse {
+  service: ServiceType;
+  api_key_masked: string | null;
+  default_model: string | null;
+  config: ServiceConfig | null;
+  is_active: boolean;
+  verified_at: string | null;
+  env_fallback: boolean;
+}
+
+/** API settings list response */
+export interface ApiSettingsListResponse {
+  settings: ApiSettingResponse[];
+}
+
+/** API setting update request */
+export interface ApiSettingUpdateRequest {
+  api_key?: string;
+  default_model?: string;
+  config?: ServiceConfig;
+  is_active?: boolean;
+}
+
+/** Connection test response */
+export interface ConnectionTestResponse {
+  success: boolean;
+  service: string;
+  latency_ms: number | null;
+  error_message: string | null;
+  details: Record<string, unknown> | null;
 }
