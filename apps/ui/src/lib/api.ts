@@ -10,6 +10,7 @@ import type {
   CreateRunInput,
   ArtifactRef,
   ArtifactContent,
+  ArtifactUploadResponse,
   PaginatedResponse,
   Prompt,
   PromptListResponse,
@@ -29,6 +30,11 @@ import type {
   WordPressArticleResponse,
   Step12GenerateResponse,
   CostResponse,
+  ServiceType,
+  ApiSettingResponse,
+  ApiSettingsListResponse,
+  ApiSettingUpdateRequest,
+  ConnectionTestResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
@@ -736,6 +742,28 @@ class ApiClient {
 
       return response.text();
     },
+
+    /**
+     * アーティファクトをアップロード（上書き）
+     */
+    upload: async (
+      runId: string,
+      step: string,
+      content: string,
+      options?: { encoding?: "utf-8" | "base64"; invalidateCache?: boolean },
+    ): Promise<ArtifactUploadResponse> => {
+      return this.request<ArtifactUploadResponse>(
+        `/api/runs/${runId}/files/${step}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            content,
+            encoding: options?.encoding ?? "utf-8",
+            invalidate_cache: options?.invalidateCache ?? false,
+          }),
+        },
+      );
+    },
   };
 
   // ============================================
@@ -743,20 +771,46 @@ class ApiClient {
   // ============================================
 
   events = {
+    /**
+     * List events for a run with optional filters
+     * Returns DB-persisted events (survives page reload)
+     */
     list: async (
       runId: string,
-      params?: { step?: string; limit?: number },
+      params?: {
+        step?: string;
+        event_type?: string;
+        since?: string;
+        limit?: number;
+        offset?: number;
+      },
     ): Promise<
       Array<{
         id: string;
         event_type: string;
+        step?: string;
         payload: Record<string, unknown>;
+        details?: {
+          run_id?: string;
+          step?: string;
+          tenant_id?: string;
+          attempt?: number;
+          duration_ms?: number;
+          error?: string;
+          error_category?: string;
+          reason?: string;
+          timestamp?: string;
+          extra?: Record<string, unknown>;
+        };
         created_at: string;
       }>
     > => {
       const searchParams = new URLSearchParams();
       if (params?.step) searchParams.set("step", params.step);
+      if (params?.event_type) searchParams.set("event_type", params.event_type);
+      if (params?.since) searchParams.set("since", params.since);
       if (params?.limit) searchParams.set("limit", params.limit.toString());
+      if (params?.offset) searchParams.set("offset", params.offset.toString());
 
       const query = searchParams.toString();
       return this.request(`/api/runs/${runId}/events${query ? `?${query}` : ""}`);
@@ -1095,6 +1149,68 @@ class ApiClient {
         has_result: boolean;
         result_path: string | null;
       }>(`/api/github/review-status/${runId}/${step}`);
+    },
+  };
+
+  // ============================================
+  // Settings API (API Keys & Model Configuration)
+  // ============================================
+
+  settings = {
+    /**
+     * 全サービスの設定一覧を取得
+     */
+    list: async (): Promise<ApiSettingsListResponse> => {
+      return this.request<ApiSettingsListResponse>("/api/settings");
+    },
+
+    /**
+     * 特定サービスの設定を取得
+     */
+    get: async (service: ServiceType): Promise<ApiSettingResponse> => {
+      return this.request<ApiSettingResponse>(`/api/settings/${service}`);
+    },
+
+    /**
+     * サービス設定を更新
+     * api_key を指定しない場合は既存のキーを保持
+     */
+    update: async (
+      service: ServiceType,
+      data: ApiSettingUpdateRequest
+    ): Promise<ApiSettingResponse> => {
+      return this.request<ApiSettingResponse>(`/api/settings/${service}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /**
+     * サービス設定を削除（環境変数にフォールバック）
+     */
+    delete: async (service: ServiceType): Promise<{ message: string }> => {
+      return this.request<{ message: string }>(`/api/settings/${service}`, {
+        method: "DELETE",
+      });
+    },
+
+    /**
+     * サービス接続をテスト
+     * api_key を指定しない場合は保存済みキーまたは環境変数を使用
+     */
+    test: async (
+      service: ServiceType,
+      apiKey?: string,
+      model?: string
+    ): Promise<ConnectionTestResponse> => {
+      const params = new URLSearchParams();
+      if (apiKey) params.set("api_key", apiKey);
+      if (model) params.set("model", model);
+      const query = params.toString();
+      return this.request<ConnectionTestResponse>(
+        `/api/settings/${service}/test${query ? `?${query}` : ""}`,
+        { method: "POST" }
+      );
     },
   };
 }

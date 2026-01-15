@@ -285,3 +285,86 @@ def get_llm_client(provider: str, **kwargs: Any) -> LLMInterface:
 
     _LLM_CLIENT_CACHE[cache_key] = client
     return client
+
+
+async def get_llm_client_with_settings(
+    provider: str,
+    tenant_id: str | None = None,
+    tenant_manager: Any | None = None,
+    **kwargs: Any,
+) -> LLMInterface:
+    """Get LLM client using settings from DB or environment.
+
+    This async version retrieves API key and default model from:
+    1. Database (api_settings table) - if tenant_id and tenant_manager provided
+    2. Environment variables - fallback
+
+    Args:
+        provider: Provider name ("gemini", "openai", "anthropic")
+        tenant_id: Tenant ID for DB lookup. If None, uses env vars only.
+        tenant_manager: TenantDBManager instance for DB access.
+        **kwargs: Additional client initialization arguments
+                  (model, temperature, etc. - overrides DB defaults)
+
+    Returns:
+        LLMInterface: Configured client instance
+
+    Raises:
+        ValueError: Unknown provider
+        LLMConfigurationError: No API key available
+
+    Example:
+        from apps.api.db import get_tenant_manager
+        manager = get_tenant_manager()
+        client = await get_llm_client_with_settings(
+            "gemini",
+            tenant_id="tenant-123",
+            tenant_manager=manager,
+        )
+        response = await client.generate("Hello!")
+    """
+    from apps.api.services.settings_provider import SettingsProvider
+
+    # Get settings from DB or env
+    provider_instance = SettingsProvider(tenant_manager)
+    settings = await provider_instance.get_llm_settings(provider, tenant_id)
+
+    if not settings.api_key:
+        from .errors import LLMConfigurationError
+
+        raise LLMConfigurationError(f"No API key available for {provider}. Set via UI (/settings?tab=apikeys) or environment variable.")
+
+    # Build kwargs with settings, allowing overrides
+    merged_kwargs: dict[str, Any] = {
+        "api_key": settings.api_key,
+    }
+
+    # Add default_model only if not overridden and available
+    if "model" not in kwargs and settings.default_model:
+        merged_kwargs["model"] = settings.default_model
+
+    # Apply service-specific config
+    if settings.config:
+        # For Gemini: grounding, url_context, code_execution, thinking
+        if provider == "gemini" and "gemini_config" not in kwargs:
+            from .gemini import GeminiConfig
+
+            gemini_config = GeminiConfig(
+                grounding=settings.config.get("grounding", False),
+                dynamic_retrieval_threshold=settings.config.get("grounding_threshold", 0.3),
+            )
+            merged_kwargs["gemini_config"] = gemini_config
+
+    # Merge explicit kwargs (they take precedence)
+    merged_kwargs.update(kwargs)
+
+    # Create cache key including tenant_id for proper isolation
+    cache_key = f"{provider}:{tenant_id or 'env'}:{_serialize_cache_kwargs(merged_kwargs)}"
+    cached = _LLM_CLIENT_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    # Create client using sync function
+    client = get_llm_client(provider, **merged_kwargs)
+    _LLM_CLIENT_CACHE[cache_key] = client
+    return client
