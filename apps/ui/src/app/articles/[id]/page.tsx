@@ -59,6 +59,28 @@ export default function ArticleDetailPage({
   const [showReviewPanel, setShowReviewPanel] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
 
+  // GitHub PR/Branch state
+  interface PRInfo {
+    number: number;
+    title: string;
+    url: string;
+    state: string;
+    head_branch: string | null;
+    user: string | null;
+    additions: number;
+    deletions: number;
+  }
+  interface BranchInfo {
+    name: string;
+    url: string;
+    compare_url: string;
+    author: string | null;
+    ahead_by: number;
+  }
+  const [openPRs, setOpenPRs] = useState<PRInfo[]>([]);
+  const [pendingBranches, setPendingBranches] = useState<BranchInfo[]>([]);
+  const [githubLoading, setGithubLoading] = useState(false);
+
   const fetchArticle = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -105,6 +127,28 @@ export default function ArticleDetailPage({
       return () => clearInterval(interval);
     }
   }, [reviewStatus?.status, fetchReviewStatus]);
+
+  // Fetch GitHub PR/Branch info
+  const fetchGithubInfo = useCallback(async () => {
+    if (!article?.github_repo_url || !article?.github_dir_path) return;
+
+    setGithubLoading(true);
+    try {
+      const diffResult = await api.github.getDiff(id, "step10");
+      setOpenPRs(diffResult.open_prs || []);
+      setPendingBranches(diffResult.pending_branches || []);
+    } catch {
+      // GitHub not configured or error
+    } finally {
+      setGithubLoading(false);
+    }
+  }, [id, article?.github_repo_url, article?.github_dir_path]);
+
+  useEffect(() => {
+    if (article?.github_repo_url) {
+      fetchGithubInfo();
+    }
+  }, [article?.github_repo_url, fetchGithubInfo]);
 
   const handleReview = async (type: ReviewType) => {
     setShowReviewMenu(false);
@@ -539,6 +583,91 @@ ${issue.suggestion}
               )}
             </div>
 
+            {/* GitHub PR Summary */}
+            {article.github_repo_url && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                  <Github className="h-5 w-5" />
+                  GitHub
+                </h2>
+
+                {githubLoading ? (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    読み込み中...
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Open PRs */}
+                    {openPRs.length > 0 && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                          オープンPR: {openPRs.length}件
+                        </div>
+                        <div className="space-y-1">
+                          {openPRs.slice(0, 3).map((pr) => (
+                            <a
+                              key={pr.number}
+                              href={pr.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-xs text-blue-600 dark:text-blue-400 hover:underline truncate"
+                            >
+                              #{pr.number} {pr.title}
+                            </a>
+                          ))}
+                          {openPRs.length > 3 && (
+                            <button
+                              onClick={() => setActiveTab("github")}
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              他{openPRs.length - 3}件を見る...
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Branches */}
+                    {pendingBranches.length > 0 && (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <div className="text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+                          未PR ブランチ: {pendingBranches.length}件
+                        </div>
+                        <div className="space-y-1">
+                          {pendingBranches.slice(0, 2).map((branch) => (
+                            <a
+                              key={branch.name}
+                              href={branch.compare_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-xs text-amber-600 dark:text-amber-400 hover:underline truncate"
+                            >
+                              {branch.name}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* No PRs/Branches */}
+                    {openPRs.length === 0 && pendingBranches.length === 0 && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        オープンPRはありません
+                      </p>
+                    )}
+
+                    <button
+                      onClick={() => setActiveTab("github")}
+                      className="w-full btn btn-ghost text-sm"
+                    >
+                      GitHub連携を開く
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -670,6 +799,97 @@ ${issue.suggestion}
                   </p>
                 )}
               </div>
+
+              {/* Open PRs Section */}
+              {openPRs.length > 0 && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    <span className="font-medium text-blue-800 dark:text-blue-200">
+                      オープン Pull Request ({openPRs.length}件)
+                    </span>
+                    <button
+                      onClick={fetchGithubInfo}
+                      disabled={githubLoading}
+                      className="ml-auto text-blue-600 dark:text-blue-400 hover:text-blue-800"
+                    >
+                      <RefreshCw className={cn("h-4 w-4", githubLoading && "animate-spin")} />
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {openPRs.map((pr) => (
+                      <div key={pr.number} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-100 dark:border-blue-800">
+                        <div className="flex-1 min-w-0">
+                          <a
+                            href={pr.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline truncate block"
+                          >
+                            #{pr.number} {pr.title}
+                          </a>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {pr.user && <span>@{pr.user}</span>}
+                            {pr.head_branch && <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">{pr.head_branch}</span>}
+                            <span className="text-green-600">+{pr.additions}</span>
+                            <span className="text-red-600">-{pr.deletions}</span>
+                          </div>
+                        </div>
+                        <a
+                          href={pr.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 btn btn-ghost btn-sm"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Branches Section */}
+              {pendingBranches.length > 0 && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span className="font-medium text-amber-800 dark:text-amber-200">
+                      PR未作成のブランチ ({pendingBranches.length}件)
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {pendingBranches.map((branch) => (
+                      <div key={branch.name} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-amber-100 dark:border-amber-800">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-mono text-amber-700 dark:text-amber-300 truncate block">
+                            {branch.name}
+                          </span>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {branch.author && <span>@{branch.author}</span>}
+                            <span>{branch.ahead_by} commits ahead</span>
+                          </div>
+                        </div>
+                        <a
+                          href={branch.compare_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 btn btn-ghost btn-sm text-amber-600"
+                        >
+                          比較
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    これらのブランチからPRを作成するには、下の「差分を確認」から行えます
+                  </p>
+                </div>
+              )}
 
               {/* Step 10 Actions */}
               {article.has_step10 && (
