@@ -1361,6 +1361,72 @@ class ApiClient {
         last_comment: string | null;
       }>(`/api/github/issue-status/${runId}/${issueNumber}`);
     },
+
+    /**
+     * Get pull request details
+     */
+    getPR: async (
+      runId: string,
+      prNumber: number
+    ): Promise<{
+      number: number;
+      title: string;
+      state: string;
+      merged: boolean;
+      mergeable: boolean | null;
+      mergeable_state: string | null;
+      url: string;
+      head_branch: string | null;
+      base_branch: string | null;
+      user: string | null;
+      additions: number;
+      deletions: number;
+      changed_files: number;
+    }> => {
+      return this.request<{
+        number: number;
+        title: string;
+        state: string;
+        merged: boolean;
+        mergeable: boolean | null;
+        mergeable_state: string | null;
+        url: string;
+        head_branch: string | null;
+        base_branch: string | null;
+        user: string | null;
+        additions: number;
+        deletions: number;
+        changed_files: number;
+      }>(`/api/github/pr/${runId}/${prNumber}`);
+    },
+
+    /**
+     * Merge a pull request
+     */
+    mergePR: async (
+      runId: string,
+      prNumber: number,
+      mergeMethod: "merge" | "squash" | "rebase" = "squash",
+      commitTitle?: string,
+      commitMessage?: string
+    ): Promise<{
+      merged: boolean;
+      sha: string | null;
+      message: string;
+    }> => {
+      return this.request<{
+        merged: boolean;
+        sha: string | null;
+        message: string;
+      }>(`/api/github/merge-pr/${runId}/${prNumber}`, {
+        method: "POST",
+        body: JSON.stringify({
+          merge_method: mergeMethod,
+          commit_title: commitTitle,
+          commit_message: commitMessage,
+        }),
+      });
+    },
   };
 
   // ============================================
