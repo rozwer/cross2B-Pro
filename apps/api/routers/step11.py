@@ -1477,7 +1477,7 @@ async def finalize_images(
             step12_generated = True
             logger.info(f"Step12 generated directly: run_id={run_id}, articles={len(step12_data.get('articles', []))}")
 
-            # Run status を completed に更新
+            # Run status を completed に更新し、Step12 レコードも作成
             async with db_manager.get_session(tenant_id) as session:
                 query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
                 result = await session.execute(query)
@@ -1487,8 +1487,31 @@ async def finalize_images(
                     run.current_step = "step12"
                     run.completed_at = datetime.now()
                     run.updated_at = datetime.now()
+
+                    # Step12 レコードを作成
+                    from apps.api.db import Step as StepModel
+
+                    step12_query = select(StepModel).where(StepModel.run_id == run_id, StepModel.step_name == "step12")
+                    step12_result = await session.execute(step12_query)
+                    step12_record = step12_result.scalar_one_or_none()
+
+                    if step12_record:
+                        step12_record.status = "completed"
+                        step12_record.completed_at = datetime.now()
+                    else:
+                        new_step12 = StepModel(
+                            id=str(uuid.uuid4()),
+                            run_id=run_id,
+                            step_name="step12",
+                            status="completed",
+                            started_at=datetime.now(),
+                            completed_at=datetime.now(),
+                            retry_count=0,
+                        )
+                        session.add(new_step12)
+
                     await session.commit()
-                    logger.info(f"Run marked as completed: run_id={run_id}")
+                    logger.info(f"Run marked as completed with step12 record: run_id={run_id}")
 
         except Exception as step12_error:
             logger.error(f"Failed to generate Step12 directly: {step12_error}", exc_info=True)
