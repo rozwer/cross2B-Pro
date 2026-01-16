@@ -23,7 +23,7 @@ from apps.api.db.audit import AuditLogger
 from apps.api.db.models import ApiSetting
 from apps.api.db.tenant import TenantDBManager, get_tenant_manager
 from apps.api.services.connection_test import ConnectionTestResult, ConnectionTestService
-from apps.api.services.encryption import decrypt, encrypt, mask_api_key
+from apps.api.services.encryption import EncryptionError, decrypt, encrypt, mask_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -170,42 +170,42 @@ def _setting_to_response(
         try:
             decrypted_key = decrypt(setting.api_key_encrypted)
             masked_key = mask_api_key(decrypted_key, service)
-        except Exception:
-            masked_key = "****[decryption error]"
-
-        return SettingResponse(
-            service=service,
-            api_key_masked=masked_key,
-            default_model=setting.default_model,
-            config=ServiceConfig(**(setting.config or {})) if setting.config else None,
-            is_active=setting.is_active,
-            verified_at=setting.verified_at.isoformat() if setting.verified_at else None,
-            env_fallback=False,
-        )
-    else:
-        # Fall back to environment variable
-        env_key, default_model = _get_env_fallback(service)
-        if env_key:
-            masked_key = mask_api_key(env_key, service)
             return SettingResponse(
                 service=service,
                 api_key_masked=masked_key,
-                default_model=default_model,
-                config=None,
-                is_active=True,
-                verified_at=None,
-                env_fallback=True,
+                default_model=setting.default_model,
+                config=ServiceConfig(**(setting.config or {})) if setting.config else None,
+                is_active=setting.is_active,
+                verified_at=setting.verified_at.isoformat() if setting.verified_at else None,
+                env_fallback=False,
             )
-        else:
-            return SettingResponse(
-                service=service,
-                api_key_masked=None,
-                default_model=default_model,
-                config=None,
-                is_active=False,
-                verified_at=None,
-                env_fallback=True,
-            )
+        except EncryptionError:
+            # Decryption failed - fall through to env fallback
+            logger.warning(f"Failed to decrypt API key for {service}, falling back to env")
+
+    # Fall back to environment variable (no DB setting, inactive, or decryption failed)
+    env_key, default_model = _get_env_fallback(service)
+    if env_key:
+        masked_key = mask_api_key(env_key, service)
+        return SettingResponse(
+            service=service,
+            api_key_masked=masked_key,
+            default_model=default_model,
+            config=None,
+            is_active=True,
+            verified_at=None,
+            env_fallback=True,
+        )
+    else:
+        return SettingResponse(
+            service=service,
+            api_key_masked=None,
+            default_model=default_model,
+            config=None,
+            is_active=False,
+            verified_at=None,
+            env_fallback=True,
+        )
 
 
 # =============================================================================
@@ -359,6 +359,7 @@ async def delete_setting(
 
         if setting:
             await session.delete(setting)
+            await session.flush()  # Ensure deletion is persisted before audit log
 
             # Log audit
             audit_logger = AuditLogger(session)
@@ -445,6 +446,7 @@ async def test_connection(
             setting = db_result.scalar_one_or_none()
             if setting:
                 setting.verified_at = datetime.now(UTC)
+                await session.flush()  # Ensure verified_at is persisted
 
     return ConnectionTestResponse(
         success=result.success,

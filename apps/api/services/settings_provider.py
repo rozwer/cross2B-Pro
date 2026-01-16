@@ -22,7 +22,7 @@ from sqlalchemy import select
 
 from apps.api.db.models import ApiSetting
 from apps.api.db.tenant import TenantDBManager
-from apps.api.services.encryption import decrypt
+from apps.api.services.encryption import EncryptionError, decrypt
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,9 @@ class SettingsProvider:
 
             try:
                 decrypted_key = decrypt(setting.api_key_encrypted)
-            except Exception as e:
+            except EncryptionError as e:
+                # Specific encryption error - key exists but cannot be decrypted
+                # Fall back to env vars by returning None
                 logger.error(f"Failed to decrypt API key for {service}: {e}")
                 return None
 
