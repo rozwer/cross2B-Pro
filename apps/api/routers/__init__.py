@@ -13,8 +13,10 @@ from . import (
     keywords,
     prompts,
     runs,
+    settings,
     step11,
     step12,
+    suggestions,
     websocket,
 )
 
@@ -31,7 +33,9 @@ __all__ = [
     "keywords",
     "prompts",
     "runs",
+    "settings",
     "step11",
     "step12",
+    "suggestions",
     "websocket",
 ]

@@ -36,6 +36,7 @@ from apps.api.routers import (
     settings,
     step11,
     step12,
+    suggestions,
     websocket,
 )
 from apps.api.storage import ArtifactStore
@@ -230,6 +231,7 @@ app.include_router(step12.router)
 app.include_router(github.router)
 app.include_router(settings.router)
 app.include_router(models.router)
+app.include_router(suggestions.router)
 
 
 # =============================================================================

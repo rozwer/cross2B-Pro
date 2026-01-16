@@ -40,6 +40,12 @@ import type {
   LLMProvidersListResponse,
   LLMModelCreateRequest,
   LLMModelUpdateRequest,
+  TargetAudienceSuggestionRequest,
+  TargetAudienceSuggestionResponse,
+  RelatedKeywordSuggestionRequest,
+  RelatedKeywordSuggestionResponse,
+  ChildTopicSuggestionRequest,
+  ChildTopicSuggestionResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
@@ -832,6 +838,42 @@ class ApiClient {
      */
     suggest: async (request: KeywordSuggestionRequest): Promise<KeywordSuggestionResponse> => {
       return this.request<KeywordSuggestionResponse>("/api/keywords/suggest", {
+        method: "POST",
+        body: JSON.stringify(request),
+      });
+    },
+  };
+
+  // ============================================
+  // Suggestions API (AI-powered input assistance)
+  // ============================================
+
+  suggestions = {
+    /**
+     * ターゲット読者の候補を生成
+     */
+    targetAudience: async (request: TargetAudienceSuggestionRequest): Promise<TargetAudienceSuggestionResponse> => {
+      return this.request<TargetAudienceSuggestionResponse>("/api/suggestions/target-audience", {
+        method: "POST",
+        body: JSON.stringify(request),
+      });
+    },
+
+    /**
+     * 関連キーワードの候補を生成
+     */
+    relatedKeywords: async (request: RelatedKeywordSuggestionRequest): Promise<RelatedKeywordSuggestionResponse> => {
+      return this.request<RelatedKeywordSuggestionResponse>("/api/suggestions/related-keywords", {
+        method: "POST",
+        body: JSON.stringify(request),
+      });
+    },
+
+    /**
+     * 子記事トピックの候補を生成
+     */
+    childTopics: async (request: ChildTopicSuggestionRequest): Promise<ChildTopicSuggestionResponse> => {
+      return this.request<ChildTopicSuggestionResponse>("/api/suggestions/child-topics", {
         method: "POST",
         body: JSON.stringify(request),
       });

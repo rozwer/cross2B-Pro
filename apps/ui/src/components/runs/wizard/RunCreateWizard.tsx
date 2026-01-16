@@ -393,6 +393,7 @@ export function RunCreateWizard({
             isLoadingSuggestions={isLoadingSuggestions}
             onGenerateSuggestions={handleGenerateKeywords}
             onSelectKeyword={handleSelectKeyword}
+            businessDescription={formData.business.description}
             errors={validationErrors[2] || []}
           />
         );
@@ -401,6 +402,9 @@ export function RunCreateWizard({
           <Step3Strategy
             data={formData.strategy}
             onChange={(data) => updateFormData("strategy", data)}
+            mainKeyword={formData.keyword.main_keyword || formData.keyword.selected_keyword?.keyword || ""}
+            businessDescription={formData.business.description}
+            targetAudience={formData.business.target_audience}
             errors={validationErrors[3] || []}
           />
         );
