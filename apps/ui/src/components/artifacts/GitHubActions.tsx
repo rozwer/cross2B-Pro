@@ -93,6 +93,7 @@ export function GitHubActions({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<GitHubSyncStatus | undefined>(initialSyncStatus);
+  const [isCreatingPR, setIsCreatingPR] = useState(false);
   // Issue tracking state
   const [issueStatus, setIssueStatus] = useState<IssueStatus | null>(null);
   const [showIssueTracker, setShowIssueTracker] = useState(false);
@@ -228,6 +229,24 @@ export function GitHubActions({
       setIsSyncing(false);
     }
   }, [runId, step, onSyncStatusChange, githubRepoUrl, githubDirPath]);
+
+  // PR を作成
+  const handleCreatePR = useCallback(async (branchName: string) => {
+    setIsCreatingPR(true);
+    setError(null);
+
+    try {
+      const result = await api.github.createPR(runId, branchName);
+      setSuccessMessage(`PR #${result.number} を作成しました`);
+      // 差分を再取得してブランチ情報を更新
+      const newDiff = await api.github.getDiff(runId, step);
+      setDiffResult(newDiff);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "PR の作成に失敗しました");
+    } finally {
+      setIsCreatingPR(false);
+    }
+  }, [runId, step]);
 
   // GitHub が設定されていない場合は表示しない
   // Note: This must be AFTER all hooks are called
@@ -514,14 +533,13 @@ export function GitHubActions({
                           </p>
                         )}
                       </div>
-                      <a
-                        href={branch.compare_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700"
+                      <button
+                        onClick={() => handleCreatePR(branch.name)}
+                        disabled={isCreatingPR}
+                        className="ml-2 px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        PR を作成
-                      </a>
+                        {isCreatingPR ? "作成中..." : "PR を作成"}
+                      </button>
                     </div>
                   ))}
                 </div>

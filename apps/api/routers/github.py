@@ -527,6 +527,86 @@ async def get_diff(
         )
 
 
+class CreatePRRequest(BaseModel):
+    """Request to create a pull request."""
+
+    branch_name: str
+    title: str | None = None
+    body: str | None = None
+
+
+class CreatePRResponse(BaseModel):
+    """Response with created PR info."""
+
+    number: int
+    title: str
+    url: str
+    state: str
+    head_branch: str | None = None
+    base_branch: str | None = None
+
+
+@router.post("/create-pr/{run_id}", response_model=CreatePRResponse)
+async def create_pull_request(
+    run_id: UUID,
+    request: CreatePRRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> CreatePRResponse:
+    """Create a pull request from a branch.
+
+    Creates a PR from the specified branch to main.
+    Used for creating PRs from Claude Code edit branches.
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        repo_url = run.github_repo_url
+
+    try:
+        pr_data = await github.create_pull_request(
+            repo_url=repo_url,
+            head_branch=request.branch_name,
+            base_branch="main",
+            title=request.title,
+            body=request.body,
+        )
+
+        return CreatePRResponse(
+            number=pr_data["number"],
+            title=pr_data["title"],
+            url=pr_data["url"],
+            state=pr_data["state"],
+            head_branch=pr_data.get("head_branch"),
+            base_branch=pr_data.get("base_branch"),
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed.",
+        )
+    except Exception as e:
+        logger.error(f"Failed to create PR: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create pull request: {str(e)}",
+        )
+
+
 @router.post("/sync/{run_id}/{step}", response_model=SyncResponse)
 async def sync_from_github(
     run_id: UUID,
