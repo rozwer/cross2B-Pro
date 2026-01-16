@@ -190,7 +190,7 @@ async def get_run_cost(
                 raise HTTPException(status_code=404, detail="Run not found")
 
         # List all artifacts in storage for this run
-        artifact_paths = store.list_run_artifacts(tenant_id, run_id)
+        artifact_paths = await store.list_run_artifacts(tenant_id, run_id)
 
         # Filter to only output.json files
         output_files = [p for p in artifact_paths if p.endswith("/output.json")]
