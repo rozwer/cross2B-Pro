@@ -1,24 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
   Loader2,
-  Trash2,
   Plus,
-  Edit2,
-  Check,
-  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePosition, Section } from "@/lib/types";
+import { SortablePositionList } from "./SortablePositionList";
+import { ArticlePreviewWithMarkers } from "./ArticlePreviewWithMarkers";
 
 interface Phase11B_PositionsProps {
   positions: ImagePosition[];
   sections: Section[];
   analysisSummary: string;
+  articleMarkdown?: string;
   onConfirm: (positions: ImagePosition[]) => void;
   onReanalyze: (request: string) => void;
   onBack: () => void;
@@ -29,20 +28,13 @@ export function Phase11B_Positions({
   positions: initialPositions,
   sections,
   analysisSummary,
+  articleMarkdown = "",
   onConfirm,
   onReanalyze,
   onBack,
   loading = false,
 }: Phase11B_PositionsProps) {
   const [positions, setPositions] = useState<ImagePosition[]>(initialPositions);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
-  // Sync positions state when initialPositions prop changes
-  // This ensures the component reflects new position data from the parent
-  useEffect(() => {
-    setPositions(initialPositions);
-    setEditingIndex(null); // Reset editing state when positions change
-  }, [initialPositions]);
   const [showReanalyzeInput, setShowReanalyzeInput] = useState(false);
   const [reanalyzeRequest, setReanalyzeRequest] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -54,18 +46,33 @@ export function Phase11B_Positions({
     description: "",
   });
 
-  const handleDelete = (index: number) => {
+  // Sync positions state when initialPositions prop changes
+  useEffect(() => {
+    setPositions(initialPositions);
+  }, [initialPositions]);
+
+  // 位置追加（視覚的選択から）
+  const handleAddFromPreview = useCallback(
+    (section: Section, position: "before" | "after") => {
+      const newPos: ImagePosition = {
+        article_number: section.article_number ?? null,
+        section_title: section.title,
+        section_index: section.section_index ?? sections.indexOf(section),
+        position,
+        source_text: "",
+        description: "",
+      };
+      setPositions((prev) => [...prev, newPos]);
+    },
+    [sections]
+  );
+
+  // 位置削除（視覚的選択から）
+  const handleRemoveFromPreview = useCallback((index: number) => {
     setPositions((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const handleEdit = (index: number, field: keyof ImagePosition, value: string | number) => {
-    setPositions((prev) =>
-      prev.map((pos, i) =>
-        i === index ? { ...pos, [field]: value } : pos
-      )
-    );
-  };
-
+  // 手動追加フォームから追加
   const handleAdd = () => {
     if (!newPosition.section_title) return;
 
@@ -74,7 +81,7 @@ export function Phase11B_Positions({
       section_title: newPosition.section_title!,
       section_index: newPosition.section_index!,
       position: newPosition.position as "before" | "after",
-      source_text: "",  // 後方互換性のため空文字を設定
+      source_text: "",
       description: newPosition.description || "",
     };
     setPositions((prev) => [...prev, position]);
@@ -95,240 +102,128 @@ export function Phase11B_Positions({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 分析結果サマリー */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
           分析結果
         </h4>
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+        <p className="text-xs text-blue-700 dark:text-blue-300">
           {analysisSummary}
         </p>
       </div>
 
-      {/* 位置一覧 */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            挿入位置 ({positions.length}件)
+      {/* 2ペインレイアウト */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 左ペイン: 記事プレビュー（視覚的位置選択） */}
+        <div className="order-2 lg:order-1">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+            記事プレビュー
           </h4>
-          <button
-            onClick={() => setShowAddForm(true)}
+          <ArticlePreviewWithMarkers
+            markdown={articleMarkdown}
+            sections={sections}
+            positions={positions}
+            onAddPosition={handleAddFromPreview}
+            onRemovePosition={handleRemoveFromPreview}
+          />
+        </div>
+
+        {/* 右ペイン: 位置リスト（ドラッグ&ドロップ） */}
+        <div className="order-1 lg:order-2">
+          <SortablePositionList
+            positions={positions}
+            sections={sections}
             disabled={loading}
-            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg"
-          >
-            <Plus className="h-3 w-3" />
-            追加
-          </button>
-        </div>
+            onPositionsChange={setPositions}
+            onShowAddForm={() => setShowAddForm(true)}
+          />
 
-        {/* 位置カード */}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {positions.map((pos, index) => (
-            <div
-              key={index}
-              className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-            >
-              {editingIndex === index ? (
-                // 編集モード
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400">
-                        セクション
-                      </label>
-                      <select
-                        value={pos.section_title}
-                        onChange={(e) => {
-                          const section = sections.find(
-                            (s) => s.title === e.target.value
-                          );
-                          if (section) {
-                            const sectionIndex = section.section_index ?? sections.indexOf(section);
-                            handleEdit(index, "section_title", section.title);
-                            handleEdit(index, "section_index", sectionIndex);
-                            if (section.article_number !== undefined) {
-                              handleEdit(index, "article_number", section.article_number);
-                            }
-                          }
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                      >
-                        {sections.map((section, i) => (
-                          <option key={section.section_key ?? i} value={section.title}>
-                            {section.article_number ? `記事${section.article_number}: ` : ""}{section.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400">
-                        位置
-                      </label>
-                      <select
-                        value={pos.position}
-                        onChange={(e) =>
-                          handleEdit(index, "position", e.target.value)
-                        }
-                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                      >
-                        <option value="before">見出しの前</option>
-                        <option value="after">見出しの後</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400">
-                      説明
-                    </label>
-                    <input
-                      type="text"
-                      value={pos.description}
-                      onChange={(e) =>
-                        handleEdit(index, "description", e.target.value)
+          {/* 追加フォーム */}
+          {showAddForm && (
+            <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
+              <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                新しい挿入位置を追加
+              </h5>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400">
+                    セクション
+                  </label>
+                  <select
+                    value={newPosition.section_title}
+                    onChange={(e) => {
+                      const section = sections.find((s) => s.title === e.target.value);
+                      if (section) {
+                        setNewPosition((prev) => ({
+                          ...prev,
+                          section_title: section.title,
+                          section_index: section.section_index ?? sections.indexOf(section),
+                          article_number: section.article_number ?? prev.article_number,
+                        }));
                       }
-                      className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setEditingIndex(null)}
-                      className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                    >
-                      <Check className="h-4 w-4" />
-                    </button>
-                  </div>
+                    }}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">選択してください</option>
+                    {sections.map((section, i) => (
+                      <option key={section.section_key ?? i} value={section.title}>
+                        {section.article_number ? `記事${section.article_number}: ` : ""}{section.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ) : (
-                // 表示モード
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MapPin className="h-4 w-4 text-primary-500 flex-shrink-0" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {pos.section_title}
-                      </span>
-                      {pos.article_number && (
-                        <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded">
-                          記事{pos.article_number}
-                        </span>
-                      )}
-                      <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
-                        {pos.position === "before" ? "前" : "後"}
-                      </span>
-                    </div>
-                    {pos.description && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                        {pos.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                    <button
-                      onClick={() => setEditingIndex(index)}
-                      disabled={loading}
-                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      disabled={loading}
-                      className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* 追加フォーム */}
-        {showAddForm && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
-            <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              新しい挿入位置を追加
-            </h5>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-gray-500 dark:text-gray-400">
-                  セクション
-                </label>
-                <select
-                  value={newPosition.section_title}
-                  onChange={(e) => {
-                    const section = sections.find((s) => s.title === e.target.value);
-                    if (section) {
+                <div>
+                  <label className="text-xs text-gray-500 dark:text-gray-400">
+                    位置
+                  </label>
+                  <select
+                    value={newPosition.position}
+                    onChange={(e) =>
                       setNewPosition((prev) => ({
                         ...prev,
-                        section_title: section.title,
-                        section_index: section.section_index ?? sections.indexOf(section),
-                        article_number: section.article_number ?? prev.article_number,
-                      }));
+                        position: e.target.value as "before" | "after",
+                      }))
                     }
-                  }}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">選択してください</option>
-                  {sections.map((section, i) => (
-                    <option key={section.section_key ?? i} value={section.title}>
-                      {section.article_number ? `記事${section.article_number}: ` : ""}{section.title}
-                    </option>
-                  ))}
-                </select>
+                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="before">見出しの前</option>
+                    <option value="after">見出しの後</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-gray-500 dark:text-gray-400">
-                  位置
+                  説明（任意）
                 </label>
-                <select
-                  value={newPosition.position}
+                <input
+                  type="text"
+                  value={newPosition.description}
                   onChange={(e) =>
-                    setNewPosition((prev) => ({
-                      ...prev,
-                      position: e.target.value as "before" | "after",
-                    }))
+                    setNewPosition((prev) => ({ ...prev, description: e.target.value }))
                   }
+                  placeholder="この位置に入れる画像の説明"
                   className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
                 >
-                  <option value="before">見出しの前</option>
-                  <option value="after">見出しの後</option>
-                </select>
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleAdd}
+                  disabled={!newPosition.section_title}
+                  className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  追加
+                </button>
               </div>
             </div>
-            <div>
-              <label className="text-xs text-gray-500 dark:text-gray-400">
-                説明（任意）
-              </label>
-              <input
-                type="text"
-                value={newPosition.description}
-                onChange={(e) =>
-                  setNewPosition((prev) => ({ ...prev, description: e.target.value }))
-                }
-                placeholder="この位置に入れる画像の説明"
-                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleAdd}
-                disabled={!newPosition.section_title}
-                className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                追加
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* 再分析リクエスト */}

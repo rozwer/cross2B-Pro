@@ -461,11 +461,13 @@ class ApiClient {
       positions: ImagePosition[];
       sections: Section[];
       analysis_summary: string;
+      article_markdown: string;
     }> => {
       return this.request<{
         positions: ImagePosition[];
         sections: Section[];
         analysis_summary: string;
+        article_markdown: string;
       }>(`/api/runs/${id}/step11/positions`);
     },
 

@@ -36,6 +36,7 @@ interface WizardState {
   positions: ImagePosition[];
   sections: Section[];
   analysisSummary: string;
+  articleMarkdown: string;
   confirmedPositions: ImagePosition[];
   images: GeneratedImage[];
   warnings: string[];
@@ -83,6 +84,7 @@ export function ImageGenerationWizard({
     positions: [],
     sections: [],
     analysisSummary: "",
+    articleMarkdown: "",
     confirmedPositions: [],
     images: [],
     warnings: [],
@@ -193,6 +195,7 @@ export function ImageGenerationWizard({
               positions: data.positions,
               sections: data.sections,
               analysisSummary: data.analysis_summary,
+              articleMarkdown: data.article_markdown || "",
             }));
             break;
           }
@@ -477,7 +480,7 @@ export function ImageGenerationWizard({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 z-50 w-full max-w-2xl p-0 bg-transparent backdrop:bg-black/50"
+      className="fixed inset-0 z-50 w-full max-w-5xl p-0 bg-transparent backdrop:bg-black/50"
       onClick={handleBackdropClick}
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
@@ -593,6 +596,7 @@ export function ImageGenerationWizard({
               positions={state.positions}
               sections={state.sections}
               analysisSummary={state.analysisSummary}
+              articleMarkdown={state.articleMarkdown}
               onConfirm={handlePositionsConfirm}
               onReanalyze={handlePositionsReanalyze}
               onBack={handleBack}
