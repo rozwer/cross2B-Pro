@@ -121,7 +121,7 @@ def get_current_tenant_id() -> str:
 
     TODO: Implement proper auth - currently returns default tenant.
     """
-    return os.getenv("DEFAULT_TENANT_ID", "default")
+    return os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
 
 
 # =============================================================================
