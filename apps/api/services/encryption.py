@@ -130,29 +130,32 @@ def decrypt(encrypted: str) -> str:
 def mask_api_key(api_key: str, service: str = "") -> str:
     """Mask an API key for display.
 
-    Different masking strategies for different services:
-    - GitHub: Show only first 4 chars (ghp_****) due to exposure risk
-    - Others: Show last 4 chars (****xyz)
+    Uses fixed-length masking for consistent UI appearance:
+    - GitHub: Show only first 4 chars (ghp_••••) due to exposure risk
+    - Others: Show last 4 chars (••••xyz)
 
     Args:
         api_key: The API key to mask
         service: The service name (github, gemini, openai, etc.)
 
     Returns:
-        Masked API key string
+        Masked API key string (fixed length for UI consistency)
     """
     if not api_key:
         return ""
 
+    # Fixed mask length for consistent UI display
+    mask_chars = "••••"
+
     if len(api_key) <= 8:
-        return "*" * len(api_key)
+        return mask_chars
 
     # GitHub tokens need special handling - show only prefix
     if service.lower() == "github":
-        return api_key[:4] + "*" * (len(api_key) - 4)
+        return api_key[:4] + mask_chars
 
     # For other services, show last 4 chars
-    return "*" * (len(api_key) - 4) + api_key[-4:]
+    return mask_chars + api_key[-4:]
 
 
 def generate_encryption_key() -> str:
