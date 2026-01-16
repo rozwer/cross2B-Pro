@@ -340,6 +340,26 @@ class ArtifactStore:
                 return False
             raise ArtifactStoreError(f"Failed to check artifact: {e}") from e
 
+    async def exists_by_path(self, path: str) -> bool:
+        """Check if an object exists at the given path.
+
+        Args:
+            path: Object path in storage (e.g., "tenant_id/run_id/step/file.json")
+
+        Returns:
+            True if object exists
+        """
+        try:
+            self.client.stat_object(
+                bucket_name=self.bucket,
+                object_name=path,
+            )
+            return True
+        except S3Error as e:
+            if e.code == "NoSuchKey":
+                return False
+            raise ArtifactStoreError(f"Failed to check path: {e}") from e
+
     async def delete(self, ref: ArtifactRef) -> None:
         """Delete an artifact.
 

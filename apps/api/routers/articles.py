@@ -169,10 +169,10 @@ async def list_articles(
                     images = run.step11_state.get("images", [])
                     has_images = len(images) > 0
 
-                # Check review status from MinIO
+                # Check review status from MinIO (use storage/ prefix to match actual MinIO paths)
                 review_status: str | None = None
-                review_path = f"{tenant_id}/{run.id}/step10/review.json"
-                if await store.exists(review_path):
+                review_path = f"storage/{tenant_id}/{run.id}/step10/review.json"
+                if await store.exists_by_path(review_path):
                     review_status = "completed"
 
                 # Get article count from input data
@@ -243,15 +243,15 @@ async def get_article(
 
             input_data = run.input_data or {}
 
-            # Check content availability
-            has_step10 = await store.exists(f"{tenant_id}/{run_id}/step10/output.json")
-            has_step11 = await store.exists(f"{tenant_id}/{run_id}/step11/output.json")
-            has_step12 = await store.exists(f"{tenant_id}/{run_id}/step12/output.json")
+            # Check content availability (use storage/ prefix to match actual MinIO paths)
+            has_step10 = await store.exists_by_path(f"storage/{tenant_id}/{run_id}/step10/output.json")
+            has_step11 = await store.exists_by_path(f"storage/{tenant_id}/{run_id}/step11/output.json")
+            has_step12 = await store.exists_by_path(f"storage/{tenant_id}/{run_id}/step12/output.json")
 
             # Check review status
             review_status: str | None = None
-            review_path = f"{tenant_id}/{run_id}/step10/review.json"
-            if await store.exists(review_path):
+            review_path = f"storage/{tenant_id}/{run_id}/step10/review.json"
+            if await store.exists_by_path(review_path):
                 review_status = "completed"
 
             # Get article count
@@ -260,7 +260,7 @@ async def get_article(
             if articles_input:
                 article_count = len(articles_input)
 
-            # Try to get title from step10 output
+            # Try to get title and article count from step10 output
             title: str | None = None
             description: str | None = None
             if has_step10:
@@ -276,7 +276,9 @@ async def get_article(
                         step10_data = json.loads(step10_content.decode("utf-8"))
                         # Handle both single article and multi-article format
                         if "articles" in step10_data:
-                            first_article = step10_data["articles"][0] if step10_data["articles"] else {}
+                            articles_list = step10_data["articles"]
+                            article_count = len(articles_list) if articles_list else 1
+                            first_article = articles_list[0] if articles_list else {}
                             title = first_article.get("title")
                             description = first_article.get("meta_description")
                         else:
