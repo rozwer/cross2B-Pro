@@ -127,6 +127,23 @@ class SyncResponse(BaseModel):
     message: str
 
 
+class PullRequestInfo(BaseModel):
+    """Information about a pull request."""
+
+    number: int
+    title: str
+    url: str
+    state: str
+    head_branch: str | None = None
+    base_branch: str | None = None
+    user: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    additions: int = 0
+    deletions: int = 0
+    status: str | None = None  # added, modified, removed
+
+
 class DiffResponse(BaseModel):
     """Response with diff between GitHub and MinIO."""
 
@@ -134,6 +151,7 @@ class DiffResponse(BaseModel):
     diff: str | None = None
     github_sha: str | None = None
     minio_digest: str | None = None
+    open_prs: list[PullRequestInfo] = Field(default_factory=list)
 
 
 # =============================================================================
@@ -355,6 +373,8 @@ async def get_diff(
     # Get diff from GitHub
     file_path = f"{dir_path}/{step}/output.json"
 
+    import hashlib
+
     try:
         diff = await github.get_diff(
             repo_url=repo_url,
@@ -366,23 +386,71 @@ async def get_diff(
         github_sha = await github.get_file_sha(repo_url, file_path)
 
         # Calculate MinIO digest
-        import hashlib
-
         minio_digest = hashlib.sha256(minio_content).hexdigest()
+
+        # Get open PRs that modify this file
+        open_prs: list[PullRequestInfo] = []
+        try:
+            prs_data = await github.get_prs_for_file(repo_url, file_path, state="open")
+            open_prs = [
+                PullRequestInfo(
+                    number=pr["number"],
+                    title=pr["title"],
+                    url=pr["url"],
+                    state=pr["state"],
+                    head_branch=pr.get("head_branch"),
+                    base_branch=pr.get("base_branch"),
+                    user=pr.get("user"),
+                    created_at=pr.get("created_at"),
+                    updated_at=pr.get("updated_at"),
+                    additions=pr.get("additions", 0),
+                    deletions=pr.get("deletions", 0),
+                    status=pr.get("status"),
+                )
+                for pr in prs_data
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get PRs for file: {e}")
 
         return DiffResponse(
             has_diff=diff is not None and len(diff) > 0,
             diff=diff,
             github_sha=github_sha,
             minio_digest=minio_digest,
+            open_prs=open_prs,
         )
 
     except GitHubNotFoundError:
+        # Still try to get PRs even if main branch file not found
+        open_prs = []
+        try:
+            prs_data = await github.get_prs_for_file(repo_url, file_path, state="open")
+            open_prs = [
+                PullRequestInfo(
+                    number=pr["number"],
+                    title=pr["title"],
+                    url=pr["url"],
+                    state=pr["state"],
+                    head_branch=pr.get("head_branch"),
+                    base_branch=pr.get("base_branch"),
+                    user=pr.get("user"),
+                    created_at=pr.get("created_at"),
+                    updated_at=pr.get("updated_at"),
+                    additions=pr.get("additions", 0),
+                    deletions=pr.get("deletions", 0),
+                    status=pr.get("status"),
+                )
+                for pr in prs_data
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get PRs for file: {e}")
+
         return DiffResponse(
             has_diff=True,
             diff="GitHub file not found",
             github_sha=None,
             minio_digest=hashlib.sha256(minio_content).hexdigest(),
+            open_prs=open_prs,
         )
 
 

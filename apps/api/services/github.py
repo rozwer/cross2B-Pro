@@ -776,3 +776,70 @@ class GitHubService:
             "last_comment": last_comment,
             "issue_url": issue_data.get("html_url"),
         }
+
+    async def get_prs_for_file(
+        self,
+        repo_url: str,
+        file_path: str,
+        state: str = "open",
+    ) -> list[dict[str, Any]]:
+        """Get pull requests that modify a specific file.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            file_path: Path to the file within the repository
+            state: PR state filter ("open", "closed", "all")
+
+        Returns:
+            List of PRs with number, title, url, state, and branch info
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            # Get open PRs
+            prs_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls",
+                headers=self._get_headers(),
+                params={"state": state, "per_page": 20},
+                timeout=30.0,
+            )
+            prs_data = await self._handle_response(prs_response)
+
+            # Check each PR to see if it modifies the target file
+            matching_prs = []
+            for pr in prs_data:
+                pr_number = pr.get("number")
+                try:
+                    files_response = await client.get(
+                        f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}/files",
+                        headers=self._get_headers(),
+                        params={"per_page": 100},
+                        timeout=30.0,
+                    )
+                    files_data = await self._handle_response(files_response)
+
+                    # Check if any file matches
+                    for file in files_data:
+                        if file.get("filename") == file_path:
+                            matching_prs.append(
+                                {
+                                    "number": pr_number,
+                                    "title": pr.get("title"),
+                                    "url": pr.get("html_url"),
+                                    "state": pr.get("state"),
+                                    "head_branch": pr.get("head", {}).get("ref"),
+                                    "base_branch": pr.get("base", {}).get("ref"),
+                                    "user": pr.get("user", {}).get("login"),
+                                    "created_at": pr.get("created_at"),
+                                    "updated_at": pr.get("updated_at"),
+                                    "additions": file.get("additions", 0),
+                                    "deletions": file.get("deletions", 0),
+                                    "status": file.get("status"),  # added, modified, removed
+                                }
+                            )
+                            break
+                except Exception as e:
+                    logger.warning(f"Failed to check files for PR #{pr_number}: {e}")
+                    continue
+
+            return matching_prs
