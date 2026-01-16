@@ -69,9 +69,17 @@ export default function RunDetailPage({
   const [showImageGenDialog, setShowImageGenDialog] = useState(false);
   const [imageGenLoading, setImageGenLoading] = useState(false);
   const [pauseLoading, setPauseLoading] = useState(false);
+  const [isPauseRequested, setIsPauseRequested] = useState(false);
   const [showStep3ReviewDialog, setShowStep3ReviewDialog] = useState(false);
 
   const { run, loading, error, fetch, approve, reject, retry, resume, pause, continueRun, isPolling } = useRun(id);
+
+  // 一時停止リクエスト後、実際にpausedになったらフラグをリセット
+  useEffect(() => {
+    if (run?.status === "paused" && isPauseRequested) {
+      setIsPauseRequested(false);
+    }
+  }, [run?.status, isPauseRequested]);
   const { artifacts, fetch: fetchArtifacts } = useArtifacts(id);
 
   // 自動ポップアップは無効化 - 手動で開く必要あり
@@ -201,6 +209,7 @@ export default function RunDetailPage({
     setPauseLoading(true);
     try {
       await pause();
+      setIsPauseRequested(true);
     } catch (err) {
       console.error("Pause failed:", err);
     } finally {
@@ -354,18 +363,27 @@ export default function RunDetailPage({
             </button>
             {/* 停止/続行ボタン */}
             {run.status === "running" && (
-              <button
-                onClick={handlePause}
-                disabled={pauseLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
-              >
-                {pauseLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="flex items-center gap-2">
+                {isPauseRequested ? (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-md border border-amber-300 dark:border-amber-700">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">このステップが終わったら停止します</span>
+                  </div>
                 ) : (
-                  <Pause className="h-4 w-4" />
+                  <button
+                    onClick={handlePause}
+                    disabled={pauseLoading}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {pauseLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Pause className="h-4 w-4" />
+                    )}
+                    一時停止
+                  </button>
                 )}
-                一時停止
-              </button>
+              </div>
             )}
             {run.status === "paused" && (
               <button
