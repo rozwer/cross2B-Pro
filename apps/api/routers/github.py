@@ -144,6 +144,23 @@ class PullRequestInfo(BaseModel):
     status: str | None = None  # added, modified, removed
 
 
+class BranchInfo(BaseModel):
+    """Information about a branch with pending changes (not yet a PR)."""
+
+    name: str
+    url: str
+    compare_url: str
+    last_commit_sha: str | None = None
+    last_commit_message: str | None = None
+    last_commit_date: str | None = None
+    author: str | None = None
+    additions: int = 0
+    deletions: int = 0
+    status: str | None = None  # added, modified, removed
+    ahead_by: int = 0
+    behind_by: int = 0
+
+
 class DiffResponse(BaseModel):
     """Response with diff between GitHub and MinIO."""
 
@@ -152,6 +169,7 @@ class DiffResponse(BaseModel):
     github_sha: str | None = None
     minio_digest: str | None = None
     open_prs: list[PullRequestInfo] = Field(default_factory=list)
+    pending_branches: list[BranchInfo] = Field(default_factory=list)
 
 
 # =============================================================================
@@ -412,17 +430,47 @@ async def get_diff(
         except Exception as e:
             logger.warning(f"Failed to get PRs for file: {e}")
 
+        # Get branches with pending changes (not yet PRs)
+        pending_branches: list[BranchInfo] = []
+        try:
+            # Get branches with claude/ prefix that modify this file
+            branches_data = await github.get_branches_for_file(repo_url, file_path, prefix="claude/")
+            # Filter out branches that already have PRs
+            pr_branch_names = {pr.head_branch for pr in open_prs}
+            pending_branches = [
+                BranchInfo(
+                    name=branch["name"],
+                    url=branch["url"],
+                    compare_url=branch["compare_url"],
+                    last_commit_sha=branch.get("last_commit_sha"),
+                    last_commit_message=branch.get("last_commit_message"),
+                    last_commit_date=branch.get("last_commit_date"),
+                    author=branch.get("author"),
+                    additions=branch.get("additions", 0),
+                    deletions=branch.get("deletions", 0),
+                    status=branch.get("status"),
+                    ahead_by=branch.get("ahead_by", 0),
+                    behind_by=branch.get("behind_by", 0),
+                )
+                for branch in branches_data
+                if branch["name"] not in pr_branch_names
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get branches for file: {e}")
+
         return DiffResponse(
             has_diff=diff is not None and len(diff) > 0,
             diff=diff,
             github_sha=github_sha,
             minio_digest=minio_digest,
             open_prs=open_prs,
+            pending_branches=pending_branches,
         )
 
     except GitHubNotFoundError:
-        # Still try to get PRs even if main branch file not found
-        open_prs = []
+        # Still try to get PRs and branches even if main branch file not found
+        open_prs: list[PullRequestInfo] = []
+        pending_branches: list[BranchInfo] = []
         try:
             prs_data = await github.get_prs_for_file(repo_url, file_path, state="open")
             open_prs = [
@@ -445,12 +493,37 @@ async def get_diff(
         except Exception as e:
             logger.warning(f"Failed to get PRs for file: {e}")
 
+        try:
+            branches_data = await github.get_branches_for_file(repo_url, file_path, prefix="claude/")
+            pr_branch_names = {pr.head_branch for pr in open_prs}
+            pending_branches = [
+                BranchInfo(
+                    name=branch["name"],
+                    url=branch["url"],
+                    compare_url=branch["compare_url"],
+                    last_commit_sha=branch.get("last_commit_sha"),
+                    last_commit_message=branch.get("last_commit_message"),
+                    last_commit_date=branch.get("last_commit_date"),
+                    author=branch.get("author"),
+                    additions=branch.get("additions", 0),
+                    deletions=branch.get("deletions", 0),
+                    status=branch.get("status"),
+                    ahead_by=branch.get("ahead_by", 0),
+                    behind_by=branch.get("behind_by", 0),
+                )
+                for branch in branches_data
+                if branch["name"] not in pr_branch_names
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get branches for file: {e}")
+
         return DiffResponse(
             has_diff=True,
             diff="GitHub file not found",
             github_sha=None,
             minio_digest=hashlib.sha256(minio_content).hexdigest(),
             open_prs=open_prs,
+            pending_branches=pending_branches,
         )
 
 

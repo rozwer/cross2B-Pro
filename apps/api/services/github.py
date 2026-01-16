@@ -843,3 +843,87 @@ class GitHubService:
                     continue
 
             return matching_prs
+
+    async def get_branches_for_file(
+        self,
+        repo_url: str,
+        file_path: str,
+        prefix: str = "claude/",
+    ) -> list[dict[str, Any]]:
+        """Get branches that may contain changes to a specific file.
+
+        Searches for branches with the given prefix (e.g., claude/) and checks
+        if they have changes to the target file compared to main.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            file_path: Path to the file within the repository
+            prefix: Branch name prefix to filter (default: "claude/")
+
+        Returns:
+            List of branches with name, url, last_commit info, and file diff stats
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+        matching_branches = []
+
+        async with httpx.AsyncClient() as client:
+            # Get all branches
+            branches_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/branches",
+                headers=self._get_headers(),
+                params={"per_page": 50},
+                timeout=30.0,
+            )
+            branches_data = await self._handle_response(branches_response)
+
+            # Filter branches by prefix and check for file changes
+            for branch in branches_data:
+                branch_name = branch.get("name", "")
+                if not branch_name.startswith(prefix):
+                    continue
+
+                # Skip if it's the main branch
+                if branch_name in ("main", "master"):
+                    continue
+
+                try:
+                    # Compare branch to main to see file changes
+                    compare_response = await client.get(
+                        f"{GITHUB_API_URL}/repos/{owner}/{repo}/compare/main...{branch_name}",
+                        headers=self._get_headers(),
+                        timeout=30.0,
+                    )
+                    compare_data = await self._handle_response(compare_response)
+
+                    # Check if the file is in the changed files
+                    files = compare_data.get("files", [])
+                    for file in files:
+                        if file.get("filename") == file_path:
+                            # Get commit info
+                            commits = compare_data.get("commits", [])
+                            last_commit = commits[-1] if commits else None
+
+                            matching_branches.append(
+                                {
+                                    "name": branch_name,
+                                    "url": f"https://github.com/{owner}/{repo}/tree/{branch_name}",
+                                    "compare_url": f"https://github.com/{owner}/{repo}/compare/main...{branch_name}",
+                                    "last_commit_sha": last_commit.get("sha", "")[:8] if last_commit else None,
+                                    "last_commit_message": last_commit.get("commit", {}).get("message", "")[:100] if last_commit else None,
+                                    "last_commit_date": last_commit.get("commit", {}).get("committer", {}).get("date")
+                                    if last_commit
+                                    else None,
+                                    "author": last_commit.get("author", {}).get("login") if last_commit else None,
+                                    "additions": file.get("additions", 0),
+                                    "deletions": file.get("deletions", 0),
+                                    "status": file.get("status"),  # added, modified, removed
+                                    "ahead_by": compare_data.get("ahead_by", 0),
+                                    "behind_by": compare_data.get("behind_by", 0),
+                                }
+                            )
+                            break
+                except Exception as e:
+                    logger.warning(f"Failed to check branch {branch_name}: {e}")
+                    continue
+
+        return matching_branches
