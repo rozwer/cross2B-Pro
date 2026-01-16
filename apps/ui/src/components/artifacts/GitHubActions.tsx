@@ -94,6 +94,7 @@ export function GitHubActions({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<GitHubSyncStatus | undefined>(initialSyncStatus);
   const [isCreatingPR, setIsCreatingPR] = useState(false);
+  const [isMergingPR, setIsMergingPR] = useState<number | null>(null);
   // Issue tracking state
   const [issueStatus, setIssueStatus] = useState<IssueStatus | null>(null);
   const [showIssueTracker, setShowIssueTracker] = useState(false);
@@ -247,6 +248,35 @@ export function GitHubActions({
       setIsCreatingPR(false);
     }
   }, [runId, step]);
+
+  // PR をマージ
+  const handleMergePR = useCallback(async (prNumber: number) => {
+    if (!confirm("この PR をマージしますか？")) {
+      return;
+    }
+
+    setIsMergingPR(prNumber);
+    setError(null);
+
+    try {
+      const result = await api.github.mergePR(runId, prNumber, "squash");
+      if (result.merged) {
+        setSuccessMessage(`PR #${prNumber} をマージしました`);
+        // 差分を再取得してPR情報を更新
+        const newDiff = await api.github.getDiff(runId, step);
+        setDiffResult(newDiff);
+        // 同期ステータスも更新（マージ後は差分がある可能性）
+        setSyncStatus("diverged");
+        onSyncStatusChange?.(step, "diverged");
+      } else {
+        setError(result.message || "PR のマージに失敗しました");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "PR のマージに失敗しました");
+    } finally {
+      setIsMergingPR(null);
+    }
+  }, [runId, step, onSyncStatusChange]);
 
   // GitHub が設定されていない場合は表示しない
   // Note: This must be AFTER all hooks are called
@@ -474,14 +504,13 @@ export function GitHubActions({
                           <span className="text-red-600">-{pr.deletions}</span>
                         </div>
                       </div>
-                      <a
-                        href={pr.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                      <button
+                        onClick={() => handleMergePR(pr.number)}
+                        disabled={isMergingPR === pr.number}
+                        className="ml-2 px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        PR を開く
-                      </a>
+                        {isMergingPR === pr.number ? "マージ中..." : "マージ"}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -665,28 +694,33 @@ export function GitHubActions({
                 </div>
               )}
 
-              {/* PR が作成された場合のリンク */}
-              {issueStatus.pr_url && (
-                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="font-medium">PR が作成されました</span>
+              {/* PR が作成された場合のマージボタン */}
+              {issueStatus.pr_url && (() => {
+                // Extract PR number from URL (e.g., https://github.com/owner/repo/pull/123)
+                const prMatch = issueStatus.pr_url.match(/\/pull\/(\d+)/);
+                const prNumber = prMatch ? parseInt(prMatch[1], 10) : null;
+                return (
+                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium">PR #{prNumber} が作成されました</span>
+                      </div>
+                      {prNumber && (
+                        <button
+                          onClick={() => handleMergePR(prNumber)}
+                          disabled={isMergingPR === prNumber}
+                          className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isMergingPR === prNumber ? "マージ中..." : "マージ"}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <a
-                    href={issueStatus.pr_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400 hover:underline"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                    </svg>
-                    PR をレビュー・マージ
-                  </a>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* アクションボタン */}

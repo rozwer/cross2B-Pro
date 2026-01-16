@@ -546,6 +546,43 @@ class CreatePRResponse(BaseModel):
     base_branch: str | None = None
 
 
+class MergePRRequest(BaseModel):
+    """Request to merge a pull request."""
+
+    merge_method: str = Field(
+        default="squash",
+        description="Merge method: merge, squash, or rebase",
+    )
+    commit_title: str | None = None
+    commit_message: str | None = None
+
+
+class MergePRResponse(BaseModel):
+    """Response with merge result."""
+
+    merged: bool
+    sha: str | None = None
+    message: str
+
+
+class PRDetailResponse(BaseModel):
+    """Response with PR details."""
+
+    number: int
+    title: str
+    state: str
+    merged: bool
+    mergeable: bool | None = None
+    mergeable_state: str | None = None
+    url: str
+    head_branch: str | None = None
+    base_branch: str | None = None
+    user: str | None = None
+    additions: int = 0
+    deletions: int = 0
+    changed_files: int = 0
+
+
 @router.post("/create-pr/{run_id}", response_model=CreatePRResponse)
 async def create_pull_request(
     run_id: UUID,
@@ -604,6 +641,147 @@ async def create_pull_request(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to create pull request: {str(e)}",
+        )
+
+
+@router.get("/pr/{run_id}/{pr_number}", response_model=PRDetailResponse)
+async def get_pull_request(
+    run_id: UUID,
+    pr_number: int,
+    user: AuthUser = Depends(get_current_user),
+) -> PRDetailResponse:
+    """Get pull request details.
+
+    Returns PR details including mergeable status.
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        repo_url = run.github_repo_url
+
+    try:
+        pr_data = await github.get_pull_request(repo_url, pr_number)
+
+        return PRDetailResponse(
+            number=pr_data["number"],
+            title=pr_data["title"],
+            state=pr_data["state"],
+            merged=pr_data.get("merged", False),
+            mergeable=pr_data.get("mergeable"),
+            mergeable_state=pr_data.get("mergeable_state"),
+            url=pr_data["url"],
+            head_branch=pr_data.get("head_branch"),
+            base_branch=pr_data.get("base_branch"),
+            user=pr_data.get("user"),
+            additions=pr_data.get("additions", 0),
+            deletions=pr_data.get("deletions", 0),
+            changed_files=pr_data.get("changed_files", 0),
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pull request #{pr_number} not found.",
+        )
+
+
+@router.post("/merge-pr/{run_id}/{pr_number}", response_model=MergePRResponse)
+async def merge_pull_request(
+    run_id: UUID,
+    pr_number: int,
+    request: MergePRRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> MergePRResponse:
+    """Merge a pull request.
+
+    Merges the specified PR using the given merge method (squash, merge, or rebase).
+    After merge, syncs the content to MinIO.
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        repo_url = run.github_repo_url
+
+    # Validate merge method
+    if request.merge_method not in ("merge", "squash", "rebase"):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid merge method: {request.merge_method}. Must be merge, squash, or rebase.",
+        )
+
+    try:
+        merge_result = await github.merge_pull_request(
+            repo_url=repo_url,
+            pr_number=pr_number,
+            merge_method=request.merge_method,
+            commit_title=request.commit_title,
+            commit_message=request.commit_message,
+        )
+
+        return MergePRResponse(
+            merged=merge_result.get("merged", False),
+            sha=merge_result.get("sha"),
+            message=merge_result.get("message", "Pull request merged successfully"),
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Pull request #{pr_number} not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot merge this pull request.",
+        )
+    except GitHubValidationError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error(f"Failed to merge PR: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to merge pull request: {str(e)}",
         )
 
 

@@ -998,3 +998,88 @@ _Created via SEO Article Generator_
             "user": pr_data.get("user", {}).get("login"),
             "created_at": pr_data.get("created_at"),
         }
+
+    async def merge_pull_request(
+        self,
+        repo_url: str,
+        pr_number: int,
+        merge_method: str = "squash",
+        commit_title: str | None = None,
+        commit_message: str | None = None,
+    ) -> dict[str, Any]:
+        """Merge a pull request.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            pr_number: Pull request number to merge
+            merge_method: Merge method ("merge", "squash", "rebase")
+            commit_title: Optional custom commit title (for squash/merge)
+            commit_message: Optional custom commit message (for squash/merge)
+
+        Returns:
+            Merge result including sha, merged status, and message
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        body: dict[str, Any] = {
+            "merge_method": merge_method,
+        }
+        if commit_title:
+            body["commit_title"] = commit_title
+        if commit_message:
+            body["commit_message"] = commit_message
+
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}/merge",
+                headers=self._get_headers(),
+                json=body,
+                timeout=30.0,
+            )
+            merge_data = await self._handle_response(response)
+
+        return {
+            "sha": merge_data.get("sha"),
+            "merged": merge_data.get("merged", False),
+            "message": merge_data.get("message", ""),
+        }
+
+    async def get_pull_request(
+        self,
+        repo_url: str,
+        pr_number: int,
+    ) -> dict[str, Any]:
+        """Get pull request details.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            pr_number: Pull request number
+
+        Returns:
+            PR data including number, title, state, mergeable, etc.
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls/{pr_number}",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+            pr_data = await self._handle_response(response)
+
+        return {
+            "number": pr_data.get("number"),
+            "title": pr_data.get("title"),
+            "state": pr_data.get("state"),
+            "merged": pr_data.get("merged", False),
+            "mergeable": pr_data.get("mergeable"),
+            "mergeable_state": pr_data.get("mergeable_state"),
+            "url": pr_data.get("html_url"),
+            "head_branch": pr_data.get("head", {}).get("ref"),
+            "base_branch": pr_data.get("base", {}).get("ref"),
+            "user": pr_data.get("user", {}).get("login"),
+            "additions": pr_data.get("additions", 0),
+            "deletions": pr_data.get("deletions", 0),
+            "changed_files": pr_data.get("changed_files", 0),
+        }
