@@ -6,8 +6,12 @@ Handles model configuration and workflow step defaults.
 import logging
 import os
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy import select
+
+from apps.api.db.models import LLMModel, LLMProvider
+from apps.api.db.tenant import TenantDBManager, get_tenant_manager
 
 logger = logging.getLogger(__name__)
 
@@ -341,65 +345,97 @@ def _get_workflow_step_defaults() -> list[StepDefaultConfig]:
 
 
 @router.get("/models", response_model=ModelsConfigResponse)
-async def get_models_config() -> ModelsConfigResponse:
+async def get_models_config(
+    tenant_manager: TenantDBManager = Depends(get_tenant_manager),
+) -> ModelsConfigResponse:
     """Get available models and default workflow step configurations.
 
     This endpoint provides:
-    - Available LLM providers with their default models
+    - Available LLM providers with their models (from database)
     - Default configuration for each workflow step
 
     The frontend should use this as the source of truth for model names
     and step configurations.
     """
-    gemini_default = os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
-    openai_default = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-5.2")
-    anthropic_default = os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-5-20250929")
+    # Default models from environment variables
+    default_models = {
+        "gemini": os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash"),
+        "openai": os.getenv("OPENAI_DEFAULT_MODEL", "gpt-5.2"),
+        "anthropic": os.getenv("ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-5-20250929"),
+    }
 
-    providers = [
-        ProviderConfig(
-            provider="gemini",
-            default_model=gemini_default,
-            available_models=[
-                gemini_default,
-                "gemini-2.5-flash",
-                "gemini-2.5-pro",
-                "gemini-2.0-flash",
-                "gemini-3.0-pro",
-                "gemini-3-pro-latest",
-                "gemini-3-pro-preview-11-2025",
-                "gemini-3-flash-preview",
-                "gemini-1.5-pro",
-                "gemini-1.5-flash",
-            ],
-            supports_grounding=True,
-        ),
-        ProviderConfig(
-            provider="openai",
-            default_model=openai_default,
-            available_models=[
-                openai_default,
-                "gpt-5.2",
-                "gpt-5.2-pro",
-                "gpt-4o",
-                "gpt-4o-mini",
-                "gpt-4-turbo",
-            ],
-            supports_grounding=False,
-        ),
-        ProviderConfig(
-            provider="anthropic",
-            default_model=anthropic_default,
-            available_models=[
-                anthropic_default,
-                "claude-sonnet-4-5-20250929",
-                "claude-opus-4-5-20251101",
-                "claude-sonnet-4-20250514",
-                "claude-opus-4-20250514",
-                "claude-3-5-sonnet-20241022",
-            ],
-            supports_grounding=False,
-        ),
-    ]
+    # Grounding support by provider
+    grounding_support = {
+        "gemini": True,
+        "openai": False,
+        "anthropic": False,
+    }
+
+    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
+
+    providers: list[ProviderConfig] = []
+
+    try:
+        async with tenant_manager.get_session(tenant_id) as session:
+            # Get all providers
+            providers_result = await session.execute(
+                select(LLMProvider).where(LLMProvider.is_active == True).order_by(LLMProvider.id)  # noqa: E712
+            )
+            db_providers = providers_result.scalars().all()
+
+            # Get all active models
+            models_result = await session.execute(
+                select(LLMModel).where(LLMModel.is_active == True).order_by(LLMModel.model_name)  # noqa: E712
+            )
+            db_models = models_result.scalars().all()
+
+            # Group models by provider
+            models_by_provider: dict[str, list[str]] = {}
+            for model in db_models:
+                if model.provider_id not in models_by_provider:
+                    models_by_provider[model.provider_id] = []
+                models_by_provider[model.provider_id].append(model.model_name)
+
+            # Build provider configs
+            for provider in db_providers:
+                provider_models = models_by_provider.get(provider.id, [])
+                default_model = default_models.get(provider.id, provider_models[0] if provider_models else "")
+
+                # Ensure default model is in the list
+                if default_model and default_model not in provider_models:
+                    provider_models.insert(0, default_model)
+
+                providers.append(
+                    ProviderConfig(
+                        provider=provider.id,
+                        default_model=default_model,
+                        available_models=provider_models,
+                        supports_grounding=grounding_support.get(provider.id, False),
+                    )
+                )
+    except Exception as e:
+        logger.warning(f"Failed to load models from DB, using fallback: {e}")
+        # Fallback to hardcoded values if DB fails
+        providers = [
+            ProviderConfig(
+                provider="gemini",
+                default_model=default_models["gemini"],
+                available_models=[default_models["gemini"], "gemini-2.5-flash", "gemini-2.5-pro"],
+                supports_grounding=True,
+            ),
+            ProviderConfig(
+                provider="openai",
+                default_model=default_models["openai"],
+                available_models=[default_models["openai"], "gpt-4o", "gpt-4o-mini"],
+                supports_grounding=False,
+            ),
+            ProviderConfig(
+                provider="anthropic",
+                default_model=default_models["anthropic"],
+                available_models=[default_models["anthropic"], "claude-3-5-sonnet-20241022"],
+                supports_grounding=False,
+            ),
+        ]
 
     return ModelsConfigResponse(
         providers=providers,

@@ -612,6 +612,40 @@ export interface ModelsConfigResponse {
 }
 
 // ============================================
+// LLM Models Management Types
+// ============================================
+
+export interface LLMModel {
+  id: number;
+  provider_id: string;
+  model_name: string;
+  model_class: string;
+  is_active: boolean;
+}
+
+export interface LLMProviderWithModels {
+  id: string;
+  display_name: string;
+  is_active: boolean;
+  models: LLMModel[];
+}
+
+export interface LLMProvidersListResponse {
+  providers: LLMProviderWithModels[];
+}
+
+export interface LLMModelCreateRequest {
+  provider_id: string;
+  model_name: string;
+  model_class?: string;
+}
+
+export interface LLMModelUpdateRequest {
+  model_class?: string;
+  is_active?: boolean;
+}
+
+// ============================================
 // Step11 Image Generation Types
 // ============================================
 

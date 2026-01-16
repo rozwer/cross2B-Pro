@@ -93,6 +93,10 @@ class OpenAIClient(LLMInterface):
         self.max_retries = max_retries or self.MAX_RETRIES
         self._openai_config = openai_config or OpenAIConfig()
 
+        # 警告のみ（DBで管理されているモデルリストを優先）
+        if self.model not in self.AVAILABLE_MODELS:
+            logger.warning(f"Model '{self.model}' is not in known models list. Available: {self.AVAILABLE_MODELS}")
+
     def configure_reasoning(self, effort: str | None = None) -> None:
         """Reasoning effortを設定（GPT-5系向け）
 

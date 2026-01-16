@@ -18,17 +18,19 @@ import {
   Key,
 } from "lucide-react";
 import { WORKFLOW_STEPS, type StepConfig } from "@/components/workflow";
-import { ModelSettingsTab, ApiKeysTab } from "@/components/tabs";
+import { ModelSettingsTab, ApiKeysTab, ModelsManagementTab } from "@/components/tabs";
 import { TabBar, type TabItem } from "@/components/common/TabBar";
+import { Cpu } from "lucide-react";
 import api from "@/lib/api";
 import type { LLMPlatform, Prompt } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
 import { Loading } from "@/components/common";
 
-type SettingsTab = "models" | "prompts" | "apikeys";
+type SettingsTab = "models" | "prompts" | "apikeys" | "llm-models";
 
 const TABS: TabItem[] = [
   { id: "models", label: "モデル設定", icon: <Settings className="h-4 w-4" /> },
+  { id: "llm-models", label: "LLMモデル", icon: <Cpu className="h-4 w-4" /> },
   { id: "prompts", label: "プロンプト", icon: <FileText className="h-4 w-4" /> },
   { id: "apikeys", label: "APIキー", icon: <Key className="h-4 w-4" /> },
 ];
@@ -390,6 +392,12 @@ export default function SettingsPage() {
       {activeTab === "apikeys" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <ApiKeysTab />
+        </div>
+      )}
+
+      {activeTab === "llm-models" && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <ModelsManagementTab />
         </div>
       )}
     </div>
