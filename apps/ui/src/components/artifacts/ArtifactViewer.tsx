@@ -7,12 +7,16 @@ import {
   ImageIcon,
   File,
   Download,
+  Upload,
   ChevronDown,
   ChevronRight,
   Eye,
   Package,
   Clock,
   AlertTriangle,
+  X,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import type { ArtifactRef, ArtifactContent, GitHubSyncStatus } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
@@ -91,6 +95,59 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
   // GitHub sync status tracking (Phase 5)
   const [syncStatuses, setSyncStatuses] = useState<Record<string, GitHubSyncStatus>>({});
 
+  // Upload dialog state
+  const [uploadDialog, setUploadDialog] = useState<{
+    isOpen: boolean;
+    step: string;
+    loading: boolean;
+    error: string | null;
+    success: string | null;
+    invalidateCache: boolean;
+  }>({
+    isOpen: false,
+    step: "",
+    loading: false,
+    error: null,
+    success: null,
+    invalidateCache: false,
+  });
+
+  // Artifact events/history for selected artifact
+  type ArtifactEvent = {
+    id: string;
+    event_type: string;
+    payload: Record<string, unknown>;
+    created_at: string;
+  };
+  const [artifactEvents, setArtifactEvents] = useState<ArtifactEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+
+  // Fetch events for selected artifact's step
+  useEffect(() => {
+    if (!selectedArtifact) {
+      setArtifactEvents([]);
+      return;
+    }
+
+    const fetchEvents = async () => {
+      setEventsLoading(true);
+      try {
+        const step = selectedArtifact.step_name || selectedArtifact.step_id;
+        const events = await api.events.list(runId, { step, limit: 20 });
+        // Filter for upload events only
+        const uploadEvents = events.filter((e: { event_type: string }) => e.event_type === "upload");
+        setArtifactEvents(uploadEvents);
+      } catch (err) {
+        console.error("Failed to load artifact events:", err);
+        setArtifactEvents([]);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [runId, selectedArtifact]);
+
   // Load sync status when GitHub is configured
   useEffect(() => {
     if (!githubRepoUrl || !githubDirPath) return;
@@ -118,6 +175,71 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
   const handleSyncStatusChange = useCallback((step: string, status: GitHubSyncStatus) => {
     setSyncStatuses((prev) => ({ ...prev, [step]: status }));
   }, []);
+
+  // Open upload dialog for a step
+  const openUploadDialog = useCallback((step: string) => {
+    setUploadDialog({
+      isOpen: true,
+      step,
+      loading: false,
+      error: null,
+      success: null,
+      invalidateCache: false,
+    });
+  }, []);
+
+  // Handle file upload
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setUploadDialog((prev) => ({ ...prev, loading: true, error: null, success: null }));
+
+      try {
+        const fileContent = await file.text();
+
+        // Validate JSON
+        try {
+          JSON.parse(fileContent);
+        } catch {
+          throw new Error("無効なJSONファイルです");
+        }
+
+        const result = await api.artifacts.upload(runId, uploadDialog.step, fileContent, {
+          invalidateCache: uploadDialog.invalidateCache,
+        });
+
+        setUploadDialog((prev) => ({
+          ...prev,
+          loading: false,
+          success: `アップロード完了${result.cache_invalidated ? "（キャッシュ無効化済み）" : ""}`,
+        }));
+
+        // Reload selected artifact if it's the same step - trigger a refresh
+        if (selectedArtifact?.step_name === uploadDialog.step) {
+          // Reload by downloading the content again
+          const data = await api.artifacts.download(runId, selectedArtifact.id);
+          setContent(data);
+        }
+
+        // Close after short delay
+        setTimeout(() => {
+          setUploadDialog((prev) => ({ ...prev, isOpen: false }));
+        }, 2000);
+      } catch (error) {
+        setUploadDialog((prev) => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error.message : "アップロードに失敗しました",
+        }));
+      } finally {
+        // Reset file input
+        event.target.value = "";
+      }
+    },
+    [runId, uploadDialog.step, uploadDialog.invalidateCache, selectedArtifact],
+  );
 
   // step_nameでグループ化し、STEP_ORDERでソート
   const groupedArtifacts = useMemo(() => {
@@ -253,33 +375,46 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
           <div className="w-72 flex-shrink-0 overflow-y-auto max-h-[600px]">
             {groupedArtifacts.map(([stepKey, stepArtifacts]) => (
               <div key={stepKey} className="border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-                <button
-                  onClick={() => toggleStep(stepKey)}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  {expandedSteps.has(stepKey) ? (
-                    <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-1.5">
-                      {getStepLabel(stepKey)}
-                      {/* GitHub sync status badge (Phase 5) */}
-                      {githubRepoUrl && syncStatuses[stepKey] === "diverged" && (
-                        <span title="GitHub と差分あり">
-                          <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
-                        </span>
-                      )}
+                <div className="flex items-center">
+                  <button
+                    onClick={() => toggleStep(stepKey)}
+                    className="flex-1 flex items-center gap-2 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    {expandedSteps.has(stepKey) ? (
+                      <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-1.5">
+                        {getStepLabel(stepKey)}
+                        {/* GitHub sync status badge (Phase 5) */}
+                        {githubRepoUrl && syncStatuses[stepKey] === "diverged" && (
+                          <span title="GitHub と差分あり">
+                            <AlertTriangle className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {stepKey} · {stepArtifacts.length} ファイル
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {stepKey} · {stepArtifacts.length} ファイル
-                    </div>
-                  </div>
-                  <span className="flex-shrink-0 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">
-                    {stepArtifacts.length}
-                  </span>
-                </button>
+                    <span className="flex-shrink-0 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">
+                      {stepArtifacts.length}
+                    </span>
+                  </button>
+                  {/* Upload button for step */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openUploadDialog(stepKey);
+                    }}
+                    className="p-2 mr-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                    title={`${getStepLabel(stepKey)} にアップロード`}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </button>
+                </div>
 
                 {expandedSteps.has(stepKey) && (
                   <div className="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
@@ -376,6 +511,48 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
                       />
                     </div>
                   )}
+                  {/* Upload History */}
+                  {artifactEvents.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <h5 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        編集履歴
+                      </h5>
+                      <div className="space-y-1.5 max-h-24 overflow-y-auto">
+                        {artifactEvents.map((event) => (
+                          <div
+                            key={event.id}
+                            className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2"
+                          >
+                            <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                              <Upload className="h-2.5 w-2.5 mr-1" />
+                              upload
+                            </span>
+                            <span className="text-gray-400 dark:text-gray-500">
+                              {formatDate(event.created_at)}
+                            </span>
+                            <span className="truncate">
+                              {String(event.payload.user_id || "unknown")}
+                            </span>
+                            {(() => {
+                              const details = event.payload.details as Record<string, unknown> | undefined;
+                              return details?.cache_invalidated ? (
+                                <span className="text-orange-500 dark:text-orange-400" title="キャッシュ無効化">
+                                  🔄
+                                </span>
+                              ) : null;
+                            })()}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {eventsLoading && (
+                    <div className="mt-2 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      履歴を読み込み中...
+                    </div>
+                  )}
                 </div>
 
                 {/* コンテンツエリア */}
@@ -394,6 +571,90 @@ export function ArtifactViewer({ runId, artifacts, githubRepoUrl, githubDirPath 
                 <Eye className="h-12 w-12 mb-3 text-gray-300 dark:text-gray-600" />
                 <p className="text-sm">ファイルを選択してプレビュー</p>
                 <p className="text-xs mt-1">左のリストからファイルをクリックしてください</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Upload Dialog */}
+      {uploadDialog.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                成果物をアップロード
+              </h2>
+              <button
+                onClick={() => setUploadDialog((prev) => ({ ...prev, isOpen: false }))}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium">{getStepLabel(uploadDialog.step)}</span> ({uploadDialog.step}) の成果物を置き換えます。
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                既存のファイルはバックアップされます。
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={uploadDialog.invalidateCache}
+                  onChange={(e) =>
+                    setUploadDialog((prev) => ({ ...prev, invalidateCache: e.target.checked }))
+                  }
+                  className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900"
+                />
+                <span className="text-gray-700 dark:text-gray-300">次回実行時に再生成する（キャッシュ無効化）</span>
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-6">
+                チェックすると、このステップを再実行した際に新たに生成されます
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {uploadDialog.error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-sm text-red-600 dark:text-red-400">{uploadDialog.error}</p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {uploadDialog.success && (
+              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <p className="text-sm text-green-600 dark:text-green-400">{uploadDialog.success}</p>
+              </div>
+            )}
+
+            <label className="block">
+              <span className="sr-only">ファイルを選択</span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                disabled={uploadDialog.loading}
+                className="block w-full text-sm text-gray-500 dark:text-gray-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-300
+                  hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50
+                  disabled:opacity-50"
+              />
+            </label>
+
+            {uploadDialog.loading && (
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                アップロード中...
               </div>
             )}
           </div>

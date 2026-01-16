@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Download,
+  Upload,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import {
@@ -41,6 +43,13 @@ export default function PreviewPage({
   const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
   const [showReviewPanel, setShowReviewPanel] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+
+  // Upload state
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [invalidateCache, setInvalidateCache] = useState(false);
 
   // Fetch review status on mount
   const fetchReviewStatus = useCallback(async () => {
@@ -130,6 +139,73 @@ ${issue.suggestion}
       });
     },
     []
+  );
+
+  // Download artifact
+  const handleDownload = useCallback(async () => {
+    try {
+      const content = await api.artifacts.download(id, `${id}:step10:output.json`);
+      const blob = new Blob([content.content], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `step10_output_${id.slice(0, 8)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "ダウンロードに失敗しました"
+      );
+    }
+  }, [id]);
+
+  // Handle file upload
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setUploadLoading(true);
+      setUploadError(null);
+      setUploadSuccess(null);
+
+      try {
+        const content = await file.text();
+
+        // Validate JSON
+        try {
+          JSON.parse(content);
+        } catch {
+          throw new Error("無効なJSONファイルです");
+        }
+
+        const result = await api.artifacts.upload(id, "step10", content, {
+          invalidateCache,
+        });
+
+        setUploadSuccess(
+          `アップロード完了${result.cache_invalidated ? "（キャッシュ無効化済み）" : ""}`
+        );
+        setShowUploadDialog(false);
+
+        // Reload preview
+        const iframe = document.querySelector("iframe");
+        if (iframe) {
+          iframe.src = iframe.src;
+        }
+      } catch (error) {
+        setUploadError(
+          error instanceof Error ? error.message : "アップロードに失敗しました"
+        );
+      } finally {
+        setUploadLoading(false);
+        // Reset file input
+        event.target.value = "";
+      }
+    },
+    [id, invalidateCache]
   );
 
   return (
@@ -230,6 +306,31 @@ ${issue.suggestion}
             </button>
           )}
 
+          {/* ダウンロード・アップロードボタン */}
+          <div className="flex items-center gap-1 border-l border-gray-200 pl-2 ml-1">
+            <button
+              onClick={handleDownload}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              title="JSONファイルをダウンロード"
+            >
+              <Download className="h-4 w-4" />
+              DL
+            </button>
+            <button
+              onClick={() => setShowUploadDialog(true)}
+              disabled={uploadLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
+              title="編集したJSONファイルをアップロード"
+            >
+              {uploadLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              UL
+            </button>
+          </div>
+
           <button
             onClick={() => setFullscreen(!fullscreen)}
             className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
@@ -258,13 +359,80 @@ ${issue.suggestion}
         </div>
       </div>
 
+      {/* アップロードダイアログ */}
+      {showUploadDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">成果物をアップロード</h2>
+              <button
+                onClick={() => setShowUploadDialog(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              編集したJSONファイルを選択してアップロードしてください。
+              既存のファイルはバックアップされます。
+            </p>
+            <div className="mb-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={invalidateCache}
+                  onChange={(e) => setInvalidateCache(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <span>次回実行時に再生成する（キャッシュ無効化）</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                チェックすると、このステップを再実行した際に新たに生成されます
+              </p>
+            </div>
+            <label className="block">
+              <span className="sr-only">ファイルを選択</span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                disabled={uploadLoading}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100
+                  disabled:opacity-50"
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* エラー表示 */}
-      {reviewError && (
+      {(reviewError || uploadError) && (
         <div className="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center justify-between">
-          <span className="text-sm text-red-600">{reviewError}</span>
+          <span className="text-sm text-red-600">{reviewError || uploadError}</span>
           <button
-            onClick={() => setReviewError(null)}
+            onClick={() => {
+              setReviewError(null);
+              setUploadError(null);
+            }}
             className="text-red-400 hover:text-red-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 成功表示 */}
+      {uploadSuccess && (
+        <div className="bg-green-50 border-b border-green-200 px-4 py-2 flex items-center justify-between">
+          <span className="text-sm text-green-600">{uploadSuccess}</span>
+          <button
+            onClick={() => setUploadSuccess(null)}
+            className="text-green-400 hover:text-green-600"
           >
             <X className="h-4 w-4" />
           </button>
