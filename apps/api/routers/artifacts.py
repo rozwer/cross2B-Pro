@@ -57,6 +57,67 @@ def _get_artifact_store() -> Any:
     return get_artifact_store()
 
 
+async def _push_artifact_to_github(
+    tenant_id: str,
+    run_id: str,
+    step: str,
+    content: bytes,
+    user_id: str,
+) -> None:
+    """Push uploaded artifact to GitHub if configured.
+
+    Non-blocking: failures are logged but don't stop the upload.
+
+    Args:
+        tenant_id: Tenant identifier
+        run_id: Run identifier
+        step: Step name
+        content: Content bytes to push
+        user_id: User who uploaded (for commit message)
+    """
+    try:
+        # Get run info directly from DB (avoid internal API call requiring auth)
+        db_manager = _get_tenant_db_manager()
+
+        async with db_manager.get_session(tenant_id) as session:
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                logger.warning(f"Run not found for GitHub push: {run_id}")
+                return
+
+            repo_url = run.github_repo_url
+            dir_path = run.github_dir_path
+
+            if not repo_url or not dir_path:
+                return
+
+        logger.info(f"Pushing uploaded artifact to GitHub: {repo_url}")
+
+        from apps.api.services.github import GitHubService
+
+        github = GitHubService()
+
+        # Build file path
+        file_path = f"{dir_path}/{step}/output.json"
+        commit_message = f"{step}: manual upload\n\nRun: {run_id}\nUploaded by: {user_id}"
+
+        # Push (idempotent - will update if exists)
+        sha = await github.push_file(
+            repo_url=repo_url,
+            path=file_path,
+            content=content,
+            message=commit_message,
+        )
+        logger.info(f"GitHub push successful: {sha[:8]}")
+
+    except Exception as e:
+        # Non-blocking: log and continue
+        logger.warning(f"GitHub push failed (non-blocking): {e}")
+
+
 # =============================================================================
 # Pydantic Models
 # =============================================================================
@@ -648,3 +709,229 @@ async def get_run_preview(
     except Exception as e:
         logger.error(f"Failed to get preview: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to get preview") from e
+
+
+# =============================================================================
+# Upload (PUT) Endpoint
+# =============================================================================
+
+# Statuses that block upload (run is in progress)
+UPLOAD_BLOCKED_STATUSES = {"running", "pending", "workflow_starting"}
+
+# Maximum upload size (10MB)
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+
+
+class ArtifactUploadRequest(BaseModel):
+    """Request body for JSON-based artifact upload."""
+
+    content: str
+    encoding: str = "utf-8"  # utf-8 or base64
+    invalidate_cache: bool = False
+
+
+class ArtifactUploadResponse(BaseModel):
+    """Response for artifact upload."""
+
+    success: bool
+    artifact_ref: ArtifactRef
+    backup_path: str | None = None
+    cache_invalidated: bool
+
+
+@router.put("/api/runs/{run_id}/files/{step}", response_model=ArtifactUploadResponse)
+async def upload_artifact(
+    run_id: str,
+    step: str,
+    data: ArtifactUploadRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> ArtifactUploadResponse:
+    """Upload (overwrite) artifact for a specific step.
+
+    This endpoint allows users to:
+    - Download an artifact, edit externally, and upload the modified version
+    - Optionally invalidate the idempotency cache (metadata.json) for re-generation
+
+    Security:
+    - tenant_id scope enforced
+    - Blocked when run is in progress (running/pending/workflow_starting)
+    - Audit log recorded
+
+    Args:
+        run_id: Run identifier
+        step: Step name (e.g., "step4", "step10")
+        data: Upload request with content and options
+        user: Authenticated user
+
+    Returns:
+        ArtifactUploadResponse with artifact reference and backup path
+
+    Raises:
+        400: Empty content or invalid JSON
+        404: Run not found
+        409: Run is in progress (cannot modify)
+        413: Content too large (>10MB)
+    """
+    tenant_id = user.tenant_id
+    logger.info(
+        "Uploading artifact",
+        extra={
+            "run_id": run_id,
+            "step": step,
+            "tenant_id": tenant_id,
+            "user_id": user.user_id,
+            "invalidate_cache": data.invalidate_cache,
+        },
+    )
+
+    db_manager = _get_tenant_db_manager()
+    store = _get_artifact_store()
+
+    # Decode content
+    if data.encoding == "base64":
+        try:
+            content_bytes = base64.b64decode(data.content)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid base64 encoding: {e}") from e
+    else:
+        content_bytes = data.content.encode("utf-8")
+
+    # Validate content size
+    if len(content_bytes) == 0:
+        raise HTTPException(status_code=400, detail="Empty content is not allowed")
+
+    if len(content_bytes) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Content too large. Maximum size is {MAX_UPLOAD_SIZE // (1024 * 1024)}MB",
+        )
+
+    # Validate JSON if it looks like JSON
+    if content_bytes.startswith(b"{") or content_bytes.startswith(b"["):
+        try:
+            import json
+
+            json.loads(content_bytes)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON content: {e}") from e
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            # Verify run exists and belongs to tenant
+            run_query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            run_result = await session.execute(run_query)
+            run = run_result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            # Check run status - block if in progress
+            if run.status in UPLOAD_BLOCKED_STATUSES:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Cannot modify artifact while run is in progress (status: {run.status})",
+                )
+
+            # Get existing content for backup (if exists)
+            backup_path: str | None = None
+            try:
+                existing_content = await store.get_by_path(tenant_id, run_id, step)
+                if existing_content:
+                    # Create backup with timestamp
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_filename = f"backup_{timestamp}.json"
+                    backup_full_path = store.build_path(tenant_id, run_id, step, backup_filename)
+
+                    await store.put(
+                        content=existing_content,
+                        path=backup_full_path,
+                        content_type="application/json",
+                    )
+                    backup_path = backup_full_path
+                    logger.info(f"Created backup: {backup_path}")
+            except Exception as backup_error:
+                logger.warning(f"Could not create backup: {backup_error}")
+                # Continue without backup - not critical
+
+            # Upload new content
+            output_path = store.build_path(tenant_id, run_id, step)
+            artifact_ref_storage = await store.put(
+                content=content_bytes,
+                path=output_path,
+                content_type="application/json",
+            )
+
+            # Optionally invalidate cache (delete metadata.json)
+            cache_invalidated = False
+            if data.invalidate_cache:
+                try:
+                    metadata_path = store.build_path(tenant_id, run_id, step, "metadata.json")
+                    # Use client directly to delete
+                    from minio.error import S3Error
+
+                    try:
+                        store.client.remove_object(store.bucket, metadata_path)
+                        cache_invalidated = True
+                        logger.info(f"Deleted metadata for cache invalidation: {metadata_path}")
+                    except S3Error as e:
+                        if e.code != "NoSuchKey":
+                            raise
+                        # metadata.json didn't exist, that's fine
+                        cache_invalidated = True
+                except Exception as cache_error:
+                    logger.warning(f"Failed to invalidate cache: {cache_error}")
+                    # Not critical, continue
+
+            # Record audit log
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="upload",
+                resource_type="artifact",
+                resource_id=f"{run_id}:{step}",
+                details={
+                    "step": step,
+                    "size_bytes": len(content_bytes),
+                    "digest": artifact_ref_storage.digest,
+                    "backup_path": backup_path,
+                    "cache_invalidated": cache_invalidated,
+                },
+            )
+
+            await session.commit()
+
+            # Push to GitHub if configured (non-blocking)
+            await _push_artifact_to_github(
+                tenant_id=tenant_id,
+                run_id=run_id,
+                step=step,
+                content=content_bytes,
+                user_id=user.user_id,
+            )
+
+            return ArtifactUploadResponse(
+                success=True,
+                artifact_ref=ArtifactRef(
+                    id=f"{run_id}:{step}:output.json",
+                    step_id="",
+                    step_name=step,
+                    ref_path=artifact_ref_storage.path,
+                    digest=artifact_ref_storage.digest,
+                    content_type=artifact_ref_storage.content_type,
+                    size_bytes=artifact_ref_storage.size_bytes,
+                    created_at=artifact_ref_storage.created_at.isoformat()
+                    if artifact_ref_storage.created_at
+                    else datetime.now().isoformat(),
+                ),
+                backup_path=backup_path,
+                cache_invalidated=cache_invalidated,
+            )
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to upload artifact: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to upload artifact") from e

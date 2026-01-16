@@ -1936,7 +1936,7 @@ async def cancel_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
 @router.delete("/{run_id}/delete")
 async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) -> dict[str, bool]:
-    """Delete a completed, failed, or cancelled run."""
+    """Delete a run. Running/pending/paused runs are cancelled first."""
     tenant_id = user.tenant_id
     logger.info(
         "Deleting run",
@@ -1945,27 +1945,49 @@ async def delete_run(run_id: str, user: AuthUser = Depends(get_current_user)) ->
 
     db_manager = _get_tenant_db_manager()
     store = _get_artifact_store()
+    temporal_client = _get_temporal_client()
+
+    # Statuses that need to be cancelled before deletion
+    cancellable_statuses = [
+        RunStatus.PENDING.value,
+        RunStatus.WORKFLOW_STARTING.value,
+        RunStatus.RUNNING.value,
+        RunStatus.PAUSED.value,
+        RunStatus.WAITING_APPROVAL.value,
+        RunStatus.WAITING_IMAGE_INPUT.value,
+    ]
 
     try:
         async with db_manager.get_session(tenant_id) as session:
-            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id)
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
             result = await session.execute(query)
             run = result.scalar_one_or_none()
 
             if not run:
                 raise HTTPException(status_code=404, detail="Run not found")
 
-            deletable_statuses = [
-                RunStatus.COMPLETED.value,
-                RunStatus.FAILED.value,
-                RunStatus.CANCELLED.value,
-                RunStatus.WAITING_IMAGE_INPUT.value,
-                RunStatus.WAITING_APPROVAL.value,
-            ]
-            if run.status not in deletable_statuses:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Run cannot be deleted while in progress (current status: {run.status}). Cancel it first.",
+            # Cancel the run first if it's in a cancellable state
+            if run.status in cancellable_statuses:
+                if temporal_client is not None:
+                    try:
+                        workflow_handle = temporal_client.get_workflow_handle(run_id)
+                        await workflow_handle.cancel()
+                        logger.info("Temporal workflow cancelled before delete", extra={"run_id": run_id})
+                    except Exception as cancel_error:
+                        logger.warning(f"Failed to cancel Temporal workflow {run_id}: {cancel_error}")
+                        # Continue with deletion even if cancel fails
+
+                previous_status = run.status
+                run.status = RunStatus.CANCELLED.value
+                run.updated_at = datetime.now()
+
+                audit = AuditLogger(session)
+                await audit.log(
+                    user_id=user.user_id,
+                    action="cancel",
+                    resource_type="run",
+                    resource_id=run_id,
+                    details={"previous_status": previous_status, "reason": "delete"},
                 )
 
             audit = AuditLogger(session)
@@ -2033,8 +2055,11 @@ async def bulk_delete_runs(
 
     cancellable_statuses = [
         RunStatus.PENDING.value,
+        RunStatus.WORKFLOW_STARTING.value,
         RunStatus.RUNNING.value,
+        RunStatus.PAUSED.value,
         RunStatus.WAITING_APPROVAL.value,
+        RunStatus.WAITING_IMAGE_INPUT.value,
     ]
 
     try:
