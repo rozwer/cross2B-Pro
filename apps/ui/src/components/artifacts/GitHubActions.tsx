@@ -23,6 +23,14 @@ interface DiffResult {
   minio_digest: string | null;
 }
 
+interface IssueStatus {
+  issue_number: number;
+  issue_url: string;
+  status: "open" | "in_progress" | "closed";
+  last_comment?: string;
+  updated_at?: string;
+}
+
 /**
  * GitHubActions - GitHub連携アクションボタン群
  *
@@ -52,6 +60,9 @@ export function GitHubActions({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<GitHubSyncStatus | undefined>(initialSyncStatus);
+  // Issue tracking state
+  const [issueStatus, setIssueStatus] = useState<IssueStatus | null>(null);
+  const [showIssueTracker, setShowIssueTracker] = useState(false);
 
   // Update sync status when initialSyncStatus changes
   useEffect(() => {
@@ -75,8 +86,13 @@ export function GitHubActions({
       setShowInstructionModal(false);
       setInstruction("");
 
-      // 新しいタブで Issue を開く
-      window.open(result.issue_url, "_blank");
+      // Issue作成後はページ内で状態を表示（URLに飛ばない）
+      setIssueStatus({
+        issue_number: result.issue_number,
+        issue_url: result.issue_url,
+        status: "open",
+      });
+      setShowIssueTracker(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Issue の作成に失敗しました");
     } finally {
@@ -375,6 +391,95 @@ export function GitHubActions({
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Issue進捗トラッカー（ページ内表示） */}
+      {showIssueTracker && issueStatus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Claude Code 編集状況
+              </h3>
+              <button
+                onClick={() => setShowIssueTracker(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Issue情報 */}
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-3 h-3 rounded-full ${
+                  issueStatus.status === "closed" ? "bg-green-500" :
+                  issueStatus.status === "in_progress" ? "bg-yellow-500 animate-pulse" :
+                  "bg-purple-500"
+                }`} />
+                <span className="font-medium text-gray-900 dark:text-white">
+                  Issue #{issueStatus.issue_number}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  issueStatus.status === "closed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                  issueStatus.status === "in_progress" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                  "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                }`}>
+                  {issueStatus.status === "closed" ? "完了" :
+                   issueStatus.status === "in_progress" ? "編集中" : "待機中"}
+                </span>
+              </div>
+
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                {issueStatus.status === "open" && "Claude Code が Issue を確認するのを待っています..."}
+                {issueStatus.status === "in_progress" && "Claude Code が編集を実行中です..."}
+                {issueStatus.status === "closed" && "編集が完了しました。差分を確認してください。"}
+              </p>
+
+              {issueStatus.last_comment && (
+                <div className="bg-white dark:bg-gray-700 rounded p-3 text-sm text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">最新コメント:</div>
+                  {issueStatus.last_comment}
+                </div>
+              )}
+            </div>
+
+            {/* アクションボタン */}
+            <div className="flex justify-between items-center">
+              <a
+                href={issueStatus.issue_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+                GitHub で開く
+              </a>
+
+              <div className="flex gap-2">
+                {issueStatus.status === "closed" && (
+                  <button
+                    onClick={() => {
+                      setShowIssueTracker(false);
+                      handleCheckDiff();
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    差分を確認
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowIssueTracker(false)}
+                  className="px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
