@@ -1,16 +1,98 @@
 # Plans.md
 
-> **最終更新**: 2026-01-14
+> **最終更新**: 2026-01-16
 > **アーカイブ**: 詳細な修正計画は `.claude/memory/archive/Plans-2026-01-13-full-review.md` を参照
 
 ---
 
-## ✅ ワークフロー一時停止機能 `cc:DONE` (2026-01-14)
+## 🎯 作成済み記事一覧ページ & Claude Codeレビュー機能
 
-実装完了。詳細は以下のファイルを参照：
-- BE: `apps/api/routers/runs.py` (pause/continue endpoints)
-- Workflow: `apps/worker/workflows/article_workflow.py` (pause/resume_from_pause signals)
-- FE: `apps/ui/src/app/runs/[id]/page.tsx` (一時停止/続行ボタン)
+> **目的**: 完了したrunの記事を一覧表示し、Claude Codeによるレビュー・編集・PR自動化を実現
+
+### 概要
+- **対象**: 完了した記事（completed runs）
+- **流用**: 既存の成果物ページロジック（ArtifactViewer, GitHubActions）
+- **新機能**: SEOレビュー、Claude Code編集、PR/マージ自動化
+
+---
+
+## ✅ フェーズ1: 記事一覧ページ基盤 `cc:DONE`
+
+### 1.1 API: 完了記事一覧エンドポイント
+- [x] `GET /api/articles` - 完了した記事一覧を取得
+  - フィルタ: status=completed
+  - キーワード検索
+  - ページネーション対応
+- [x] `GET /api/articles/{run_id}` - 記事詳細取得（step10/step12の成果物含む）
+
+### 1.2 FE: 記事一覧ページ
+- [x] `apps/ui/src/app/articles/page.tsx` - 一覧ページ作成
+  - キーワード検索
+  - レビューステータスフィルタ（すべて/レビュー済み/未レビュー）
+- [x] `apps/ui/src/app/articles/[id]/page.tsx` - 記事詳細ページ
+  - 概要タブ: メタデータ、成果物一覧
+  - プレビュータブ: iframe表示、レビューパネル
+  - GitHubタブ: Claude Code編集、PR管理
+
+---
+
+## ✅ フェーズ2: Claude Codeレビュー機能強化 `cc:DONE`
+
+### 2.1 レビュー機能拡張（既存コード流用）
+- [x] 既存の `PreviewPage` のレビュー機能を記事詳細に組み込み
+  - `ReviewResultPanel` コンポーネント流用
+  - レビュータイプ: SEO最適化、ファクトチェック、文章品質
+- [x] レビュー結果の永続化と表示
+  - MinIO に保存済み（review.json）
+  - 一覧でレビューステータス表示
+
+### 2.2 Claude Code編集連携
+- [x] Issue作成機能の流用（GitHubActions）
+  - 記事詳細ページから編集依頼Issue作成
+  - `@claude` メンション付きIssue
+- [x] 編集完了通知
+  - GitHub Issue/PRのステータス監視（10秒ポーリング）
+  - 完了時にPR情報表示
+
+---
+
+## ✅ フェーズ3: PR表示と管理 `cc:DONE`
+
+### 3.1 PR表示
+- [x] PR一覧表示
+  - サイドバーにオープンPRサマリー表示
+  - GitHubタブで詳細なPR一覧（作成者、ブランチ、追加/削除行数）
+- [x] 未PRブランチ表示
+  - Claude Code編集後のブランチ一覧
+  - 比較リンク
+
+### 3.2 PR作成
+- [x] ブランチ→PR自動作成（GitHubActionsコンポーネント内）
+- ~~マージ自動化~~ （ユーザー要望により除外 - PRまで）
+
+---
+
+## 📊 コンポーネント流用マップ
+
+| 既存コンポーネント | 流用先 | 変更点 |
+|------------------|-------|--------|
+| `ArtifactViewer` | 記事詳細ページ | 記事向けUIカスタマイズ |
+| `GitHubActions` | 記事詳細ページ | PR/マージUI追加 |
+| `ReviewResultPanel` | 記事詳細ページ | そのまま流用 |
+| `PreviewPage` | 記事プレビュー | ルーティング変更 |
+| `HtmlPreview` | 記事プレビュー | そのまま流用 |
+
+---
+
+## 🔧 技術スタック
+
+| 領域 | 技術 |
+|------|------|
+| API | FastAPI（既存） |
+| DB | PostgreSQL（既存） |
+| Storage | MinIO（既存） |
+| GitHub連携 | GitHubService（既存） |
+| FE | Next.js + React（既存） |
 
 ---
 
@@ -68,11 +150,15 @@
 
 ---
 
-## 次のアクション（本番デプロイ向け）
+## 完了状況
 
-1. **認証プロバイダ選定**: Auth0 / Clerk / Firebase Auth / 自前JWT
-2. **Google Ads API申請**: キーワード検索ボリューム取得用
-3. **Redis導入検討**: トークン無効化リスト用
+✅ **全フェーズ完了** (2026-01-16)
+
+実装した機能:
+- 記事一覧API・ページ（検索、フィルタ対応）
+- 記事詳細ページ（概要/プレビュー/GitHubタブ）
+- Claudeレビュー機能（SEO、ファクトチェック、品質）
+- GitHub連携（Issue作成、PR一覧、ブランチ管理）
 
 ---
 
