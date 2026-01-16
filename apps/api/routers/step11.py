@@ -27,7 +27,7 @@ import os
 from datetime import datetime
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from sqlalchemy import select
@@ -1219,40 +1219,90 @@ async def review_images(
 @router.get("/preview")
 async def get_preview(
     run_id: str,
+    article: int | None = Query(default=None, ge=1, le=4, description="記事番号（1-4）。省略時は画像のある記事を表示"),
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """11E: プレビューを取得"""
+    """11E: プレビューを取得
+
+    Args:
+        run_id: ワークフロー実行ID
+        article: 記事番号（1-4）。省略時は画像のある最初の記事を表示
+    """
     run, state = await get_run_and_state(run_id, user)
 
     store = get_artifact_store()
     tenant_id = user.tenant_id
 
     # Step10 の記事を取得
+    step10_json = {}
     try:
         step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
         if step10_data:
             step10_json = json.loads(step10_data.decode("utf-8"))
-            markdown_content = step10_json.get("markdown_content", "")
-        else:
-            markdown_content = ""
     except Exception:
-        markdown_content = ""
+        pass
 
-    if not markdown_content:
-        return {
-            "preview_html": "<p>プレビューを生成できませんでした。記事データがありません。</p>",
-            "preview_available": False,
-        }
-
-    # 画像を挿入したプレビューを生成
+    # 画像とpositionsを取得
     positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
     images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
 
-    result_md, result_html = await insert_images_into_article(markdown_content, images, positions)
+    # 複数記事対応
+    articles = step10_json.get("articles", [])
+    previews = []
 
+    if articles:
+        for art in articles:
+            article_number = art.get("article_number", 1)
+
+            # 記事番号が指定されている場合はフィルタ
+            if article is not None and article_number != article:
+                continue
+
+            article_content = art.get("content", "") or art.get("markdown_content", "")
+            article_images = [img for img in images if img.article_number == article_number]
+            article_positions = [pos for pos in positions if pos.article_number == article_number]
+
+            if article_content:
+                if article_images:
+                    _, article_html = await insert_images_into_article(article_content, article_images, article_positions)
+                else:
+                    article_html = _markdown_to_html(article_content)
+
+                previews.append(
+                    {
+                        "article_number": article_number,
+                        "title": art.get("title", ""),
+                        "preview_html": article_html,
+                        "image_count": len(article_images),
+                    }
+                )
+    else:
+        # 単一記事の場合（後方互換性）
+        markdown_content = step10_json.get("markdown_content", "")
+        if markdown_content:
+            _, result_html = await insert_images_into_article(markdown_content, images, positions)
+            previews.append(
+                {
+                    "article_number": 1,
+                    "title": step10_json.get("article_title", ""),
+                    "preview_html": result_html,
+                    "image_count": len(images),
+                }
+            )
+
+    if not previews:
+        return {
+            "preview_html": "<p>プレビューを生成できませんでした。記事データがありません。</p>",
+            "preview_available": False,
+            "articles": [],
+        }
+
+    # 後方互換性のため、最初の記事のHTMLをトップレベルにも配置
     return {
-        "preview_html": result_html,
+        "preview_html": previews[0]["preview_html"],
         "preview_available": True,
+        "articles": previews,
+        "total_articles": len(previews),
     }
 
 
@@ -1319,28 +1369,71 @@ async def finalize_images(
         state = await _load_step11_state(run, session, user, action="finalize")
 
         # Step10 の記事を取得
+        step10_json = {}
         try:
             step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
             if step10_data:
                 step10_json = json.loads(step10_data.decode("utf-8"))
-                markdown_content = step10_json.get("markdown_content", "")
-            else:
-                markdown_content = ""
         except Exception:
-            markdown_content = ""
+            pass
 
-        # 画像を挿入
+        # 画像とpositionsを取得
         positions = [ImagePosition(**p) if isinstance(p, dict) else p for p in state.positions]
         images = [GeneratedImage(**img) if isinstance(img, dict) else img for img in state.images]
 
-        final_md, final_html = await insert_images_into_article(markdown_content, images, positions)
+        # 複数記事対応: 各記事ごとに画像をフィルタリングして挿入
+        articles = step10_json.get("articles", [])
+        articles_with_images = []
+
+        if articles:
+            # 複数記事の場合
+            for article in articles:
+                article_number = article.get("article_number", 1)
+                article_content = article.get("content", "") or article.get("markdown_content", "")
+
+                # この記事向けの画像のみをフィルタ
+                article_images = [img for img in images if img.article_number == article_number]
+
+                if article_images and article_content:
+                    # 画像をフィルタしたpositionsも必要
+                    article_positions = [pos for pos in positions if pos.article_number == article_number]
+                    md_with_images, html_with_images = await insert_images_into_article(article_content, article_images, article_positions)
+                else:
+                    md_with_images = article_content
+                    html_with_images = _markdown_to_html(article_content) if article_content else ""
+
+                articles_with_images.append(
+                    {
+                        "article_number": article_number,
+                        "title": article.get("title", ""),
+                        "markdown_with_images": md_with_images,
+                        "html_with_images": html_with_images,
+                        "image_count": len(article_images),
+                    }
+                )
+        else:
+            # 単一記事の場合（後方互換性）
+            markdown_content = step10_json.get("markdown_content", "")
+            if markdown_content:
+                final_md, final_html = await insert_images_into_article(markdown_content, images, positions)
+                articles_with_images.append(
+                    {
+                        "article_number": 1,
+                        "title": step10_json.get("article_title", ""),
+                        "markdown_with_images": final_md,
+                        "html_with_images": final_html,
+                        "image_count": len(images),
+                    }
+                )
 
         # 結果を保存
         output_data = {
-            "markdown_with_images": final_md,
-            "html_with_images": final_html,
+            "articles": articles_with_images,
             "images": [img.model_dump() for img in images],
             "positions": [p.model_dump() for p in positions],
+            # 後方互換性のため、最初の記事の内容も保持
+            "markdown_with_images": articles_with_images[0]["markdown_with_images"] if articles_with_images else "",
+            "html_with_images": articles_with_images[0]["html_with_images"] if articles_with_images else "",
         }
 
         # ArtifactStore.build_path()で標準パスを構築（storage/{tenant}/{run}/step11/output.json）
