@@ -687,3 +687,92 @@ class GitHubService:
                 timeout=30.0,
             )
             return await self._handle_response(response)
+
+    async def get_issue_status(
+        self,
+        repo_url: str,
+        issue_number: int,
+    ) -> dict[str, Any]:
+        """Get issue status including linked PRs.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            issue_number: Issue number to check
+
+        Returns:
+            Issue status data including:
+            - state: "open" or "closed"
+            - updated_at: ISO timestamp
+            - pr_url: URL of linked PR (if any)
+            - last_comment: Most recent comment body
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            # 1. Get issue info
+            issue_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+            issue_data = await self._handle_response(issue_response)
+
+            # 2. Get comments to find latest
+            comments_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}/comments",
+                headers=self._get_headers(),
+                params={"per_page": 5, "sort": "created", "direction": "desc"},
+                timeout=30.0,
+            )
+            comments_data = await self._handle_response(comments_response)
+
+            # 3. Get timeline events to find linked PRs
+            timeline_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}/timeline",
+                headers={**self._get_headers(), "Accept": "application/vnd.github+json"},
+                timeout=30.0,
+            )
+            timeline_data = await self._handle_response(timeline_response)
+
+        # Find PR URL from timeline (cross-referenced or connected events)
+        pr_url = None
+        for event in timeline_data:
+            event_type = event.get("event")
+            # cross-referenced: PR mentions this issue
+            if event_type == "cross-referenced":
+                source = event.get("source", {})
+                issue_ref = source.get("issue", {})
+                if issue_ref.get("pull_request"):
+                    pr_url = issue_ref.get("html_url")
+                    break
+            # connected: PR is linked to this issue via "fixes #N" etc.
+            elif event_type == "connected":
+                subject = event.get("subject", {})
+                if subject.get("type") == "PullRequest":
+                    # Need to construct PR URL from event data
+                    pr_number = subject.get("number")
+                    if pr_number:
+                        pr_url = f"https://github.com/{owner}/{repo}/pull/{pr_number}"
+                        break
+
+        # Get last comment
+        last_comment = None
+        if comments_data and len(comments_data) > 0:
+            last_comment = comments_data[0].get("body", "")[:200]  # Truncate to 200 chars
+
+        # Determine status based on issue state and activity
+        state = issue_data.get("state", "open")
+        status = "open"
+        if state == "closed":
+            status = "closed"
+        elif last_comment and ("claude" in last_comment.lower() or "working" in last_comment.lower()):
+            status = "in_progress"
+
+        return {
+            "state": state,
+            "status": status,
+            "updated_at": issue_data.get("updated_at"),
+            "pr_url": pr_url,
+            "last_comment": last_comment,
+            "issue_url": issue_data.get("html_url"),
+        }
