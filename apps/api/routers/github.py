@@ -602,6 +602,18 @@ class ReviewStatusResponse(BaseModel):
     result_path: str | None = None
 
 
+class IssueStatusResponse(BaseModel):
+    """Response with GitHub issue status."""
+
+    issue_number: int
+    status: str  # open, in_progress, closed
+    state: str  # GitHub state: open, closed
+    issue_url: str | None = None
+    updated_at: str | None = None
+    pr_url: str | None = None
+    last_comment: str | None = None
+
+
 # =============================================================================
 # Review API Endpoints
 # =============================================================================
@@ -819,3 +831,58 @@ async def get_review_status(
         status="pending",
         has_result=False,
     )
+
+
+@router.get("/issue-status/{run_id}/{issue_number}", response_model=IssueStatusResponse)
+async def get_issue_status(
+    run_id: UUID,
+    issue_number: int,
+    user: AuthUser = Depends(get_current_user),
+) -> IssueStatusResponse:
+    """Get GitHub issue status including linked PRs.
+
+    Checks the issue state, latest comments, and any linked pull requests.
+    Used for tracking Claude Code edit progress.
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    # Get run to find GitHub repo URL
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        repo_url = run.github_repo_url
+
+    try:
+        status_data = await github.get_issue_status(repo_url, issue_number)
+
+        return IssueStatusResponse(
+            issue_number=issue_number,
+            status=status_data.get("status", "open"),
+            state=status_data.get("state", "open"),
+            issue_url=status_data.get("issue_url"),
+            updated_at=status_data.get("updated_at"),
+            pr_url=status_data.get("pr_url"),
+            last_comment=status_data.get("last_comment"),
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Issue #{issue_number} not found.",
+        )

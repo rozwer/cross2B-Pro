@@ -1246,6 +1246,32 @@ class ApiClient {
         result_path: string | null;
       }>(`/api/github/review-status/${runId}/${step}`);
     },
+
+    /**
+     * Get issue status including linked PRs (for tracking Claude Code edits)
+     */
+    getIssueStatus: async (
+      runId: string,
+      issueNumber: number
+    ): Promise<{
+      issue_number: number;
+      status: "open" | "in_progress" | "closed";
+      state: string;
+      issue_url: string | null;
+      updated_at: string | null;
+      pr_url: string | null;
+      last_comment: string | null;
+    }> => {
+      return this.request<{
+        issue_number: number;
+        status: "open" | "in_progress" | "closed";
+        state: string;
+        issue_url: string | null;
+        updated_at: string | null;
+        pr_url: string | null;
+        last_comment: string | null;
+      }>(`/api/github/issue-status/${runId}/${issueNumber}`);
+    },
   };
 
   // ============================================
