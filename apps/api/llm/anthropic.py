@@ -77,7 +77,8 @@ class AnthropicClient(LLMInterface):
             raise NonRetryableLLMError("ANTHROPIC_API_KEY is not set")
 
         if model not in SUPPORTED_MODELS:
-            raise NonRetryableLLMError(f"Model '{model}' is not supported. Supported models: {SUPPORTED_MODELS}")
+            # 警告のみ（DBで管理されているモデルリストを優先）
+            logger.warning(f"Model '{model}' is not in known models list. Available: {SUPPORTED_MODELS}")
 
         # Configure httpx client with connection pool limits
         # max_connections: total connection pool size

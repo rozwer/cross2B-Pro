@@ -35,6 +35,11 @@ import type {
   ApiSettingsListResponse,
   ApiSettingUpdateRequest,
   ConnectionTestResponse,
+  LLMModel,
+  LLMProviderWithModels,
+  LLMProvidersListResponse,
+  LLMModelCreateRequest,
+  LLMModelUpdateRequest,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
@@ -844,6 +849,55 @@ class ApiClient {
      */
     getModels: async (): Promise<ModelsConfigResponse> => {
       return this.request<ModelsConfigResponse>("/api/config/models");
+    },
+  };
+
+  // ============================================
+  // LLM Models Management API
+  // ============================================
+
+  models = {
+    /**
+     * Get all LLM providers with their models
+     */
+    list: async (): Promise<LLMProvidersListResponse> => {
+      return this.request<LLMProvidersListResponse>("/api/models");
+    },
+
+    /**
+     * Get models for a specific provider
+     */
+    getProvider: async (providerId: string): Promise<LLMProviderWithModels> => {
+      return this.request<LLMProviderWithModels>(`/api/models/${providerId}`);
+    },
+
+    /**
+     * Create a new model
+     */
+    create: async (data: LLMModelCreateRequest): Promise<LLMModel> => {
+      return this.request<LLMModel>("/api/models", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /**
+     * Update an existing model
+     */
+    update: async (modelId: number, data: LLMModelUpdateRequest): Promise<LLMModel> => {
+      return this.request<LLMModel>(`/api/models/${modelId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /**
+     * Delete a model
+     */
+    delete: async (modelId: number): Promise<{ message: string }> => {
+      return this.request<{ message: string }>(`/api/models/${modelId}`, {
+        method: "DELETE",
+      });
     },
   };
 
