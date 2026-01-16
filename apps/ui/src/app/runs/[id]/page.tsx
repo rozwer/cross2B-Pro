@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, useEffect, useRef } from "react";
+import { use, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,7 +11,7 @@ import {
   FileText,
   Wifi,
   WifiOff,
-  Network,
+  DollarSign,
   X,
   Loader2,
   Pause,
@@ -35,9 +35,7 @@ import { STEP_LABELS, getStep11Phase, getKeywordFromInput } from "@/lib/types";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-// ===== DEBUG_LOG_START =====
-type TabType = "timeline" | "artifacts" | "events" | "settings" | "network";
-// ===== DEBUG_LOG_END =====
+type TabType = "timeline" | "artifacts" | "events" | "settings" | "cost";
 
 // プレビューモーダル用状態の型
 interface PreviewModalState {
@@ -463,14 +461,12 @@ export default function RunDetailPage({
             icon={<Settings className="h-4 w-4" />}
             label="設定"
           />
-          {/* ===== DEBUG_LOG_START ===== */}
           <TabButton
-            active={activeTab === "network"}
-            onClick={() => setActiveTab("network")}
-            icon={<Network className="h-4 w-4" />}
-            label="Network (Debug)"
+            active={activeTab === "cost"}
+            onClick={() => setActiveTab("cost")}
+            icon={<DollarSign className="h-4 w-4" />}
+            label="コスト"
           />
-          {/* ===== DEBUG_LOG_END ===== */}
         </div>
       </div>
 
@@ -514,13 +510,11 @@ export default function RunDetailPage({
         />
       )}
 
-      {activeTab === "events" && <EventsList events={events} />}
+      {activeTab === "events" && <EventsList runId={id} wsEvents={events} />}
 
       {activeTab === "settings" && <SettingsPanel run={run} />}
 
-      {/* ===== DEBUG_LOG_START ===== */}
-      {activeTab === "network" && <NetworkDebugPanel runId={id} />}
-      {/* ===== DEBUG_LOG_END ===== */}
+      {activeTab === "cost" && <CostPanel runId={id} />}
 
       {/* ダイアログ */}
       <ApprovalDialog
@@ -665,48 +659,278 @@ function TabButton({
   );
 }
 
-function EventsList({
-  events,
-}: {
-  events: Array<{ type: string; timestamp: string; message: string }>;
-}) {
+// Event type categories for filtering and styling
+const EVENT_CATEGORIES = {
+  success: ["step.succeeded", "run.completed", "validation.passed", "repair.applied", "step_completed", "run_completed"],
+  error: ["step.failed", "run.failed", "validation.failed", "repair.failed", "llm.error", "error", "run_failed"],
+  retry: ["step.retrying", "step_retrying"],
+  started: ["step.started", "run.started", "run.created", "step_started"],
+  info: ["run.paused", "run.resumed", "llm.request_sent", "llm.response_received", "approval_requested"],
+};
+
+function getEventCategory(eventType: string): keyof typeof EVENT_CATEGORIES | "other" {
+  for (const [category, types] of Object.entries(EVENT_CATEGORIES)) {
+    if (types.some((t) => eventType.includes(t) || t.includes(eventType))) {
+      return category as keyof typeof EVENT_CATEGORIES;
+    }
+  }
+  return "other";
+}
+
+function getEventBadgeStyle(eventType: string): string {
+  const category = getEventCategory(eventType);
+  switch (category) {
+    case "success":
+      return "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300";
+    case "error":
+      return "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300";
+    case "retry":
+      return "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300";
+    case "started":
+      return "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300";
+    case "info":
+      return "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300";
+    default:
+      return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+  }
+}
+
+interface EventsListProps {
+  runId: string;
+  wsEvents: Array<{ type: string; timestamp: string; message: string; step?: string; attempt?: number; details?: Record<string, unknown> }>;
+}
+
+function EventsList({ runId, wsEvents }: EventsListProps) {
+  const [filter, setFilter] = useState<string>("all");
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set());
+  const [dbEvents, setDbEvents] = useState<Array<{
+    id: string;
+    event_type: string;
+    step?: string;
+    payload: Record<string, unknown>;
+    details?: {
+      step?: string;
+      attempt?: number;
+      duration_ms?: number;
+      error?: string;
+      error_category?: string;
+      reason?: string;
+    };
+    created_at: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch DB events on mount
+  useEffect(() => {
+    const fetchDbEvents = async () => {
+      try {
+        setLoading(true);
+        const events = await api.events.list(runId, { limit: 200 });
+        setDbEvents(events);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "イベントの取得に失敗しました");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDbEvents();
+  }, [runId]);
+
+  // Combine and deduplicate events
+  const allEvents = useMemo(() => {
+    const seenIds = new Set<string>();
+    const combined: Array<{
+      id: string;
+      type: string;
+      step?: string;
+      message: string;
+      timestamp: string;
+      attempt?: number;
+      duration_ms?: number;
+      error?: string;
+      error_category?: string;
+      reason?: string;
+      details?: Record<string, unknown>;
+      source: "db" | "ws";
+    }> = [];
+
+    // Add DB events first (authoritative)
+    for (const e of dbEvents) {
+      const id = e.id;
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+
+      combined.push({
+        id,
+        type: e.event_type,
+        step: e.step || e.details?.step as string | undefined,
+        message: e.payload?.message as string || formatEventMessage(e.event_type, e.details),
+        timestamp: e.created_at,
+        attempt: e.details?.attempt,
+        duration_ms: e.details?.duration_ms,
+        error: e.details?.error,
+        error_category: e.details?.error_category,
+        reason: e.details?.reason,
+        details: e.payload,
+        source: "db",
+      });
+    }
+
+    // Add WS events that aren't in DB yet
+    for (const e of wsEvents) {
+      const wsId = `ws-${e.timestamp}-${e.type}`;
+      // Check for duplicates by timestamp and type combination
+      const isDuplicate = combined.some(
+        (existing) =>
+          Math.abs(new Date(existing.timestamp).getTime() - new Date(e.timestamp).getTime()) < 1000 &&
+          existing.type.replace(".", "_") === e.type.replace(".", "_")
+      );
+      if (isDuplicate) continue;
+
+      combined.push({
+        id: wsId,
+        type: e.type,
+        step: e.step,
+        message: e.message,
+        timestamp: e.timestamp,
+        attempt: e.attempt,
+        details: e.details,
+        source: "ws",
+      });
+    }
+
+    // Sort by timestamp (newest first)
+    combined.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return combined;
+  }, [dbEvents, wsEvents]);
+
+  // Filter events
+  const filteredEvents = useMemo(() => {
+    if (filter === "all") return allEvents;
+    return allEvents.filter((e) => getEventCategory(e.type) === filter);
+  }, [allEvents, filter]);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedEvents((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">イベントログ</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            イベントログ
+            <span className="ml-2 text-xs font-normal text-gray-500">
+              ({filteredEvents.length}件)
+            </span>
+          </h3>
+          <div className="flex items-center gap-2">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+            >
+              <option value="all">すべて</option>
+              <option value="success">成功</option>
+              <option value="error">エラー</option>
+              <option value="retry">リトライ</option>
+              <option value="started">開始</option>
+              <option value="info">情報</option>
+            </select>
+            {loading && (
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            )}
+          </div>
+        </div>
       </div>
-      <div className="max-h-96 overflow-y-auto">
-        {events.length === 0 ? (
+      <div className="max-h-[600px] overflow-y-auto">
+        {error ? (
+          <div className="p-4 text-center text-red-500 dark:text-red-400">
+            {error}
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            イベントがありません
+            {loading ? "読み込み中..." : "イベントがありません"}
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
-            {events.map((event, index) => (
-              <div key={index} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            {filteredEvents.map((event) => (
+              <div
+                key={event.id}
+                className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                onClick={() => toggleExpanded(event.id)}
+              >
                 <div className="flex items-center gap-2 text-xs">
-                  <span
-                    className={cn(
-                      "px-2 py-0.5 rounded",
-                      event.type.includes("completed") &&
-                        "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300",
-                      event.type.includes("failed") &&
-                        "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
-                      event.type.includes("started") &&
-                        "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
-                      !event.type.includes("completed") &&
-                        !event.type.includes("failed") &&
-                        !event.type.includes("started") &&
-                        "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
-                    )}
-                  >
+                  <span className={cn("px-2 py-0.5 rounded", getEventBadgeStyle(event.type))}>
                     {event.type}
                   </span>
-                  <span className="text-gray-400 dark:text-gray-500">
+                  {event.step && (
+                    <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                      {STEP_LABELS[event.step] || event.step}
+                    </span>
+                  )}
+                  {event.attempt && event.attempt > 1 && (
+                    <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                      リトライ #{event.attempt}
+                    </span>
+                  )}
+                  {event.duration_ms && (
+                    <span className="text-gray-400 dark:text-gray-500">
+                      {event.duration_ms}ms
+                    </span>
+                  )}
+                  <span className="text-gray-400 dark:text-gray-500 ml-auto">
                     {formatDate(event.timestamp)}
                   </span>
+                  {event.source === "ws" && (
+                    <span className="px-1 py-0.5 rounded text-[10px] bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                      LIVE
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{event.message}</p>
+
+                {/* Expanded details */}
+                {expandedEvents.has(event.id) && (
+                  <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-900/50 rounded text-xs">
+                    {event.error && (
+                      <div className="mb-2">
+                        <span className="font-semibold text-red-600 dark:text-red-400">エラー: </span>
+                        <span className="text-red-600 dark:text-red-400">{event.error}</span>
+                        {event.error_category && (
+                          <span className="ml-2 text-gray-500">({event.error_category})</span>
+                        )}
+                      </div>
+                    )}
+                    {event.reason && (
+                      <div className="mb-2">
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">理由: </span>
+                        <span className="text-gray-600 dark:text-gray-300">{event.reason}</span>
+                      </div>
+                    )}
+                    {event.details && Object.keys(event.details).length > 0 && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                          詳細データ
+                        </summary>
+                        <pre className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto text-[10px]">
+                          {JSON.stringify(event.details, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -714,6 +938,44 @@ function EventsList({
       </div>
     </div>
   );
+}
+
+function formatEventMessage(eventType: string, details?: Record<string, unknown>): string {
+  const step = details?.step as string | undefined;
+  const stepLabel = step ? (STEP_LABELS[step] || step) : "";
+
+  switch (eventType) {
+    case "step.started":
+      return `${stepLabel} を開始しました`;
+    case "step.succeeded":
+      return `${stepLabel} が完了しました`;
+    case "step.failed":
+      return `${stepLabel} が失敗しました: ${details?.error || "不明なエラー"}`;
+    case "step.retrying":
+      return `${stepLabel} をリトライします (試行 #${details?.attempt || "?"})`;
+    case "run.created":
+      return "ワークフローを作成しました";
+    case "run.started":
+      return "ワークフローを開始しました";
+    case "run.completed":
+      return "ワークフローが完了しました";
+    case "run.failed":
+      return "ワークフローが失敗しました";
+    case "run.paused":
+      return "ワークフローを一時停止しました";
+    case "run.resumed":
+      return "ワークフローを再開しました";
+    case "repair.applied":
+      return `${stepLabel} の修正を適用しました`;
+    case "repair.failed":
+      return `${stepLabel} の修正に失敗しました`;
+    case "validation.passed":
+      return `${stepLabel} の検証に成功しました`;
+    case "validation.failed":
+      return `${stepLabel} の検証に失敗しました`;
+    default:
+      return eventType;
+  }
 }
 
 const PLATFORM_DISPLAY_NAMES: Record<string, string> = {
@@ -923,211 +1185,197 @@ function SettingsPanel({
   );
 }
 
-// ===== DEBUG_LOG_START =====
-interface NetworkLog {
-  timestamp: string;
-  method: string;
-  url: string;
-  status: number | string;
-  duration: number;
-  response?: unknown;
-  error?: string;
-}
+// コストパネルコンポーネント
+import type { CostResponse, CostBreakdown } from "@/lib/types";
 
-function NetworkDebugPanel({ runId }: { runId: string }) {
-  const [logs, setLogs] = useState<NetworkLog[]>([]);
-  const [polling, setPolling] = useState(false);
-  const [interval, setIntervalValue] = useState(2000);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+function CostPanel({ runId }: { runId: string }) {
+  const [costData, setCostData] = useState<CostResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchRunStatus = async () => {
-    const start = Date.now();
+  const fetchCost = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/runs/${runId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token") || ""}` },
-      });
-      const data = await res.json();
-      const duration = Date.now() - start;
-
-      setLogs((prev) =>
-        [
-          {
-            timestamp: new Date().toISOString(),
-            method: "GET",
-            url: `/api/runs/${runId}`,
-            status: res.status,
-            duration,
-            response: {
-              status: data.status,
-              current_step: data.current_step,
-              steps: data.steps?.length,
-            },
-          },
-          ...prev,
-        ].slice(0, 50),
-      );
+      const data = await api.cost.get(runId);
+      setCostData(data);
     } catch (err) {
-      const duration = Date.now() - start;
-      setLogs((prev) =>
-        [
-          {
-            timestamp: new Date().toISOString(),
-            method: "GET",
-            url: `/api/runs/${runId}`,
-            status: "ERR",
-            duration,
-            error: String(err),
-          },
-          ...prev,
-        ].slice(0, 50),
-      );
+      setError(err instanceof Error ? err.message : "コスト情報の取得に失敗しました");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const fetchHealthDetailed = async () => {
-    const start = Date.now();
-    try {
-      const res = await fetch("/api/health/detailed");
-      const data = await res.json();
-      const duration = Date.now() - start;
-
-      setLogs((prev) =>
-        [
-          {
-            timestamp: new Date().toISOString(),
-            method: "GET",
-            url: "/api/health/detailed",
-            status: res.status,
-            duration,
-            response: data,
-          },
-          ...prev,
-        ].slice(0, 50),
-      );
-    } catch (err) {
-      const duration = Date.now() - start;
-      setLogs((prev) =>
-        [
-          {
-            timestamp: new Date().toISOString(),
-            method: "GET",
-            url: "/api/health/detailed",
-            status: "ERR",
-            duration,
-            error: String(err),
-          },
-          ...prev,
-        ].slice(0, 50),
-      );
-    }
-  };
+  }, [runId]);
 
   useEffect(() => {
-    if (polling) {
-      intervalRef.current = setInterval(fetchRunStatus, interval);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [polling, interval]);
+    fetchCost();
+  }, [fetchCost]);
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-4">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Network Debug Panel
-        </h3>
-        <div className="flex items-center gap-2">
+  const formatCost = (cost: number) => {
+    return cost < 0.01 ? `$${cost.toFixed(6)}` : `$${cost.toFixed(4)}`;
+  };
+
+  const formatTokens = (tokens: number) => {
+    if (tokens >= 1000000) {
+      return `${(tokens / 1000000).toFixed(2)}M`;
+    }
+    if (tokens >= 1000) {
+      return `${(tokens / 1000).toFixed(1)}K`;
+    }
+    return tokens.toString();
+  };
+
+  const getModelColor = (model: string) => {
+    if (model.includes("gemini")) return "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300";
+    if (model.includes("gpt")) return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300";
+    if (model.includes("claude")) return "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300";
+    return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300";
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+        <div className="flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          <span className="ml-2 text-gray-500 dark:text-gray-400">コスト情報を取得中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="text-center">
+          <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
           <button
-            onClick={fetchRunStatus}
-            className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+            onClick={fetchCost}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
           >
-            Fetch Run
-          </button>
-          <button
-            onClick={fetchHealthDetailed}
-            className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
-          >
-            Health Check
-          </button>
-          <label className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={polling}
-              onChange={(e) => setPolling(e.target.checked)}
-              className="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900"
-            />
-            Auto-poll
-          </label>
-          <select
-            value={interval}
-            onChange={(e) => setIntervalValue(Number(e.target.value))}
-            className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-          >
-            <option value={1000}>1s</option>
-            <option value={2000}>2s</option>
-            <option value={5000}>5s</option>
-          </select>
-          <button
-            onClick={() => setLogs([])}
-            className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Clear
+            再読み込み
           </button>
         </div>
       </div>
-      <div className="max-h-96 overflow-y-auto font-mono text-xs text-gray-900 dark:text-gray-100">
-        {logs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            No network logs. Click buttons above to fetch.
+    );
+  }
+
+  if (!costData || costData.breakdown.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>コスト情報がありません</p>
+          <p className="text-sm mt-2">ワークフロー実行後にトークン使用量が表示されます</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* サマリーカード */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="text-sm text-gray-500 dark:text-gray-400">総コスト</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {formatCost(costData.total_cost)}
           </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900 sticky top-0">
+          <div className="text-xs text-gray-400 dark:text-gray-500">{costData.currency}</div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="text-sm text-gray-500 dark:text-gray-400">入力トークン</div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {formatTokens(costData.total_input_tokens)}
+          </div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">
+            {costData.total_input_tokens.toLocaleString()} tokens
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="text-sm text-gray-500 dark:text-gray-400">出力トークン</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {formatTokens(costData.total_output_tokens)}
+          </div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">
+            {costData.total_output_tokens.toLocaleString()} tokens
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="text-sm text-gray-500 dark:text-gray-400">使用工程数</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {costData.breakdown.length}
+          </div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">steps with LLM usage</div>
+        </div>
+      </div>
+
+      {/* 工程別内訳 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            工程別コスト内訳
+          </h3>
+          <button
+            onClick={fetchCost}
+            className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1"
+          >
+            <RefreshCw className="h-3 w-3" />
+            更新
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">Time</th>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">Method</th>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">URL</th>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">Status</th>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">Duration</th>
-                <th className="px-2 py-1 text-left text-gray-700 dark:text-gray-300">Response</th>
+                <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 font-medium">工程</th>
+                <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 font-medium">モデル</th>
+                <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">入力</th>
+                <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">出力</th>
+                <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">コスト</th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((log, idx) => (
+              {costData.breakdown.map((item: CostBreakdown, idx: number) => (
                 <tr
                   key={idx}
-                  className={cn(
-                    "border-t border-gray-100 dark:border-gray-700",
-                    log.status === 200 && "bg-green-50 dark:bg-green-900/30",
-                    (log.status === "ERR" ||
-                      (typeof log.status === "number" && log.status >= 400)) &&
-                      "bg-red-50 dark:bg-red-900/30",
-                  )}
+                  className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
-                  <td className="px-2 py-1 whitespace-nowrap">
-                    {log.timestamp.split("T")[1]?.slice(0, 12)}
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    {STEP_LABELS[item.step] || item.step}
                   </td>
-                  <td className="px-2 py-1">{log.method}</td>
-                  <td className="px-2 py-1 truncate max-w-48">{log.url}</td>
-                  <td className="px-2 py-1">{log.status}</td>
-                  <td className="px-2 py-1">{log.duration}ms</td>
-                  <td className="px-2 py-1 truncate max-w-64">
-                    {log.error ? (
-                      <span className="text-red-600 dark:text-red-400">{log.error}</span>
-                    ) : (
-                      JSON.stringify(log.response)
-                    )}
+                  <td className="px-4 py-3">
+                    <span className={cn("px-2 py-0.5 rounded text-xs font-medium", getModelColor(item.model))}>
+                      {item.model}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 font-mono">
+                    {item.input_tokens.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 font-mono">
+                    {item.output_tokens.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100 font-mono">
+                    {formatCost(item.cost)}
                   </td>
                 </tr>
               ))}
             </tbody>
+            <tfoot className="bg-gray-50 dark:bg-gray-900 font-medium">
+              <tr className="border-t-2 border-gray-200 dark:border-gray-600">
+                <td className="px-4 py-3 text-gray-900 dark:text-gray-100" colSpan={2}>合計</td>
+                <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400 font-mono">
+                  {costData.total_input_tokens.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-right text-green-600 dark:text-green-400 font-mono">
+                  {costData.total_output_tokens.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100 font-mono">
+                  {formatCost(costData.total_cost)}
+                </td>
+              </tr>
+            </tfoot>
           </table>
-        )}
+        </div>
       </div>
     </div>
   );
 }
-// ===== DEBUG_LOG_END =====

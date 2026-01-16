@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { RefreshCw, Filter, Search, Inbox, Plus, Trash2, CheckSquare, Square, X } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { RefreshCw, Filter, Search, Inbox, Plus, Trash2, CheckSquare, Square, X, Pause, Play } from "lucide-react";
 import Link from "next/link";
 import type { RunSummary, RunStatus } from "@/lib/types";
 import { api } from "@/lib/api";
@@ -21,6 +21,9 @@ const STATUS_FILTERS: Array<{ value: RunStatus | "all"; label: string; color: st
 // Statuses that can be deleted (all statuses are deletable)
 const DELETABLE_STATUSES: RunStatus[] = ["pending", "running", "waiting_approval", "waiting_image_input", "completed", "failed", "cancelled"];
 
+// Polling interval in milliseconds (10 seconds)
+const POLLING_INTERVAL = 10000;
+
 export function RunList() {
   const [runs, setRuns] = useState<RunSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,32 +33,86 @@ export function RunList() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [isPolling, setIsPolling] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchRuns = async (isRefresh = false) => {
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
+  const fetchRuns = useCallback(async (isRefresh = false, silent = false) => {
     if (isRefresh) {
       setRefreshing(true);
-    } else {
+    } else if (!silent) {
       setLoading(true);
     }
-    setError(null);
+    if (!silent) {
+      setError(null);
+    }
 
     try {
       const params = statusFilter !== "all" ? { status: statusFilter } : {};
       const response = await api.runs.list(params);
-      setRuns(response?.items ?? []);
+      if (isMountedRef.current) {
+        setRuns(response?.items ?? []);
+        setLastUpdated(new Date());
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch runs");
-      setRuns([]);
+      if (isMountedRef.current && !silent) {
+        setError(err instanceof Error ? err.message : "Failed to fetch runs");
+        setRuns([]);
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchRuns();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
+
+  // Start/stop polling
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) return;
+    pollingIntervalRef.current = setInterval(() => {
+      fetchRuns(false, true); // silent fetch
+    }, POLLING_INTERVAL);
+  }, [fetchRuns]);
+
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
+  const togglePolling = useCallback(() => {
+    if (isPolling) {
+      stopPolling();
+    } else {
+      startPolling();
+    }
+    setIsPolling(!isPolling);
+  }, [isPolling, startPolling, stopPolling]);
+
+  // Initial fetch and polling setup
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchRuns();
+
+    return () => {
+      isMountedRef.current = false;
+      stopPolling();
+    };
+  }, [fetchRuns, stopPolling]);
+
+  // Manage polling based on isPolling state
+  useEffect(() => {
+    if (isPolling) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+    return () => stopPolling();
+  }, [isPolling, startPolling, stopPolling]);
 
   if (loading) {
     return (
@@ -190,6 +247,28 @@ export function RunList() {
             )}
           </button>
 
+          {/* Auto-refresh toggle */}
+          <button
+            onClick={togglePolling}
+            className={cn(
+              "btn btn-ghost",
+              isPolling && "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
+            )}
+            title={isPolling ? "自動更新を停止" : "自動更新を開始"}
+          >
+            {isPolling ? (
+              <>
+                <Pause className="h-4 w-4" />
+                自動更新中
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                自動更新
+              </>
+            )}
+          </button>
+
           {/* Refresh button */}
           <button onClick={() => fetchRuns(true)} disabled={refreshing} className="btn btn-ghost">
             <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
@@ -197,6 +276,19 @@ export function RunList() {
           </button>
         </div>
       </div>
+
+      {/* Last updated indicator */}
+      {lastUpdated && (
+        <div className="flex items-center justify-end gap-2 mb-4 text-xs text-gray-500 dark:text-gray-400">
+          {isPolling && (
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              自動更新ON
+            </span>
+          )}
+          <span>最終更新: {lastUpdated.toLocaleTimeString("ja-JP")}</span>
+        </div>
+      )}
 
       {/* Bulk delete controls */}
       {selectMode && (
