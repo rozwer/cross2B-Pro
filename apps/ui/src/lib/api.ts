@@ -46,6 +46,8 @@ import type {
   RelatedKeywordSuggestionResponse,
   ChildTopicSuggestionRequest,
   ChildTopicSuggestionResponse,
+  ArticleListResponse,
+  ArticleDetail,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
@@ -1490,6 +1492,45 @@ class ApiClient {
         `/api/settings/${service}/test${query ? `?${query}` : ""}`,
         { method: "POST" }
       );
+    },
+  };
+
+  // ============================================
+  // Articles API (Completed Articles Management)
+  // ============================================
+
+  articles = {
+    /**
+     * List completed articles with filtering and pagination
+     */
+    list: async (params?: {
+      page?: number;
+      limit?: number;
+      keyword?: string;
+      has_review?: boolean;
+    }): Promise<ArticleListResponse> => {
+      const searchParams = new URLSearchParams();
+      if (params?.page) searchParams.set("page", params.page.toString());
+      if (params?.limit) searchParams.set("limit", params.limit.toString());
+      if (params?.keyword) searchParams.set("keyword", params.keyword);
+      if (params?.has_review !== undefined) searchParams.set("has_review", params.has_review.toString());
+
+      const query = searchParams.toString();
+      return this.request<ArticleListResponse>(`/api/articles${query ? `?${query}` : ""}`);
+    },
+
+    /**
+     * Get detailed article information
+     */
+    get: async (id: string): Promise<ArticleDetail> => {
+      return this.request<ArticleDetail>(`/api/articles/${id}`);
+    },
+
+    /**
+     * Get article content from a specific step
+     */
+    getContent: async (id: string, step: "step10" | "step11" | "step12"): Promise<Record<string, unknown>> => {
+      return this.request<Record<string, unknown>>(`/api/articles/${id}/content/${step}`);
     },
   };
 }

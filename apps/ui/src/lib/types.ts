@@ -993,3 +993,47 @@ export interface ConnectionTestResponse {
   error_message: string | null;
   details: Record<string, unknown> | null;
 }
+
+// ============================================
+// Article Types (Completed Articles Management)
+// ============================================
+
+/** Summary of a completed article for list view */
+export interface ArticleSummary {
+  id: string;
+  keyword: string;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+  has_images: boolean;
+  article_count: number;
+  review_status: "pending" | "completed" | null;
+  github_repo_url: string | null;
+}
+
+/** Response for article list endpoint */
+export interface ArticleListResponse {
+  articles: ArticleSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Detailed article information */
+export interface ArticleDetail {
+  id: string;
+  keyword: string;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+  github_repo_url: string | null;
+  github_dir_path: string | null;
+  title: string | null;
+  description: string | null;
+  article_count: number;
+  has_step10: boolean;
+  has_step11: boolean;
+  has_step12: boolean;
+  review_status: "pending" | "completed" | null;
+  input_data: Record<string, unknown> | null;
+}
