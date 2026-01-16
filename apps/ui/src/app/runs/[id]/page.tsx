@@ -1257,6 +1257,13 @@ function CostPanel({ runId, stepCompletedCount = 0 }: CostPanelProps) {
     return cost < 0.01 ? `$${cost.toFixed(6)}` : `$${cost.toFixed(4)}`;
   };
 
+  // USD to JPY conversion (approximate rate - can be updated)
+  const USD_TO_JPY_RATE = 155;
+  const formatCostJPY = (costUSD: number) => {
+    const jpy = costUSD * USD_TO_JPY_RATE;
+    return jpy < 1 ? `¥${jpy.toFixed(2)}` : `¥${Math.round(jpy).toLocaleString()}`;
+  };
+
   const formatTokens = (tokens: number) => {
     if (tokens >= 1000000) {
       return `${(tokens / 1000000).toFixed(2)}M`;
@@ -1325,7 +1332,10 @@ function CostPanel({ runId, stepCompletedCount = 0 }: CostPanelProps) {
           <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatCost(costData.total_cost)}
           </div>
-          <div className="text-xs text-gray-400 dark:text-gray-500">{costData.currency}</div>
+          <div className="text-sm font-medium text-primary-600 dark:text-primary-400">
+            {formatCostJPY(costData.total_cost)}
+          </div>
+          <div className="text-xs text-gray-400 dark:text-gray-500">1 USD = ¥{USD_TO_JPY_RATE}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">入力トークン</div>
@@ -1438,8 +1448,9 @@ function CostPanel({ runId, stepCompletedCount = 0 }: CostPanelProps) {
                     {costData.total_thinking_tokens.toLocaleString()}
                   </td>
                 )}
-                <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100 font-mono">
-                  {formatCost(costData.total_cost)}
+                <td className="px-4 py-3 text-right font-mono">
+                  <div className="text-gray-900 dark:text-gray-100">{formatCost(costData.total_cost)}</div>
+                  <div className="text-xs text-primary-600 dark:text-primary-400">{formatCostJPY(costData.total_cost)}</div>
                 </td>
               </tr>
             </tfoot>
