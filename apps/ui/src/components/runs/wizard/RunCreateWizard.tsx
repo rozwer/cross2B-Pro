@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArticleHearingInput,
@@ -15,6 +15,7 @@ import {
   KeywordSuggestion,
   HearingTemplate,
   HearingTemplateData,
+  ServiceConfig,
 } from "@/lib/types";
 import { api } from "@/lib/api";
 import { WizardProgress } from "./WizardProgress";
@@ -110,6 +111,25 @@ export function RunCreateWizard({
     confirmed: false,
     github_repo_url: "",
   });
+
+  // Load default GitHub settings on mount
+  useEffect(() => {
+    const loadDefaultGitHubSettings = async () => {
+      try {
+        const response = await api.settings.get("github");
+        const config = response.config as ServiceConfig | null;
+        if (config?.default_repo_url) {
+          setFormData((prev) => ({
+            ...prev,
+            github_repo_url: config.default_repo_url || "",
+          }));
+        }
+      } catch {
+        // Ignore errors - default settings are optional
+      }
+    };
+    loadDefaultGitHubSettings();
+  }, []);
 
   // Keyword suggestions state
   const [keywordSuggestions, setKeywordSuggestions] = useState<KeywordSuggestion[] | null>(null);

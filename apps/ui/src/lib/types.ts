@@ -954,6 +954,9 @@ export type LLMServiceType = "gemini" | "openai" | "anthropic";
 export interface ServiceConfig {
   grounding?: boolean;
   temperature?: number;
+  // GitHub-specific config
+  default_repo_url?: string;
+  default_dir_path?: string;
 }
 
 /** API setting response */
