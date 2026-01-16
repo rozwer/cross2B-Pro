@@ -1203,6 +1203,39 @@ class ApiClient {
     },
 
     /**
+     * ブランチから PR を作成
+     */
+    createPR: async (
+      runId: string,
+      branchName: string,
+      title?: string,
+      body?: string
+    ): Promise<{
+      number: number;
+      title: string;
+      url: string;
+      state: string;
+      head_branch: string | null;
+      base_branch: string | null;
+    }> => {
+      return this.request<{
+        number: number;
+        title: string;
+        url: string;
+        state: string;
+        head_branch: string | null;
+        base_branch: string | null;
+      }>(`/api/github/create-pr/${runId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          branch_name: branchName,
+          title,
+          body,
+        }),
+      });
+    },
+
+    /**
      * Get sync status for all steps of a run
      */
     getSyncStatus: async (

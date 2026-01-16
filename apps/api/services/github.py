@@ -927,3 +927,74 @@ class GitHubService:
                     continue
 
         return matching_branches
+
+    async def create_pull_request(
+        self,
+        repo_url: str,
+        head_branch: str,
+        base_branch: str = "main",
+        title: str | None = None,
+        body: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a pull request from head_branch to base_branch.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            head_branch: Source branch name
+            base_branch: Target branch name (default: "main")
+            title: PR title (auto-generated if not provided)
+            body: PR description (auto-generated if not provided)
+
+        Returns:
+            Created PR data including number, url, state
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        # Auto-generate title from branch name if not provided
+        if not title:
+            # claude/issue-2-20260116-1126 -> Issue #2: Edit step4
+            if head_branch.startswith("claude/issue-"):
+                parts = head_branch.split("-")
+                if len(parts) >= 2:
+                    issue_num = parts[1]
+                    title = f"Issue #{issue_num}: Changes from Claude Code"
+                else:
+                    title = f"Changes from {head_branch}"
+            else:
+                title = f"Changes from {head_branch}"
+
+        if not body:
+            body = f"""## Summary
+This PR was created automatically from branch `{head_branch}`.
+
+## Changes
+See the diff for details.
+
+---
+_Created via SEO Article Generator_
+"""
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls",
+                headers=self._get_headers(),
+                json={
+                    "title": title,
+                    "body": body,
+                    "head": head_branch,
+                    "base": base_branch,
+                },
+                timeout=30.0,
+            )
+            pr_data = await self._handle_response(response)
+
+        return {
+            "number": pr_data.get("number"),
+            "title": pr_data.get("title"),
+            "url": pr_data.get("html_url"),
+            "state": pr_data.get("state"),
+            "head_branch": pr_data.get("head", {}).get("ref"),
+            "base_branch": pr_data.get("base", {}).get("ref"),
+            "user": pr_data.get("user", {}).get("login"),
+            "created_at": pr_data.get("created_at"),
+        }
