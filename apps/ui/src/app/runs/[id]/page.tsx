@@ -71,6 +71,7 @@ export default function RunDetailPage({
   const [pauseLoading, setPauseLoading] = useState(false);
   const [isPauseRequested, setIsPauseRequested] = useState(false);
   const [showStep3ReviewDialog, setShowStep3ReviewDialog] = useState(false);
+  const [stepCompletedCount, setStepCompletedCount] = useState(0);
 
   const { run, loading, error, fetch, approve, reject, retry, resume, pause, continueRun, isPolling } = useRun(id);
 
@@ -103,6 +104,8 @@ export default function RunDetailPage({
         fetch();
         // Also refresh artifacts when steps complete
         fetchArtifactsRef.current();
+        // Increment counter to trigger CostPanel refresh
+        setStepCompletedCount((c) => c + 1);
       }
     },
   });
@@ -532,7 +535,7 @@ export default function RunDetailPage({
 
       {activeTab === "settings" && <SettingsPanel run={run} />}
 
-      {activeTab === "cost" && <CostPanel runId={id} />}
+      {activeTab === "cost" && <CostPanel runId={id} stepCompletedCount={stepCompletedCount} />}
 
       {/* ダイアログ */}
       <ApprovalDialog
@@ -1206,12 +1209,25 @@ function SettingsPanel({
 // コストパネルコンポーネント
 import type { CostResponse, CostBreakdown } from "@/lib/types";
 
-function CostPanel({ runId }: { runId: string }) {
+interface CostPanelProps {
+  runId: string;
+  stepCompletedCount?: number; // Increment this to trigger auto-refresh
+}
+
+function CostPanel({ runId, stepCompletedCount = 0 }: CostPanelProps) {
   const [costData, setCostData] = useState<CostResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchRef = useRef<number>(0);
 
-  const fetchCost = useCallback(async () => {
+  const fetchCost = useCallback(async (force = false) => {
+    // Debounce: prevent rapid fetches within 2 seconds (unless forced)
+    const now = Date.now();
+    if (!force && now - lastFetchRef.current < 2000 && costData) {
+      return;
+    }
+    lastFetchRef.current = now;
+
     setLoading(true);
     setError(null);
     try {
@@ -1222,11 +1238,20 @@ function CostPanel({ runId }: { runId: string }) {
     } finally {
       setLoading(false);
     }
+  }, [runId, costData]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchCost(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runId]);
 
+  // Auto-refresh when step completes
   useEffect(() => {
-    fetchCost();
-  }, [fetchCost]);
+    if (stepCompletedCount > 0) {
+      fetchCost(true);
+    }
+  }, [stepCompletedCount, fetchCost]);
 
   const formatCost = (cost: number) => {
     return cost < 0.01 ? `$${cost.toFixed(6)}` : `$${cost.toFixed(4)}`;
@@ -1266,7 +1291,7 @@ function CostPanel({ runId }: { runId: string }) {
         <div className="text-center">
           <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
           <button
-            onClick={fetchCost}
+            onClick={() => fetchCost(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
           >
             再読み込み
@@ -1288,10 +1313,13 @@ function CostPanel({ runId }: { runId: string }) {
     );
   }
 
+  // Check if any thinking tokens are present
+  const hasThinkingTokens = costData.total_thinking_tokens > 0;
+
   return (
     <div className="space-y-6">
       {/* サマリーカード */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={cn("grid grid-cols-1 gap-4", hasThinkingTokens ? "md:grid-cols-5" : "md:grid-cols-4")}>
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">総コスト</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -1317,6 +1345,17 @@ function CostPanel({ runId }: { runId: string }) {
             {costData.total_output_tokens.toLocaleString()} tokens
           </div>
         </div>
+        {hasThinkingTokens && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">推論トークン</div>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {formatTokens(costData.total_thinking_tokens)}
+            </div>
+            <div className="text-xs text-gray-400 dark:text-gray-500">
+              {costData.total_thinking_tokens.toLocaleString()} tokens
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">使用工程数</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -1333,7 +1372,7 @@ function CostPanel({ runId }: { runId: string }) {
             工程別コスト内訳
           </h3>
           <button
-            onClick={fetchCost}
+            onClick={() => fetchCost(true)}
             className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1"
           >
             <RefreshCw className="h-3 w-3" />
@@ -1348,6 +1387,9 @@ function CostPanel({ runId }: { runId: string }) {
                 <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 font-medium">モデル</th>
                 <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">入力</th>
                 <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">出力</th>
+                {hasThinkingTokens && (
+                  <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">推論</th>
+                )}
                 <th className="px-4 py-3 text-right text-gray-500 dark:text-gray-400 font-medium">コスト</th>
               </tr>
             </thead>
@@ -1371,6 +1413,11 @@ function CostPanel({ runId }: { runId: string }) {
                   <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 font-mono">
                     {item.output_tokens.toLocaleString()}
                   </td>
+                  {hasThinkingTokens && (
+                    <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400 font-mono">
+                      {(item.thinking_tokens || 0).toLocaleString()}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100 font-mono">
                     {formatCost(item.cost)}
                   </td>
@@ -1386,6 +1433,11 @@ function CostPanel({ runId }: { runId: string }) {
                 <td className="px-4 py-3 text-right text-green-600 dark:text-green-400 font-mono">
                   {costData.total_output_tokens.toLocaleString()}
                 </td>
+                {hasThinkingTokens && (
+                  <td className="px-4 py-3 text-right text-amber-600 dark:text-amber-400 font-mono">
+                    {costData.total_thinking_tokens.toLocaleString()}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100 font-mono">
                   {formatCost(costData.total_cost)}
                 </td>
