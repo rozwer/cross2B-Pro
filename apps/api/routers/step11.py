@@ -371,11 +371,12 @@ async def save_step11_state(
 # =============================================================================
 
 
-async def analyze_positions(
+async def analyze_positions_single(
     markdown_content: str,
     settings: Step11SettingsInput,
+    article_number: int = 1,
 ) -> tuple[list[ImagePosition], str, list[dict[str, Any]]]:
-    """位置分析（モック実装）
+    """単一記事の位置分析（モック実装）
 
     TODO: 実際の LLM 呼び出しに置き換え
     """
@@ -387,10 +388,10 @@ async def analyze_positions(
     for line in lines:
         if line.startswith("## "):
             current_section = line[3:].strip()
-            sections.append({"title": current_section, "level": 2})
+            sections.append({"title": current_section, "level": 2, "article_number": article_number})
         elif line.startswith("### "):
             current_section = line[4:].strip()
-            sections.append({"title": current_section, "level": 3})
+            sections.append({"title": current_section, "level": 3, "article_number": article_number})
 
     # モック: セクション数に応じて位置を提案
     positions = []
@@ -401,7 +402,7 @@ async def analyze_positions(
             section_title = str(sections[i].get("title", ""))
             positions.append(
                 ImagePosition(
-                    article_number=1,
+                    article_number=article_number,
                     section_title=section_title,
                     section_index=i,
                     position="after",
@@ -413,6 +414,42 @@ async def analyze_positions(
     summary = f"{len(positions)}箇所の画像挿入位置を提案しました。"
 
     return positions, summary, sections
+
+
+async def analyze_positions(
+    articles: list[dict[str, Any]],
+    settings: Step11SettingsInput,
+) -> tuple[list[ImagePosition], str, list[dict[str, Any]]]:
+    """複数記事の位置分析
+
+    Args:
+        articles: Step10からの記事リスト（各記事は article_number, content を持つ）
+        settings: 画像生成設定
+
+    Returns:
+        positions: 全記事の画像挿入位置リスト
+        summary: 分析サマリー
+        sections: 全記事のセクションリスト
+    """
+    all_positions: list[ImagePosition] = []
+    all_sections: list[dict[str, Any]] = []
+
+    for article in articles:
+        article_number = article.get("article_number", 1)
+        content = article.get("content", "") or article.get("markdown_content", "")
+
+        if not content:
+            continue
+
+        positions, _, sections = await analyze_positions_single(content, settings, article_number)
+        all_positions.extend(positions)
+        all_sections.extend(sections)
+
+    total_count = len(all_positions)
+    article_count = len(articles)
+    summary = f"{article_count}記事から{total_count}箇所の画像挿入位置を提案しました。"
+
+    return all_positions, summary, all_sections
 
 
 def _enhance_image_prompt(base_prompt: str, section_title: str) -> str:
@@ -735,23 +772,33 @@ async def submit_settings(
             raise HTTPException(status_code=404, detail="Run not found")
 
         # Step10 の出力を取得
+        step10_json = {}
         try:
             step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
             if step10_data:
                 step10_json = json.loads(step10_data.decode("utf-8"))
-                markdown_content = step10_json.get("markdown_content", "")
-            else:
-                markdown_content = ""
         except Exception as e:
             logger.warning(f"Failed to load step10 output: {e}")
-            markdown_content = ""
 
-        if not markdown_content:
+        # 複数記事対応
+        articles = step10_json.get("articles", [])
+
+        # 後方互換性: 単一記事の場合
+        if not articles and step10_json.get("markdown_content"):
+            articles = [
+                {
+                    "article_number": 1,
+                    "title": step10_json.get("article_title", ""),
+                    "content": step10_json.get("markdown_content", ""),
+                }
+            ]
+
+        if not articles:
             logger.error(f"Step10 article data missing: run_id={run_id}")
             raise HTTPException(status_code=400, detail="Step10 の記事データがありません。先に記事生成を完了してください。")
 
-        # 位置分析を実行
-        positions, summary, sections = await analyze_positions(markdown_content, data)
+        # 位置分析を実行（全記事対象）
+        positions, summary, sections = await analyze_positions(articles, data)
 
         # 状態を更新
         state = Step11State(
@@ -833,19 +880,47 @@ async def get_positions(
         positions: 画像挿入位置リスト
         sections: 記事セクション一覧
         analysis_summary: 分析結果サマリー
-        article_markdown: 記事本文（Markdown形式）- 視覚的位置選択用
+        articles: 記事リスト（各記事の article_number, title, markdown を含む）
+        article_markdown: 記事本文（後方互換性、最初の記事のMarkdown）
     """
     run, state = await get_run_and_state(run_id, user)
     store = get_artifact_store()
     tenant_id = user.tenant_id
 
-    # Step10の成果物からMarkdownを取得
+    # Step10の成果物から記事データを取得
+    articles_response: list[dict[str, Any]] = []
     article_markdown = ""
     try:
         step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
         if step10_data:
             step10_json = json.loads(step10_data.decode("utf-8"))
-            article_markdown = step10_json.get("markdown_content", "")
+            articles = step10_json.get("articles", [])
+
+            if articles:
+                for art in articles:
+                    article_number = art.get("article_number", 1)
+                    content = art.get("content", "") or art.get("markdown_content", "")
+                    articles_response.append(
+                        {
+                            "article_number": article_number,
+                            "title": art.get("title", ""),
+                            "markdown": content,
+                        }
+                    )
+                # 後方互換性のため最初の記事をarticle_markdownにも設定
+                if articles_response:
+                    article_markdown = articles_response[0].get("markdown", "")
+            else:
+                # 後方互換性: 単一記事の場合
+                article_markdown = step10_json.get("markdown_content", "")
+                if article_markdown:
+                    articles_response.append(
+                        {
+                            "article_number": 1,
+                            "title": step10_json.get("article_title", ""),
+                            "markdown": article_markdown,
+                        }
+                    )
     except Exception as e:
         logger.warning(f"Failed to get article markdown for visual selection: {e}")
 
@@ -853,6 +928,7 @@ async def get_positions(
         "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions],
         "sections": state.sections,
         "analysis_summary": state.analysis_summary,
+        "articles": articles_response,
         "article_markdown": article_markdown,
     }
 
@@ -881,18 +957,27 @@ async def confirm_positions(
 
         if data.reanalyze:
             # 再分析
+            articles: list[dict[str, Any]] = []
             try:
                 step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
                 if step10_data:
                     step10_json = json.loads(step10_data.decode("utf-8"))
-                    markdown_content = step10_json.get("markdown_content", "")
-                else:
-                    markdown_content = ""
+                    articles = step10_json.get("articles", [])
+
+                    # 後方互換性: 単一記事の場合
+                    if not articles and step10_json.get("markdown_content"):
+                        articles = [
+                            {
+                                "article_number": 1,
+                                "title": step10_json.get("article_title", ""),
+                                "content": step10_json.get("markdown_content", ""),
+                            }
+                        ]
             except Exception:
-                markdown_content = ""
+                pass
 
             settings = state.settings or Step11SettingsInput()
-            positions, summary, sections = await analyze_positions(markdown_content, settings)
+            positions, summary, sections = await analyze_positions(articles, settings)
 
             state.positions = positions
             state.analysis_summary = summary + f" (再分析: {data.reanalyze_request})"
