@@ -19,6 +19,7 @@ from temporalio.client import Client as TemporalClient
 
 from apps.api.db import TenantDBManager
 from apps.api.routers import (
+    articles,
     artifacts,
     auth,
     config,
@@ -232,6 +233,7 @@ app.include_router(github.router)
 app.include_router(settings.router)
 app.include_router(models.router)
 app.include_router(suggestions.router)
+app.include_router(articles.router)
 
 
 # =============================================================================
