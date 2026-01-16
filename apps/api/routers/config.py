@@ -6,7 +6,7 @@ Handles model configuration and workflow step defaults.
 import logging
 import os
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -414,28 +414,12 @@ async def get_models_config(
                     )
                 )
     except Exception as e:
-        logger.warning(f"Failed to load models from DB, using fallback: {e}")
-        # Fallback to hardcoded values if DB fails
-        providers = [
-            ProviderConfig(
-                provider="gemini",
-                default_model=default_models["gemini"],
-                available_models=[default_models["gemini"], "gemini-2.5-flash", "gemini-2.5-pro"],
-                supports_grounding=True,
-            ),
-            ProviderConfig(
-                provider="openai",
-                default_model=default_models["openai"],
-                available_models=[default_models["openai"], "gpt-4o", "gpt-4o-mini"],
-                supports_grounding=False,
-            ),
-            ProviderConfig(
-                provider="anthropic",
-                default_model=default_models["anthropic"],
-                available_models=[default_models["anthropic"], "claude-3-5-sonnet-20241022"],
-                supports_grounding=False,
-            ),
-        ]
+        # フォールバック禁止: DBエラーは上位に伝播
+        logger.error(f"Failed to load models from DB: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection failed. Unable to load model configuration.",
+        )
 
     return ModelsConfigResponse(
         providers=providers,
