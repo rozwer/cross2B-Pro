@@ -5,6 +5,7 @@ Models are stored in the common DB (llm_providers, llm_models tables).
 """
 
 import logging
+import os
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -16,6 +17,19 @@ from apps.api.db.tenant import TenantDBManager, get_tenant_manager
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/models", tags=["models"])
+
+
+# =============================================================================
+# Dependencies
+# =============================================================================
+
+
+def get_current_tenant_id() -> str:
+    """Get current tenant ID from authentication.
+
+    TODO: Implement proper auth - currently returns default tenant.
+    """
+    return os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
 
 
 # =============================================================================
@@ -70,16 +84,13 @@ class ModelUpdateRequest(BaseModel):
 
 @router.get("", response_model=ProvidersListResponse)
 async def get_all_models(
+    tenant_id: str = Depends(get_current_tenant_id),
     tenant_manager: TenantDBManager = Depends(get_tenant_manager),
 ) -> ProvidersListResponse:
     """Get all LLM providers with their models.
 
     Returns providers and their available models from the database.
     """
-    import os
-
-    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
-
     async with tenant_manager.get_session(tenant_id) as session:
         # Get all providers
         providers_result = await session.execute(select(LLMProvider).order_by(LLMProvider.id))
@@ -122,13 +133,10 @@ async def get_all_models(
 @router.get("/{provider_id}", response_model=ProviderResponse)
 async def get_provider_models(
     provider_id: str,
+    tenant_id: str = Depends(get_current_tenant_id),
     tenant_manager: TenantDBManager = Depends(get_tenant_manager),
 ) -> ProviderResponse:
     """Get a specific provider with its models."""
-    import os
-
-    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
-
     async with tenant_manager.get_session(tenant_id) as session:
         # Get provider
         provider_result = await session.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
@@ -164,13 +172,10 @@ async def get_provider_models(
 @router.post("", response_model=ModelResponse)
 async def create_model(
     request: ModelCreateRequest,
+    tenant_id: str = Depends(get_current_tenant_id),
     tenant_manager: TenantDBManager = Depends(get_tenant_manager),
 ) -> ModelResponse:
     """Create a new LLM model."""
-    import os
-
-    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
-
     async with tenant_manager.get_session(tenant_id) as session:
         # Verify provider exists
         provider_result = await session.execute(select(LLMProvider).where(LLMProvider.id == request.provider_id))
@@ -220,13 +225,10 @@ async def create_model(
 async def update_model(
     model_id: int,
     request: ModelUpdateRequest,
+    tenant_id: str = Depends(get_current_tenant_id),
     tenant_manager: TenantDBManager = Depends(get_tenant_manager),
 ) -> ModelResponse:
     """Update an LLM model."""
-    import os
-
-    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
-
     async with tenant_manager.get_session(tenant_id) as session:
         result = await session.execute(select(LLMModel).where(LLMModel.id == model_id))
         model = result.scalar_one_or_none()
@@ -258,13 +260,10 @@ async def update_model(
 @router.delete("/{model_id}")
 async def delete_model(
     model_id: int,
+    tenant_id: str = Depends(get_current_tenant_id),
     tenant_manager: TenantDBManager = Depends(get_tenant_manager),
 ) -> dict[str, str]:
     """Delete an LLM model."""
-    import os
-
-    tenant_id = os.getenv("DEV_TENANT_ID", os.getenv("DEFAULT_TENANT_ID", "default"))
-
     async with tenant_manager.get_session(tenant_id) as session:
         result = await session.execute(select(LLMModel).where(LLMModel.id == model_id))
         model = result.scalar_one_or_none()
