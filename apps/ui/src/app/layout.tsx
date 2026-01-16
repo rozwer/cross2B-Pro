@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles, Plus, Settings } from "lucide-react";
-import { ThemeProvider, ThemeToggle } from "@/components/theme";
+import { Sparkles } from "lucide-react";
+import { ThemeProvider } from "@/components/theme";
+import { Navigation } from "@/components/layout/Navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,20 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </Link>
 
                   {/* Navigation */}
-                  <nav className="flex items-center gap-2">
-                    <ThemeToggle />
-                    <Link
-                      href="/settings"
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span className="hidden sm:inline">Settings</span>
-                    </Link>
-                    <Link href="/settings/runs/new" className="btn btn-primary">
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">New Run</span>
-                    </Link>
-                  </nav>
+                  <Navigation />
                 </div>
               </div>
 
