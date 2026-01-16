@@ -1122,20 +1122,25 @@ class ArticleWorkflow:
                 reviews = self.step11_image_reviews or []
                 num_positions = len(self.step11_positions)
                 num_images = len(self.step11_generated_images)
-                invalid_indices = [
-                    r.get("index")
-                    for r in reviews
-                    if not isinstance(r.get("index"), int)
-                    or r.get("index", -1) < 0
-                    or r.get("index", -1) >= num_positions
-                    or r.get("index", -1) >= num_images
-                ]
-                if invalid_indices:
-                    raise ApplicationError(
-                        f"Step11 review indices out of bounds: {invalid_indices}",
-                        type="STEP11_INVALID_REVIEW_INDEX",
-                        non_retryable=True,
-                    )
+
+                # Validate and filter invalid indices (warn instead of error)
+                # API側で既に処理が完了している場合もあるため、無効なインデックスはスキップ
+                valid_reviews = []
+                for r in reviews:
+                    idx = r.get("index")
+                    if not isinstance(idx, int) or idx < 0:
+                        workflow.logger.warning(f"Step11 review: invalid index type or negative: {idx}")
+                        continue
+                    if idx >= num_positions:
+                        workflow.logger.warning(f"Step11 review: index {idx} >= num_positions ({num_positions}), skipping")
+                        continue
+                    if idx >= num_images:
+                        workflow.logger.warning(f"Step11 review: index {idx} >= num_images ({num_images}), skipping")
+                        continue
+                    valid_reviews.append(r)
+
+                # Use only valid reviews for retry processing
+                reviews = valid_reviews
 
                 retries_needed = [
                     r
@@ -1491,20 +1496,25 @@ class ImageAdditionWorkflow:
                 reviews = self.step11_image_reviews or []
                 num_positions = len(self.step11_positions)
                 num_images = len(self.step11_generated_images)
-                invalid_indices = [
-                    r.get("index")
-                    for r in reviews
-                    if not isinstance(r.get("index"), int)
-                    or r.get("index", -1) < 0
-                    or r.get("index", -1) >= num_positions
-                    or r.get("index", -1) >= num_images
-                ]
-                if invalid_indices:
-                    raise ApplicationError(
-                        f"Step11 review indices out of bounds: {invalid_indices}",
-                        type="STEP11_INVALID_REVIEW_INDEX",
-                        non_retryable=True,
-                    )
+
+                # Validate and filter invalid indices (warn instead of error)
+                # API側で既に処理が完了している場合もあるため、無効なインデックスはスキップ
+                valid_reviews = []
+                for r in reviews:
+                    idx = r.get("index")
+                    if not isinstance(idx, int) or idx < 0:
+                        workflow.logger.warning(f"Step11 review: invalid index type or negative: {idx}")
+                        continue
+                    if idx >= num_positions:
+                        workflow.logger.warning(f"Step11 review: index {idx} >= num_positions ({num_positions}), skipping")
+                        continue
+                    if idx >= num_images:
+                        workflow.logger.warning(f"Step11 review: index {idx} >= num_images ({num_images}), skipping")
+                        continue
+                    valid_reviews.append(r)
+
+                # Use only valid reviews for retry processing
+                reviews = valid_reviews
 
                 retries_requested = [
                     r
