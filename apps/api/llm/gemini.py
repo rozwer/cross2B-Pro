@@ -528,7 +528,8 @@ class GeminiClient(LLMInterface):
                 ),
                 timeout=10.0,
             )
-            return response is not None and response.text is not None
+            # responseが返ってくれば接続成功（textがNoneでも問題なし）
+            return response is not None
         except Exception as e:
             logger.warning(f"Health check failed: {e}")
             return False
