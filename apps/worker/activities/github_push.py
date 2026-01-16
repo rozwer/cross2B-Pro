@@ -238,8 +238,10 @@ class GitHubPushActivity:
 
 To apply changes back to the system:
 1. Commit your changes to this repository
-2. Create an Issue mentioning @claude with your request
+2. Create an Issue mentioning @codex (recommended, cost-effective) or @claude with your request
 3. Or use the "Sync from GitHub" button in the UI
+
+Note: Both @codex and @claude are supported. @codex is recommended for cost efficiency.
 
 ## Support
 

@@ -68,7 +68,7 @@ interface IssueStatus {
  * GitHubActions - GitHub連携アクションボタン群
  *
  * 機能:
- * - 「Claude Code で編集」: GitHub Issue を作成して @claude メンション
+ * - 「AI で編集」: GitHub Issue を作成して @codex（デフォルト、コスト効率良）または @claude メンション
  * - 「GitHub で開く」: 該当ファイルを GitHub で直接表示
  * - 「差分を確認」: GitHub と MinIO の差分を表示
  * - 「同期」: GitHub の変更を MinIO に反映
@@ -353,7 +353,7 @@ export function GitHubActions({
 
       {/* アクションボタン */}
       <div className="flex flex-wrap gap-2">
-        {/* Claude Code で編集 */}
+        {/* AI で編集 */}
         <button
           onClick={() => setShowInstructionModal(true)}
           disabled={disabled || isCreatingIssue}
@@ -362,7 +362,7 @@ export function GitHubActions({
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
-          Claude Code で編集
+          AI で編集
         </button>
 
         {/* GitHub で開く */}
@@ -423,9 +423,10 @@ export function GitHubActions({
       {showInstructionModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
-            <h3 className="text-lg font-semibold mb-4">Claude Code で編集</h3>
+            <h3 className="text-lg font-semibold mb-4">AI で編集</h3>
             <p className="text-sm text-gray-600 mb-4">
-              GitHub Issue を作成し、Claude Code (@claude) に編集を依頼します。
+              GitHub Issue を作成し、AI（@codex または @claude）に編集を依頼します。
+              @codex がデフォルト（コスト効率が良い）です。
             </p>
             <textarea
               value={instruction}
@@ -458,7 +459,7 @@ export function GitHubActions({
       {/* 差分表示モーダル */}
       {showDiffModal && diffResult && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">差分確認</h3>
               <button
@@ -584,10 +585,80 @@ export function GitHubActions({
                     MinIO Digest: {diffResult.minio_digest?.slice(0, 8) || "N/A"}
                   </p>
                 </div>
-                <div className="flex-1 overflow-auto bg-gray-900 rounded p-4">
-                  <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
-                    {diffResult.diff || "差分データがありません"}
-                  </pre>
+                {/* Side-by-side diff view */}
+                <div className="flex-1 overflow-auto">
+                  <div className="grid grid-cols-2 gap-0 border border-gray-700 rounded overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-red-900/30 px-3 py-2 border-b border-gray-700 text-red-300 text-xs font-medium">
+                      MinIO (ローカル)
+                    </div>
+                    <div className="bg-green-900/30 px-3 py-2 border-b border-gray-700 text-green-300 text-xs font-medium">
+                      GitHub (main)
+                    </div>
+                    {/* Diff content */}
+                    <div className="bg-gray-900 overflow-auto max-h-96">
+                      <pre className="text-xs font-mono p-3 whitespace-pre-wrap break-all">
+                        {(() => {
+                          const lines = (diffResult.diff || "").split("\n");
+                          return lines.map((line, i) => {
+                            if (line.startsWith("---") || line.startsWith("+++") || line.startsWith("@@")) {
+                              return null; // Skip header lines
+                            }
+                            if (line.startsWith("-")) {
+                              return (
+                                <div key={i} className="bg-red-900/40 text-red-300 -mx-3 px-3">
+                                  {line.slice(1) || " "}
+                                </div>
+                              );
+                            }
+                            if (line.startsWith("+")) {
+                              return (
+                                <div key={i} className="text-gray-500 -mx-3 px-3">
+                                  {/* Placeholder for added lines on left side */}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={i} className="text-gray-400 -mx-3 px-3">
+                                {line.slice(1) || " "}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </pre>
+                    </div>
+                    <div className="bg-gray-900 overflow-auto max-h-96 border-l border-gray-700">
+                      <pre className="text-xs font-mono p-3 whitespace-pre-wrap break-all">
+                        {(() => {
+                          const lines = (diffResult.diff || "").split("\n");
+                          return lines.map((line, i) => {
+                            if (line.startsWith("---") || line.startsWith("+++") || line.startsWith("@@")) {
+                              return null; // Skip header lines
+                            }
+                            if (line.startsWith("+")) {
+                              return (
+                                <div key={i} className="bg-green-900/40 text-green-300 -mx-3 px-3">
+                                  {line.slice(1) || " "}
+                                </div>
+                              );
+                            }
+                            if (line.startsWith("-")) {
+                              return (
+                                <div key={i} className="text-gray-500 -mx-3 px-3">
+                                  {/* Placeholder for removed lines on right side */}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={i} className="text-gray-400 -mx-3 px-3">
+                                {line.slice(1) || " "}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </pre>
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                   <button
@@ -646,7 +717,7 @@ export function GitHubActions({
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Claude Code 編集状況
+                AI 編集状況
               </h3>
               <button
                 onClick={() => setShowIssueTracker(false)}
@@ -678,8 +749,8 @@ export function GitHubActions({
               </div>
 
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                {issueStatus.status === "open" && "Claude Code が Issue を確認するのを待っています..."}
-                {issueStatus.status === "in_progress" && "Claude Code が編集を実行中です..."}
+                {issueStatus.status === "open" && "AI が Issue を確認するのを待っています..."}
+                {issueStatus.status === "in_progress" && "AI が編集を実行中です..."}
                 {issueStatus.status === "closed" && (
                   issueStatus.pr_url
                     ? "編集が完了し、PRが作成されました。レビューしてマージしてください。"
