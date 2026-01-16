@@ -1378,6 +1378,8 @@ async def finalize_images(
         )
 
         # Temporal signalを送信してWorkflowを再開
+        signal_error = None
+        workflow_already_completed = False
         try:
             temporal_client = await get_temporal_client()
             workflow_handle = temporal_client.get_workflow_handle(run_id)
@@ -1388,8 +1390,40 @@ async def finalize_images(
             await workflow_handle.signal("step11_finalize", payload)
             logger.info("Temporal step11_finalize signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
-            logger.error(f"Failed to send step11_finalize signal: {sig_error}", exc_info=True)
-            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {sig_error}")
+            error_msg = str(sig_error)
+            # ワークフローが既に完了している場合は、成果物が保存されていれば成功とする
+            if "already completed" in error_msg.lower() or "workflow execution already completed" in error_msg.lower():
+                workflow_already_completed = True
+                logger.warning(
+                    f"Workflow already completed, but artifacts saved successfully: {sig_error}",
+                    extra={"run_id": run_id},
+                )
+                # エラー情報をアーティファクトとして保存
+                error_artifact = {
+                    "type": "workflow_signal_error",
+                    "message": error_msg,
+                    "timestamp": datetime.now().isoformat(),
+                    "context": "step11_finalize signal failed but artifacts were saved",
+                    "recovery_action": "artifacts_preserved",
+                }
+                error_path = store.build_path(tenant_id, run_id, "step11", "signal_error.json")
+                try:
+                    await store.put(
+                        json.dumps(error_artifact, ensure_ascii=False).encode("utf-8"),
+                        error_path,
+                        "application/json",
+                    )
+                    logger.info(f"Signal error artifact saved: {error_path}")
+                except Exception as store_error:
+                    logger.warning(f"Failed to save signal error artifact: {store_error}")
+            else:
+                # それ以外のエラーは従来通り例外を投げる
+                logger.error(f"Failed to send step11_finalize signal: {sig_error}", exc_info=True)
+                signal_error = sig_error
+
+        # シグナルエラーがあり、ワークフロー完了以外の理由の場合はエラーを投げる
+        if signal_error and not workflow_already_completed:
+            raise HTTPException(status_code=503, detail=f"Failed to send signal to workflow: {signal_error}")
 
         await session.commit()
 
@@ -1397,6 +1431,7 @@ async def finalize_images(
         "success": True,
         "phase": "completed",
         "output_path": output_path,
+        "workflow_already_completed": workflow_already_completed,
     }
 
 
