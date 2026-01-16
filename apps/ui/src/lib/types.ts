@@ -164,6 +164,61 @@ export interface KeywordSuggestionResponse {
   generated_at: string;
 }
 
+// =============================================================================
+// Content Suggestion Types
+// =============================================================================
+
+export interface TargetAudienceSuggestionRequest {
+  business_description: string;
+  target_cv: string;
+}
+
+export interface TargetAudienceSuggestion {
+  audience: string;
+  rationale: string;
+}
+
+export interface TargetAudienceSuggestionResponse {
+  suggestions: TargetAudienceSuggestion[];
+  model_used: string;
+  generated_at: string;
+}
+
+export interface RelatedKeywordSuggestionRequest {
+  main_keyword: string;
+  business_description: string;
+}
+
+export interface RelatedKeywordSuggestionItem {
+  keyword: string;
+  volume: string;
+  relation_type: string;
+}
+
+export interface RelatedKeywordSuggestionResponse {
+  suggestions: RelatedKeywordSuggestionItem[];
+  model_used: string;
+  generated_at: string;
+}
+
+export interface ChildTopicSuggestionRequest {
+  main_keyword: string;
+  business_description: string;
+  target_audience: string;
+}
+
+export interface ChildTopicSuggestion {
+  topic: string;
+  target_keyword: string;
+  rationale: string;
+}
+
+export interface ChildTopicSuggestionResponse {
+  suggestions: ChildTopicSuggestion[];
+  model_used: string;
+  generated_at: string;
+}
+
 export interface StepModelConfig {
   step_id: string;
   platform: LLMPlatform;

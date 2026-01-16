@@ -542,3 +542,119 @@ class HearingTemplateList(BaseModel):
     total: int = Field(..., description="総数")
     limit: int = Field(..., description="取得件数上限")
     offset: int = Field(..., description="オフセット")
+
+
+# =============================================================================
+# Content Suggestion API Schemas
+# =============================================================================
+
+
+class TargetAudienceSuggestionRequest(BaseModel):
+    """Request for target audience suggestions."""
+
+    business_description: str = Field(
+        ...,
+        min_length=10,
+        description="事業内容",
+    )
+    target_cv: str = Field(
+        ...,
+        description="目標CV（inquiry/document_request/free_consultation/other）",
+    )
+
+
+class TargetAudienceSuggestion(BaseModel):
+    """Single target audience suggestion."""
+
+    audience: str = Field(..., description="ターゲット読者像")
+    rationale: str = Field(..., description="提案理由")
+
+
+class TargetAudienceSuggestionResponse(BaseModel):
+    """Response containing target audience suggestions."""
+
+    suggestions: list[TargetAudienceSuggestion] = Field(
+        ...,
+        min_length=1,
+        max_length=5,
+        description="ターゲット読者候補",
+    )
+    model_used: str = Field(..., description="使用したモデル")
+    generated_at: str = Field(..., description="生成日時（ISO 8601）")
+
+
+class RelatedKeywordSuggestionRequest(BaseModel):
+    """Request for related keyword suggestions."""
+
+    main_keyword: str = Field(
+        ...,
+        min_length=2,
+        description="メインキーワード",
+    )
+    business_description: str = Field(
+        ...,
+        description="事業内容（コンテキスト用）",
+    )
+
+
+class RelatedKeywordSuggestionItem(BaseModel):
+    """Single related keyword suggestion."""
+
+    keyword: str = Field(..., description="関連キーワード")
+    volume: str = Field(..., description="推定検索ボリューム")
+    relation_type: str = Field(
+        ...,
+        description="関連タイプ（synonym/long_tail/question/related_topic）",
+    )
+
+
+class RelatedKeywordSuggestionResponse(BaseModel):
+    """Response containing related keyword suggestions."""
+
+    suggestions: list[RelatedKeywordSuggestionItem] = Field(
+        ...,
+        min_length=1,
+        max_length=10,
+        description="関連キーワード候補",
+    )
+    model_used: str = Field(..., description="使用したモデル")
+    generated_at: str = Field(..., description="生成日時（ISO 8601）")
+
+
+class ChildTopicSuggestionRequest(BaseModel):
+    """Request for child topic suggestions."""
+
+    main_keyword: str = Field(
+        ...,
+        min_length=2,
+        description="メインキーワード",
+    )
+    business_description: str = Field(
+        ...,
+        description="事業内容",
+    )
+    target_audience: str = Field(
+        ...,
+        description="ターゲット読者",
+    )
+
+
+class ChildTopicSuggestion(BaseModel):
+    """Single child topic suggestion."""
+
+    topic: str = Field(..., description="子記事トピック")
+    target_keyword: str = Field(..., description="ターゲットキーワード")
+    rationale: str = Field(..., description="提案理由")
+
+
+class ChildTopicSuggestionResponse(BaseModel):
+    """Response containing child topic suggestions."""
+
+    suggestions: list[ChildTopicSuggestion] = Field(
+        ...,
+        min_length=1,
+        max_length=5,
+        description="子記事トピック候補",
+    )
+    model_used: str = Field(..., description="使用したモデル")
+    generated_at: str = Field(..., description="生成日時（ISO 8601）")
