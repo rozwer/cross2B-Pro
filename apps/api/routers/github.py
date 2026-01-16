@@ -469,11 +469,11 @@ async def get_diff(
 
     except GitHubNotFoundError:
         # Still try to get PRs and branches even if main branch file not found
-        open_prs: list[PullRequestInfo] = []
-        pending_branches: list[BranchInfo] = []
+        fallback_prs: list[PullRequestInfo] = []
+        fallback_branches: list[BranchInfo] = []
         try:
             prs_data = await github.get_prs_for_file(repo_url, file_path, state="open")
-            open_prs = [
+            fallback_prs = [
                 PullRequestInfo(
                     number=pr["number"],
                     title=pr["title"],
@@ -495,8 +495,8 @@ async def get_diff(
 
         try:
             branches_data = await github.get_branches_for_file(repo_url, file_path, prefix="claude/")
-            pr_branch_names = {pr.head_branch for pr in open_prs}
-            pending_branches = [
+            pr_branch_names = {pr.head_branch for pr in fallback_prs}
+            fallback_branches = [
                 BranchInfo(
                     name=branch["name"],
                     url=branch["url"],
@@ -522,8 +522,8 @@ async def get_diff(
             diff="GitHub file not found",
             github_sha=None,
             minio_digest=hashlib.sha256(minio_content).hexdigest(),
-            open_prs=open_prs,
-            pending_branches=pending_branches,
+            open_prs=fallback_prs,
+            pending_branches=fallback_branches,
         )
 
 
