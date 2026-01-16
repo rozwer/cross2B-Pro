@@ -827,13 +827,33 @@ async def get_positions(
     run_id: str,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """11B: 位置一覧を取得"""
+    """11B: 位置一覧を取得
+
+    Returns:
+        positions: 画像挿入位置リスト
+        sections: 記事セクション一覧
+        analysis_summary: 分析結果サマリー
+        article_markdown: 記事本文（Markdown形式）- 視覚的位置選択用
+    """
     run, state = await get_run_and_state(run_id, user)
+    store = get_artifact_store()
+    tenant_id = user.tenant_id
+
+    # Step10の成果物からMarkdownを取得
+    article_markdown = ""
+    try:
+        step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
+        if step10_data:
+            step10_json = json.loads(step10_data.decode("utf-8"))
+            article_markdown = step10_json.get("markdown_content", "")
+    except Exception as e:
+        logger.warning(f"Failed to get article markdown for visual selection: {e}")
 
     return {
         "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions],
         "sections": state.sections,
         "analysis_summary": state.analysis_summary,
+        "article_markdown": article_markdown,
     }
 
 
