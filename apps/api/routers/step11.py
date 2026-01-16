@@ -1447,11 +1447,59 @@ async def finalize_images(
 
         await session.commit()
 
+    # ワークフローが既に完了している場合は、Step12を直接生成
+    step12_generated = False
+    if workflow_already_completed:
+        logger.info(f"Workflow already completed, generating Step12 directly: run_id={run_id}")
+        try:
+            from apps.api.routers.step12 import _generate_wordpress_html_from_step10
+
+            step12_data = await _generate_wordpress_html_from_step10(tenant_id, run_id, store)
+
+            # Step12 output を保存
+            step12_output_path = store.build_path(tenant_id, run_id, "step12", "output.json")
+            await store.put(
+                json.dumps(step12_data, ensure_ascii=False).encode("utf-8"),
+                step12_output_path,
+                "application/json",
+            )
+
+            # 個別記事も保存
+            for article in step12_data.get("articles", []):
+                filename = article.get("filename", f"article_{article.get('article_number', 1)}.html")
+                article_path = store.build_path(tenant_id, run_id, "step12", filename)
+                await store.put(
+                    article.get("gutenberg_blocks", "").encode("utf-8"),
+                    article_path,
+                    "text/html",
+                )
+
+            step12_generated = True
+            logger.info(f"Step12 generated directly: run_id={run_id}, articles={len(step12_data.get('articles', []))}")
+
+            # Run status を completed に更新
+            async with db_manager.get_session(tenant_id) as session:
+                query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+                result = await session.execute(query)
+                run = result.scalar_one_or_none()
+                if run:
+                    run.status = RunStatus.COMPLETED.value
+                    run.current_step = "step12"
+                    run.completed_at = datetime.now()
+                    run.updated_at = datetime.now()
+                    await session.commit()
+                    logger.info(f"Run marked as completed: run_id={run_id}")
+
+        except Exception as step12_error:
+            logger.error(f"Failed to generate Step12 directly: {step12_error}", exc_info=True)
+            # Step12 生成失敗はログに残すが、Step11 の成功は維持
+
     return {
         "success": True,
         "phase": "completed",
         "output_path": output_path,
         "workflow_already_completed": workflow_already_completed,
+        "step12_generated": step12_generated,
     }
 
 
