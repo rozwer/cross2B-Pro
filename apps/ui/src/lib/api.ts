@@ -1105,7 +1105,7 @@ class ApiClient {
     },
 
     /**
-     * GitHub と MinIO の差分を取得
+     * GitHub と MinIO の差分を取得（PR情報を含む）
      */
     getDiff: async (
       runId: string,
@@ -1115,12 +1115,40 @@ class ApiClient {
       diff: string | null;
       github_sha: string | null;
       minio_digest: string | null;
+      open_prs: Array<{
+        number: number;
+        title: string;
+        url: string;
+        state: string;
+        head_branch: string | null;
+        base_branch: string | null;
+        user: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+        additions: number;
+        deletions: number;
+        status: string | null;
+      }>;
     }> => {
       return this.request<{
         has_diff: boolean;
         diff: string | null;
         github_sha: string | null;
         minio_digest: string | null;
+        open_prs: Array<{
+          number: number;
+          title: string;
+          url: string;
+          state: string;
+          head_branch: string | null;
+          base_branch: string | null;
+          user: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          additions: number;
+          deletions: number;
+          status: string | null;
+        }>;
       }>(`/api/github/diff/${runId}/${step}`);
     },
 

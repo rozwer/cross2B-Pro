@@ -16,11 +16,27 @@ interface GitHubActionsProps {
   onSyncStatusChange?: (step: string, status: GitHubSyncStatus) => void;
 }
 
+interface PullRequestInfo {
+  number: number;
+  title: string;
+  url: string;
+  state: string;
+  head_branch: string | null;
+  base_branch: string | null;
+  user: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  additions: number;
+  deletions: number;
+  status: string | null;
+}
+
 interface DiffResult {
   has_diff: boolean;
   diff: string | null;
   github_sha: string | null;
   minio_digest: string | null;
+  open_prs: PullRequestInfo[];
 }
 
 interface IssueStatus {
@@ -388,10 +404,59 @@ export function GitHubActions({
               </button>
             </div>
 
+            {/* PR情報セクション */}
+            {diffResult.open_prs && diffResult.open_prs.length > 0 && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 3a3 3 0 00-3 3v12a3 3 0 003 3h12a3 3 0 003-3V6a3 3 0 00-3-3H6zm1 15v-2h2v2H7zm0-4v-2h2v2H7zm0-4V8h2v2H7zm4 8v-2h6v2h-6zm0-4v-2h6v2h-6zm0-4V8h6v2h-6z"/>
+                  </svg>
+                  <span className="font-medium text-blue-800">
+                    このファイルを変更する PR があります ({diffResult.open_prs.length}件)
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {diffResult.open_prs.map((pr) => (
+                    <div key={pr.number} className="flex items-center justify-between bg-white p-3 rounded border border-blue-100">
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={pr.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                        >
+                          #{pr.number} {pr.title}
+                        </a>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                          <span className="inline-flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            {pr.user}
+                          </span>
+                          <span>{pr.head_branch} → {pr.base_branch}</span>
+                          <span className="text-green-600">+{pr.additions}</span>
+                          <span className="text-red-600">-{pr.deletions}</span>
+                        </div>
+                      </div>
+                      <a
+                        href={pr.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        PR を開く
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {diffResult.has_diff ? (
               <>
                 <div className="text-sm text-gray-600 mb-4">
-                  <p>GitHub と MinIO の間に差分があります。</p>
+                  <p>GitHub (main) と MinIO の間に差分があります。</p>
                   <p className="text-xs text-gray-500 mt-1">
                     GitHub SHA: {diffResult.github_sha?.slice(0, 8) || "N/A"} |
                     MinIO Digest: {diffResult.minio_digest?.slice(0, 8) || "N/A"}
@@ -427,7 +492,12 @@ export function GitHubActions({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p className="text-lg text-gray-700">差分はありません</p>
-                  <p className="text-sm text-gray-500 mt-1">GitHub と MinIO は同期しています</p>
+                  <p className="text-sm text-gray-500 mt-1">GitHub (main) と MinIO は同期しています</p>
+                  {diffResult.open_prs && diffResult.open_prs.length > 0 && (
+                    <p className="text-sm text-blue-600 mt-2">
+                      ただし、上記の PR がマージされると差分が発生します
+                    </p>
+                  )}
                 </div>
                 <div className="mt-4 flex justify-end">
                   <button
