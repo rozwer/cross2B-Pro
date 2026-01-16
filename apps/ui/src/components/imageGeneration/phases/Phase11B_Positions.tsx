@@ -6,7 +6,6 @@ import {
   ArrowRight,
   RefreshCw,
   Loader2,
-  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePosition, Section } from "@/lib/types";
