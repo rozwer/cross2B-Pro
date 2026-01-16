@@ -624,6 +624,7 @@ export interface CostBreakdown {
   model: string;
   input_tokens: number;
   output_tokens: number;
+  thinking_tokens: number;  // Reasoning/thinking tokens (Gemini 2.5, o1, etc.)
   cost: number;
 }
 
@@ -632,6 +633,7 @@ export interface CostResponse {
   total_cost: number;
   total_input_tokens: number;
   total_output_tokens: number;
+  total_thinking_tokens: number;  // Total reasoning/thinking tokens
   breakdown: CostBreakdown[];
   currency: string;
 }
