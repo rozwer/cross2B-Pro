@@ -1,0 +1,95 @@
+{
+  "project_date": "2026-01-12",
+  "business_info": {
+    "business_content": "eラーニングシステム「クロスラーニング」の提供。法人向けオンライン研修プラットフォーム。派遣社員・契約社員向け教育、コンプライアンス研修、スキルアップ研修など幅広い研修コンテンツを提供。",
+    "target_cv": "問い合わせ獲得",
+    "target_audience": "派遣会社の教育担当者、人事部門の研修企画担当者",
+    "company_strengths": "派遣社員向け教育に特化したeラーニングシステム。300社以上の導入実績。カスタマイズ可能な研修コンテンツ。進捗管理・効果測定機能。モバイル対応で場所を選ばず学習可能。"
+  },
+  "keyword_info": {
+    "main_keyword": "eラーニング 派遣社員",
+    "search_volume": 320,
+    "competition": "中",
+    "related_keywords": [
+      {
+        "keyword": "eラーニング 企業",
+        "volume": "1000～1万"
+      },
+      {
+        "keyword": "eラーニング システム",
+        "volume": "1000～1万"
+      },
+      {
+        "keyword": "派遣社員 研修",
+        "volume": "100～1000"
+      },
+      {
+        "keyword": "オンライン研修 法人",
+        "volume": "100～1000"
+      }
+    ]
+  },
+  "article_strategy": {
+    "article_type": "comprehensive_guide",
+    "background_and_purpose": {
+      "why_now": "リモートワークの普及により、場所を選ばない教育手法としてeラーニングの需要が急増。派遣社員の教育効率化・コスト削減ニーズが高まっている。",
+      "target_pain": "派遣社員の教育に時間とコストがかかりすぎる。集合研修の日程調整が困難。教育の質にばらつきがある。進捗管理ができていない。",
+      "key_message": "eラーニングを活用すれば、派遣社員の教育コストを削減しながら、質の高い研修を効率的に提供できる。",
+      "urgency": "中"
+    },
+    "conversion_design": {
+      "primary_cta": "クロスラーニングの詳細を見る（サービスページへ誘導）",
+      "conversion_points": [
+        "導入部：派遣社員教育の課題への共感",
+        "中盤：eラーニングのメリットと導入事例の提示",
+        "終盤：クロスラーニングの特長と導入相談への誘導"
+      ]
+    }
+  },
+  "strategy": {
+    "type": "standard",
+    "child_articles": []
+  },
+  "target_word_count": 8000,
+  "cta_specification": {
+    "design_type": "single",
+    "single_cta": {
+      "url": "https://cross-learning.jp/",
+      "text": "クロスラーニングの詳細を見る",
+      "description": "クロスラーニング広報サイトのTOPページ",
+      "placement": {
+        "early": 650,
+        "mid": 2800,
+        "final": "7500"
+      }
+    },
+    "staged_cta": null,
+    "constraint_notes": [
+      "工程0のフォーム回答で指定されたCTAのみ使用",
+      "AIが独自にCTAを考案することは禁止",
+      "単一CTAの場合：全てのCTA（Early/Mid/Final）で同じURL・テキストを使用"
+    ]
+  },
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": "Phase 2",
+      "score": 17,
+      "rationale": "「eラーニング 派遣社員」は比較検討段階（Phase 2）のキーワード。前頭前野が活性化し、論理的に複数の選択肢を評価している状態。具体的な解決策を求めている。"
+    },
+    "behavioral_economics": {
+      "applicable_principles": ["社会的証明", "権威性", "損失回避"],
+      "score": 80,
+      "rationale": "導入企業数や実績データで社会的証明が有効。教育コスト削減という損失回避フレームも刺さりやすい。業界専門性による権威性も活用可能。"
+    },
+    "llmo": {
+      "citation_probability": "high",
+      "score": 85,
+      "rationale": "「eラーニングとは」「メリット・デメリット」「導入方法」など、構造化しやすいトピック。AI検索での引用可能性が高い。"
+    },
+    "kgi": {
+      "expected_cvr": "2.5%",
+      "score": 75,
+      "rationale": "Phase 2キーワードとして標準的なCVR。比較検討段階の読者が多いため、具体的な導入事例や費用対効果を示すことでCV誘導が可能。"
+    }
+  }
+}
