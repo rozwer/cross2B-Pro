@@ -40,7 +40,9 @@ class ServiceConfig(BaseModel):
 
     grounding: bool | None = None  # For Gemini
     temperature: float | None = None
-    # Add more service-specific options as needed
+    # GitHub-specific options
+    default_repo_url: str | None = None  # Default repository URL
+    default_dir_path: str | None = None  # Default directory path in repo
 
 
 class SettingResponse(BaseModel):
