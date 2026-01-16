@@ -74,6 +74,52 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 """
 
+# Codex Action workflow template (more cost-effective alternative)
+CODEX_WORKFLOW = """# Codex Action Workflow
+#
+# This workflow enables Codex to automatically edit files when @codex is mentioned
+# in GitHub Issues or PR comments.
+#
+# Requirements:
+# - OPENAI_API_KEY must be set in repository secrets (for Codex)
+
+name: Codex
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+jobs:
+  codex:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@codex')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@codex')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@codex'))
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Codex
+        uses: openai/codex-action@v1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+"""
+
 
 class GitHubError(Exception):
     """Base exception for GitHub operations."""
@@ -330,6 +376,19 @@ class GitHubService:
             except Exception as e:
                 # Log but don't fail repo creation
                 logger.warning(f"Failed to add Claude Code workflow: {e}")
+
+            # Also setup Codex workflow (more cost-effective alternative)
+            try:
+                await self.push_file(
+                    repo_url=repo_url,
+                    path=".github/workflows/codex.yml",
+                    content=CODEX_WORKFLOW.encode("utf-8"),
+                    message="chore: add codex-action workflow",
+                )
+                logger.info(f"Codex workflow added to {repo_url}")
+            except Exception as e:
+                # Log but don't fail repo creation
+                logger.warning(f"Failed to add Codex workflow: {e}")
 
         return repo_url
 
@@ -818,9 +877,10 @@ class GitHubService:
                     )
                     files_data = await self._handle_response(files_response)
 
-                    # Check if any file matches
+                    # Check if any file matches (exact match or directory prefix match)
                     for file in files_data:
-                        if file.get("filename") == file_path:
+                        filename = file.get("filename", "")
+                        if filename == file_path or filename.startswith(file_path.rsplit("/", 1)[0] + "/"):
                             matching_prs.append(
                                 {
                                     "number": pr_number,
@@ -854,6 +914,7 @@ class GitHubService:
 
         Searches for branches with the given prefix (e.g., claude/) and checks
         if they have changes to the target file compared to main.
+        Excludes branches that have already been merged via PR.
 
         Args:
             repo_url: Full GitHub repository URL
@@ -867,6 +928,26 @@ class GitHubService:
         matching_branches = []
 
         async with httpx.AsyncClient() as client:
+            # First, get all merged PRs to filter out already-processed branches
+            merged_branch_names: set[str] = set()
+            try:
+                # Get merged PRs (closed PRs with merged state)
+                prs_response = await client.get(
+                    f"{GITHUB_API_URL}/repos/{owner}/{repo}/pulls",
+                    headers=self._get_headers(),
+                    params={"state": "closed", "per_page": 100},
+                    timeout=30.0,
+                )
+                prs_data = await self._handle_response(prs_response)
+                for pr in prs_data:
+                    if pr.get("merged_at"):  # PR was merged
+                        head_ref = pr.get("head", {}).get("ref", "")
+                        if head_ref:
+                            merged_branch_names.add(head_ref)
+                logger.debug(f"Found {len(merged_branch_names)} merged branches to exclude")
+            except Exception as e:
+                logger.warning(f"Failed to get merged PRs: {e}")
+
             # Get all branches
             branches_response = await client.get(
                 f"{GITHUB_API_URL}/repos/{owner}/{repo}/branches",
@@ -886,6 +967,11 @@ class GitHubService:
                 if branch_name in ("main", "master"):
                     continue
 
+                # Skip if this branch has already been merged via PR
+                if branch_name in merged_branch_names:
+                    logger.debug(f"Skipping merged branch: {branch_name}")
+                    continue
+
                 try:
                     # Compare branch to main to see file changes
                     compare_response = await client.get(
@@ -895,10 +981,13 @@ class GitHubService:
                     )
                     compare_data = await self._handle_response(compare_response)
 
-                    # Check if the file is in the changed files
+                    # Check if any file in the changed files matches the path
+                    # Support both exact match and directory prefix match
                     files = compare_data.get("files", [])
                     for file in files:
-                        if file.get("filename") == file_path:
+                        filename = file.get("filename", "")
+                        # Match if exact path or if file is under the directory path
+                        if filename == file_path or filename.startswith(file_path.rsplit("/", 1)[0] + "/"):
                             # Get commit info
                             commits = compare_data.get("commits", [])
                             last_commit = commits[-1] if commits else None

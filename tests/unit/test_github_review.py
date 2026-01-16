@@ -23,7 +23,7 @@ class TestReviewPrompts:
     """Tests for review prompt generation."""
 
     def test_get_review_prompt_fact_check(self) -> None:
-        """Test fact check prompt generation."""
+        """Test fact check prompt generation with default @codex."""
         prompt = get_review_prompt(
             review_type=ReviewType.FACT_CHECK,
             file_path="test/step10/output.json",
@@ -32,12 +32,28 @@ class TestReviewPrompts:
             step="step10",
         )
 
-        assert "@claude" in prompt
+        # Default is @codex (more cost-effective)
+        assert "@codex" in prompt
         assert "ファクトチェック" in prompt
         assert "test/step10/output.json" in prompt
         assert "test/step10/review.json" in prompt
         assert "test-run-123" in prompt
         assert "事実の正確性" in prompt
+
+    def test_get_review_prompt_with_claude(self) -> None:
+        """Test fact check prompt generation with explicit @claude."""
+        prompt = get_review_prompt(
+            review_type=ReviewType.FACT_CHECK,
+            file_path="test/step10/output.json",
+            output_path="test/step10/review.json",
+            run_id="test-run-123",
+            step="step10",
+            ai_mention="@claude",
+        )
+
+        assert "@claude" in prompt
+        assert "@codex" not in prompt
+        assert "ファクトチェック" in prompt
 
     def test_get_review_prompt_seo(self) -> None:
         """Test SEO review prompt generation."""
@@ -49,7 +65,7 @@ class TestReviewPrompts:
             step="step10",
         )
 
-        assert "@claude" in prompt
+        assert "@codex" in prompt
         assert "SEO最適化" in prompt
         assert "キーワード配置" in prompt
         assert "見出し構造" in prompt
@@ -64,7 +80,7 @@ class TestReviewPrompts:
             step="step10",
         )
 
-        assert "@claude" in prompt
+        assert "@codex" in prompt
         assert "文章品質" in prompt
         assert "可読性" in prompt
         assert "誤字脱字" in prompt
@@ -79,7 +95,7 @@ class TestReviewPrompts:
             step="step10",
         )
 
-        assert "@claude" in prompt
+        assert "@codex" in prompt
         assert "総合レビュー" in prompt
         # Should contain all three perspectives
         assert "ファクトチェック" in prompt
@@ -182,8 +198,8 @@ class TestReviewAPIEndpoints:
         )
         title = get_review_title(review_type, step, mock_run.github_dir_path)
 
-        # Verify prompt contains required elements
-        assert "@claude" in prompt
+        # Verify prompt contains required elements (default is @codex)
+        assert "@codex" in prompt
         assert file_path in prompt
         assert output_path in prompt
 

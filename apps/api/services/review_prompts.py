@@ -1,10 +1,12 @@
-"""Review prompt templates for Claude Code integration.
+"""Review prompt templates for Claude Code / Codex integration.
 
 Provides structured prompts for different review perspectives:
 - Fact check: Verify accuracy and currency of information
 - SEO: Analyze keyword density, heading structure, meta info
 - Quality: Check readability, typos, tone consistency
 - All: Combined review with all perspectives
+
+Note: @codex is the default (more cost-effective), @claude is also supported.
 """
 
 from enum import Enum
@@ -17,6 +19,10 @@ class ReviewType(str, Enum):
     SEO = "seo"
     QUALITY = "quality"
     ALL = "all"
+
+
+# Default AI assistant mention (@codex is more cost-effective, @claude also works)
+DEFAULT_AI_MENTION = "@codex"
 
 
 # Base instruction for output format
@@ -52,7 +58,7 @@ OUTPUT_INSTRUCTION = """
 レビュー完了後、このIssueにコメントで結果のサマリーを投稿してください。
 """
 
-FACT_CHECK_PROMPT = """@claude
+FACT_CHECK_PROMPT = """{ai_mention}
 
 ## レビュー依頼: ファクトチェック（事実確認）
 
@@ -78,7 +84,7 @@ FACT_CHECK_PROMPT = """@claude
 *Step: {step}*
 """
 
-SEO_PROMPT = """@claude
+SEO_PROMPT = """{ai_mention}
 
 ## レビュー依頼: SEO最適化チェック
 
@@ -106,7 +112,7 @@ SEO_PROMPT = """@claude
 *Step: {step}*
 """
 
-QUALITY_PROMPT = """@claude
+QUALITY_PROMPT = """{ai_mention}
 
 ## レビュー依頼: 文章品質チェック
 
@@ -134,7 +140,7 @@ QUALITY_PROMPT = """@claude
 *Step: {step}*
 """
 
-ALL_REVIEW_PROMPT = """@claude
+ALL_REVIEW_PROMPT = """{ai_mention}
 
 ## 総合レビュー依頼: 全観点チェック
 
@@ -186,6 +192,7 @@ def get_review_prompt(
     output_path: str,
     run_id: str,
     step: str,
+    ai_mention: str | None = None,
 ) -> str:
     """Get the appropriate review prompt for the given type.
 
@@ -195,10 +202,14 @@ def get_review_prompt(
         output_path: Path where review results should be saved
         run_id: Run ID for tracking
         step: Step name for tracking
+        ai_mention: AI assistant mention (default: @codex, can be @claude)
 
     Returns:
         Formatted prompt string
     """
+    if ai_mention is None:
+        ai_mention = DEFAULT_AI_MENTION
+
     output_instruction = OUTPUT_INSTRUCTION.format(
         output_path=output_path,
         review_type=review_type.value,
@@ -213,6 +224,7 @@ def get_review_prompt(
 
     template = prompts[review_type]
     return template.format(
+        ai_mention=ai_mention,
         file_path=file_path,
         output_instruction=output_instruction,
         run_id=run_id,

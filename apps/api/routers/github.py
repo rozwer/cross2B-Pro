@@ -958,11 +958,15 @@ async def get_sync_status(
 
 
 class CreateReviewRequest(BaseModel):
-    """Request to create a review issue for Claude Code."""
+    """Request to create a review issue for Claude Code or Codex."""
 
     review_type: str = Field(
         default="all",
         description="Review type: fact_check, seo, quality, or all",
+    )
+    ai_mention: str = Field(
+        default="@codex",
+        description="AI assistant to mention: @codex (recommended, cost-effective) or @claude",
     )
 
 
@@ -1025,9 +1029,10 @@ async def create_review_issue(
     request: CreateReviewRequest,
     user: AuthUser = Depends(get_current_user),
 ) -> CreateReviewResponse:
-    """Create a GitHub issue for Claude Code to review an article.
+    """Create a GitHub issue for Claude Code or Codex to review an article.
 
-    Creates an issue with @claude mention and review instructions.
+    Creates an issue with @codex (default, cost-effective) or @claude mention
+    and review instructions.
     Supports different review types: fact_check, seo, quality, or all.
     """
     from apps.api.services.review_prompts import ReviewType, get_review_prompt, get_review_title
@@ -1065,6 +1070,11 @@ async def create_review_issue(
     file_path = f"{dir_path}/{step}/output.json"
     output_path = f"{dir_path}/{step}/review.json"
 
+    # Validate ai_mention
+    ai_mention = request.ai_mention
+    if ai_mention not in ("@codex", "@claude"):
+        ai_mention = "@codex"  # Default to cost-effective option
+
     # Generate review prompt
     issue_body = get_review_prompt(
         review_type=review_type,
@@ -1072,6 +1082,7 @@ async def create_review_issue(
         output_path=output_path,
         run_id=str(run_id),
         step=step,
+        ai_mention=ai_mention,
     )
 
     # Generate issue title
@@ -1203,9 +1214,9 @@ async def get_review_status(
     db_manager = _get_tenant_db_manager()
     store = _get_artifact_store()
 
-    # Check if review result exists in MinIO
-    review_path = f"{user.tenant_id}/{run_id}/{step}/review.json"
-    has_result = await store.exists(review_path)
+    # Check if review result exists in MinIO (use storage/ prefix to match actual MinIO paths)
+    review_path = f"storage/{user.tenant_id}/{run_id}/{step}/review.json"
+    has_result = await store.exists_by_path(review_path)
 
     # Get run to find GitHub repo URL
     async with db_manager.get_session(user.tenant_id) as session:
