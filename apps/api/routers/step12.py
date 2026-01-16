@@ -242,17 +242,11 @@ async def _generate_wordpress_html_from_step10(
     run_id: str,
     store: ArtifactStore,
 ) -> dict[str, Any]:
-    """Step10の出力からWordPress用HTMLを生成."""
-    # Step10の出力を取得
-    try:
-        step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
-        if not step10_data:
-            raise ValueError("Step10 output not found")
-        step10_json = json.loads(step10_data.decode("utf-8"))
-    except Exception as e:
-        raise ValueError(f"Failed to load step10 output: {e}") from e
+    """Step10/Step11の出力からWordPress用HTMLを生成.
 
-    # Step11の出力を取得（オプション）
+    Step11の画像付き記事があればそれを優先使用、なければStep10から生成。
+    """
+    # Step11の出力を取得（画像付き記事）
     step11_json = {}
     try:
         step11_data = await store.get_by_path(tenant_id, run_id, "step11", "output.json")
@@ -261,51 +255,97 @@ async def _generate_wordpress_html_from_step10(
     except Exception:
         pass
 
-    # 記事データを取得
-    articles_data = step10_json.get("articles", [])
+    # Step10の出力を取得
+    step10_json = {}
+    try:
+        step10_data = await store.get_by_path(tenant_id, run_id, "step10", "output.json")
+        if step10_data:
+            step10_json = json.loads(step10_data.decode("utf-8"))
+    except Exception as e:
+        if not step11_json:
+            raise ValueError(f"Failed to load step10 output: {e}") from e
 
-    # 後方互換性: 単一記事の場合
-    if not articles_data and step10_json.get("markdown_content"):
-        articles_data = [
-            {
-                "article_number": 1,
-                "title": step10_json.get("article_title", ""),
-                "content": step10_json.get("markdown_content", ""),
-                "html_content": step10_json.get("html_content", ""),
-                "meta_description": step10_json.get("meta_description", ""),
-            }
-        ]
+    # Step11に複数記事の出力がある場合はそれを使用
+    step11_articles = step11_json.get("articles", [])
 
     # 各記事をWordPress用HTMLに変換
     wordpress_articles = []
-    for article in articles_data:
-        article_number = article.get("article_number", 1)
-        title = article.get("title", "")
-        content = article.get("content", "")
-        html_content = article.get("html_content", "")
-        meta_description = article.get("meta_description", "")
 
-        # HTMLがなければMarkdownから変換
-        if not html_content and content:
-            html_content = _markdown_to_html(content)
+    if step11_articles:
+        # Step11の画像付き記事を使用
+        for art in step11_articles:
+            article_number = art.get("article_number", 1)
+            html_content = art.get("html_with_images", "")
 
-        # Gutenbergブロック形式に変換
-        gutenberg_html = _convert_to_gutenberg(html_content)
+            # HTMLがなければMarkdownから変換
+            if not html_content:
+                md_content = art.get("markdown_with_images", "")
+                if md_content:
+                    html_content = _markdown_to_html(md_content)
 
-        wordpress_articles.append(
-            {
-                "article_number": article_number,
-                "filename": f"article_{article_number}.html",
-                "gutenberg_blocks": gutenberg_html,
-                "metadata": {
-                    "title": title,
-                    "meta_description": meta_description,
-                    "focus_keyword": step10_json.get("keyword", ""),
-                    "word_count": len(content) if content else len(html_content),
-                    "slug": "",
-                },
-            }
-        )
+            # Gutenbergブロック形式に変換
+            gutenberg_html = _convert_to_gutenberg(html_content) if html_content else ""
+
+            wordpress_articles.append(
+                {
+                    "article_number": article_number,
+                    "filename": f"article_{article_number}.html",
+                    "gutenberg_blocks": gutenberg_html,
+                    "metadata": {
+                        "title": art.get("title", ""),
+                        "meta_description": "",
+                        "focus_keyword": step10_json.get("keyword", ""),
+                        "word_count": len(html_content),
+                        "slug": "",
+                    },
+                    "image_count": art.get("image_count", 0),
+                }
+            )
+    else:
+        # Step10の記事を使用（Step11がない場合）
+        articles_data = step10_json.get("articles", [])
+
+        # 後方互換性: 単一記事の場合
+        if not articles_data and step10_json.get("markdown_content"):
+            articles_data = [
+                {
+                    "article_number": 1,
+                    "title": step10_json.get("article_title", ""),
+                    "content": step10_json.get("markdown_content", ""),
+                    "html_content": step10_json.get("html_content", ""),
+                    "meta_description": step10_json.get("meta_description", ""),
+                }
+            ]
+
+        for article in articles_data:
+            article_number = article.get("article_number", 1)
+            title = article.get("title", "")
+            content = article.get("content", "")
+            html_content = article.get("html_content", "")
+            meta_description = article.get("meta_description", "")
+
+            # HTMLがなければMarkdownから変換
+            if not html_content and content:
+                html_content = _markdown_to_html(content)
+
+            # Gutenbergブロック形式に変換
+            gutenberg_html = _convert_to_gutenberg(html_content)
+
+            wordpress_articles.append(
+                {
+                    "article_number": article_number,
+                    "filename": f"article_{article_number}.html",
+                    "gutenberg_blocks": gutenberg_html,
+                    "metadata": {
+                        "title": title,
+                        "meta_description": meta_description,
+                        "focus_keyword": step10_json.get("keyword", ""),
+                        "word_count": len(content) if content else len(html_content),
+                        "slug": "",
+                    },
+                    "image_count": 0,
+                }
+            )
 
     return {
         "articles": wordpress_articles,
