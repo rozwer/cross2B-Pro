@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { ArticleDetail } from "@/lib/types";
@@ -80,6 +81,10 @@ export default function ArticleDetailPage({
   const [openPRs, setOpenPRs] = useState<PRInfo[]>([]);
   const [pendingBranches, setPendingBranches] = useState<BranchInfo[]>([]);
   const [githubLoading, setGithubLoading] = useState(false);
+  const [mergingPR, setMergingPR] = useState<number | null>(null);
+  const [creatingPR, setCreatingPR] = useState<string | null>(null);
+  const [githubError, setGithubError] = useState<string | null>(null);
+  const [githubSuccess, setGithubSuccess] = useState<string | null>(null);
 
   const fetchArticle = useCallback(async () => {
     setLoading(true);
@@ -150,6 +155,50 @@ export default function ArticleDetailPage({
     }
   }, [article?.github_repo_url, fetchGithubInfo]);
 
+  // PRマージ (GUI内で完結)
+  const handleMergePR = useCallback(async (prNumber: number) => {
+    if (!confirm("この PR をマージしますか？")) {
+      return;
+    }
+
+    setMergingPR(prNumber);
+    setGithubError(null);
+    setGithubSuccess(null);
+
+    try {
+      const result = await api.github.mergePR(id, prNumber, "squash");
+      if (result.merged) {
+        setGithubSuccess(`PR #${prNumber} をマージしました`);
+        // PR一覧を更新
+        fetchGithubInfo();
+      } else {
+        setGithubError(result.message || "PR のマージに失敗しました");
+      }
+    } catch (err) {
+      setGithubError(err instanceof Error ? err.message : "PR のマージに失敗しました");
+    } finally {
+      setMergingPR(null);
+    }
+  }, [id, fetchGithubInfo]);
+
+  // ブランチからPR作成 (GUI内で完結)
+  const handleCreatePR = useCallback(async (branchName: string) => {
+    setCreatingPR(branchName);
+    setGithubError(null);
+    setGithubSuccess(null);
+
+    try {
+      const result = await api.github.createPR(id, branchName);
+      setGithubSuccess(`PR #${result.number} を作成しました`);
+      // PR一覧を更新
+      fetchGithubInfo();
+    } catch (err) {
+      setGithubError(err instanceof Error ? err.message : "PR の作成に失敗しました");
+    } finally {
+      setCreatingPR(null);
+    }
+  }, [id, fetchGithubInfo]);
+
   const handleReview = async (type: ReviewType) => {
     setShowReviewMenu(false);
     setReviewLoading(true);
@@ -157,7 +206,7 @@ export default function ArticleDetailPage({
 
     try {
       const response = await api.github.createReview(id, "step10", type);
-      window.open(response.issue_url, "_blank");
+      // GUI内で完結 - 外部リンクではなくIssue進捗を表示
       setReviewStatus({
         status: "in_progress",
         issue_number: response.issue_number,
@@ -193,11 +242,16 @@ ${issue.suggestion}
     `.trim();
 
     navigator.clipboard.writeText(instruction).then(() => {
-      alert(
-        "編集指示をクリップボードにコピーしました。\nGitHub Issue で Claude Code に送信してください。"
+      const proceed = confirm(
+        "編集指示をクリップボードにコピーしました。\n\n" +
+        "編集作業はRun詳細ページ（成果物ページ）で行います。\n" +
+        "Run詳細ページに移動しますか？"
       );
+      if (proceed) {
+        window.location.href = `/runs/${id}`;
+      }
     });
-  }, []);
+  }, [id]);
 
   const handleDownload = useCallback(
     async (step: "step10" | "step11" | "step12") => {
@@ -683,6 +737,13 @@ ${issue.suggestion}
                 </button>
                 <Link
                   href={`/runs/${id}`}
+                  className="w-full btn btn-primary justify-start"
+                >
+                  <Pencil className="h-4 w-4" />
+                  編集する（成果物ページ）
+                </Link>
+                <Link
+                  href={`/runs/${id}`}
                   className="w-full btn btn-ghost justify-start"
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -777,6 +838,24 @@ ${issue.suggestion}
 
           {article.github_repo_url ? (
             <div className="space-y-6">
+              {/* Error/Success Messages */}
+              {githubError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-600 dark:text-red-400 flex items-center justify-between">
+                  {githubError}
+                  <button onClick={() => setGithubError(null)} className="text-red-400 hover:text-red-600">
+                    ✕
+                  </button>
+                </div>
+              )}
+              {githubSuccess && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg text-sm text-green-600 dark:text-green-400 flex items-center justify-between">
+                  {githubSuccess}
+                  <button onClick={() => setGithubSuccess(null)} className="text-green-400 hover:text-green-600">
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* Repo Info */}
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
@@ -800,7 +879,7 @@ ${issue.suggestion}
                 )}
               </div>
 
-              {/* Open PRs Section */}
+              {/* Open PRs Section - GUI内でマージ可能 */}
               {openPRs.length > 0 && (
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
@@ -822,14 +901,9 @@ ${issue.suggestion}
                     {openPRs.map((pr) => (
                       <div key={pr.number} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-blue-100 dark:border-blue-800">
                         <div className="flex-1 min-w-0">
-                          <a
-                            href={pr.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline truncate block"
-                          >
+                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400 truncate block">
                             #{pr.number} {pr.title}
-                          </a>
+                          </span>
                           <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {pr.user && <span>@{pr.user}</span>}
                             {pr.head_branch && <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1 rounded">{pr.head_branch}</span>}
@@ -837,21 +911,35 @@ ${issue.suggestion}
                             <span className="text-red-600">-{pr.deletions}</span>
                           </div>
                         </div>
-                        <a
-                          href={pr.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 btn btn-ghost btn-sm"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            onClick={() => handleMergePR(pr.number)}
+                            disabled={mergingPR === pr.number}
+                            className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {mergingPR === pr.number ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              "マージ"
+                            )}
+                          </button>
+                          <a
+                            href={pr.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-ghost btn-sm"
+                            title="GitHubで開く"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Pending Branches Section */}
+              {/* Pending Branches Section - GUI内でPR作成可能 */}
               {pendingBranches.length > 0 && (
                 <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
@@ -874,20 +962,31 @@ ${issue.suggestion}
                             <span>{branch.ahead_by} commits ahead</span>
                           </div>
                         </div>
-                        <a
-                          href={branch.compare_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 btn btn-ghost btn-sm text-amber-600"
-                        >
-                          比較
-                        </a>
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            onClick={() => handleCreatePR(branch.name)}
+                            disabled={creatingPR === branch.name}
+                            className="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {creatingPR === branch.name ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              "PR作成"
+                            )}
+                          </button>
+                          <a
+                            href={branch.compare_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-ghost btn-sm text-amber-600"
+                            title="比較を見る"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
-                    これらのブランチからPRを作成するには、下の「差分を確認」から行えます
-                  </p>
                 </div>
               )}
 
