@@ -96,6 +96,32 @@ class StepLLMDefault(CommonBase):
     model_class: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
+class HelpContent(CommonBase):
+    """Context-sensitive help content for UI components.
+
+    Stores help text (Markdown supported) that can be displayed in modal dialogs
+    when users click the "?" help button throughout the application.
+
+    help_key format: "{category}.{subcategory}.{item}"
+    Examples:
+    - "wizard.step1.business" - ワークフロー作成の事業情報入力
+    - "workflow.step0" - 工程0（キーワード選定）の説明
+    - "github.pr" - PR管理の使い方
+    """
+
+    __tablename__ = "help_contents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    help_key: Mapped[str] = mapped_column(String(128), unique=True, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)  # Markdown supported
+    category: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+
 # =============================================================================
 # Tenant DB Models
 # =============================================================================
