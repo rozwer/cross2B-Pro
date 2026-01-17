@@ -1230,3 +1230,144 @@ _Created via SEO Article Generator_
             "deletions": pr_data.get("deletions", 0),
             "changed_files": pr_data.get("changed_files", 0),
         }
+
+    async def add_collaborator(
+        self,
+        repo_url: str,
+        username: str,
+        permission: str = "push",
+    ) -> dict[str, Any]:
+        """Add a collaborator to a repository with specified permission.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            username: GitHub username to add as collaborator
+            permission: Permission level ("pull", "push", "admin", "maintain", "triage")
+                - pull: Read-only access
+                - push: Read and write access (default)
+                - admin: Full admin access
+                - maintain: Maintainer access (manage issues, PRs without admin)
+                - triage: Triage access (manage issues and PRs)
+
+        Returns:
+            dict with invitation status:
+            - invited: True if invitation was sent
+            - existing: True if user already has access
+            - permission: The permission level granted
+            - invitation_url: URL to accept the invitation (if applicable)
+
+        Raises:
+            GitHubPermissionError: If current user lacks admin access to repo
+            GitHubNotFoundError: If repository or username doesn't exist
+            GitHubValidationError: If permission level is invalid
+        """
+        valid_permissions = {"pull", "push", "admin", "maintain", "triage"}
+        if permission not in valid_permissions:
+            raise GitHubValidationError(f"Invalid permission: {permission}. Valid options: {', '.join(valid_permissions)}")
+
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/collaborators/{username}",
+                headers=self._get_headers(),
+                json={"permission": permission},
+                timeout=30.0,
+            )
+
+            # 201: Invitation created
+            # 204: User already has access (no body)
+            if response.status_code == 201:
+                data = response.json()
+                return {
+                    "invited": True,
+                    "existing": False,
+                    "permission": permission,
+                    "invitation_id": data.get("id"),
+                    "invitation_url": data.get("html_url"),
+                    "invitee": data.get("invitee", {}).get("login"),
+                }
+            elif response.status_code == 204:
+                return {
+                    "invited": False,
+                    "existing": True,
+                    "permission": permission,
+                    "message": f"User {username} already has access to this repository",
+                }
+            else:
+                # Handle errors
+                await self._handle_response(response)
+                # Should not reach here, but just in case
+                return {"invited": False, "error": "Unknown response"}
+
+    async def remove_collaborator(
+        self,
+        repo_url: str,
+        username: str,
+    ) -> dict[str, Any]:
+        """Remove a collaborator from a repository.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            username: GitHub username to remove
+
+        Returns:
+            dict with removal status
+
+        Raises:
+            GitHubPermissionError: If current user lacks admin access
+            GitHubNotFoundError: If repository or user doesn't exist
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/collaborators/{username}",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+
+            if response.status_code == 204:
+                return {
+                    "removed": True,
+                    "username": username,
+                }
+            else:
+                await self._handle_response(response)
+                return {"removed": False, "error": "Unknown response"}
+
+    async def list_collaborators(
+        self,
+        repo_url: str,
+        affiliation: str = "all",
+    ) -> list[dict[str, Any]]:
+        """List collaborators on a repository.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            affiliation: Filter by affiliation ("outside", "direct", "all")
+
+        Returns:
+            List of collaborators with login, permissions, etc.
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/collaborators",
+                headers=self._get_headers(),
+                params={"affiliation": affiliation, "per_page": 100},
+                timeout=30.0,
+            )
+            data = await self._handle_response(response)
+
+        return [
+            {
+                "login": collab.get("login"),
+                "id": collab.get("id"),
+                "avatar_url": collab.get("avatar_url"),
+                "permissions": collab.get("permissions", {}),
+                "role_name": collab.get("role_name"),
+            }
+            for collab in data
+        ]
