@@ -7,6 +7,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Phase11A_SettingsProps {
   onSubmit: (settings: { imageCount: number; positionRequest: string }) => void;
@@ -33,10 +34,13 @@ export function Phase11A_Settings({
     <div className="space-y-6">
       {/* 説明 */}
       <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          AIが記事内容を分析し、画像挿入に適した位置を提案します。
-          画像の枚数と挿入位置の希望を指定してください。
-        </p>
+        <div className="flex items-start gap-2">
+          <p className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+            AIが記事内容を分析し、画像挿入に適した位置を提案します。
+            画像の枚数と挿入位置の希望を指定してください。
+          </p>
+          <HelpButton helpKey="image.settings" size="sm" />
+        </div>
       </div>
 
       {/* 画像枚数 */}

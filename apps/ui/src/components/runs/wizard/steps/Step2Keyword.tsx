@@ -8,6 +8,7 @@ import {
   KeywordSuggestion,
   RelatedKeywordSuggestionItem,
 } from "@/lib/types";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Step2KeywordProps {
   data: KeywordInput;
@@ -117,7 +118,10 @@ export function Step2Keyword({
       {/* キーワードの状態 */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          キーワードの状態 <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            キーワードの状態 <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step2.keyword" size="sm" />
+          </span>
         </label>
         <p className="mt-1 text-xs text-gray-500">
           メインキーワードの状態を選択してください
@@ -385,7 +389,10 @@ eラーニングの活用事例を紹介したい
       <div>
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium text-gray-700">
-            関連キーワード（任意）
+            <span className="inline-flex items-center gap-1">
+              関連キーワード（任意）
+              <HelpButton helpKey="wizard.step2.related" size="sm" />
+            </span>
           </label>
           <button
             type="button"

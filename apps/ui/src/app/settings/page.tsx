@@ -26,6 +26,7 @@ import api from "@/lib/api";
 import type { LLMPlatform, Prompt } from "@/lib/types";
 import { STEP_LABELS } from "@/lib/types";
 import { Loading } from "@/components/common";
+import { HelpButton } from "@/components/common/HelpButton";
 
 type SettingsTab = "models" | "prompts" | "apikeys" | "llm-models" | "github";
 
@@ -239,6 +240,10 @@ export default function SettingsPage() {
       {/* Tab Content */}
       {activeTab === "models" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">モデル設定</h2>
+            <HelpButton helpKey="settings.models" size="sm" />
+          </div>
           <ModelSettingsTab stepConfigs={stepConfigs} onConfigChange={handleConfigChange} />
         </div>
       )}
@@ -393,6 +398,10 @@ export default function SettingsPage() {
 
       {activeTab === "apikeys" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">APIキー設定</h2>
+            <HelpButton helpKey="settings.apikeys" size="sm" />
+          </div>
           <ApiKeysTab />
         </div>
       )}

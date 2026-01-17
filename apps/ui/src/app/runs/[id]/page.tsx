@@ -24,6 +24,7 @@ import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
 import { ApprovalDialog } from "@/components/common/ApprovalDialog";
+import { HelpButton } from "@/components/common/HelpButton";
 import { Step3ReviewDialog } from "@/components/approval/Step3ReviewDialog";
 import { ImageGenerationWizard } from "@/components/imageGeneration";
 import { ResumeConfirmDialog } from "@/components/approval/ResumeConfirmDialog";
@@ -333,6 +334,7 @@ export default function RunDetailPage({
                 {getKeywordFromInput(run.input)}
               </h1>
               <RunStatusBadge status={run.status} />
+              <HelpButton helpKey="workflow.overview" size="sm" />
             </div>
             <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
               <span>ID: {run.id.slice(0, 8)}</span>
@@ -412,26 +414,32 @@ export default function RunDetailPage({
               </button>
             ) : isWaitingForStep3Review() ? (
               /* Step3レビュー待ちの場合はレビューボタン */
-              <button
-                onClick={() => {
-                  fetchArtifacts();
-                  setShowStep3ReviewDialog(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                Step3 レビュー
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    fetchArtifacts();
+                    setShowStep3ReviewDialog(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Step3 レビュー
+                </button>
+                <HelpButton helpKey="workflow.step3" size="sm" />
+              </div>
             ) : run.status === "waiting_approval" ? (
               /* その他の承認待ちの場合は承認ボタン */
-              <button
-                onClick={() => {
-                  fetchArtifacts();  // Ensure artifacts are loaded before showing dialog
-                  setShowApprovalDialog(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-              >
-                承認待ち
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    fetchArtifacts();  // Ensure artifacts are loaded before showing dialog
+                    setShowApprovalDialog(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+                >
+                  承認待ち
+                </button>
+                <HelpButton helpKey="workflow.approval" size="sm" />
+              </div>
             ) : null}
             {run.status === "completed" && (
               <>
@@ -523,12 +531,18 @@ export default function RunDetailPage({
       )}
 
       {activeTab === "artifacts" && (
-        <ArtifactViewer
-          runId={id}
-          artifacts={artifacts}
-          githubRepoUrl={run?.github_repo_url}
-          githubDirPath={run?.github_dir_path}
-        />
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">成果物</h2>
+            <HelpButton helpKey="workflow.artifacts" size="sm" />
+          </div>
+          <ArtifactViewer
+            runId={id}
+            artifacts={artifacts}
+            githubRepoUrl={run?.github_repo_url}
+            githubDirPath={run?.github_dir_path}
+          />
+        </div>
       )}
 
       {activeTab === "events" && <EventsList runId={id} wsEvents={events} />}

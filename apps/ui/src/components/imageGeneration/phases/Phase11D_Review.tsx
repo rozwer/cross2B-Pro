@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/common/HelpButton";
 import type { GeneratedImage } from "@/lib/types";
 
 // APIベースURL
@@ -135,9 +136,12 @@ export function Phase11D_Review({
 
       {/* ステータス */}
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-600 dark:text-gray-400">
-          {images.length}枚の画像を確認してください
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-600 dark:text-gray-400">
+            {images.length}枚の画像を確認してください
+          </span>
+          <HelpButton helpKey="image.review" size="sm" />
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-green-600 dark:text-green-400">
             承認: {acceptedCount}枚

@@ -8,6 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/common/HelpButton";
 import type { ImagePosition, Section } from "@/lib/types";
 import { SortablePositionList } from "./SortablePositionList";
 import { ArticlePreviewWithMarkers } from "./ArticlePreviewWithMarkers";
@@ -104,9 +105,12 @@ export function Phase11B_Positions({
     <div className="space-y-4">
       {/* 分析結果サマリー */}
       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
-          分析結果
-        </h4>
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            分析結果
+          </h4>
+          <HelpButton helpKey="image.positions" size="sm" />
+        </div>
         <p className="text-xs text-blue-700 dark:text-blue-300">
           {analysisSummary}
         </p>

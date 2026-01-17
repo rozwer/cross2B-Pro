@@ -8,6 +8,7 @@ import {
   CTAInput,
 } from "@/lib/types";
 import { RepoSelector } from "@/components/github/RepoSelector";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface WizardFormData {
   business: BusinessInput;
@@ -77,8 +78,9 @@ export function Step6Confirm({
       <div className="space-y-4">
         {/* Section 1: Business */}
         <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 inline-flex items-center gap-1">
             セクション1: 事業内容とターゲット
+            <HelpButton helpKey="wizard.step6.confirm" size="sm" />
           </h3>
           <dl className="space-y-2 text-sm">
             <div className="flex">

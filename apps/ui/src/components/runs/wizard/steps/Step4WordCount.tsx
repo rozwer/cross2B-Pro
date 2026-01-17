@@ -1,6 +1,7 @@
 "use client";
 
 import { WordCountInput, WordCountMode, ArticleStyle } from "@/lib/types";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Step4WordCountProps {
   data: WordCountInput;
@@ -63,7 +64,10 @@ export function Step4WordCount({
       {/* 文字数設定モード */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          文字数設定モード <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            文字数設定モード <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step4.wordcount" size="sm" />
+          </span>
         </label>
         <p className="mt-1 text-xs text-gray-500">
           ターゲット文字数の決定方法を選んでください
