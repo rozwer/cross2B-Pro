@@ -172,6 +172,28 @@ class DiffResponse(BaseModel):
     pending_branches: list[BranchInfo] = Field(default_factory=list)
 
 
+class SetupWorkflowsRequest(BaseModel):
+    """Request to setup AI workflows for an existing repository."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+
+
+class WorkflowSetupResult(BaseModel):
+    """Result for a single workflow setup."""
+
+    status: str  # created, skipped, error
+    reason: str | None = None
+    commit_sha: str | None = None
+    error: str | None = None
+
+
+class SetupWorkflowsResponse(BaseModel):
+    """Response with workflow setup results."""
+
+    claude_code: WorkflowSetupResult
+    codex: WorkflowSetupResult
+
+
 # =============================================================================
 # Endpoints
 # =============================================================================
@@ -260,6 +282,76 @@ async def create_repo(
         raise HTTPException(
             status_code=403,
             detail="Permission denied. Cannot create repository.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )
+
+
+@router.post("/setup-workflows", response_model=SetupWorkflowsResponse)
+async def setup_workflows(
+    request: SetupWorkflowsRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> SetupWorkflowsResponse:
+    """Setup AI workflows for an existing GitHub repository.
+
+    Adds both Claude Code (@claude) and Codex (@codex) GitHub Actions workflows.
+    This is idempotent - existing workflows are skipped.
+
+    Use this endpoint when:
+    - Connecting an existing repository that doesn't have the workflows
+    - Updating a repository that only has the Claude workflow (adds Codex)
+    """
+    github = _get_github_service()
+
+    try:
+        # First check access
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.write:
+            raise HTTPException(
+                status_code=403,
+                detail="Write permission required to setup workflows",
+            )
+
+        # Setup workflows
+        results = await github.setup_workflows(request.repo_url)
+
+        return SetupWorkflowsResponse(
+            claude_code=WorkflowSetupResult(
+                status=results["claude_code"].get("status", "error"),
+                reason=results["claude_code"].get("reason"),
+                commit_sha=results["claude_code"].get("commit_sha"),
+                error=results["claude_code"].get("error"),
+            ),
+            codex=WorkflowSetupResult(
+                status=results["codex"].get("status", "error"),
+                reason=results["codex"].get("reason"),
+                commit_sha=results["codex"].get("commit_sha"),
+                error=results["codex"].get("error"),
+            ),
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found or you don't have access.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot setup workflows.",
         )
     except GitHubRateLimitError as e:
         reset_msg = ""

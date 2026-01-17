@@ -392,6 +392,64 @@ class GitHubService:
 
         return repo_url
 
+    async def setup_workflows(
+        self,
+        repo_url: str,
+    ) -> dict[str, Any]:
+        """Setup AI workflow files for an existing repository.
+
+        Adds both Claude Code and Codex GitHub Actions workflows if they don't exist.
+        This is idempotent - existing workflows are skipped.
+
+        Args:
+            repo_url: Full GitHub repository URL
+
+        Returns:
+            dict with results for each workflow setup attempt
+        """
+        results: dict[str, Any] = {
+            "claude_code": {"status": "skipped", "reason": "unknown"},
+            "codex": {"status": "skipped", "reason": "unknown"},
+        }
+
+        # Setup Claude Code workflow
+        try:
+            existing = await self.get_file(repo_url, ".github/workflows/claude-code.yml")
+            if existing:
+                results["claude_code"] = {"status": "skipped", "reason": "already_exists"}
+            else:
+                sha = await self.push_file(
+                    repo_url=repo_url,
+                    path=".github/workflows/claude-code.yml",
+                    content=CLAUDE_CODE_WORKFLOW.encode("utf-8"),
+                    message="chore: add claude-code-action workflow",
+                )
+                results["claude_code"] = {"status": "created", "commit_sha": sha}
+                logger.info(f"Claude Code workflow added to {repo_url}")
+        except Exception as e:
+            results["claude_code"] = {"status": "error", "error": str(e)}
+            logger.warning(f"Failed to setup Claude Code workflow: {e}")
+
+        # Setup Codex workflow
+        try:
+            existing = await self.get_file(repo_url, ".github/workflows/codex.yml")
+            if existing:
+                results["codex"] = {"status": "skipped", "reason": "already_exists"}
+            else:
+                sha = await self.push_file(
+                    repo_url=repo_url,
+                    path=".github/workflows/codex.yml",
+                    content=CODEX_WORKFLOW.encode("utf-8"),
+                    message="chore: add codex-action workflow",
+                )
+                results["codex"] = {"status": "created", "commit_sha": sha}
+                logger.info(f"Codex workflow added to {repo_url}")
+        except Exception as e:
+            results["codex"] = {"status": "error", "error": str(e)}
+            logger.warning(f"Failed to setup Codex workflow: {e}")
+
+        return results
+
     async def push_file(
         self,
         repo_url: str,
