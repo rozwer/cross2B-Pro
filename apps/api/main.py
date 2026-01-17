@@ -29,6 +29,7 @@ from apps.api.routers import (
     github,
     health,
     hearing,
+    help,
     internal,
     keywords,
     models,
@@ -234,6 +235,7 @@ app.include_router(settings.router)
 app.include_router(models.router)
 app.include_router(suggestions.router)
 app.include_router(articles.router)
+app.include_router(help.router)
 
 
 # =============================================================================
