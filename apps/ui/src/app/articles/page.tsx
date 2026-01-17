@@ -17,6 +17,7 @@ import type { ArticleSummary } from "@/lib/types";
 import { api } from "@/lib/api";
 import { ListSkeleton } from "@/components/common/Loading";
 import { ErrorMessage } from "@/components/common/ErrorBoundary";
+import { HelpButton } from "@/components/common/HelpButton";
 import { cn } from "@/lib/utils";
 
 const REVIEW_FILTERS = [
@@ -121,9 +122,12 @@ export default function ArticlesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          作成済み記事
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            作成済み記事
+          </h1>
+          <HelpButton helpKey="articles.list" size="sm" />
+        </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           完了した記事の管理・レビュー・編集
         </p>
@@ -147,21 +151,24 @@ export default function ArticlesPage() {
           </form>
 
           {/* Review filter */}
-          <div className="flex items-center gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            {REVIEW_FILTERS.map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => setReviewFilter(filter.value)}
-                className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
-                  reviewFilter === filter.value
-                    ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                )}
-              >
-                {filter.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
+              {REVIEW_FILTERS.map((filter) => (
+                <button
+                  key={filter.value}
+                  onClick={() => setReviewFilter(filter.value)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                    reviewFilter === filter.value
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  )}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+            <HelpButton helpKey="articles.status" size="sm" />
           </div>
 
           {/* Refresh */}

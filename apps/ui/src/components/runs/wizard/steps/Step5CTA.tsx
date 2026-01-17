@@ -7,6 +7,7 @@ import {
   StagedCTA,
   StagedCTAItem,
 } from "@/lib/types";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Step5CTAProps {
   data: CTAInput;
@@ -104,7 +105,10 @@ export function Step5CTA({ data, onChange, errors }: Step5CTAProps) {
       {/* CTAタイプ選択 */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          CTA設計のタイプ <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            CTA設計のタイプ <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step5.cta" size="sm" />
+          </span>
         </label>
 
         <div className="mt-4 space-y-3">

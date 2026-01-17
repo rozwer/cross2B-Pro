@@ -9,6 +9,7 @@ import {
   Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Phase11E_PreviewProps {
   previewHtml: string;
@@ -32,10 +33,13 @@ export function Phase11E_Preview({
     <div className="space-y-6">
       {/* 説明 */}
       <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-        <p className="text-sm text-green-800 dark:text-green-200">
-          画像が挿入された記事のプレビューです。問題がなければ完了してください。
-          修正が必要な場合は「画像指示に戻る」から再調整できます。
-        </p>
+        <div className="flex items-start gap-2">
+          <p className="flex-1 text-sm text-green-800 dark:text-green-200">
+            画像が挿入された記事のプレビューです。問題がなければ完了してください。
+            修正が必要な場合は「画像指示に戻る」から再調整できます。
+          </p>
+          <HelpButton helpKey="image.preview" size="sm" />
+        </div>
       </div>
 
       {/* ビューモード切り替え */}

@@ -8,6 +8,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/common/HelpButton";
 import type { ImagePosition } from "@/lib/types";
 
 interface ImageInstruction {
@@ -75,12 +76,13 @@ export function Phase11C_Instructions({
       <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="flex items-start gap-3">
           <Lightbulb className="h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               各挿入位置に対して、どのような画像を生成するか指示してください。
               具体的な説明があるほど、より適切な画像が生成されます。
             </p>
           </div>
+          <HelpButton helpKey="image.instructions" size="sm" />
         </div>
       </div>
 

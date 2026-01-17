@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { BusinessInput, TargetCV, TargetAudienceSuggestion } from "@/lib/types";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Step1BusinessProps {
   data: BusinessInput;
@@ -69,7 +70,10 @@ export function Step1Business({ data, onChange, errors }: Step1BusinessProps) {
           htmlFor="description"
           className="block text-sm font-medium text-gray-700"
         >
-          事業内容 <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            事業内容 <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step1.business" size="sm" />
+          </span>
         </label>
         <p className="mt-1 text-xs text-gray-500">
           貴社の事業内容をできる限り詳細に教えてください
@@ -87,7 +91,10 @@ export function Step1Business({ data, onChange, errors }: Step1BusinessProps) {
       {/* 目標CV */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          目標CV（コンバージョン） <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            目標CV（コンバージョン） <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step1.target" size="sm" />
+          </span>
         </label>
         <div className="mt-2 space-y-2">
           {TARGET_CV_OPTIONS.map((option) => (

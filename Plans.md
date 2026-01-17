@@ -1,86 +1,154 @@
 # Plans.md
 
-> **最終更新**: 2026-01-16
+> **最終更新**: 2026-01-17
 > **アーカイブ**: 詳細な修正計画は `.claude/memory/archive/Plans-2026-01-13-full-review.md` を参照
 
 ---
 
-## 🎯 作成済み記事一覧ページ & Claude Codeレビュー機能
+## 🎯 コンテキストヘルプ機能（?ボタン）
 
-> **目的**: 完了したrunの記事を一覧表示し、Claude Codeによるレビュー・編集・PR自動化を実現
+> **目的**: 各ページ・各機能に「?」ボタンを配置し、モーダルでヘルプを表示。DBで管理し将来的に非エンジニアでも更新可能に。
 
 ### 概要
-- **対象**: 完了した記事（completed runs）
-- **流用**: 既存の成果物ページロジック（ArtifactViewer, GitHubActions）
-- **新機能**: SEOレビュー、Claude Code編集、PR/マージ自動化
+- **表示形式**: モーダル/ダイアログ（クリックで開く）
+- **コンテンツ管理**: DB（PostgreSQL）で一元管理
+- **対象範囲**: 全画面・全主要機能
 
 ---
 
-## ✅ フェーズ1: 記事一覧ページ基盤 `cc:DONE`
+## 🔴 フェーズ1: 基盤構築 `cc:TODO`
 
-### 1.1 API: 完了記事一覧エンドポイント
-- [x] `GET /api/articles` - 完了した記事一覧を取得
-  - フィルタ: status=completed
-  - キーワード検索
-  - ページネーション対応
-- [x] `GET /api/articles/{run_id}` - 記事詳細取得（step10/step12の成果物含む）
+### 1.1 DB: ヘルプコンテンツテーブル
+- [ ] `help_contents` テーブル作成
+  ```sql
+  CREATE TABLE help_contents (
+    id SERIAL PRIMARY KEY,
+    help_key VARCHAR(128) UNIQUE NOT NULL,  -- 例: "wizard.step1.business"
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,                   -- Markdown対応
+    category VARCHAR(64),                    -- ページカテゴリ
+    display_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+  );
+  ```
+- [ ] SQLAlchemy モデル追加 (`apps/api/db/models.py`)
+- [ ] 初期データ投入用 SQL/スクリプト作成
 
-### 1.2 FE: 記事一覧ページ
-- [x] `apps/ui/src/app/articles/page.tsx` - 一覧ページ作成
-  - キーワード検索
-  - レビューステータスフィルタ（すべて/レビュー済み/未レビュー）
-- [x] `apps/ui/src/app/articles/[id]/page.tsx` - 記事詳細ページ
-  - 概要タブ: メタデータ、成果物一覧
-  - プレビュータブ: iframe表示、レビューパネル
-  - GitHubタブ: Claude Code編集、PR管理
+### 1.2 API: ヘルプコンテンツ取得
+- [ ] `GET /api/help/{help_key}` - 単一ヘルプ取得
+- [ ] `GET /api/help?category={category}` - カテゴリ別一覧取得
+- [ ] `PUT /api/help/{help_key}` - ヘルプ更新（将来の管理画面用）
 
----
-
-## ✅ フェーズ2: Claude Codeレビュー機能強化 `cc:DONE`
-
-### 2.1 レビュー機能拡張（既存コード流用）
-- [x] 既存の `PreviewPage` のレビュー機能を記事詳細に組み込み
-  - `ReviewResultPanel` コンポーネント流用
-  - レビュータイプ: SEO最適化、ファクトチェック、文章品質
-- [x] レビュー結果の永続化と表示
-  - MinIO に保存済み（review.json）
-  - 一覧でレビューステータス表示
-
-### 2.2 Claude Code編集連携
-- [x] Issue作成機能の流用（GitHubActions）
-  - 記事詳細ページから編集依頼Issue作成
-  - `@claude` メンション付きIssue
-- [x] 編集完了通知
-  - GitHub Issue/PRのステータス監視（10秒ポーリング）
-  - 完了時にPR情報表示
+### 1.3 FE: 共通コンポーネント
+- [ ] `HelpButton` コンポーネント作成
+  - `?` アイコンボタン（lucide-react の `HelpCircle`）
+  - クリックでモーダル表示
+  - props: `helpKey: string`
+- [ ] `HelpModal` コンポーネント作成
+  - 既存の `ConfirmDialog` パターンを流用
+  - Markdown レンダリング対応
+  - 閉じるボタン（×）のみ（確認ボタンなし）
 
 ---
 
-## ✅ フェーズ3: PR表示と管理 `cc:DONE`
+## 🟡 フェーズ2: ワークフロー作成ウィザード `cc:TODO`
 
-### 3.1 PR表示
-- [x] PR一覧表示
-  - サイドバーにオープンPRサマリー表示
-  - GitHubタブで詳細なPR一覧（作成者、ブランチ、追加/削除行数）
-- [x] 未PRブランチ表示
-  - Claude Code編集後のブランチ一覧
-  - 比較リンク
+### 2.1 Step1: 事業情報入力
+- [ ] `wizard.step1.business` - 事業内容の入力ガイド
+- [ ] `wizard.step1.target` - ターゲット読者の設定方法
+- [ ] `wizard.step1.strategy` - 記事戦略（標準/トピッククラスター）の違い
 
-### 3.2 PR作成
-- [x] ブランチ→PR自動作成（GitHubActionsコンポーネント内）
-- ~~マージ自動化~~ （ユーザー要望により除外 - PRまで）
+### 2.2 Step2: キーワード選定
+- [ ] `wizard.step2.keyword` - メインキーワードの選び方
+- [ ] `wizard.step2.related` - 関連キーワードの活用法
+- [ ] `wizard.step2.volume` - 検索ボリュームの見方
+
+### 2.3 Step3: 戦略設定
+- [ ] `wizard.step3.type` - 記事タイプ（網羅/深掘り/比較等）の選択基準
+- [ ] `wizard.step3.cta` - CTAの設定方法
+
+### 2.4 Step4-6: 詳細設定
+- [ ] `wizard.step4.wordcount` - 文字数設定の目安
+- [ ] `wizard.step5.cta` - CTA詳細設定
+- [ ] `wizard.step6.confirm` - 確認画面の見方
 
 ---
 
-## 📊 コンポーネント流用マップ
+## 🟢 フェーズ3: ワークフロー実行画面 `cc:TODO`
 
-| 既存コンポーネント | 流用先 | 変更点 |
-|------------------|-------|--------|
-| `ArtifactViewer` | 記事詳細ページ | 記事向けUIカスタマイズ |
-| `GitHubActions` | 記事詳細ページ | PR/マージUI追加 |
-| `ReviewResultPanel` | 記事詳細ページ | そのまま流用 |
-| `PreviewPage` | 記事プレビュー | ルーティング変更 |
-| `HtmlPreview` | 記事プレビュー | そのまま流用 |
+### 3.1 工程説明
+- [ ] `workflow.overview` - 全体フローの概要（工程0〜12）
+- [ ] `workflow.step0` - キーワード選定（工程0）
+- [ ] `workflow.step1` - 競合記事収集（工程1）
+- [ ] `workflow.step2` - CSV読み込み確認（工程2）
+- [ ] `workflow.step3` - 並列分析（3A/3B/3C）の意味
+- [ ] `workflow.step4-6` - アウトライン生成フロー
+- [ ] `workflow.step7` - 本文生成
+- [ ] `workflow.step8-9` - ファクトチェック・品質向上
+- [ ] `workflow.step10` - 最終出力
+- [ ] `workflow.step11` - 画像生成
+- [ ] `workflow.step12` - WordPress HTML
+
+### 3.2 操作ガイド
+- [ ] `workflow.approval` - 承認・却下の操作方法
+- [ ] `workflow.retry` - 工程再実行の方法
+- [ ] `workflow.artifacts` - 成果物の確認方法
+
+---
+
+## 🔵 フェーズ4: 画像生成ウィザード `cc:TODO`
+
+### 4.1 各フェーズ説明
+- [ ] `image.settings` - 画像設定（スタイル、枚数）
+- [ ] `image.positions` - 挿入位置の選び方
+- [ ] `image.instructions` - 画像指示の書き方
+- [ ] `image.review` - 生成画像の確認・リトライ
+- [ ] `image.preview` - プレビューの見方
+
+---
+
+## 🟣 フェーズ5: 記事管理・レビュー `cc:TODO`
+
+### 5.1 記事一覧
+- [ ] `articles.list` - 一覧画面の使い方
+- [ ] `articles.filter` - 検索・フィルタの活用
+- [ ] `articles.status` - レビューステータスの意味
+
+### 5.2 レビュー機能
+- [ ] `review.types` - レビュータイプ（SEO/ファクトチェック/品質）の違い
+- [ ] `review.results` - レビュー結果の読み方
+- [ ] `review.action` - レビュー後のアクション
+
+### 5.3 GitHub連携
+- [ ] `github.issue` - Issue作成の使い方
+- [ ] `github.pr` - PR一覧の見方
+- [ ] `github.branch` - ブランチ操作
+
+---
+
+## ⚪ フェーズ6: 設定画面 `cc:TODO`
+
+### 6.1 API設定
+- [ ] `settings.apikeys` - APIキー設定方法
+- [ ] `settings.models` - モデル選択の基準
+
+### 6.2 プロンプト管理
+- [ ] `settings.prompts` - プロンプト編集の注意点
+
+---
+
+## 📊 ヘルプコンテンツ一覧（予定）
+
+| カテゴリ | 件数 | 優先度 |
+|---------|------|--------|
+| ワークフロー作成 | 12件 | 高 |
+| ワークフロー実行 | 15件 | 高 |
+| 画像生成 | 5件 | 中 |
+| 記事管理・レビュー | 9件 | 中 |
+| 設定 | 4件 | 低 |
+| **合計** | **45件** | - |
 
 ---
 
@@ -88,86 +156,9 @@
 
 | 領域 | 技術 |
 |------|------|
-| API | FastAPI（既存） |
-| DB | PostgreSQL（既存） |
-| Storage | MinIO（既存） |
-| GitHub連携 | GitHubService（既存） |
-| FE | Next.js + React（既存） |
+| DB | PostgreSQL（`help_contents` テーブル） |
+| API | FastAPI |
+| FE | React + lucide-react（HelpCircle アイコン）|
+| Markdown | react-markdown または既存の MarkdownViewer |
 
----
-
-## 📋 モック挙動・TODO・未実装リストアップ
-
-> **目的**: 本番環境デプロイ前に対応が必要なモック/未実装箇所の可視化
-
-### 🔴 CRITICAL: 認証系（本番環境ブロッカー）`cc:TODO`
-
-| ファイル | 行番号 | 内容 | 対応方針 |
-|---------|-------|------|----------|
-| `apps/api/auth/middleware.py` | 35, 168-172, 205-213 | `SKIP_AUTH` で認証スキップ、固定の `DEV_TENANT_ID` | 認証プロバイダ統合 |
-| `apps/api/routers/auth.py` | 35-55 | ログインが開発環境のみ、本番は `NotImplemented` | JWT/OAuth統合 |
-| `apps/api/routers/auth.py` | 92 | `TODO: トークン無効化リスト（Redis等）` | Redis実装 |
-| `apps/api/routers/diagnostics.py` | 78-95 | `get_current_user()` が placeholder | 認証連携後に実装 |
-| `apps/ui/src/lib/websocket.ts` | 22 | `DEV_TENANT_ID` ハードコード | 認証から取得に変更 |
-| `apps/ui/src/lib/auth.ts` | 244 | `TODO: 認証機能実装後に有効化` | 認証UI実装 |
-| `apps/ui/src/lib/api.ts` | 4 | 開発段階で認証無効化 | 認証ヘッダー追加 |
-
-### 🟠 MEDIUM: 外部API統合 `cc:TODO`
-
-| ファイル | 行番号 | 内容 | 対応方針 |
-|---------|-------|------|----------|
-| `apps/api/tools/search.py` | 256-290 | `SearchVolumeTool` がモック実装 | Google Ads API統合 |
-| `apps/api/tools/search.py` | 343-374 | `RelatedKeywordsTool` がモック実装 | 同上 |
-| `apps/api/tools/search.py` | 295, 379 | `NotImplementedError` | API キー取得後に実装 |
-
-### 🟡 LOW: 開発用設定・将来対応 `cc:TODO`
-
-| ファイル | 行番号 | 内容 | 対応方針 |
-|---------|-------|------|----------|
-| `apps/api/main.py` | 65-66 | `USE_MOCK_LLM=true` で LLM なし起動 | 本番では無効化 |
-| `apps/api/prompts/loader.py` | 219-223 | テスト用 `mock_pack` | テスト用として維持 |
-| `apps/worker/workflows/article_workflow.py` | 83 | `TODO: Remove after migration` | マイグレーション後に削除 |
-| `apps/api/auth/middleware.py` | 145 | `TODO: VULN-011 監査ログ連携` | 監査ログ実装と連携 |
-
-### ⚪ INFO: 例外クラス・基底クラスの pass（正常）
-
-設計上 `pass` のみで問題なし：
-- `apps/api/db/models.py` - 基底クラス
-- `apps/api/prompts/loader.py` - 例外クラス
-- `apps/api/db/tenant.py` - 例外クラス
-- `apps/api/storage/artifact_store.py` - 例外クラス
-
----
-
-## 📊 サマリー
-
-| 重大度 | 件数 | 対応タイミング |
-|--------|------|----------------|
-| **CRITICAL** | 7件 | 本番デプロイ前に必須 |
-| **MEDIUM** | 3件 | Google Ads API取得後 |
-| **LOW** | 4件 | 将来対応/維持 |
-| **INFO** | 12件 | 対応不要（正常設計） |
-
----
-
-## 完了状況
-
-✅ **全フェーズ完了** (2026-01-16)
-
-実装した機能:
-- 記事一覧API・ページ（検索、フィルタ対応）
-- 記事詳細ページ（概要/プレビュー/GitHubタブ）
-- Claudeレビュー機能（SEO、ファクトチェック、品質）
-- GitHub連携（Issue作成、PR一覧、ブランチ管理）
-
----
-
-## アーカイブ（詳細な修正計画）
-
-以下のアーカイブには詳細な修正計画が含まれています：
-
-| ファイル | 内容 |
-|---------|------|
-| `.claude/memory/archive/Plans-2026-01-13-full-review.md` | 全体コードレビュー修正計画（CRITICAL 25件、HIGH 58件、MEDIUM 28件、LOW 8件） |
-
-アーカイブの計画を実行する場合は該当ファイルを参照してください。
+---ka

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { StrategyInput, ChildTopicSuggestion } from "@/lib/types";
+import { HelpButton } from "@/components/common/HelpButton";
 
 interface Step3StrategyProps {
   data: StrategyInput;
@@ -92,7 +93,10 @@ export function Step3Strategy({
       {/* 記事のスタイル */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          記事のスタイル <span className="text-red-500">*</span>
+          <span className="inline-flex items-center gap-1">
+            記事のスタイル <span className="text-red-500">*</span>
+            <HelpButton helpKey="wizard.step3.type" size="sm" />
+          </span>
         </label>
         <p className="mt-1 text-xs text-gray-500">
           どちらの記事スタイルで作成しますか？
@@ -199,7 +203,10 @@ export function Step3Strategy({
         <div>
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-700">
-              子記事のトピック <span className="text-red-500">*</span>
+              <span className="inline-flex items-center gap-1">
+                子記事のトピック <span className="text-red-500">*</span>
+                <HelpButton helpKey="wizard.step3.cta" size="sm" />
+              </span>
             </label>
             <button
               type="button"

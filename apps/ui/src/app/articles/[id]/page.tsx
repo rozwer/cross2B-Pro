@@ -32,6 +32,7 @@ import {
   type ReviewStatus,
   type ReviewIssue,
 } from "@/components/review/ReviewResultPanel";
+import { HelpButton } from "@/components/common/HelpButton";
 import { cn } from "@/lib/utils";
 
 type ReviewType = "fact_check" | "seo" | "quality" | "all";
@@ -539,9 +540,12 @@ ${issue.suggestion}
           <div className="space-y-6">
             {/* Review Status */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                レビュー
-              </h2>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  レビュー
+                </h2>
+                <HelpButton helpKey="review.types" size="sm" />
+              </div>
 
               {/* Review Status Badge */}
               <div className="mb-4">
@@ -618,32 +622,38 @@ ${issue.suggestion}
 
               {/* Review Result Button */}
               {(reviewStatus?.has_result || reviewResult) && (
-                <button
-                  onClick={() => setShowReviewPanel(!showReviewPanel)}
-                  className={cn(
-                    "w-full mt-3 btn",
-                    reviewResult?.passed
-                      ? "btn-ghost text-green-600 dark:text-green-400"
-                      : "btn-ghost text-amber-600 dark:text-amber-400"
-                  )}
-                >
-                  {reviewResult?.passed ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4" />
-                  )}
-                  レビュー結果を見る
-                </button>
+                <div className="flex items-center gap-2 mt-3">
+                  <button
+                    onClick={() => setShowReviewPanel(!showReviewPanel)}
+                    className={cn(
+                      "flex-1 btn",
+                      reviewResult?.passed
+                        ? "btn-ghost text-green-600 dark:text-green-400"
+                        : "btn-ghost text-amber-600 dark:text-amber-400"
+                    )}
+                  >
+                    {reviewResult?.passed ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4" />
+                    )}
+                    レビュー結果を見る
+                  </button>
+                  <HelpButton helpKey="review.results" size="sm" />
+                </div>
               )}
             </div>
 
             {/* GitHub PR Summary */}
             {article.github_repo_url && (
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                  <Github className="h-5 w-5" />
-                  GitHub
-                </h2>
+                <div className="flex items-center gap-2 mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Github className="h-5 w-5" />
+                    GitHub
+                  </h2>
+                  <HelpButton helpKey="github.pr" size="sm" />
+                </div>
 
                 {githubLoading ? (
                   <div className="flex items-center gap-2 text-gray-500">
@@ -889,6 +899,7 @@ ${issue.suggestion}
                     <span className="font-medium text-blue-800 dark:text-blue-200">
                       オープン Pull Request ({openPRs.length}件)
                     </span>
+                    <HelpButton helpKey="github.pr" size="sm" />
                     <button
                       onClick={fetchGithubInfo}
                       disabled={githubLoading}
@@ -949,6 +960,7 @@ ${issue.suggestion}
                     <span className="font-medium text-amber-800 dark:text-amber-200">
                       PR未作成のブランチ ({pendingBranches.length}件)
                     </span>
+                    <HelpButton helpKey="github.branch" size="sm" />
                   </div>
                   <div className="space-y-2">
                     {pendingBranches.map((branch) => (
