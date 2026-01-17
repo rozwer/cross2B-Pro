@@ -1388,3 +1388,241 @@ async def get_issue_status(
             status_code=404,
             detail=f"Issue #{issue_number} not found.",
         )
+
+
+# =============================================================================
+# Collaborator API Models
+# =============================================================================
+
+
+class AddCollaboratorRequest(BaseModel):
+    """Request to add a collaborator to a repository."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    username: str = Field(..., description="GitHub username to add")
+    permission: str = Field(
+        default="push",
+        description="Permission level: pull (read), push (write), admin, maintain, triage",
+    )
+
+
+class AddCollaboratorResponse(BaseModel):
+    """Response with collaborator addition result."""
+
+    invited: bool
+    existing: bool
+    permission: str
+    invitation_id: int | None = None
+    invitation_url: str | None = None
+    invitee: str | None = None
+    message: str | None = None
+
+
+class RemoveCollaboratorRequest(BaseModel):
+    """Request to remove a collaborator from a repository."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    username: str = Field(..., description="GitHub username to remove")
+
+
+class RemoveCollaboratorResponse(BaseModel):
+    """Response with collaborator removal result."""
+
+    removed: bool
+    username: str
+
+
+class CollaboratorInfo(BaseModel):
+    """Information about a collaborator."""
+
+    login: str
+    id: int | None = None
+    avatar_url: str | None = None
+    permissions: dict[str, bool] = Field(default_factory=dict)
+    role_name: str | None = None
+
+
+class ListCollaboratorsRequest(BaseModel):
+    """Request to list collaborators."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    affiliation: str = Field(
+        default="all",
+        description="Filter: outside (external), direct (explicit access), all",
+    )
+
+
+class ListCollaboratorsResponse(BaseModel):
+    """Response with list of collaborators."""
+
+    collaborators: list[CollaboratorInfo]
+
+
+# =============================================================================
+# Collaborator API Endpoints
+# =============================================================================
+
+
+@router.post("/add-collaborator", response_model=AddCollaboratorResponse)
+async def add_collaborator(
+    request: AddCollaboratorRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> AddCollaboratorResponse:
+    """Add a collaborator to a GitHub repository.
+
+    Adds a user with the specified permission level.
+    Requires admin access to the repository.
+
+    Permission levels:
+    - pull: Read-only access
+    - push: Read and write access (default)
+    - admin: Full admin access
+    - maintain: Manage repo without admin
+    - triage: Manage issues and PRs
+    """
+    github = _get_github_service()
+
+    try:
+        # First check that the caller has admin access
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.admin:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin access required to add collaborators",
+            )
+
+        result = await github.add_collaborator(
+            repo_url=request.repo_url,
+            username=request.username,
+            permission=request.permission,
+        )
+
+        return AddCollaboratorResponse(
+            invited=result.get("invited", False),
+            existing=result.get("existing", False),
+            permission=result.get("permission", request.permission),
+            invitation_id=result.get("invitation_id"),
+            invitation_url=result.get("invitation_url"),
+            invitee=result.get("invitee"),
+            message=result.get("message"),
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository or user not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Admin access required to add collaborators.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )
+
+
+@router.post("/remove-collaborator", response_model=RemoveCollaboratorResponse)
+async def remove_collaborator(
+    request: RemoveCollaboratorRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> RemoveCollaboratorResponse:
+    """Remove a collaborator from a GitHub repository.
+
+    Requires admin access to the repository.
+    """
+    github = _get_github_service()
+
+    try:
+        # First check that the caller has admin access
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.admin:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin access required to remove collaborators",
+            )
+
+        result = await github.remove_collaborator(
+            repo_url=request.repo_url,
+            username=request.username,
+        )
+
+        return RemoveCollaboratorResponse(
+            removed=result.get("removed", False),
+            username=request.username,
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository or user not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Admin access required to remove collaborators.",
+        )
+
+
+@router.post("/list-collaborators", response_model=ListCollaboratorsResponse)
+async def list_collaborators(
+    request: ListCollaboratorsRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> ListCollaboratorsResponse:
+    """List collaborators on a GitHub repository.
+
+    Returns users with explicit access to the repository.
+    """
+    github = _get_github_service()
+
+    try:
+        collaborators = await github.list_collaborators(
+            repo_url=request.repo_url,
+            affiliation=request.affiliation,
+        )
+
+        return ListCollaboratorsResponse(
+            collaborators=[
+                CollaboratorInfo(
+                    login=c["login"],
+                    id=c.get("id"),
+                    avatar_url=c.get("avatar_url"),
+                    permissions=c.get("permissions", {}),
+                    role_name=c.get("role_name"),
+                )
+                for c in collaborators
+            ]
+        )
+
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot list collaborators.",
+        )
