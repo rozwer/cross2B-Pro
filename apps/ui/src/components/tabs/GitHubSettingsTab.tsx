@@ -92,6 +92,10 @@ export function GitHubSettingsTab() {
       setRepoUrl(config?.default_repo_url || "");
       setDirPath(config?.default_dir_path || "");
       setHasChanges(false);
+      // Initialize branch management URL from default repo
+      if (config?.default_repo_url) {
+        setBranchRepoUrl(config.default_repo_url);
+      }
     } catch (err) {
       // 404 is expected if no settings exist yet
       if (err instanceof Error && err.message.includes("404")) {
