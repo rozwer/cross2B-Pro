@@ -75,13 +75,14 @@ jobs:
 """
 
 # Codex Action workflow template (more cost-effective alternative)
-CODEX_WORKFLOW = """# Codex Action Workflow
+# Uses codex CLI directly since openai/codex-action has known issues with server initialization
+CODEX_WORKFLOW = """# Codex Workflow
 #
-# This workflow enables Codex to automatically edit files when @codex is mentioned
-# in GitHub Issues or PR comments.
+# This workflow enables Codex to automatically respond to @codex mentions
+# in GitHub Issues or PR comments using the Codex CLI directly.
 #
 # Requirements:
-# - OPENAI_API_KEY must be set in repository secrets (for Codex)
+# - OPENAI_API_KEY must be set in repository secrets
 
 name: Codex
 
@@ -106,7 +107,6 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      id-token: write
 
     steps:
       - name: Checkout repository
@@ -114,10 +114,69 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Codex
-        uses: openai/codex-action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          node-version: '20'
+
+      - name: Install Codex CLI
+        run: npm install -g @openai/codex
+
+      - name: Extract prompt
+        id: extract_prompt
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            PROMPT="${{ github.event.issue.body }}"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            PROMPT="${{ github.event.comment.body }}"
+          else
+            PROMPT="${{ github.event.comment.body }}"
+          fi
+          # Remove @codex mention from prompt
+          PROMPT=$(echo "$PROMPT" | sed 's/@codex//g')
+          # Save to file to handle multiline
+          echo "$PROMPT" > /tmp/prompt.txt
+
+      - name: Run Codex
+        id: run_codex
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Run codex exec with the prompt and capture output
+          PROMPT=$(cat /tmp/prompt.txt)
+          codex exec --full-auto -o /tmp/codex_output.txt "$PROMPT" || true
+          # Set output for next step
+          if [ -f /tmp/codex_output.txt ]; then
+            echo "output_file=/tmp/codex_output.txt" >> $GITHUB_OUTPUT
+            echo "has_output=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_output=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post Codex feedback
+        if: steps.run_codex.outputs.has_output == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('fs');
+            const outputFile = '${{ steps.run_codex.outputs.output_file }}';
+            let message = '';
+            try {
+              message = fs.readFileSync(outputFile, 'utf8');
+            } catch (e) {
+              message = 'Codex completed but produced no output.';
+            }
+
+            const issueNumber = context.payload.issue?.number || context.payload.pull_request?.number;
+            if (issueNumber && message.trim()) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: '## Codex Response\\n\\n' + message,
+              });
+            }
 """
 
 
@@ -331,6 +390,7 @@ class GitHubService:
         description: str = "",
         private: bool = True,
         setup_claude_workflow: bool = True,
+        setup_secrets: bool = True,
     ) -> str:
         """Create a new GitHub repository.
 
@@ -339,6 +399,7 @@ class GitHubService:
             description: Repository description
             private: Whether the repository should be private
             setup_claude_workflow: Whether to add claude-code-action workflow
+            setup_secrets: Whether to auto-configure API key secrets from env
 
         Returns:
             URL of the created repository
@@ -389,6 +450,26 @@ class GitHubService:
             except Exception as e:
                 # Log but don't fail repo creation
                 logger.warning(f"Failed to add Codex workflow: {e}")
+
+        # Setup API key secrets from environment variables
+        if setup_secrets:
+            # Setup OPENAI_API_KEY for Codex workflow
+            openai_key = os.getenv("OPENAI_API_KEY")
+            if openai_key:
+                try:
+                    await self.set_repo_secret(repo_url, "OPENAI_API_KEY", openai_key)
+                    logger.info(f"OPENAI_API_KEY secret set for {repo_url}")
+                except Exception as e:
+                    logger.warning(f"Failed to set OPENAI_API_KEY secret: {e}")
+
+            # Setup ANTHROPIC_API_KEY for Claude Code workflow
+            anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+            if anthropic_key:
+                try:
+                    await self.set_repo_secret(repo_url, "ANTHROPIC_API_KEY", anthropic_key)
+                    logger.info(f"ANTHROPIC_API_KEY secret set for {repo_url}")
+                except Exception as e:
+                    logger.warning(f"Failed to set ANTHROPIC_API_KEY secret: {e}")
 
         return repo_url
 
@@ -1695,3 +1776,98 @@ _Created via SEO Article Generator_
                 logger.error(f"Failed to update issue #{issue_number}: {e}")
 
         return results
+
+    async def get_repo_public_key(
+        self,
+        repo_url: str,
+    ) -> dict[str, str]:
+        """Get repository public key for encrypting secrets.
+
+        Args:
+            repo_url: Full GitHub repository URL
+
+        Returns:
+            dict with key_id and key (base64 encoded public key)
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/actions/secrets/public-key",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+            data = await self._handle_response(response)
+
+        return {
+            "key_id": data.get("key_id"),
+            "key": data.get("key"),
+        }
+
+    async def set_repo_secret(
+        self,
+        repo_url: str,
+        secret_name: str,
+        secret_value: str,
+    ) -> bool:
+        """Set a repository secret for GitHub Actions.
+
+        Uses libsodium sealed box encryption as required by GitHub API.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            secret_name: Name of the secret (e.g., OPENAI_API_KEY)
+            secret_value: Plain text value to encrypt and store
+
+        Returns:
+            True if secret was created/updated successfully
+        """
+        from nacl import encoding, public
+
+        owner, repo = self._parse_repo_url(repo_url)
+
+        # Get the repository's public key
+        key_info = await self.get_repo_public_key(repo_url)
+        public_key = key_info["key"]
+        key_id = key_info["key_id"]
+
+        # Encrypt the secret using the public key
+        public_key_bytes = encoding.Base64Encoder.decode(public_key.encode("utf-8"))
+        sealed_box = public.SealedBox(public.PublicKey(public_key_bytes))
+        encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
+        encrypted_value = encoding.Base64Encoder.encode(encrypted).decode("utf-8")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/actions/secrets/{secret_name}",
+                headers=self._get_headers(),
+                json={
+                    "encrypted_value": encrypted_value,
+                    "key_id": key_id,
+                },
+                timeout=30.0,
+            )
+
+            # 201 = created, 204 = updated
+            if response.status_code in (201, 204):
+                logger.info(f"Secret {secret_name} set successfully for {repo_url}")
+                return True
+
+            await self._handle_response(response)
+            return False
+
+    async def setup_codex_secret(
+        self,
+        repo_url: str,
+        openai_api_key: str,
+    ) -> bool:
+        """Set up OPENAI_API_KEY secret for Codex workflow.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            openai_api_key: OpenAI API key value
+
+        Returns:
+            True if secret was set successfully
+        """
+        return await self.set_repo_secret(repo_url, "OPENAI_API_KEY", openai_api_key)
