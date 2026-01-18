@@ -21,9 +21,9 @@ class ReviewType(str, Enum):
     ALL = "all"
 
 
-# Default AI assistant mention (@claude is used by default as ANTHROPIC_API_KEY is auto-configured)
-# @codex requires manual OPENAI_API_KEY setup in repository secrets
-DEFAULT_AI_MENTION = "@claude"
+# Default AI assistant mention (@codex is more cost-effective)
+# Both OPENAI_API_KEY and ANTHROPIC_API_KEY are auto-configured during repo creation
+DEFAULT_AI_MENTION = "@codex"
 
 
 # Base instruction for output format

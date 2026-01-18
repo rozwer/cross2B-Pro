@@ -194,6 +194,22 @@ class SetupWorkflowsResponse(BaseModel):
     codex: WorkflowSetupResult
 
 
+class SetRepoSecretRequest(BaseModel):
+    """Request to set a repository secret."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    secret_name: str = Field(..., description="Secret name (e.g., OPENAI_API_KEY)")
+    secret_value: str = Field(..., description="Secret value (will be encrypted)")
+
+
+class SetRepoSecretResponse(BaseModel):
+    """Response for setting repository secret."""
+
+    success: bool
+    secret_name: str
+    message: str
+
+
 # =============================================================================
 # Endpoints
 # =============================================================================
@@ -352,6 +368,78 @@ async def setup_workflows(
         raise HTTPException(
             status_code=403,
             detail="Permission denied. Cannot setup workflows.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )
+
+
+@router.post("/set-secret", response_model=SetRepoSecretResponse)
+async def set_repo_secret(
+    request: SetRepoSecretRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> SetRepoSecretResponse:
+    """Set a repository secret for GitHub Actions.
+
+    This is used to configure API keys needed for AI workflows:
+    - OPENAI_API_KEY: Required for Codex (@codex) workflow
+    - ANTHROPIC_API_KEY: Required for Claude Code (@claude) workflow
+
+    The secret value is encrypted using the repository's public key
+    before being stored, as required by GitHub API.
+    """
+    github = _get_github_service()
+
+    try:
+        # First check access (need admin to set secrets)
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.admin:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin permission required to set repository secrets",
+            )
+
+        # Set the secret
+        success = await github.set_repo_secret(
+            repo_url=request.repo_url,
+            secret_name=request.secret_name,
+            secret_value=request.secret_value,
+        )
+
+        if success:
+            return SetRepoSecretResponse(
+                success=True,
+                secret_name=request.secret_name,
+                message=f"Secret {request.secret_name} set successfully",
+            )
+        else:
+            return SetRepoSecretResponse(
+                success=False,
+                secret_name=request.secret_name,
+                message="Failed to set secret",
+            )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found or you don't have access.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Admin access required to set secrets.",
         )
     except GitHubRateLimitError as e:
         reset_msg = ""
