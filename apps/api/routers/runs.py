@@ -285,6 +285,41 @@ async def create_run(
 
         logger.info("Run created and committed", extra={"run_id": run_id, "tenant_id": tenant_id})
 
+        # Auto-save repository URL to settings (for dropdown in GitHub settings)
+        if data.github_repo_url:
+            try:
+                from apps.api.db import ApiSetting
+
+                async with db_manager.get_session(tenant_id) as session:
+                    result = await session.execute(
+                        select(ApiSetting).where(
+                            ApiSetting.tenant_id == tenant_id,
+                            ApiSetting.service == "github",
+                        )
+                    )
+                    setting = result.scalar_one_or_none()
+                    repo_url = data.github_repo_url.strip().rstrip("/")
+
+                    if setting:
+                        config = setting.config or {}
+                        repo_urls: list[str] = config.get("repository_urls", [])
+                        if repo_url not in repo_urls:
+                            repo_urls.insert(0, repo_url)
+                            repo_urls = repo_urls[:20]  # Keep max 20
+                            config["repository_urls"] = repo_urls
+                            setting.config = config
+                    else:
+                        setting = ApiSetting(
+                            tenant_id=tenant_id,
+                            service="github",
+                            config={"repository_urls": [repo_url]},
+                            is_active=True,
+                        )
+                        session.add(setting)
+                logger.debug(f"Saved repository URL to settings: {repo_url}")
+            except Exception as e:
+                logger.warning(f"Failed to save repository URL to settings: {e}")
+
         # Phase 2: Start Temporal workflow AFTER DB commit
         if start_workflow and temporal_client is not None:
             try:

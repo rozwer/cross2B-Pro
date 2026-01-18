@@ -1652,6 +1652,55 @@ class ApiClient {
         { method: "POST" }
       );
     },
+
+    /**
+     * Get saved repository URLs list
+     */
+    getRepositories: async (): Promise<{
+      repository_urls: string[];
+      default_repo_url: string | null;
+    }> => {
+      return this.request<{
+        repository_urls: string[];
+        default_repo_url: string | null;
+      }>("/api/settings/github/repositories");
+    },
+
+    /**
+     * Add a repository URL to saved list
+     */
+    addRepository: async (
+      repoUrl: string
+    ): Promise<{
+      repository_urls: string[];
+      default_repo_url: string | null;
+    }> => {
+      return this.request<{
+        repository_urls: string[];
+        default_repo_url: string | null;
+      }>("/api/settings/github/repositories", {
+        method: "POST",
+        body: JSON.stringify({ repo_url: repoUrl }),
+      });
+    },
+
+    /**
+     * Remove a repository URL from saved list
+     */
+    removeRepository: async (
+      repoUrl: string
+    ): Promise<{
+      repository_urls: string[];
+      default_repo_url: string | null;
+    }> => {
+      return this.request<{
+        repository_urls: string[];
+        default_repo_url: string | null;
+      }>(
+        `/api/settings/github/repositories?repo_url=${encodeURIComponent(repoUrl)}`,
+        { method: "DELETE" }
+      );
+    },
   };
 
   // ============================================

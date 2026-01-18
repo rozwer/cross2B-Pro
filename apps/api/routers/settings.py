@@ -43,6 +43,7 @@ class ServiceConfig(BaseModel):
     # GitHub-specific options
     default_repo_url: str | None = None  # Default repository URL
     default_dir_path: str | None = None  # Default directory path in repo
+    repository_urls: list[str] | None = None  # Saved repository URLs for dropdown
 
 
 class SettingResponse(BaseModel):
@@ -457,3 +458,145 @@ async def test_connection(
         error_message=result.error_message,
         details=result.details,
     )
+
+
+# =============================================================================
+# GitHub Repository URL Management
+# =============================================================================
+
+
+class AddRepoRequest(BaseModel):
+    """Request model for adding a repository URL."""
+
+    repo_url: str = Field(..., description="GitHub repository URL to add")
+
+
+class RepoListResponse(BaseModel):
+    """Response model for repository URL list."""
+
+    repository_urls: list[str]
+    default_repo_url: str | None = None
+
+
+@router.post("/github/repositories", response_model=RepoListResponse)
+async def add_repository_url(
+    request: AddRepoRequest,
+    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_manager: TenantDBManager = Depends(get_tenant_manager),
+) -> RepoListResponse:
+    """Add a repository URL to the saved list.
+
+    Used when creating a run with a new repository.
+    Automatically deduplicates and maintains a list of used repositories.
+    """
+    import re
+
+    # Validate URL format
+    repo_url = request.repo_url.strip()
+    if not re.match(r"^https://github\.com/[\w\-]+/[\w\-\.]+/?$", repo_url):
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid GitHub repository URL format",
+        )
+
+    # Remove trailing slash for consistency
+    repo_url = repo_url.rstrip("/")
+
+    async with tenant_manager.get_session(tenant_id) as session:
+        result = await session.execute(
+            select(ApiSetting).where(
+                ApiSetting.tenant_id == tenant_id,
+                ApiSetting.service == "github",
+            )
+        )
+        setting = result.scalar_one_or_none()
+
+        if setting:
+            # Update existing setting
+            config = setting.config or {}
+            repo_urls = config.get("repository_urls", [])
+            if repo_url not in repo_urls:
+                repo_urls.insert(0, repo_url)  # Add to front (most recent first)
+                # Keep max 20 URLs
+                repo_urls = repo_urls[:20]
+                config["repository_urls"] = repo_urls
+                setting.config = config
+        else:
+            # Create new setting
+            setting = ApiSetting(
+                tenant_id=tenant_id,
+                service="github",
+                config={"repository_urls": [repo_url]},
+                is_active=True,
+            )
+            session.add(setting)
+
+        await session.flush()
+        config = setting.config or {}
+
+    return RepoListResponse(
+        repository_urls=config.get("repository_urls", []),
+        default_repo_url=config.get("default_repo_url"),
+    )
+
+
+@router.get("/github/repositories", response_model=RepoListResponse)
+async def get_repository_urls(
+    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_manager: TenantDBManager = Depends(get_tenant_manager),
+) -> RepoListResponse:
+    """Get list of saved repository URLs.
+
+    Returns all repository URLs saved for this tenant.
+    """
+    async with tenant_manager.get_session(tenant_id) as session:
+        result = await session.execute(
+            select(ApiSetting).where(
+                ApiSetting.tenant_id == tenant_id,
+                ApiSetting.service == "github",
+            )
+        )
+        setting = result.scalar_one_or_none()
+
+    if setting and setting.config:
+        return RepoListResponse(
+            repository_urls=setting.config.get("repository_urls", []),
+            default_repo_url=setting.config.get("default_repo_url"),
+        )
+
+    return RepoListResponse(repository_urls=[], default_repo_url=None)
+
+
+@router.delete("/github/repositories")
+async def remove_repository_url(
+    repo_url: str,
+    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_manager: TenantDBManager = Depends(get_tenant_manager),
+) -> RepoListResponse:
+    """Remove a repository URL from the saved list."""
+    repo_url = repo_url.strip().rstrip("/")
+
+    async with tenant_manager.get_session(tenant_id) as session:
+        result = await session.execute(
+            select(ApiSetting).where(
+                ApiSetting.tenant_id == tenant_id,
+                ApiSetting.service == "github",
+            )
+        )
+        setting = result.scalar_one_or_none()
+
+        if setting and setting.config:
+            config = setting.config
+            repo_urls = config.get("repository_urls", [])
+            if repo_url in repo_urls:
+                repo_urls.remove(repo_url)
+                config["repository_urls"] = repo_urls
+                setting.config = config
+                await session.flush()
+
+            return RepoListResponse(
+                repository_urls=repo_urls,
+                default_repo_url=config.get("default_repo_url"),
+            )
+
+    return RepoListResponse(repository_urls=[], default_repo_url=None)
