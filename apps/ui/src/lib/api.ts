@@ -1431,6 +1431,64 @@ class ApiClient {
         }),
       });
     },
+
+    /**
+     * List all branches in a repository
+     */
+    listBranches: async (
+      repoUrl: string
+    ): Promise<{
+      branches: Array<{
+        name: string;
+        protected: boolean;
+        commit_sha: string | null;
+        commit_date: string | null;
+        commit_message: string | null;
+        commit_author: string | null;
+        is_default: boolean;
+        is_merged: boolean;
+      }>;
+      default_branch: string | null;
+    }> => {
+      return this.request<{
+        branches: Array<{
+          name: string;
+          protected: boolean;
+          commit_sha: string | null;
+          commit_date: string | null;
+          commit_message: string | null;
+          commit_author: string | null;
+          is_default: boolean;
+          is_merged: boolean;
+        }>;
+        default_branch: string | null;
+      }>("/api/github/list-branches", {
+        method: "POST",
+        body: JSON.stringify({ repo_url: repoUrl }),
+      });
+    },
+
+    /**
+     * Delete multiple branches from a repository
+     * Protected branches (main, master, develop, release/*) are automatically skipped
+     */
+    deleteBranches: async (
+      repoUrl: string,
+      branches: string[]
+    ): Promise<{
+      deleted: string[];
+      failed: Array<{ name: string; reason: string | null }>;
+      skipped: Array<{ name: string; reason: string | null }>;
+    }> => {
+      return this.request<{
+        deleted: string[];
+        failed: Array<{ name: string; reason: string | null }>;
+        skipped: Array<{ name: string; reason: string | null }>;
+      }>("/api/github/branches", {
+        method: "DELETE",
+        body: JSON.stringify({ repo_url: repoUrl, branches }),
+      });
+    },
   };
 
   // ============================================

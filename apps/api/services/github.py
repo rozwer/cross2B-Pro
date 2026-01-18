@@ -1371,3 +1371,163 @@ _Created via SEO Article Generator_
             }
             for collab in data
         ]
+
+    async def list_branches(
+        self,
+        repo_url: str,
+        per_page: int = 100,
+    ) -> list[dict[str, Any]]:
+        """List all branches in a repository with merge status.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            per_page: Number of branches per page (max 100)
+
+        Returns:
+            List of branches with name, protected status, last commit info, and merge status
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            # Get all branches
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/branches",
+                headers=self._get_headers(),
+                params={"per_page": per_page},
+                timeout=30.0,
+            )
+            branches_data = await self._handle_response(response)
+
+            # Get default branch
+            repo_response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+            repo_data = await self._handle_response(repo_response)
+            default_branch = repo_data.get("default_branch", "main")
+
+            branches = []
+            for branch in branches_data:
+                branch_name = branch.get("name", "")
+                commit_sha = branch.get("commit", {}).get("sha", "")
+
+                # Get commit details for date
+                commit_date = None
+                commit_message = None
+                commit_author = None
+                if commit_sha:
+                    try:
+                        commit_response = await client.get(
+                            f"{GITHUB_API_URL}/repos/{owner}/{repo}/commits/{commit_sha}",
+                            headers=self._get_headers(),
+                            timeout=30.0,
+                        )
+                        commit_data = await self._handle_response(commit_response)
+                        commit_date = commit_data.get("commit", {}).get("committer", {}).get("date")
+                        commit_message = commit_data.get("commit", {}).get("message", "")[:100]
+                        commit_author = commit_data.get("author", {}).get("login") if commit_data.get("author") else None
+                    except Exception:
+                        pass
+
+                # Check if merged into default branch (skip for default branch itself)
+                is_merged = False
+                if branch_name != default_branch:
+                    try:
+                        compare_response = await client.get(
+                            f"{GITHUB_API_URL}/repos/{owner}/{repo}/compare/{default_branch}...{branch_name}",
+                            headers=self._get_headers(),
+                            timeout=30.0,
+                        )
+                        compare_data = await self._handle_response(compare_response)
+                        # If ahead_by is 0, the branch has been fully merged
+                        is_merged = compare_data.get("ahead_by", 1) == 0
+                    except Exception:
+                        pass
+
+                branches.append(
+                    {
+                        "name": branch_name,
+                        "protected": branch.get("protected", False),
+                        "commit_sha": commit_sha[:8] if commit_sha else None,
+                        "commit_date": commit_date,
+                        "commit_message": commit_message,
+                        "commit_author": commit_author,
+                        "is_default": branch_name == default_branch,
+                        "is_merged": is_merged,
+                    }
+                )
+
+            return branches
+
+    async def delete_branch(
+        self,
+        repo_url: str,
+        branch_name: str,
+    ) -> bool:
+        """Delete a single branch from a repository.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            branch_name: Name of the branch to delete
+
+        Returns:
+            True if deleted successfully
+
+        Raises:
+            GitHubPermissionError: If branch is protected or no write access
+            GitHubNotFoundError: If branch doesn't exist
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/refs/heads/{branch_name}",
+                headers=self._get_headers(),
+                timeout=30.0,
+            )
+
+            if response.status_code == 204:
+                return True
+            elif response.status_code == 422:
+                raise GitHubPermissionError(f"Cannot delete branch '{branch_name}': branch may be protected")
+            else:
+                await self._handle_response(response)
+                return False
+
+    async def delete_branches(
+        self,
+        repo_url: str,
+        branch_names: list[str],
+    ) -> dict[str, Any]:
+        """Delete multiple branches from a repository.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            branch_names: List of branch names to delete
+
+        Returns:
+            dict with deleted, failed, and skipped lists
+        """
+        results: dict[str, Any] = {
+            "deleted": [],
+            "failed": [],
+            "skipped": [],
+        }
+
+        for branch_name in branch_names:
+            try:
+                await self.delete_branch(repo_url, branch_name)
+                results["deleted"].append(branch_name)
+                logger.info(f"Deleted branch: {branch_name}")
+            except GitHubPermissionError as e:
+                results["skipped"].append({"name": branch_name, "reason": str(e)})
+                logger.warning(f"Skipped branch {branch_name}: {e}")
+            except GitHubNotFoundError:
+                results["failed"].append({"name": branch_name, "reason": "Branch not found"})
+                logger.warning(f"Branch not found: {branch_name}")
+            except Exception as e:
+                results["failed"].append({"name": branch_name, "reason": str(e)})
+                logger.error(f"Failed to delete branch {branch_name}: {e}")
+
+        return results
