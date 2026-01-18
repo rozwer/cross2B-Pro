@@ -466,6 +466,29 @@ ${issue.suggestion}
         </div>
       )}
 
+      {/* レビュー完了（結果なし）バナー */}
+      {reviewStatus?.status === "completed" &&
+        !reviewStatus?.has_result &&
+        !reviewResult && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-3">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <span className="text-sm text-amber-700">
+              レビューは完了しましたが、結果ファイルが見つかりません。{" "}
+              {reviewStatus.issue_url && (
+                <a
+                  href={reviewStatus.issue_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline inline-flex items-center gap-1"
+                >
+                  Issue #{reviewStatus.issue_number} を確認
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </span>
+          </div>
+        )}
+
       <div className="flex">
         {/* プレビュー iframe */}
         <div

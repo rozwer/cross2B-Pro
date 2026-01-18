@@ -557,7 +557,7 @@ ${issue.suggestion}
 
               {/* Review Status Badge */}
               <div className="mb-4">
-                {article.review_status === "completed" ? (
+                {article.review_status === "completed" || reviewResult ? (
                   <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 rounded-full">
                     <CheckCircle className="h-4 w-4" />
                     レビュー済み
@@ -567,6 +567,17 @@ ${issue.suggestion}
                     <Loader2 className="h-4 w-4 animate-spin" />
                     レビュー中
                   </span>
+                ) : reviewStatus?.status === "completed" && !reviewStatus?.has_result ? (
+                  <a
+                    href={reviewStatus.issue_url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded-full hover:bg-amber-200 dark:hover:bg-amber-900/50"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    レビュー完了（結果なし）
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full">
                     未レビュー

@@ -1476,9 +1476,10 @@ async def get_review_status(
                         has_result=False,
                     )
                 else:
-                    # Issue is closed but no result file yet (might be failed or manual close)
+                    # Issue is closed but no result file found
+                    # This means review was completed but result wasn't saved properly
                     return ReviewStatusResponse(
-                        status="pending",
+                        status="completed",
                         issue_number=issue_number,
                         issue_url=issue_url,
                         has_result=False,
