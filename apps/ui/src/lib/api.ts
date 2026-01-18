@@ -1489,6 +1489,69 @@ class ApiClient {
         body: JSON.stringify({ repo_url: repoUrl, branches }),
       });
     },
+
+    /**
+     * List issues in a repository
+     */
+    listIssues: async (
+      repoUrl: string,
+      state: "open" | "closed" | "all" = "open"
+    ): Promise<{
+      issues: Array<{
+        number: number;
+        title: string;
+        state: string;
+        created_at: string | null;
+        updated_at: string | null;
+        closed_at: string | null;
+        author: string | null;
+        labels: string[];
+        assignees: string[];
+        comments: number;
+        body: string | null;
+        html_url: string | null;
+      }>;
+    }> => {
+      return this.request<{
+        issues: Array<{
+          number: number;
+          title: string;
+          state: string;
+          created_at: string | null;
+          updated_at: string | null;
+          closed_at: string | null;
+          author: string | null;
+          labels: string[];
+          assignees: string[];
+          comments: number;
+          body: string | null;
+          html_url: string | null;
+        }>;
+      }>("/api/github/list-issues", {
+        method: "POST",
+        body: JSON.stringify({ repo_url: repoUrl, state }),
+      });
+    },
+
+    /**
+     * Update issue states (open/close)
+     */
+    updateIssues: async (
+      repoUrl: string,
+      issueNumbers: number[],
+      state: "open" | "closed"
+    ): Promise<{
+      updated: number[];
+      failed: Array<{ number: number; reason: string | null }>;
+    }> => {
+      return this.request<{
+        updated: number[];
+        failed: Array<{ number: number; reason: string | null }>;
+      }>("/api/github/issues", {
+        method: "PATCH",
+        body: JSON.stringify({ repo_url: repoUrl, issue_numbers: issueNumbers, state }),
+      });
+    },
   };
 
   // ============================================
