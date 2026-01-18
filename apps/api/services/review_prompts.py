@@ -21,9 +21,10 @@ class ReviewType(str, Enum):
     ALL = "all"
 
 
-# Default AI assistant mention (@codex is more cost-effective)
+# Default AI assistant mention
+# @claude is used because Codex has authentication issues in GitHub Actions
 # Both OPENAI_API_KEY and ANTHROPIC_API_KEY are auto-configured during repo creation
-DEFAULT_AI_MENTION = "@codex"
+DEFAULT_AI_MENTION = "@claude"
 
 
 # Base instruction for output format
