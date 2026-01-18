@@ -1532,6 +1532,50 @@ _Created via SEO Article Generator_
 
         return results
 
+    async def find_issue_by_title(
+        self,
+        repo_url: str,
+        title_contains: str,
+        state: str = "all",
+    ) -> dict[str, Any] | None:
+        """Find an issue by partial title match.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            title_contains: String that must be in the issue title
+            state: Issue state filter (open, closed, all)
+
+        Returns:
+            Most recent matching issue dict or None if not found
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues",
+                headers=self._get_headers(),
+                params={"state": state, "per_page": 50, "sort": "created", "direction": "desc"},
+                timeout=30.0,
+            )
+            data = await self._handle_response(response)
+
+            # Find matching issue (exclude PRs)
+            for issue in data:
+                if "pull_request" in issue:
+                    continue
+                if title_contains in issue.get("title", ""):
+                    return {
+                        "number": issue.get("number"),
+                        "title": issue.get("title"),
+                        "state": issue.get("state"),
+                        "created_at": issue.get("created_at"),
+                        "updated_at": issue.get("updated_at"),
+                        "html_url": issue.get("html_url"),
+                        "comments": issue.get("comments", 0),
+                    }
+
+            return None
+
     async def list_issues(
         self,
         repo_url: str,
