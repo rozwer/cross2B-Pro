@@ -1330,6 +1330,25 @@ class ApiClient {
       issue_url: string | null;
       has_result: boolean;
       result_path: string | null;
+      result: {
+        review_type: string;
+        issues: Array<{
+          severity: "high" | "medium" | "low";
+          category: string;
+          location: string;
+          original: string;
+          issue: string;
+          suggestion: string;
+        }>;
+        summary: {
+          total_issues: number;
+          high: number;
+          medium: number;
+          low: number;
+          overall_assessment: string;
+        };
+        passed: boolean;
+      } | null;
     }> => {
       return this.request<{
         status: "pending" | "in_progress" | "completed" | "failed";
@@ -1337,6 +1356,25 @@ class ApiClient {
         issue_url: string | null;
         has_result: boolean;
         result_path: string | null;
+        result: {
+          review_type: string;
+          issues: Array<{
+            severity: "high" | "medium" | "low";
+            category: string;
+            location: string;
+            original: string;
+            issue: string;
+            suggestion: string;
+          }>;
+          summary: {
+            total_issues: number;
+            high: number;
+            medium: number;
+            low: number;
+            overall_assessment: string;
+          };
+          passed: boolean;
+        } | null;
       }>(`/api/github/review-status/${runId}/${step}`);
     },
 
