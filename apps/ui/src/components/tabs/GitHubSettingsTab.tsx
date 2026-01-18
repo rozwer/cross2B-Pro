@@ -17,7 +17,6 @@ import {
   Shield,
   GitMerge,
   CircleDot,
-  Tag,
   MessageSquare,
   XCircle,
   CheckCircle,
@@ -83,6 +82,10 @@ export function GitHubSettingsTab() {
   const [repoValid, setRepoValid] = useState<boolean | null>(null);
   const [repoError, setRepoError] = useState<string | null>(null);
 
+  // Repository URL list state (for dropdown)
+  const [repositoryUrls, setRepositoryUrls] = useState<string[]>([]);
+  const [isLoadingRepos, setIsLoadingRepos] = useState(false);
+
   // Branch management state
   const [branchRepoUrl, setBranchRepoUrl] = useState("");
   const [branches, setBranches] = useState<BranchInfo[]>([]);
@@ -115,6 +118,25 @@ export function GitHubSettingsTab() {
   const [showIssueConfirm, setShowIssueConfirm] = useState(false);
   const [issueAction, setIssueAction] = useState<"open" | "closed">("closed");
 
+  // Load repository URLs from API
+  const loadRepositoryUrls = useCallback(async () => {
+    setIsLoadingRepos(true);
+    try {
+      const result = await api.settings.getRepositories();
+      setRepositoryUrls(result.repository_urls || []);
+      // Set initial branch/issue URL from the list or default
+      if (result.repository_urls && result.repository_urls.length > 0) {
+        const defaultUrl = result.default_repo_url || result.repository_urls[0];
+        if (!branchRepoUrl) setBranchRepoUrl(defaultUrl);
+        if (!issueRepoUrl) setIssueRepoUrl(defaultUrl);
+      }
+    } catch {
+      // Ignore errors - just don't populate the dropdown
+    } finally {
+      setIsLoadingRepos(false);
+    }
+  }, [branchRepoUrl, issueRepoUrl]);
+
   // Load current settings
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
@@ -128,24 +150,10 @@ export function GitHubSettingsTab() {
       setRepoUrl(config?.default_repo_url || "");
       setDirPath(config?.default_dir_path || "");
       setHasChanges(false);
-      // Initialize branch/issue management URL from default repo or latest run
+      // Initialize branch/issue management URL from default repo
       if (config?.default_repo_url) {
         setBranchRepoUrl(config.default_repo_url);
         setIssueRepoUrl(config.default_repo_url);
-      } else {
-        // Try to get repo URL from latest run
-        try {
-          const runsResponse = await api.runs.list({ limit: 1 });
-          if (runsResponse.items.length > 0) {
-            const latestRun = await api.runs.get(runsResponse.items[0].id);
-            if (latestRun.github_repo_url) {
-              setBranchRepoUrl(latestRun.github_repo_url);
-              setIssueRepoUrl(latestRun.github_repo_url);
-            }
-          }
-        } catch {
-          // Ignore errors when fetching runs
-        }
       }
     } catch (err) {
       // 404 is expected if no settings exist yet
@@ -153,19 +161,6 @@ export function GitHubSettingsTab() {
         setSetting(null);
         setRepoUrl("");
         setDirPath("");
-        // Try to get repo URL from latest run even when settings don't exist
-        try {
-          const runsResponse = await api.runs.list({ limit: 1 });
-          if (runsResponse.items.length > 0) {
-            const latestRun = await api.runs.get(runsResponse.items[0].id);
-            if (latestRun.github_repo_url) {
-              setBranchRepoUrl(latestRun.github_repo_url);
-              setIssueRepoUrl(latestRun.github_repo_url);
-            }
-          }
-        } catch {
-          // Ignore errors when fetching runs
-        }
       } else {
         setError(err instanceof Error ? err.message : "設定の読み込みに失敗しました");
       }
@@ -176,7 +171,8 @@ export function GitHubSettingsTab() {
 
   useEffect(() => {
     loadSettings();
-  }, [loadSettings]);
+    loadRepositoryUrls();
+  }, [loadSettings, loadRepositoryUrls]);
 
   // Track changes
   useEffect(() => {
@@ -652,16 +648,31 @@ export function GitHubSettingsTab() {
           </label>
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
                 <Github className="h-4 w-4 text-gray-400" />
               </div>
-              <input
-                type="url"
-                value={branchRepoUrl}
-                onChange={(e) => setBranchRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repository"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+              {repositoryUrls.length > 0 ? (
+                <select
+                  value={branchRepoUrl}
+                  onChange={(e) => setBranchRepoUrl(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+                >
+                  <option value="">リポジトリを選択...</option>
+                  {repositoryUrls.map((url) => (
+                    <option key={url} value={url}>
+                      {url.replace("https://github.com/", "")}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="url"
+                  value={branchRepoUrl}
+                  onChange={(e) => setBranchRepoUrl(e.target.value)}
+                  placeholder="https://github.com/owner/repository"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              )}
             </div>
             <button
               onClick={loadBranches}
@@ -679,6 +690,11 @@ export function GitHubSettingsTab() {
           {!hasGitHubToken && (
             <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
               GitHubトークンが必要です
+            </p>
+          )}
+          {repositoryUrls.length === 0 && !isLoadingRepos && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Runを作成するとリポジトリが自動で登録されます
             </p>
           )}
         </div>
@@ -985,16 +1001,31 @@ export function GitHubSettingsTab() {
           </label>
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
                 <Github className="h-4 w-4 text-gray-400" />
               </div>
-              <input
-                type="url"
-                value={issueRepoUrl}
-                onChange={(e) => setIssueRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repository"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+              {repositoryUrls.length > 0 ? (
+                <select
+                  value={issueRepoUrl}
+                  onChange={(e) => setIssueRepoUrl(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none cursor-pointer"
+                >
+                  <option value="">リポジトリを選択...</option>
+                  {repositoryUrls.map((url) => (
+                    <option key={url} value={url}>
+                      {url.replace("https://github.com/", "")}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="url"
+                  value={issueRepoUrl}
+                  onChange={(e) => setIssueRepoUrl(e.target.value)}
+                  placeholder="https://github.com/owner/repository"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              )}
             </div>
             <div className="flex gap-1">
               {(["open", "closed", "all"] as const).map((filter) => (
@@ -1027,6 +1058,11 @@ export function GitHubSettingsTab() {
           {!hasGitHubToken && (
             <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
               GitHubトークンが必要です
+            </p>
+          )}
+          {repositoryUrls.length === 0 && !isLoadingRepos && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Runを作成するとリポジトリが自動で登録されます
             </p>
           )}
         </div>

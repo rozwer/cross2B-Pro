@@ -8,6 +8,9 @@ Endpoints for:
 """
 
 import logging
+import time
+from collections.abc import Hashable
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,6 +30,56 @@ from apps.api.services.github import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Simple TTL Cache
+# =============================================================================
+
+
+class TTLCache:
+    """Simple in-memory cache with TTL support."""
+
+    def __init__(self, default_ttl: int = 300):
+        """Initialize cache with default TTL in seconds."""
+        self._cache: dict[Hashable, tuple[Any, float]] = {}
+        self._default_ttl = default_ttl
+
+    def get(self, key: Hashable) -> Any | None:
+        """Get value from cache if not expired."""
+        if key not in self._cache:
+            return None
+        value, expires_at = self._cache[key]
+        if time.time() > expires_at:
+            del self._cache[key]
+            return None
+        return value
+
+    def set(self, key: Hashable, value: Any, ttl: int | None = None) -> None:
+        """Set value in cache with optional TTL."""
+        expires_at = time.time() + (ttl or self._default_ttl)
+        self._cache[key] = (value, expires_at)
+
+    def invalidate(self, key: Hashable) -> None:
+        """Remove key from cache."""
+        self._cache.pop(key, None)
+
+    def invalidate_prefix(self, prefix: str) -> None:
+        """Remove all keys starting with prefix."""
+        keys_to_remove = [k for k in self._cache if isinstance(k, str) and k.startswith(prefix)]
+        for key in keys_to_remove:
+            del self._cache[key]
+
+    def clear(self) -> None:
+        """Clear all cached values."""
+        self._cache.clear()
+
+
+# Global cache instances
+# Branches cache: 5 minutes TTL (branches don't change often)
+_branches_cache = TTLCache(default_ttl=300)
+# Issues cache: 2 minutes TTL (issues change more frequently)
+_issues_cache = TTLCache(default_ttl=120)
 
 router = APIRouter(prefix="/api/github", tags=["github"])
 
@@ -1857,7 +1910,16 @@ async def list_branches(
     - Last commit details (SHA, date, message, author)
     - Whether the branch is the default branch
     - Whether the branch has been merged into the default branch
+
+    Results are cached for 5 minutes to reduce GitHub API calls.
     """
+    # Check cache first
+    cache_key = f"branches:{request.repo_url}"
+    cached = _branches_cache.get(cache_key)
+    if cached is not None:
+        logger.debug(f"Branches cache hit for {request.repo_url}")
+        return cached
+
     github = _get_github_service()
 
     try:
@@ -1870,7 +1932,7 @@ async def list_branches(
                 default_branch = branch["name"]
                 break
 
-        return ListBranchesResponse(
+        response = ListBranchesResponse(
             branches=[
                 BranchListItem(
                     name=b["name"],
@@ -1886,6 +1948,10 @@ async def list_branches(
             ],
             default_branch=default_branch,
         )
+
+        # Cache the response
+        _branches_cache.set(cache_key, response)
+        return response
 
     except GitHubValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -1976,6 +2042,12 @@ async def delete_branches(
             )
 
         results = await github.delete_branches(request.repo_url, branches_to_delete)
+
+        # Invalidate branches cache if any branches were deleted
+        if results.get("deleted"):
+            cache_key = f"branches:{request.repo_url}"
+            _branches_cache.invalidate(cache_key)
+            logger.debug(f"Invalidated branches cache for {request.repo_url}")
 
         return DeleteBranchesResponse(
             deleted=results.get("deleted", []),
@@ -2086,13 +2158,21 @@ async def list_issues(
     - Comment count and creation date
 
     Note: Pull requests are excluded from the results.
+    Results are cached for 2 minutes to reduce GitHub API calls.
     """
+    # Check cache first
+    cache_key = f"issues:{request.repo_url}:{request.state}"
+    cached = _issues_cache.get(cache_key)
+    if cached is not None:
+        logger.debug(f"Issues cache hit for {request.repo_url} (state={request.state})")
+        return cached
+
     github = _get_github_service()
 
     try:
         issues = await github.list_issues(request.repo_url, state=request.state)
 
-        return ListIssuesResponse(
+        response = ListIssuesResponse(
             issues=[
                 IssueListItem(
                     number=i["number"],
@@ -2111,6 +2191,10 @@ async def list_issues(
                 for i in issues
             ]
         )
+
+        # Cache the response
+        _issues_cache.set(cache_key, response)
+        return response
 
     except GitHubValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -2171,6 +2255,12 @@ async def update_issues(
             )
 
         results = await github.bulk_update_issues(request.repo_url, request.issue_numbers, request.state)
+
+        # Invalidate issues cache if any issues were updated
+        if results.get("updated"):
+            # Invalidate all states for this repo
+            _issues_cache.invalidate_prefix(f"issues:{request.repo_url}:")
+            logger.debug(f"Invalidated issues cache for {request.repo_url}")
 
         return UpdateIssuesResponse(
             updated=results.get("updated", []),
