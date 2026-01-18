@@ -92,9 +92,22 @@ export function GitHubSettingsTab() {
       setRepoUrl(config?.default_repo_url || "");
       setDirPath(config?.default_dir_path || "");
       setHasChanges(false);
-      // Initialize branch management URL from default repo
+      // Initialize branch management URL from default repo or latest run
       if (config?.default_repo_url) {
         setBranchRepoUrl(config.default_repo_url);
+      } else {
+        // Try to get repo URL from latest run
+        try {
+          const runsResponse = await api.runs.list({ limit: 1 });
+          if (runsResponse.items.length > 0) {
+            const latestRun = await api.runs.get(runsResponse.items[0].id);
+            if (latestRun.github_repo_url) {
+              setBranchRepoUrl(latestRun.github_repo_url);
+            }
+          }
+        } catch {
+          // Ignore errors when fetching runs
+        }
       }
     } catch (err) {
       // 404 is expected if no settings exist yet
@@ -102,6 +115,18 @@ export function GitHubSettingsTab() {
         setSetting(null);
         setRepoUrl("");
         setDirPath("");
+        // Try to get repo URL from latest run even when settings don't exist
+        try {
+          const runsResponse = await api.runs.list({ limit: 1 });
+          if (runsResponse.items.length > 0) {
+            const latestRun = await api.runs.get(runsResponse.items[0].id);
+            if (latestRun.github_repo_url) {
+              setBranchRepoUrl(latestRun.github_repo_url);
+            }
+          }
+        } catch {
+          // Ignore errors when fetching runs
+        }
       } else {
         setError(err instanceof Error ? err.message : "設定の読み込みに失敗しました");
       }
