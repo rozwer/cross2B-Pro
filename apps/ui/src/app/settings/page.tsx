@@ -157,12 +157,52 @@ export default function SettingsPage() {
   );
 
   const sortedSteps = Object.keys(groupedPrompts).sort((a, b) => {
-    const stepOrder = [
-      "step0", "step1", "step2", "step3a", "step3b", "step3c", "step4", "step5",
-      "step6", "step6_5", "step7a", "step7b", "step8", "step8_claims", "step8_verify",
-      "step8_faq", "step9", "step10", "step10_html", "step10_checklist",
-    ];
-    return stepOrder.indexOf(a) - stepOrder.indexOf(b);
+    // ステップ名から数値部分を抽出してソート
+    // 例: "step1" -> 1, "step3a" -> 3.1, "step3b" -> 3.2, "step6_5" -> 6.5, "step-1" -> -1
+    const parseStep = (step: string): number => {
+      // step-1 の場合
+      if (step === "step-1") return -1;
+
+      // step3a, step3b, step3c, step7a, step7b のようなサブステップ (a/b/c)
+      const letterMatch = step.match(/^step(\d+)([abc])$/);
+      if (letterMatch) {
+        const base = parseInt(letterMatch[1], 10);
+        const sub = letterMatch[2].charCodeAt(0) - 'a'.charCodeAt(0) + 1; // a=1, b=2, c=3
+        return base + sub * 0.1;
+      }
+
+      // step1_5, step6_5 や step1.5, step6.5 のような小数ステップ
+      const decimalMatch = step.match(/^step(\d+)[_.](\d+)$/);
+      if (decimalMatch) {
+        return parseFloat(`${decimalMatch[1]}.${decimalMatch[2]}`);
+      }
+
+      // step8_claims, step8_verify, step10_html などのサフィックス付き
+      const suffixMatch = step.match(/^step(\d+)_([a-z]+)$/);
+      if (suffixMatch) {
+        const base = parseInt(suffixMatch[1], 10);
+        // サフィックスの種類で小さな順序を付ける
+        const suffixOrder: Record<string, number> = {
+          claims: 0.01,
+          verify: 0.02,
+          faq: 0.03,
+          html: 0.01,
+          checklist: 0.02,
+        };
+        return base + (suffixOrder[suffixMatch[2]] || 0.09);
+      }
+
+      // 通常の step0, step1, step10 など
+      const match = step.match(/^step(\d+)$/);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+
+      // パースできない場合は末尾に
+      return 999;
+    };
+
+    return parseStep(a) - parseStep(b);
   });
 
   const uniqueSteps = Array.from(new Set(prompts.map((p) => p.step))).sort();
