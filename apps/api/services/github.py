@@ -1531,3 +1531,123 @@ _Created via SEO Article Generator_
                 logger.error(f"Failed to delete branch {branch_name}: {e}")
 
         return results
+
+    async def list_issues(
+        self,
+        repo_url: str,
+        state: str = "open",
+        per_page: int = 100,
+    ) -> list[dict[str, Any]]:
+        """List issues in a repository.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            state: Issue state filter (open, closed, all)
+            per_page: Number of issues per page (max 100)
+
+        Returns:
+            List of issues with details
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues",
+                headers=self._get_headers(),
+                params={"state": state, "per_page": per_page},
+                timeout=30.0,
+            )
+            data = await self._handle_response(response)
+
+            # Filter out pull requests (GitHub API returns PRs as issues)
+            issues = [
+                {
+                    "number": issue.get("number"),
+                    "title": issue.get("title"),
+                    "state": issue.get("state"),
+                    "created_at": issue.get("created_at"),
+                    "updated_at": issue.get("updated_at"),
+                    "closed_at": issue.get("closed_at"),
+                    "author": issue.get("user", {}).get("login"),
+                    "labels": [label.get("name") for label in issue.get("labels", [])],
+                    "assignees": [a.get("login") for a in issue.get("assignees", [])],
+                    "comments": issue.get("comments", 0),
+                    "body": (issue.get("body") or "")[:200],  # Truncate body
+                    "html_url": issue.get("html_url"),
+                }
+                for issue in data
+                if "pull_request" not in issue  # Exclude PRs
+            ]
+
+            return issues
+
+    async def update_issue_state(
+        self,
+        repo_url: str,
+        issue_number: int,
+        state: str,
+    ) -> dict[str, Any]:
+        """Update issue state (open/closed).
+
+        Args:
+            repo_url: Full GitHub repository URL
+            issue_number: Issue number
+            state: New state (open or closed)
+
+        Returns:
+            Updated issue details
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.patch(
+                f"{GITHUB_API_URL}/repos/{owner}/{repo}/issues/{issue_number}",
+                headers=self._get_headers(),
+                json={"state": state},
+                timeout=30.0,
+            )
+            data = await self._handle_response(response)
+
+            return {
+                "number": data.get("number"),
+                "title": data.get("title"),
+                "state": data.get("state"),
+            }
+
+    async def bulk_update_issues(
+        self,
+        repo_url: str,
+        issue_numbers: list[int],
+        state: str,
+    ) -> dict[str, Any]:
+        """Bulk update issue states.
+
+        Args:
+            repo_url: Full GitHub repository URL
+            issue_numbers: List of issue numbers to update
+            state: New state (open or closed)
+
+        Returns:
+            dict with updated, failed lists
+        """
+        results: dict[str, Any] = {
+            "updated": [],
+            "failed": [],
+        }
+
+        for issue_number in issue_numbers:
+            try:
+                await self.update_issue_state(repo_url, issue_number, state)
+                results["updated"].append(issue_number)
+                logger.info(f"Updated issue #{issue_number} to {state}")
+            except GitHubNotFoundError:
+                results["failed"].append({"number": issue_number, "reason": "Issue not found"})
+                logger.warning(f"Issue not found: #{issue_number}")
+            except GitHubPermissionError as e:
+                results["failed"].append({"number": issue_number, "reason": str(e)})
+                logger.warning(f"Permission denied for issue #{issue_number}: {e}")
+            except Exception as e:
+                results["failed"].append({"number": issue_number, "reason": str(e)})
+                logger.error(f"Failed to update issue #{issue_number}: {e}")
+
+        return results

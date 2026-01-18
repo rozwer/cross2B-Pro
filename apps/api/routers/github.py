@@ -1849,3 +1849,197 @@ async def delete_branches(
             status_code=429,
             detail=f"GitHub API rate limit exceeded.{reset_msg}",
         )
+
+
+# =============================================================================
+# Issue Management API Models
+# =============================================================================
+
+
+class IssueListItem(BaseModel):
+    """Information about an issue in the list."""
+
+    number: int
+    title: str
+    state: str
+    created_at: str | None = None
+    updated_at: str | None = None
+    closed_at: str | None = None
+    author: str | None = None
+    labels: list[str] = []
+    assignees: list[str] = []
+    comments: int = 0
+    body: str | None = None
+    html_url: str | None = None
+
+
+class ListIssuesRequest(BaseModel):
+    """Request to list issues."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    state: str = Field("open", description="Filter by state: open, closed, all")
+
+
+class ListIssuesResponse(BaseModel):
+    """Response with list of issues."""
+
+    issues: list[IssueListItem]
+
+
+class UpdateIssuesRequest(BaseModel):
+    """Request to update multiple issues."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    issue_numbers: list[int] = Field(..., min_length=1, description="Issue numbers to update")
+    state: str = Field(..., description="New state: open or closed")
+
+
+class UpdateIssueResult(BaseModel):
+    """Result for a single issue update."""
+
+    number: int
+    reason: str | None = None
+
+
+class UpdateIssuesResponse(BaseModel):
+    """Response with issue update results."""
+
+    updated: list[int]
+    failed: list[UpdateIssueResult]
+
+
+# =============================================================================
+# Issue Management API Endpoints
+# =============================================================================
+
+
+@router.post("/list-issues", response_model=ListIssuesResponse)
+async def list_issues(
+    request: ListIssuesRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> ListIssuesResponse:
+    """List issues in a GitHub repository.
+
+    Returns issue information including:
+    - Number and title
+    - State (open/closed)
+    - Author, labels, assignees
+    - Comment count and creation date
+
+    Note: Pull requests are excluded from the results.
+    """
+    github = _get_github_service()
+
+    try:
+        issues = await github.list_issues(request.repo_url, state=request.state)
+
+        return ListIssuesResponse(
+            issues=[
+                IssueListItem(
+                    number=i["number"],
+                    title=i["title"],
+                    state=i["state"],
+                    created_at=i.get("created_at"),
+                    updated_at=i.get("updated_at"),
+                    closed_at=i.get("closed_at"),
+                    author=i.get("author"),
+                    labels=i.get("labels", []),
+                    assignees=i.get("assignees", []),
+                    comments=i.get("comments", 0),
+                    body=i.get("body"),
+                    html_url=i.get("html_url"),
+                )
+                for i in issues
+            ]
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot list issues.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )
+
+
+@router.patch("/issues", response_model=UpdateIssuesResponse)
+async def update_issues(
+    request: UpdateIssuesRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> UpdateIssuesResponse:
+    """Update the state of multiple issues.
+
+    Can open or close multiple issues at once.
+    Requires write access to the repository.
+
+    Returns:
+    - updated: List of successfully updated issue numbers
+    - failed: List of issues that failed to update with reasons
+    """
+    github = _get_github_service()
+
+    if request.state not in ("open", "closed"):
+        raise HTTPException(
+            status_code=422,
+            detail="State must be 'open' or 'closed'",
+        )
+
+    try:
+        # Check write access first
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.write:
+            raise HTTPException(
+                status_code=403,
+                detail="Write access required to update issues",
+            )
+
+        results = await github.bulk_update_issues(request.repo_url, request.issue_numbers, request.state)
+
+        return UpdateIssuesResponse(
+            updated=results.get("updated", []),
+            failed=[UpdateIssueResult(number=f["number"], reason=f.get("reason")) for f in results.get("failed", [])],
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot update issues.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )

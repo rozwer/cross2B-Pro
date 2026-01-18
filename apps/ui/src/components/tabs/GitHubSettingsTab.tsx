@@ -16,6 +16,11 @@ import {
   Square,
   Shield,
   GitMerge,
+  CircleDot,
+  Tag,
+  MessageSquare,
+  XCircle,
+  CheckCircle,
 } from "lucide-react";
 import api from "@/lib/api";
 import type { ApiSettingResponse, ServiceConfig } from "@/lib/types";
@@ -34,6 +39,21 @@ interface BranchInfo {
   commit_author: string | null;
   is_default: boolean;
   is_merged: boolean;
+}
+
+interface IssueInfo {
+  number: number;
+  title: string;
+  state: string;
+  created_at: string | null;
+  updated_at: string | null;
+  closed_at: string | null;
+  author: string | null;
+  labels: string[];
+  assignees: string[];
+  comments: number;
+  body: string | null;
+  html_url: string | null;
 }
 
 // Protected branch patterns (must match backend)
@@ -79,6 +99,22 @@ export function GitHubSettingsTab() {
   } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Issue management state
+  const [issueRepoUrl, setIssueRepoUrl] = useState("");
+  const [issues, setIssues] = useState<IssueInfo[]>([]);
+  const [isLoadingIssues, setIsLoadingIssues] = useState(false);
+  const [issueError, setIssueError] = useState<string | null>(null);
+  const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set());
+  const [issueFilter, setIssueFilter] = useState<"open" | "closed" | "all">("open");
+  const [issueSearch, setIssueSearch] = useState("");
+  const [isUpdatingIssues, setIsUpdatingIssues] = useState(false);
+  const [issueResult, setIssueResult] = useState<{
+    updated: number[];
+    failed: Array<{ number: number; reason: string | null }>;
+  } | null>(null);
+  const [showIssueConfirm, setShowIssueConfirm] = useState(false);
+  const [issueAction, setIssueAction] = useState<"open" | "closed">("closed");
+
   // Load current settings
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
@@ -92,9 +128,10 @@ export function GitHubSettingsTab() {
       setRepoUrl(config?.default_repo_url || "");
       setDirPath(config?.default_dir_path || "");
       setHasChanges(false);
-      // Initialize branch management URL from default repo or latest run
+      // Initialize branch/issue management URL from default repo or latest run
       if (config?.default_repo_url) {
         setBranchRepoUrl(config.default_repo_url);
+        setIssueRepoUrl(config.default_repo_url);
       } else {
         // Try to get repo URL from latest run
         try {
@@ -103,6 +140,7 @@ export function GitHubSettingsTab() {
             const latestRun = await api.runs.get(runsResponse.items[0].id);
             if (latestRun.github_repo_url) {
               setBranchRepoUrl(latestRun.github_repo_url);
+              setIssueRepoUrl(latestRun.github_repo_url);
             }
           }
         } catch {
@@ -122,6 +160,7 @@ export function GitHubSettingsTab() {
             const latestRun = await api.runs.get(runsResponse.items[0].id);
             if (latestRun.github_repo_url) {
               setBranchRepoUrl(latestRun.github_repo_url);
+              setIssueRepoUrl(latestRun.github_repo_url);
             }
           }
         } catch {
@@ -334,6 +373,92 @@ export function GitHubSettingsTab() {
     const branch = branches.find((b) => b.name === name);
     return branch && !branch.is_merged;
   }).length;
+
+  // Load issues from repository
+  const loadIssues = async () => {
+    if (!issueRepoUrl) {
+      setIssueError("リポジトリURLを入力してください");
+      return;
+    }
+
+    setIsLoadingIssues(true);
+    setIssueError(null);
+    setIssueResult(null);
+    setIssues([]);
+    setSelectedIssues(new Set());
+
+    try {
+      const result = await api.github.listIssues(issueRepoUrl, issueFilter);
+      setIssues(result.issues);
+    } catch (err) {
+      setIssueError(err instanceof Error ? err.message : "Issueの取得に失敗しました");
+    } finally {
+      setIsLoadingIssues(false);
+    }
+  };
+
+  // Filter issues based on search
+  const filteredIssues = issues.filter((issue) => {
+    if (issueSearch) {
+      const searchLower = issueSearch.toLowerCase();
+      return (
+        issue.title.toLowerCase().includes(searchLower) ||
+        issue.number.toString().includes(searchLower) ||
+        (issue.author?.toLowerCase().includes(searchLower) ?? false)
+      );
+    }
+    return true;
+  });
+
+  // Toggle issue selection
+  const toggleIssueSelection = (issueNumber: number) => {
+    const newSelected = new Set(selectedIssues);
+    if (newSelected.has(issueNumber)) {
+      newSelected.delete(issueNumber);
+    } else {
+      newSelected.add(issueNumber);
+    }
+    setSelectedIssues(newSelected);
+  };
+
+  // Select all issues
+  const selectAllIssues = () => {
+    setSelectedIssues(new Set(filteredIssues.map((i) => i.number)));
+  };
+
+  // Clear issue selection
+  const clearIssueSelection = () => {
+    setSelectedIssues(new Set());
+  };
+
+  // Update selected issues
+  const handleUpdateIssues = async () => {
+    if (selectedIssues.size === 0) return;
+
+    setIsUpdatingIssues(true);
+    setIssueResult(null);
+    setIssueError(null);
+
+    try {
+      const result = await api.github.updateIssues(
+        issueRepoUrl,
+        Array.from(selectedIssues),
+        issueAction
+      );
+      setIssueResult(result);
+      setSelectedIssues(new Set());
+      setShowIssueConfirm(false);
+
+      // Reload issues to reflect changes
+      if (result.updated.length > 0) {
+        await loadIssues();
+      }
+    } catch (err) {
+      setIssueError(err instanceof Error ? err.message : "更新に失敗しました");
+    } finally {
+      setIsUpdatingIssues(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -837,6 +962,356 @@ export function GitHubSettingsTab() {
         </div>
       )}
 
+      {/* Issue Management Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+            <CircleDot className="h-5 w-5 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+              Issue 管理
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              リポジトリのIssueを一覧表示・一括クローズ/オープン
+            </p>
+          </div>
+        </div>
+
+        {/* Repository URL input for issue management */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            リポジトリURL
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                <Github className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="url"
+                value={issueRepoUrl}
+                onChange={(e) => setIssueRepoUrl(e.target.value)}
+                placeholder="https://github.com/owner/repository"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            <div className="flex gap-1">
+              {(["open", "closed", "all"] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setIssueFilter(filter)}
+                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                    issueFilter === filter
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {filter === "open" ? "Open" : filter === "closed" ? "Closed" : "All"}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={loadIssues}
+              disabled={isLoadingIssues || !issueRepoUrl || !hasGitHubToken}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {isLoadingIssues ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Issue取得
+            </button>
+          </div>
+          {!hasGitHubToken && (
+            <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+              GitHubトークンが必要です
+            </p>
+          )}
+        </div>
+
+        {/* Issue error message */}
+        {issueError && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <span className="text-sm text-red-700 dark:text-red-300">{issueError}</span>
+          </div>
+        )}
+
+        {/* Issue update result message */}
+        {issueResult && (
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-2">
+            {issueResult.updated.length > 0 && (
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="text-sm">
+                  {issueResult.updated.length}件のIssueを更新しました
+                </span>
+              </div>
+            )}
+            {issueResult.failed.length > 0 && (
+              <div className="flex items-start gap-2 text-red-600 dark:text-red-400">
+                <AlertCircle className="h-4 w-4 mt-0.5" />
+                <div className="text-sm">
+                  <span>{issueResult.failed.length}件失敗：</span>
+                  <ul className="mt-1 space-y-0.5">
+                    {issueResult.failed.map((f) => (
+                      <li key={f.number} className="text-xs">
+                        #{f.number}: {f.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Issue list */}
+        {issues.length > 0 && (
+          <>
+            {/* Search */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex-1 min-w-[200px] relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={issueSearch}
+                  onChange={(e) => setIssueSearch(e.target.value)}
+                  placeholder="タイトル・番号・作成者で検索..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            {/* Selection actions */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={selectAllIssues}
+                  disabled={filteredIssues.length === 0}
+                  className="text-sm text-green-600 dark:text-green-400 hover:underline disabled:opacity-50"
+                >
+                  全選択 ({filteredIssues.length})
+                </button>
+                <button
+                  onClick={clearIssueSelection}
+                  disabled={selectedIssues.size === 0}
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:underline disabled:opacity-50"
+                >
+                  選択解除
+                </button>
+                {selectedIssues.size > 0 && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedIssues.size}件選択中
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIssueAction("closed");
+                    setShowIssueConfirm(true);
+                  }}
+                  disabled={selectedIssues.size === 0 || isUpdatingIssues}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Close ({selectedIssues.size})
+                </button>
+                <button
+                  onClick={() => {
+                    setIssueAction("open");
+                    setShowIssueConfirm(true);
+                  }}
+                  disabled={selectedIssues.size === 0 || isUpdatingIssues}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Open ({selectedIssues.size})
+                </button>
+              </div>
+            </div>
+
+            {/* Issue table */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                  <tr>
+                    <th className="w-10 px-3 py-2"></th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+                      Issue
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+                      状態
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300 hidden sm:table-cell">
+                      ラベル
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                      作成日
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredIssues.map((issue) => {
+                    const isSelected = selectedIssues.has(issue.number);
+
+                    return (
+                      <tr
+                        key={issue.number}
+                        onClick={() => toggleIssueSelection(issue.number)}
+                        className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                          isSelected ? "bg-green-50 dark:bg-green-900/20" : ""
+                        }`}
+                      >
+                        <td className="px-3 py-2">
+                          {isSelected ? (
+                            <CheckSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Square className="h-5 w-5 text-gray-400" />
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 dark:text-gray-400">#{issue.number}</span>
+                              <a
+                                href={issue.html_url || "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-medium text-gray-900 dark:text-gray-100 hover:text-green-600 dark:hover:text-green-400"
+                              >
+                                {issue.title}
+                              </a>
+                            </div>
+                            {issue.author && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                by {issue.author}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          {issue.state === "open" ? (
+                            <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <CircleDot className="h-4 w-4" />
+                              Open
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                              <CheckCircle className="h-4 w-4" />
+                              Closed
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 hidden sm:table-cell">
+                          <div className="flex flex-wrap gap-1">
+                            {issue.labels.slice(0, 3).map((label) => (
+                              <span
+                                key={label}
+                                className="px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"
+                              >
+                                {label}
+                              </span>
+                            ))}
+                            {issue.labels.length > 3 && (
+                              <span className="text-xs text-gray-500">+{issue.labels.length - 3}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 hidden md:table-cell">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500 dark:text-gray-400 text-xs">
+                              {formatDate(issue.created_at)}
+                            </span>
+                            {issue.comments > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-gray-500 dark:text-gray-400 text-xs">
+                                <MessageSquare className="h-3 w-3" />
+                                {issue.comments}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {filteredIssues.length === 0 && (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  条件に一致するIssueがありません
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Issue Update Confirmation Dialog */}
+      {showIssueConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Issueの{issueAction === "closed" ? "クローズ" : "オープン"}確認
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              以下の{selectedIssues.size}件のIssueを{issueAction === "closed" ? "クローズ" : "オープン"}しますか？
+            </p>
+            <div className="max-h-40 overflow-y-auto mb-4 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <ul className="text-sm space-y-1">
+                {Array.from(selectedIssues).map((number) => {
+                  const issue = issues.find((i) => i.number === number);
+                  return (
+                    <li key={number} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                      <CircleDot className="h-3 w-3" />
+                      <span>#{number}</span>
+                      {issue && (
+                        <span className="truncate text-gray-500 dark:text-gray-400">
+                          {issue.title.substring(0, 40)}
+                          {issue.title.length > 40 && "..."}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowIssueConfirm(false)}
+                disabled={isUpdatingIssues}
+                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleUpdateIssues}
+                disabled={isUpdatingIssues}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50 transition-colors ${
+                  issueAction === "closed"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {isUpdatingIssues ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : issueAction === "closed" ? (
+                  <XCircle className="h-4 w-4" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                {issueAction === "closed" ? "クローズする" : "オープンする"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Help text */}
       <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
         <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -858,6 +1333,18 @@ export function GitHubSettingsTab() {
           <li>保護ブランチ（main, master, develop, release/*）は削除できません</li>
           <li>デフォルトブランチも削除から保護されています</li>
           <li>未マージのブランチを削除すると、変更内容が失われる可能性があります</li>
+        </ul>
+      </div>
+
+      {/* Issue management help */}
+      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+        <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+          Issue管理について
+        </h3>
+        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+          <li>複数のIssueを選択して一括でクローズ/オープンできます</li>
+          <li>Pull Requestは表示されません（Issues APIの仕様）</li>
+          <li>Issue操作にはリポジトリへの書き込み権限が必要です</li>
         </ul>
       </div>
     </div>
