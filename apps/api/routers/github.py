@@ -1459,6 +1459,59 @@ class ListCollaboratorsResponse(BaseModel):
 
 
 # =============================================================================
+# Branch Management API Models
+# =============================================================================
+
+
+class BranchListItem(BaseModel):
+    """Information about a branch in the list."""
+
+    name: str
+    protected: bool = False
+    commit_sha: str | None = None
+    commit_date: str | None = None
+    commit_message: str | None = None
+    commit_author: str | None = None
+    is_default: bool = False
+    is_merged: bool = False
+
+
+class ListBranchesRequest(BaseModel):
+    """Request to list branches."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+
+
+class ListBranchesResponse(BaseModel):
+    """Response with list of branches."""
+
+    branches: list[BranchListItem]
+    default_branch: str | None = None
+
+
+class DeleteBranchesRequest(BaseModel):
+    """Request to delete multiple branches."""
+
+    repo_url: str = Field(..., description="GitHub repository URL")
+    branches: list[str] = Field(..., min_length=1, description="Branch names to delete")
+
+
+class DeleteBranchResult(BaseModel):
+    """Result for a single branch deletion."""
+
+    name: str
+    reason: str | None = None
+
+
+class DeleteBranchesResponse(BaseModel):
+    """Response with branch deletion results."""
+
+    deleted: list[str]
+    failed: list[DeleteBranchResult]
+    skipped: list[DeleteBranchResult]
+
+
+# =============================================================================
 # Collaborator API Endpoints
 # =============================================================================
 
@@ -1625,4 +1678,174 @@ async def list_collaborators(
         raise HTTPException(
             status_code=403,
             detail="Permission denied. Cannot list collaborators.",
+        )
+
+
+# =============================================================================
+# Branch Management API Endpoints
+# =============================================================================
+
+
+@router.post("/list-branches", response_model=ListBranchesResponse)
+async def list_branches(
+    request: ListBranchesRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> ListBranchesResponse:
+    """List all branches in a GitHub repository.
+
+    Returns branch information including:
+    - Name and protection status
+    - Last commit details (SHA, date, message, author)
+    - Whether the branch is the default branch
+    - Whether the branch has been merged into the default branch
+    """
+    github = _get_github_service()
+
+    try:
+        branches = await github.list_branches(request.repo_url)
+
+        # Find default branch
+        default_branch = None
+        for branch in branches:
+            if branch.get("is_default"):
+                default_branch = branch["name"]
+                break
+
+        return ListBranchesResponse(
+            branches=[
+                BranchListItem(
+                    name=b["name"],
+                    protected=b.get("protected", False),
+                    commit_sha=b.get("commit_sha"),
+                    commit_date=b.get("commit_date"),
+                    commit_message=b.get("commit_message"),
+                    commit_author=b.get("commit_author"),
+                    is_default=b.get("is_default", False),
+                    is_merged=b.get("is_merged", False),
+                )
+                for b in branches
+            ],
+            default_branch=default_branch,
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot list branches.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
+        )
+
+
+# Protected branch patterns that cannot be deleted
+PROTECTED_BRANCH_PATTERNS = ["main", "master", "develop", "release"]
+
+
+def _is_protected_branch(branch_name: str) -> bool:
+    """Check if a branch name matches protected patterns."""
+    name_lower = branch_name.lower()
+    for pattern in PROTECTED_BRANCH_PATTERNS:
+        if name_lower == pattern or name_lower.startswith(f"{pattern}/"):
+            return True
+    return False
+
+
+@router.delete("/branches", response_model=DeleteBranchesResponse)
+async def delete_branches(
+    request: DeleteBranchesRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> DeleteBranchesResponse:
+    """Delete multiple branches from a GitHub repository.
+
+    Protected branches (main, master, develop, release/*) cannot be deleted.
+    Requires write access to the repository.
+
+    Returns:
+    - deleted: List of successfully deleted branch names
+    - failed: List of branches that failed to delete with reasons
+    - skipped: List of branches that were skipped (protected, etc.)
+    """
+    github = _get_github_service()
+
+    # Filter out protected branches
+    branches_to_delete = []
+    skipped: list[DeleteBranchResult] = []
+
+    for branch_name in request.branches:
+        if _is_protected_branch(branch_name):
+            skipped.append(
+                DeleteBranchResult(
+                    name=branch_name,
+                    reason=f"Protected branch pattern: cannot delete '{branch_name}'",
+                )
+            )
+        else:
+            branches_to_delete.append(branch_name)
+
+    if not branches_to_delete:
+        return DeleteBranchesResponse(
+            deleted=[],
+            failed=[],
+            skipped=skipped,
+        )
+
+    try:
+        # Check write access first
+        permissions = await github.check_access(request.repo_url)
+        if not permissions.write:
+            raise HTTPException(
+                status_code=403,
+                detail="Write access required to delete branches",
+            )
+
+        results = await github.delete_branches(request.repo_url, branches_to_delete)
+
+        return DeleteBranchesResponse(
+            deleted=results.get("deleted", []),
+            failed=[DeleteBranchResult(name=f["name"], reason=f.get("reason")) for f in results.get("failed", [])],
+            skipped=skipped + [DeleteBranchResult(name=s["name"], reason=s.get("reason")) for s in results.get("skipped", [])],
+        )
+
+    except GitHubValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except GitHubAuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="GitHub authentication failed. Please check your token.",
+        )
+    except GitHubNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Repository not found.",
+        )
+    except GitHubPermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied. Cannot delete branches.",
+        )
+    except GitHubRateLimitError as e:
+        reset_msg = ""
+        if e.reset_at:
+            reset_msg = f" Resets at {e.reset_at.isoformat()}"
+        raise HTTPException(
+            status_code=429,
+            detail=f"GitHub API rate limit exceeded.{reset_msg}",
         )
