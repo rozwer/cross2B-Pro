@@ -542,6 +542,106 @@ ${issue.suggestion}
                 </div>
               </div>
             </div>
+
+            {/* Review Results Section */}
+            {reviewResult && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    レビュー結果
+                  </h2>
+                  <div
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      reviewResult.passed
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                    }`}
+                  >
+                    {reviewResult.passed ? "合格" : "要確認"}
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    {reviewResult.summary.overall_assessment}
+                  </p>
+                  <div className="flex gap-3 text-xs">
+                    <span className="text-red-600 dark:text-red-400">
+                      高: {reviewResult.summary.high}
+                    </span>
+                    <span className="text-yellow-600 dark:text-yellow-400">
+                      中: {reviewResult.summary.medium}
+                    </span>
+                    <span className="text-blue-600 dark:text-blue-400">
+                      低: {reviewResult.summary.low}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Issues List */}
+                {reviewResult.issues.length > 0 ? (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {reviewResult.issues.map((issue, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border text-sm ${
+                          issue.severity === "high"
+                            ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                            : issue.severity === "medium"
+                              ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
+                              : "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`text-xs font-medium uppercase ${
+                              issue.severity === "high"
+                                ? "text-red-700 dark:text-red-300"
+                                : issue.severity === "medium"
+                                  ? "text-yellow-700 dark:text-yellow-300"
+                                  : "text-blue-700 dark:text-blue-300"
+                            }`}
+                          >
+                            {issue.severity}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {issue.category}
+                          </span>
+                        </div>
+                        <p className="text-gray-900 dark:text-gray-100 mb-1">
+                          {issue.issue}
+                        </p>
+                        {issue.suggestion && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            💡 {issue.suggestion}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                    問題は検出されませんでした
+                  </p>
+                )}
+
+                {/* GitHub Issue Link */}
+                {reviewStatus?.issue_url && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <a
+                      href={reviewStatus.issue_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      GitHub Issue #{reviewStatus.issue_number}
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
