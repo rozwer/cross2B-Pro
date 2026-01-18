@@ -1302,15 +1302,20 @@ async def get_review_status(
     """Get review status for a step.
 
     Checks if a review issue exists and whether results have been saved.
+    Status logic:
+    - completed: review.json exists in storage
+    - in_progress: issue exists and is open (waiting for Codex/Claude response)
+    - pending: no issue created yet
     """
     db_manager = _get_tenant_db_manager()
     store = _get_artifact_store()
+    github = _get_github_service()
 
     # Check if review result exists in MinIO (use storage/ prefix to match actual MinIO paths)
     review_path = f"storage/{user.tenant_id}/{run_id}/{step}/review.json"
     has_result = await store.exists_by_path(review_path)
 
-    # Get run to find GitHub repo URL
+    # Get run to find GitHub repo URL and dir_path
     async with db_manager.get_session(user.tenant_id) as session:
         result = await session.execute(select(Run).where(Run.id == run_id))
         run = result.scalar_one_or_none()
@@ -1318,8 +1323,8 @@ async def get_review_status(
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
 
-        # TODO: Track review issue number in database
-        # For now, return status based on result file existence
+        repo_url = run.github_repo_url
+        dir_path = run.github_dir_path
 
     if has_result:
         return ReviewStatusResponse(
@@ -1328,7 +1333,38 @@ async def get_review_status(
             result_path=review_path,
         )
 
-    # No result yet
+    # Check if a review issue exists for this step
+    if repo_url and dir_path:
+        try:
+            # Search for issue with title pattern: [Claude Code Review] ... - {step} ({dir_path})
+            search_pattern = f"- {step} ({dir_path})"
+            issue = await github.find_issue_by_title(repo_url, search_pattern, state="all")
+
+            if issue:
+                issue_state = issue.get("state", "open")
+                issue_number = issue.get("number")
+                issue_url = issue.get("html_url")
+
+                if issue_state == "open":
+                    # Issue is open, waiting for Codex/Claude response
+                    return ReviewStatusResponse(
+                        status="in_progress",
+                        issue_number=issue_number,
+                        issue_url=issue_url,
+                        has_result=False,
+                    )
+                else:
+                    # Issue is closed but no result file yet (might be failed or manual close)
+                    return ReviewStatusResponse(
+                        status="pending",
+                        issue_number=issue_number,
+                        issue_url=issue_url,
+                        has_result=False,
+                    )
+        except Exception as e:
+            logger.warning(f"Failed to check review issue status: {e}")
+
+    # No issue found or no GitHub repo configured
     return ReviewStatusResponse(
         status="pending",
         has_result=False,
