@@ -1183,6 +1183,7 @@ class ReviewStatusResponse(BaseModel):
     issue_url: str | None = None
     has_result: bool = False
     result_path: str | None = None
+    result: dict | None = None  # Review result JSON (from GitHub or storage)
 
 
 class IssueStatusResponse(BaseModel):
@@ -1391,17 +1392,15 @@ async def get_review_status(
 
     Checks if a review issue exists and whether results have been saved.
     Status logic:
-    - completed: review.json exists in storage
+    - completed: review.json exists in storage OR in GitHub repo
     - in_progress: issue exists and is open (waiting for Codex/Claude response)
     - pending: no issue created yet
     """
+    import json
+
     db_manager = _get_tenant_db_manager()
     store = _get_artifact_store()
     github = _get_github_service()
-
-    # Check if review result exists in MinIO (use storage/ prefix to match actual MinIO paths)
-    review_path = f"storage/{user.tenant_id}/{run_id}/{step}/review.json"
-    has_result = await store.exists_by_path(review_path)
 
     # Get run to find GitHub repo URL and dir_path
     async with db_manager.get_session(user.tenant_id) as session:
@@ -1414,12 +1413,47 @@ async def get_review_status(
         repo_url = run.github_repo_url
         dir_path = run.github_dir_path
 
-    if has_result:
+    # Check if review result exists in MinIO (use storage/ prefix to match actual MinIO paths)
+    review_path = f"storage/{user.tenant_id}/{run_id}/{step}/review.json"
+    has_result_in_storage = await store.exists_by_path(review_path)
+
+    if has_result_in_storage:
+        # Load result from storage
+        try:
+            content = await store.get_by_path(review_path)
+            if content:
+                review_result = json.loads(content.decode("utf-8"))
+                return ReviewStatusResponse(
+                    status="completed",
+                    has_result=True,
+                    result_path=review_path,
+                    result=review_result,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to load review result from storage: {e}")
+
         return ReviewStatusResponse(
             status="completed",
             has_result=True,
             result_path=review_path,
         )
+
+    # Check if review.json exists in GitHub repo (Claude Code creates it there)
+    if repo_url and dir_path:
+        github_review_path = f"{dir_path}/{step}/review.json"
+        try:
+            review_content = await github.get_file(repo_url, github_review_path)
+            if review_content:
+                review_result = json.loads(review_content.decode("utf-8"))
+                logger.info(f"Found review.json in GitHub: {github_review_path}")
+                return ReviewStatusResponse(
+                    status="completed",
+                    has_result=True,
+                    result_path=github_review_path,
+                    result=review_result,
+                )
+        except Exception as e:
+            logger.debug(f"No review.json in GitHub: {e}")
 
     # Check if a review issue exists for this step
     if repo_url and dir_path:

@@ -57,12 +57,19 @@ export default function PreviewPage({
       const status = await api.github.getReviewStatus(id, "step10");
       setReviewStatus(status);
 
-      if (status.has_result && status.result_path) {
-        // Fetch review result
-        const content = await api.artifacts.download(id, `${id}:step10:review.json`);
-        if (content && content.content) {
-          const result = JSON.parse(content.content) as ReviewResult;
-          setReviewResult(result);
+      // Use result directly from API response if available (from GitHub or storage)
+      if (status.result) {
+        setReviewResult(status.result as ReviewResult);
+      } else if (status.has_result && status.result_path) {
+        // Fallback: try to download from storage
+        try {
+          const content = await api.artifacts.download(id, `${id}:step10:review.json`);
+          if (content && content.content) {
+            const result = JSON.parse(content.content) as ReviewResult;
+            setReviewResult(result);
+          }
+        } catch {
+          // Storage download failed, but we might still have the result from GitHub
         }
       }
     } catch {
