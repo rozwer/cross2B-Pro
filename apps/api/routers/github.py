@@ -19,7 +19,7 @@ from sqlalchemy import select, text
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import Run
+from apps.api.db import ReviewRequest, Run
 from apps.api.services.github import (
     GitHubAuthenticationError,
     GitHubNotFoundError,
@@ -1427,6 +1427,44 @@ async def save_review_result(
         except Exception as e:
             logger.warning(f"Failed to post review comment: {e}")
 
+    # Save to DB (review_requests table)
+    from datetime import datetime
+
+    async with db_manager.get_session(user.tenant_id) as session:
+        # Check if review request exists
+        review_type = request.review_data.get("review_type", "all")
+        existing_query = select(ReviewRequest).where(
+            ReviewRequest.run_id == str(run_id),
+            ReviewRequest.step == step,
+            ReviewRequest.review_type == review_type,
+        )
+        existing_result = await session.execute(existing_query)
+        existing = existing_result.scalar_one_or_none()
+
+        if existing:
+            # Update existing
+            existing.status = "completed"
+            existing.review_result = request.review_data
+            existing.completed_at = datetime.now()
+            if request.issue_number:
+                existing.issue_number = request.issue_number
+                existing.issue_state = "closed"
+        else:
+            # Create new
+            review_request = ReviewRequest(
+                run_id=str(run_id),
+                step=step,
+                review_type=review_type,
+                status="completed",
+                review_result=request.review_data,
+                issue_number=request.issue_number,
+                issue_state="closed" if request.issue_number else None,
+                completed_at=datetime.now(),
+            )
+            session.add(review_request)
+
+        await session.commit()
+
     return ReviewResultResponse(
         saved=True,
         path=path,
@@ -1443,11 +1481,11 @@ async def get_review_status(
 ) -> ReviewStatusResponse:
     """Get review status for a step.
 
-    Checks if a review issue exists and whether results have been saved.
+    Checks review_requests table first, then falls back to storage/GitHub.
     Status logic:
-    - completed: review.json exists in storage OR in GitHub repo
+    - completed: review exists in DB with result
     - in_progress: issue exists and is open (waiting for Codex/Claude response)
-    - pending: no issue created yet
+    - pending: no review request
     """
     import json
 
@@ -1466,12 +1504,44 @@ async def get_review_status(
         repo_url = run.github_repo_url
         dir_path = run.github_dir_path
 
-    # Check if review result exists in MinIO (use storage/ prefix to match actual MinIO paths)
+        # Check DB first (review_requests table)
+        review_query = select(ReviewRequest).where(
+            ReviewRequest.run_id == str(run_id),
+            ReviewRequest.step == step,
+        )
+        review_result_db = await session.execute(review_query)
+        review_request = review_result_db.scalar_one_or_none()
+
+        if review_request:
+            if review_request.status == "completed" and review_request.review_result:
+                return ReviewStatusResponse(
+                    status="completed",
+                    issue_number=review_request.issue_number,
+                    issue_url=review_request.issue_url,
+                    has_result=True,
+                    result_path=f"{dir_path}/{step}/review.json" if dir_path else None,
+                    result=review_request.review_result,
+                )
+            elif review_request.status == "in_progress":
+                return ReviewStatusResponse(
+                    status="in_progress",
+                    issue_number=review_request.issue_number,
+                    issue_url=review_request.issue_url,
+                    has_result=False,
+                )
+            elif review_request.status == "closed_without_result":
+                return ReviewStatusResponse(
+                    status="completed",
+                    issue_number=review_request.issue_number,
+                    issue_url=review_request.issue_url,
+                    has_result=False,
+                )
+
+    # Fallback: Check if review result exists in MinIO
     review_path = f"storage/{user.tenant_id}/{run_id}/{step}/review.json"
     has_result_in_storage = await store.exists_by_path(review_path)
 
     if has_result_in_storage:
-        # Load result from storage
         try:
             content = await store.get_by_path(review_path)
             if content:
@@ -1491,7 +1561,7 @@ async def get_review_status(
             result_path=review_path,
         )
 
-    # Check if review.json exists in GitHub repo (Claude Code creates it there)
+    # Fallback: Check if review.json exists in GitHub repo
     if repo_url and dir_path:
         github_review_path = f"{dir_path}/{step}/review.json"
         try:
@@ -1508,10 +1578,9 @@ async def get_review_status(
         except Exception as e:
             logger.debug(f"No review.json in GitHub: {e}")
 
-    # Check if a review issue exists for this step
+    # Fallback: Check if a review issue exists for this step
     if repo_url and dir_path:
         try:
-            # Search for issue with title pattern: [Claude Code Review] ... - {step} ({dir_path})
             search_pattern = f"- {step} ({dir_path})"
             issue = await github.find_issue_by_title(repo_url, search_pattern, state="all")
 
@@ -1521,7 +1590,6 @@ async def get_review_status(
                 issue_url = issue.get("html_url")
 
                 if issue_state == "open":
-                    # Issue is open, waiting for Codex/Claude response
                     return ReviewStatusResponse(
                         status="in_progress",
                         issue_number=issue_number,
@@ -1529,8 +1597,6 @@ async def get_review_status(
                         has_result=False,
                     )
                 else:
-                    # Issue is closed but no result file found
-                    # This means review was completed but result wasn't saved properly
                     return ReviewStatusResponse(
                         status="completed",
                         issue_number=issue_number,

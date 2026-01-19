@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
-from apps.api.db import Run
+from apps.api.db import ReviewRequest, Run
 from apps.api.schemas.enums import RunStatus
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,6 @@ async def list_articles(
     tenant_id = user.tenant_id
     offset = (page - 1) * limit
     db_manager = _get_tenant_db_manager()
-    store = _get_artifact_store()
 
     try:
         async with db_manager.get_session(tenant_id) as session:
@@ -158,6 +157,21 @@ async def list_articles(
             result = await session.execute(query)
             runs = result.scalars().all()
 
+            # Get run IDs for batch review status lookup
+            run_ids = [str(run.id) for run in runs]
+
+            # Batch fetch review statuses from DB
+            review_status_map: dict[str, str] = {}
+            if run_ids:
+                review_query = select(ReviewRequest).where(
+                    ReviewRequest.run_id.in_(run_ids),
+                    ReviewRequest.step == "step10",
+                    ReviewRequest.status == "completed",
+                )
+                review_result = await session.execute(review_query)
+                for review in review_result.scalars().all():
+                    review_status_map[str(review.run_id)] = "completed"
+
             # Build article summaries
             articles: list[ArticleSummary] = []
             for run in runs:
@@ -169,11 +183,8 @@ async def list_articles(
                     images = run.step11_state.get("images", [])
                     has_images = len(images) > 0
 
-                # Check review status from MinIO (use storage/ prefix to match actual MinIO paths)
-                review_status: str | None = None
-                review_path = f"storage/{tenant_id}/{run.id}/step10/review.json"
-                if await store.exists_by_path(review_path):
-                    review_status = "completed"
+                # Get review status from pre-fetched map
+                review_status = review_status_map.get(str(run.id))
 
                 # Get article count from input data
                 article_count = 1
@@ -248,10 +259,15 @@ async def get_article(
             has_step11 = await store.exists_by_path(f"storage/{tenant_id}/{run_id}/step11/output.json")
             has_step12 = await store.exists_by_path(f"storage/{tenant_id}/{run_id}/step12/output.json")
 
-            # Check review status
+            # Check review status from DB
             review_status: str | None = None
-            review_path = f"storage/{tenant_id}/{run_id}/step10/review.json"
-            if await store.exists_by_path(review_path):
+            review_query = select(ReviewRequest).where(
+                ReviewRequest.run_id == str(run_id),
+                ReviewRequest.step == "step10",
+                ReviewRequest.status == "completed",
+            )
+            review_result = await session.execute(review_query)
+            if review_result.scalar_one_or_none():
                 review_status = "completed"
 
             # Get article count
