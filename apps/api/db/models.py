@@ -369,3 +369,45 @@ class ApiSetting(Base):
         UniqueConstraint("tenant_id", "service", name="uq_api_setting_tenant_service"),
         Index("ix_api_settings_tenant_id", "tenant_id"),
     )
+
+
+# =============================================================================
+# Review Request Model
+# =============================================================================
+
+
+class ReviewRequest(Base):
+    """Review request and result storage.
+
+    Stores Claude Code / Codex review requests and their results.
+    Eliminates the need to fetch from GitHub API for review status.
+    """
+
+    __tablename__ = "review_requests"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default="uuid_generate_v4()")
+    run_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    step: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    # GitHub issue information
+    issue_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    issue_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    issue_state: Mapped[str | None] = mapped_column(String(20), nullable=True)  # open, closed
+
+    # Review status: pending, in_progress, completed, closed_without_result
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+
+    # Review result
+    review_type: Mapped[str | None] = mapped_column(String(20), nullable=True)  # all, fact, seo, quality
+    review_result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("run_id", "step", "review_type", name="uq_review_request_run_step_type"),
+        Index("idx_review_requests_run_id", "run_id"),
+        Index("idx_review_requests_status", "status"),
+    )

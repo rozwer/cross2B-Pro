@@ -15,6 +15,7 @@ from .models import (
     LLMModel,
     LLMProvider,
     Prompt,
+    ReviewRequest,
     Run,
     Step,
     StepLLMDefault,
@@ -37,6 +38,7 @@ __all__ = [
     "Artifact",
     "AuditLog",
     "Prompt",
+    "ReviewRequest",
     # Manager
     "TenantDBManager",
     # Audit (VULN-011)
