@@ -1,141 +1,99 @@
-# LLM/API設定管理
+# 関連KW処理のバグ修正
 
-> **作成日**: 2026-01-15
-> **目的**: 環境変数で固定されているAPIキー・モデル設定をUI側から変更可能にする
+> **作成日**: 2026-01-20
+> **目的**: アンケートで入力した関連KWリストがStep1.5で使われていないバグを修正
 
 ---
 
 ## 概要
 
-### 現状の問題点
+### 現状の問題
 
-1. **環境変数固定**: `.env` でAPIキー・モデル名を設定しており、変更にはDockerコンテナ再起動が必要
-2. **配布時の障壁**: 他者に渡す際に `.env` ファイルの編集が必要で敷居が高い
-3. **疎通確認なし**: 設定変更後にAPIが正常に動作するか事前確認できない
+1. **アンケート入力**: ユーザーが関連キーワードを入力
+   - 格納先: `config["input"]["data"]["keyword"]["related_keywords"]`
 
-### 改善目標
+2. **Step1.5 の取得方法**:
+   ```python
+   related_keywords = config.get("related_keywords", [])  # 常に []
+   ```
 
-- **UI設定画面**: アプリ側でAPIキー・モデル名を設定可能に
-- **疎通テスト**: 設定変更時に実際のAPIで接続確認
-- **DB永続化**: 設定をDBに保存（環境変数は初期値/フォールバック）
-- **セキュリティ**: APIキーは暗号化保存、表示時はマスク
+3. **結果**: ユーザー入力が無視され、`step0.recommended_angles` からの推定値のみ使用
 
-### 対象サービス
+### 期待する動作
 
-| サービス | 用途 | 疎通テスト方式 |
-|----------|------|----------------|
-| Gemini | LLM（キーワード分析等） | 簡易プロンプト送信 |
-| OpenAI | LLM | 簡易プロンプト送信 |
-| Anthropic | LLM（本文生成等） | 簡易プロンプト送信 |
-| SERP API | 検索結果取得 | 軽量クエリ実行 |
-| Google Ads | キーワード調査 | API接続確認 |
-| GitHub | PR/Issue連携 | ユーザー情報取得（キーマスク必須） |
+1. アンケートで入力した `related_keywords` が優先的に使われる
+2. `related_keywords` が未入力の場合のみ `step0.recommended_angles` から推定
 
 ---
 
-## フェーズ1: バックエンド ✅完了
+## 修正方針
 
-### 1.1 DBスキーマ（`api_settings`テーブル）
+### 選択肢A: Step1.5 で正しいパスから取得（推奨）
 
-- ✅ `apps/api/db/models.py` に `ApiSetting` モデル追加
-- tenant_id, service, api_key_encrypted, default_model, config(JSONB)
-- verified_at（疎通確認日時）、is_active
-- UNIQUE(tenant_id, service)
+**メリット**:
+- 修正箇所が1ファイルのみ
+- configの構造を変えない
+- 後方互換性を維持
 
-### 1.2 APIエンドポイント
+**修正箇所**: `apps/worker/activities/step1_5.py`
 
-| メソッド | パス | 用途 | 状態 |
-|----------|------|------|------|
-| GET | `/api/settings` | 全設定一覧（キーはマスク） | ✅ |
-| GET | `/api/settings/{service}` | 個別設定取得 | ✅ |
-| PUT | `/api/settings/{service}` | 設定更新 | ✅ |
-| POST | `/api/settings/{service}/test` | 疎通テスト | ✅ |
-| DELETE | `/api/settings/{service}` | 設定削除（環境変数にフォールバック） | ✅ |
+### 選択肢B: config構成時に `related_keywords` を直下に配置
 
-### 1.3 暗号化
+**メリット**:
+- Step1.5 の取得ロジックがシンプルに保たれる
+- 他のstepからも参照しやすい
 
-- ✅ `apps/api/services/encryption.py`: AES-256-GCM
-- 環境変数: `SETTINGS_ENCRYPTION_KEY`
-
-### 1.4 接続テスト
-
-- ✅ `apps/api/services/connection_test.py`: LLM/SERP/GitHub接続テスト
+**デメリット**:
+- 複数ファイルの修正が必要
+- データ構造の変更
 
 ---
 
-## フェーズ2: フロントエンド ✅完了
+## フェーズ1: バグ修正 ✅完了
 
-### 2.1 設定画面UI（`/settings?tab=apikeys`）
+### 1.1 Step1.5 の関連KW取得ロジック修正 `[bugfix:reproduce-first]`
 
-- ✅ `apps/ui/src/components/tabs/ApiKeysTab.tsx` 新規作成
-- LLMプロバイダー（Gemini/OpenAI/Anthropic）: APIキー入力、モデル選択、テストボタン
-- 外部サービス（SERP/Google Ads/GitHub）: APIキー入力、テストボタン
-- 接続状態表示（✓接続確認済み / ⚠未設定）
+**対象ファイル**: `apps/worker/activities/step1_5.py`
 
-### 2.2 GitHub Token特別対応
+**修正内容**: ✅ 実装済み（2026-01-20）
 
-- ✅ 表示: 保存後は `ghp_****` のみ
-- ✅ 警告: 「GitHubトークンは露出すると自動で無効化されます」の注意書き
+- 正しいパスから関連KWを取得: `config["input"]["data"]["keyword"]["related_keywords"]`
+- `RelatedKeyword` 型（dict）からキーワード文字列を抽出
+- ユーザー入力を優先、入力がない場合のみ `step0.recommended_angles` からフォールバック
 
-### 2.3 API Client
-
-- ✅ `apps/ui/src/lib/api.ts` に settings API 追加
-- ✅ `apps/ui/src/lib/types.ts` に型定義追加
+**検証結果**:
+- ✅ 構文チェック成功
+- ✅ Ruff lint チェック成功
 
 ---
 
-## フェーズ3: Worker統合 ✅完了
+## フェーズ2: テスト追加 `cc:TODO`（オプション）
 
-### 3.1 設定プロバイダー
+### 2.1 ユニットテスト追加
 
-- ✅ `apps/api/services/settings_provider.py` 新規作成
-- 読み込み優先順位: DB → 環境変数
-- `SettingsProvider` クラスで統一管理
+**対象ファイル**: `tests/unit/worker/activities/test_step1_5.py`（新規）
 
-### 3.2 LLMクライアント連携
-
-- ✅ `apps/api/llm/base.py` に `get_llm_client_with_settings()` 追加
-- tenant_id を指定すると DB から設定を取得
-- 省略時は環境変数にフォールバック
-
-### 3.3 使用例
-
-```python
-from apps.api.llm import get_llm_client_with_settings
-
-# DB設定を使用
-client = await get_llm_client_with_settings(
-    "gemini",
-    tenant_id="tenant-123",
-    tenant_manager=get_tenant_manager(),
-)
-
-# 環境変数のみ使用（従来互換）
-client = await get_llm_client_with_settings("gemini")
-```
+**テストケース**:
+- [ ] ユーザー入力の関連KWが正しく取得される
+- [ ] ユーザー入力がない場合、step0からフォールバック
+- [ ] RelatedKeyword型（dict）からkeyword抽出
+- [ ] 文字列型の関連KWも処理可能
 
 ---
 
-## ファイル変更一覧
+## 修正対象ファイル一覧
 
-| ファイル | 変更 |
-|----------|------|
-| `apps/api/db/models.py` | ApiSetting モデル追加 |
-| `apps/api/routers/settings.py` | **新規** |
-| `apps/api/services/encryption.py` | **新規** |
-| `apps/api/services/connection_test.py` | **新規** |
-| `apps/api/services/settings_provider.py` | **新規** |
-| `apps/api/llm/base.py` | get_llm_client_with_settings 追加 |
-| `apps/api/llm/__init__.py` | エクスポート追加 |
-| `apps/api/main.py` | settings router 登録 |
-| `apps/ui/src/app/settings/page.tsx` | APIキータブ追加 |
-| `apps/ui/src/components/tabs/ApiKeysTab.tsx` | **新規** |
-| `apps/ui/src/lib/api.ts` | settings API 追加 |
-| `apps/ui/src/lib/types.ts` | Settings型定義追加 |
+| ファイル | 変更 | 優先度 |
+|----------|------|--------|
+| `apps/worker/activities/step1_5.py` | 関連KW取得ロジック修正 | 高 |
+| `tests/unit/worker/activities/test_step1_5.py` | テスト追加（新規） | 中 |
 
 ---
 
-## 完了済みタスク
+## 検証手順
 
-> - イベントログ改善: `仕様書/archive/event-log-improvement.md`
-> - 成果物アップロード: `仕様書/archive/artifact-upload.md`
+1. アンケートで関連KWを3つ入力してrunを作成
+2. Step1.5のログを確認
+   - 期待: `Using 3 user-provided related keywords`
+3. Step1.5の出力を確認
+   - 期待: 入力した関連KWで競合取得されている
