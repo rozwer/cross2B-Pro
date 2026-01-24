@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS runs (
     github_dir_path TEXT,                    -- e.g., keyword_20260114_123456
 
     CONSTRAINT valid_status CHECK (status IN (
-        'pending', 'workflow_starting', 'running', 'waiting_approval', 'waiting_image_input',
+        'pending', 'workflow_starting', 'running', 'paused', 'waiting_approval',
+        'waiting_step1_approval', 'waiting_image_input',
         'completed', 'failed', 'cancelled'
     ))
 );

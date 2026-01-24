@@ -4,7 +4,7 @@ Common DB: tenants, llm_providers, llm_models, step_llm_defaults
 Tenant DB: runs, steps, artifacts, audit_logs, prompts
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -141,9 +141,9 @@ class Run(Base):
         primary_key=True,
     )
     tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # マルチテナント分離必須
-    status: Mapped[str] = mapped_column(
-        String(32), nullable=False
-    )  # pending, running, waiting_approval, waiting_image_input, completed, failed, cancelled
+    # Status: pending, workflow_starting, running, paused, waiting_approval,
+    # waiting_step1_approval, waiting_image_input, completed, failed, cancelled
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
     current_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
     input_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # 元入力データ保存
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
@@ -361,9 +361,11 @@ class ApiSetting(Base):
     default_model: Mapped[str | None] = mapped_column(String(128), nullable=True)  # For LLM providers
     config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)  # Service-specific config (grounding, etc.)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Last successful connection test
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)  # Last successful connection test
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False
+    )
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "service", name="uq_api_setting_tenant_service"),

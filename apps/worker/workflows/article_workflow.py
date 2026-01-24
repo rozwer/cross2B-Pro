@@ -81,6 +81,10 @@ class ArticleWorkflow:
         # Pause/Resume state
         self.pause_requested: bool = False  # 一時停止リクエスト受信フラグ
         self.paused: bool = False  # 実際に停止中かどうか
+        # Step1 approval state (競合取得・関連KW抽出後の承認)
+        self.step1_approved: bool = False
+        self.step1_rejected: bool = False
+        self.step1_rejection_reason: str | None = None
         # Step3 Review state (REQ-01 ~ REQ-05)
         self.step3_review_received: bool = False
         self.step3_reviews: list[dict[str, Any]] = []
@@ -114,7 +118,7 @@ class ArticleWorkflow:
 
     @workflow.signal
     async def approve(self) -> None:
-        """Signal handler for approval.
+        """Signal handler for approval (Step3 A/B/C完了後).
 
         Mutual exclusion: Once rejected, approval is ignored.
         """
@@ -125,7 +129,7 @@ class ArticleWorkflow:
 
     @workflow.signal
     async def reject(self, reason: str) -> None:
-        """Signal handler for rejection.
+        """Signal handler for rejection (Step3 A/B/C完了後).
 
         Mutual exclusion: Once approved, rejection is ignored.
         """
@@ -134,6 +138,31 @@ class ArticleWorkflow:
             return
         self.rejected = True
         self.rejection_reason = reason
+
+    @workflow.signal
+    async def approve_step1(self) -> None:
+        """Signal handler for Step1 approval (競合取得・関連KW抽出後).
+
+        Mutual exclusion: Once rejected, approval is ignored.
+        """
+        if self.step1_rejected:
+            workflow.logger.warning("approve_step1 signal ignored: already rejected")
+            return
+        self.step1_approved = True
+        workflow.logger.info("Step1 approved: proceeding to step2")
+
+    @workflow.signal
+    async def reject_step1(self, reason: str) -> None:
+        """Signal handler for Step1 rejection (競合取得・関連KW抽出後).
+
+        Mutual exclusion: Once approved, rejection is ignored.
+        """
+        if self.step1_approved:
+            workflow.logger.warning("reject_step1 signal ignored: already approved")
+            return
+        self.step1_rejected = True
+        self.step1_rejection_reason = reason
+        workflow.logger.info(f"Step1 rejected: {reason}")
 
     @workflow.signal
     async def step3_review(self, payload: dict[str, Any]) -> None:
@@ -343,6 +372,10 @@ class ArticleWorkflow:
             "rejection_reason": self.rejection_reason,
             "paused": self.paused,
             "pause_requested": self.pause_requested,
+            # Step1 approval state (競合取得・関連KW抽出後)
+            "step1_approved": self.step1_approved,
+            "step1_rejected": self.step1_rejected,
+            "step1_rejection_reason": self.step1_rejection_reason,
             # Step3 review state (REQ-01 ~ REQ-05)
             "step3_review_received": self.step3_review_received,
             "step3_retrying": self.step3_retrying,
@@ -438,6 +471,74 @@ class ArticleWorkflow:
                 "step1_5",
             )
             artifact_refs["step1_5"] = step1_5_result.get("artifact_ref", {})
+
+        # ========== STEP1 APPROVAL WAIT ==========
+        # Wait for approval of competitor fetch and related keyword extraction results
+        # Skip if resuming from step2 or later
+        post_step1_steps = [
+            "step2",
+            "step3",
+            "step3a",
+            "step3b",
+            "step3c",
+            "step3_5",
+            "step4",
+            "step5",
+            "step6",
+            "step6_5",
+            "step7a",
+            "step7b",
+            "step8",
+            "step9",
+            "step10",
+            "step11",
+            "step12",
+        ]
+        skip_step1_approval = resume_from is not None and resume_from in post_step1_steps
+
+        # Check if step1 approval is enabled (default: True)
+        # Check both top-level config and options sub-dict
+        options = config.get("options") or {}
+        enable_step1_approval = options.get("enable_step1_approval", config.get("enable_step1_approval", True))
+
+        if enable_step1_approval and not skip_step1_approval:
+            self.current_step = "waiting_step1_approval"
+
+            # Sync waiting_step1_approval status to API DB
+            await self._sync_run_status(
+                tenant_id,
+                run_id,
+                "waiting_step1_approval",
+                "waiting_step1_approval",
+            )
+
+            # Wait for approval or rejection signal (max 7 days)
+            await workflow.wait_condition(
+                lambda: self.step1_approved or self.step1_rejected,
+                timeout=timedelta(days=7),
+            )
+
+            if self.step1_rejected:
+                # Sync rejected status to API DB
+                await self._sync_run_status(
+                    tenant_id,
+                    run_id,
+                    "failed",
+                    "waiting_step1_approval",
+                    error_code="STEP1_REJECTED",
+                    error_message=self.step1_rejection_reason or "Step1 rejected by reviewer",
+                )
+                return {
+                    "status": "rejected",
+                    "reason": self.step1_rejection_reason,
+                    "step": "waiting_step1_approval",
+                }
+
+            # Approved: proceed to step2
+            workflow.logger.info("Step1 approval received, proceeding to step2")
+        else:
+            # When resuming from step2 or later, mark step1 as approved
+            self.step1_approved = True
 
         # Step 2: CSV Validation
         if self._should_run("step2", resume_from):

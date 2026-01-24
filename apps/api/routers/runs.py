@@ -773,6 +773,201 @@ async def reject_run(
         raise HTTPException(status_code=500, detail="Failed to reject run") from e
 
 
+class Step1RejectInput(BaseModel):
+    """Request body for rejecting step1 (competitor fetch and related keyword extraction)."""
+
+    reason: str = ""
+
+
+@router.post("/{run_id}/step1/approve")
+async def approve_step1(
+    run_id: str,
+    comment: str | None = None,
+    expected_updated_at: str | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool]:
+    """Approve step1 results (competitor fetch and related keyword extraction).
+
+    This approval point occurs after step1 (competitor fetch) and step1_5 (related keyword extraction)
+    to allow users to review the fetched competitors and extracted keywords before proceeding.
+
+    Args:
+        run_id: Run identifier
+        comment: Optional approval comment
+        expected_updated_at: Optional optimistic lock - ISO format timestamp
+        user: Authenticated user
+    """
+    tenant_id = user.tenant_id
+    logger.info(
+        "Approving step1",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "comment": comment, "user_id": user.user_id},
+    )
+
+    db_manager = _get_tenant_db_manager()
+    temporal_client = _get_temporal_client()
+    ws_manager = _get_ws_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
+
+            if run.status != RunStatus.WAITING_STEP1_APPROVAL.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for step1 approval (current status: {run.status})",
+                )
+
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="approve_step1",
+                resource_type="run",
+                resource_id=run_id,
+                details={"comment": comment, "previous_status": run.status},
+            )
+
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.signal("approve_step1")
+                    logger.info("Temporal approve_step1 signal sent", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send approve_step1 signal: {sig_error}", exc_info=True)
+                    raise HTTPException(status_code=503, detail=f"Failed to send approval signal to workflow: {sig_error}")
+            else:
+                logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+            logger.info("Step1 approval signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.step1_approved",
+                status=run.status,
+                message="Step1 approval signal sent; proceeding to step2",
+                tenant_id=tenant_id,
+            )
+
+            await session.commit()
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to approve step1: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to approve step1") from e
+
+
+@router.post("/{run_id}/step1/reject")
+async def reject_step1(
+    run_id: str,
+    data: Step1RejectInput,
+    expected_updated_at: str | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, bool]:
+    """Reject step1 results (competitor fetch and related keyword extraction).
+
+    This rejection terminates the workflow. Use this when the fetched competitors
+    or extracted keywords are not suitable for the article generation.
+
+    Args:
+        run_id: Run identifier
+        data: Rejection data including reason
+        expected_updated_at: Optional optimistic lock
+        user: Authenticated user
+    """
+    reason = data.reason
+    tenant_id = user.tenant_id
+
+    logger.info(
+        "Rejecting step1",
+        extra={"run_id": run_id, "tenant_id": tenant_id, "reason": reason, "user_id": user.user_id},
+    )
+
+    db_manager = _get_tenant_db_manager()
+    temporal_client = _get_temporal_client()
+    ws_manager = _get_ws_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            query = select(Run).where(Run.id == run_id, Run.tenant_id == tenant_id).with_for_update()
+            result = await session.execute(query)
+            run = result.scalar_one_or_none()
+
+            if not run:
+                raise HTTPException(status_code=404, detail="Run not found")
+
+            _check_optimistic_lock(
+                run,
+                expected_updated_at,
+                error_detail="Run was modified by another user. Please refresh and try again.",
+            )
+
+            if run.status != RunStatus.WAITING_STEP1_APPROVAL.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Run is not waiting for step1 approval (current status: {run.status})",
+                )
+
+            audit = AuditLogger(session)
+            await audit.log(
+                user_id=user.user_id,
+                action="reject_step1",
+                resource_type="run",
+                resource_id=run_id,
+                details={"reason": reason, "previous_status": run.status},
+            )
+
+            if temporal_client is not None:
+                try:
+                    workflow_handle = temporal_client.get_workflow_handle(run_id)
+                    await workflow_handle.signal("reject_step1", reason or "Step1 rejected by reviewer")
+                    logger.info("Temporal reject_step1 signal sent", extra={"run_id": run_id})
+                except Exception as sig_error:
+                    logger.error(f"Failed to send reject_step1 signal: {sig_error}", exc_info=True)
+                    raise HTTPException(status_code=503, detail=f"Failed to send rejection signal to workflow: {sig_error}")
+            else:
+                logger.warning("Temporal client not available, signal not sent", extra={"run_id": run_id})
+                raise HTTPException(status_code=503, detail="Temporal service unavailable")
+
+            logger.info("Step1 rejection signal sent", extra={"run_id": run_id, "tenant_id": tenant_id})
+
+            await ws_manager.broadcast_run_update(
+                run_id=run_id,
+                event_type="run.step1_rejected",
+                status=run.status,
+                error={"code": "STEP1_REJECTED", "message": reason or "Step1 rejected by reviewer"},
+                message="Step1 rejection signal sent; workflow will terminate",
+                tenant_id=tenant_id,
+            )
+
+            await session.commit()
+            return {"success": True}
+
+    except HTTPException:
+        raise
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to reject step1: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reject step1") from e
+
+
 @router.post("/{run_id}/step3/review")
 async def review_step3(
     run_id: str,
