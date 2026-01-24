@@ -10,7 +10,8 @@ class RunStatus(str, Enum):
     WORKFLOW_STARTING = "workflow_starting"  # Temporal Workflow開始処理中（競合状態対策）
     RUNNING = "running"
     PAUSED = "paused"  # ユーザーによる一時停止（次ステップ開始前に停止）
-    WAITING_APPROVAL = "waiting_approval"
+    WAITING_STEP1_APPROVAL = "waiting_step1_approval"  # 競合取得・関連KW抽出後の承認待ち
+    WAITING_APPROVAL = "waiting_approval"  # Step3A/B/C完了後の承認待ち
     WAITING_IMAGE_INPUT = "waiting_image_input"  # Step11画像生成のユーザー入力待ち
     COMPLETED = "completed"
     FAILED = "failed"

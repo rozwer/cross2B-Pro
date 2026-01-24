@@ -17,9 +17,16 @@ logger = logging.getLogger(__name__)
 VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "pending": {"running", "cancelled", "failed"},
     "workflow_starting": {"running", "failed", "cancelled"},
-    "running": {"waiting_approval", "waiting_image_input", "paused", "completed", "failed", "cancelled"},
+    "running": {"waiting_approval", "waiting_step1_approval", "waiting_image_input", "paused", "completed", "failed", "cancelled"},
     "paused": {"running", "completed", "failed", "cancelled"},  # Can resume, complete, fail, or cancel
     "waiting_approval": {"running", "paused", "completed", "failed", "cancelled"},
+    "waiting_step1_approval": {
+        "running",
+        "paused",
+        "completed",
+        "failed",
+        "cancelled",
+    },  # Step1 approval after competitor/related KW extraction
     "waiting_image_input": {"running", "paused", "completed", "failed", "cancelled"},
     "completed": set(),  # Terminal state - no transitions allowed
     "failed": set(),  # Terminal state - no transitions allowed

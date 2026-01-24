@@ -101,6 +101,7 @@ class RunOptions(BaseModel):
 
     retry_limit: int = 3
     repair_enabled: bool = True
+    enable_step1_approval: bool = True  # 競合取得・関連KW抽出後の承認待ちを有効化
 
 
 class StepModelConfig(BaseModel):
