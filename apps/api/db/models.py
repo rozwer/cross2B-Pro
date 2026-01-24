@@ -155,6 +155,9 @@ class Run(Base):
     # GitHub integration (Phase 2)
     github_repo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     github_dir_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # GitHub Fix Guidance: resume後に同一ステップで再度失敗した場合にIssue作成へ誘導
+    last_resumed_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    fix_issue_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

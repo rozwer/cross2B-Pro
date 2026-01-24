@@ -1808,6 +1808,7 @@ async def resume_from_step(
             original_run.error_code = None
             original_run.completed_at = None
             original_run.updated_at = now
+            original_run.last_resumed_step = normalized_step  # GitHub Fix Guidance: 再開ステップを記録
 
             audit = AuditLogger(session)
             await audit.log(

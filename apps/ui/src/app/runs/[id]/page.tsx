@@ -21,6 +21,8 @@ import { useRun } from "@/hooks/useRun";
 import { useRunProgress } from "@/hooks/useRunProgress";
 import { useArtifacts } from "@/hooks/useArtifact";
 import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
+import { GitHubFixButton } from "@/components/runs/GitHubFixButton";
+import { GitHubFixStatus } from "@/components/runs/GitHubFixStatus";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
 import { ApprovalDialog, type ApprovalType } from "@/components/common/ApprovalDialog";
@@ -56,7 +58,7 @@ export default function RunDetailPage({
   const { id } = resolvedParams;
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("timeline");
-  const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const [selectedStep, _setSelectedStep] = useState<string | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalType, setApprovalType] = useState<ApprovalType>("step3");  // 承認タイプ
   const [approvalLoading, setApprovalLoading] = useState(false);
@@ -69,7 +71,7 @@ export default function RunDetailPage({
   });
   const [previewArticle, setPreviewArticle] = useState(1);
   const [showImageGenDialog, setShowImageGenDialog] = useState(false);
-  const [imageGenLoading, setImageGenLoading] = useState(false);
+  const [_imageGenLoading, setImageGenLoading] = useState(false);
   const [pauseLoading, setPauseLoading] = useState(false);
   const [isPauseRequested, setIsPauseRequested] = useState(false);
   const [showStep3ReviewDialog, setShowStep3ReviewDialog] = useState(false);
@@ -129,12 +131,8 @@ export default function RunDetailPage({
 
   const handleResumeConfirm = useCallback(async () => {
     if (!resumeStep) return;
-    try {
-      const result = await resume(resumeStep);
-      router.push(`/runs/${result.new_run_id}`);
-    } catch (err) {
-      throw err;
-    }
+    const result = await resume(resumeStep);
+    router.push(`/runs/${result.new_run_id}`);
   }, [resumeStep, resume, router]);
 
   const handleApprove = useCallback(async () => {
@@ -457,6 +455,19 @@ export default function RunDetailPage({
                 </button>
                 <HelpButton helpKey="workflow.approval" size="sm" />
               </div>
+            ) : run.status === "failed" && run.needs_github_fix ? (
+              /* GitHub Fix Guidance: resume後に同一ステップで再失敗した場合 */
+              run.fix_issue_number ? (
+                <GitHubFixStatus
+                  runId={id}
+                  issueNumber={run.fix_issue_number}
+                />
+              ) : (
+                <GitHubFixButton
+                  runId={id}
+                  onIssueCreated={() => fetch()}
+                />
+              )
             ) : null}
             {run.status === "completed" && (
               <>

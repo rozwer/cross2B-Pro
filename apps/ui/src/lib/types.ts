@@ -302,6 +302,10 @@ export interface Run {
   // GitHub integration (Phase 3)
   github_repo_url?: string;
   github_dir_path?: string;
+  // GitHub Fix Guidance: resume後に同一ステップで再失敗した場合にtrue
+  needs_github_fix?: boolean;
+  last_resumed_step?: string;
+  fix_issue_number?: number;
 }
 
 // ============================================
