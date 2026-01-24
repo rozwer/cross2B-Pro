@@ -57,6 +57,12 @@ const statusConfig: Record<
     textColor: "text-warning-700 dark:text-warning-300",
     icon: Pause,
   },
+  waiting_step1_approval: {
+    label: "Step1承認待ち",
+    bgColor: "bg-warning-100 dark:bg-warning-900/40",
+    textColor: "text-warning-700 dark:text-warning-300",
+    icon: Pause,
+  },
   waiting_image_input: {
     label: "画像入力待ち",
     bgColor: "bg-purple-100 dark:bg-purple-900/40",
@@ -116,7 +122,7 @@ export function RunStatusBadge({
   const sizeClass = sizeConfig[size];
   const IconComponent = config.icon;
   const shouldAnimate = status === "running" || status === "retrying";
-  const shouldPulse = pulse || status === "waiting_approval" || status === "waiting_image_input";
+  const shouldPulse = pulse || status === "waiting_approval" || status === "waiting_step1_approval" || status === "waiting_image_input";
 
   return (
     <span
@@ -156,6 +162,7 @@ export function StatusDot({
     retrying: "bg-orange-500",
     paused: "bg-amber-500",
     waiting_approval: "bg-warning-500",
+    waiting_step1_approval: "bg-warning-500",
     waiting_image_input: "bg-purple-500",
     completed: "bg-success-500",
     failed: "bg-error-500",
@@ -169,7 +176,7 @@ export function StatusDot({
     lg: "w-2.5 h-2.5",
   };
 
-  const shouldPulse = pulse || status === "running" || status === "retrying" || status === "paused" || status === "waiting_approval" || status === "waiting_image_input";
+  const shouldPulse = pulse || status === "running" || status === "retrying" || status === "paused" || status === "waiting_approval" || status === "waiting_step1_approval" || status === "waiting_image_input";
   // フォールバック: 未知のステータスの場合はgray
   const dotColor = dotColors[status] || "bg-gray-400";
 
