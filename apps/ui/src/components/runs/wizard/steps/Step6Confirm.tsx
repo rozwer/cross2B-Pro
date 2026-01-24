@@ -18,12 +18,14 @@ interface WizardFormData {
   cta: CTAInput;
   confirmed: boolean;
   github_repo_url: string;
+  enable_step1_approval: boolean;
 }
 
 interface Step6ConfirmProps {
   formData: WizardFormData;
   onConfirm: (confirmed: boolean) => void;
   onGitHubRepoChange: (repoUrl: string) => void;
+  onStep1ApprovalChange: (enabled: boolean) => void;
   errors: string[];
 }
 
@@ -51,9 +53,10 @@ export function Step6Confirm({
   formData,
   onConfirm,
   onGitHubRepoChange,
+  onStep1ApprovalChange,
   errors,
 }: Step6ConfirmProps) {
-  const { business, keyword, strategy, word_count, cta, confirmed, github_repo_url } = formData;
+  const { business, keyword, strategy, word_count, cta, confirmed, github_repo_url, enable_step1_approval } = formData;
 
   // Get effective keyword
   const effectiveKeyword =
@@ -271,6 +274,29 @@ export function Step6Confirm({
           value={github_repo_url}
           onChange={onGitHubRepoChange}
         />
+      </div>
+
+      {/* Execution Options Section */}
+      <div className="border border-gray-200 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          実行オプション
+        </h3>
+        <label className="flex items-start cursor-pointer">
+          <input
+            type="checkbox"
+            checked={enable_step1_approval}
+            onChange={(e) => onStep1ApprovalChange(e.target.checked)}
+            className="h-5 w-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500 mt-0.5"
+          />
+          <div className="ml-3">
+            <span className="text-sm font-medium text-gray-900">
+              競合取得後に承認待ち
+            </span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              競合記事の取得・関連キーワード抽出後に一時停止し、結果を確認してから次のステップに進むことができます
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Confirmation Checkbox */}

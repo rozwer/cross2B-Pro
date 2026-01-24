@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
 
 type RepoMode = "existing" | "new";
@@ -27,10 +27,18 @@ export function RepoSelector({
   const [mode, setMode] = useState<RepoMode>(defaultRepoUrl ? "existing" : "existing");
   const [repoUrl, setRepoUrl] = useState(value || defaultRepoUrl || "");
   const [newRepoName, setNewRepoName] = useState("");
+
+  // Sync local state when parent value changes
+  useEffect(() => {
+    if (value && value !== repoUrl) {
+      setRepoUrl(value);
+    }
+  }, [value]);
   const [newRepoDescription, setNewRepoDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
   const [validation, setValidation] = useState<ValidationState>({ status: "idle" });
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
 
   const handleCheckAccess = useCallback(async () => {
     if (!repoUrl.trim()) {
@@ -108,6 +116,43 @@ export function RepoSelector({
     setValidation({ status: "idle" });
   };
 
+  const handleLoadRecentRepo = useCallback(async () => {
+    setIsLoadingRecent(true);
+    try {
+      // Fetch recent runs and find one with github_repo_url
+      const runsResponse = await api.runs.list({ limit: 10 });
+      if (runsResponse.items.length > 0) {
+        for (const runSummary of runsResponse.items) {
+          try {
+            const run = await api.runs.get(runSummary.id);
+            if (run.github_repo_url) {
+              setRepoUrl(run.github_repo_url);
+              onChange(run.github_repo_url);
+              setValidation({
+                status: "success",
+                message: "直近のRunから読み込みました",
+              });
+              return;
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+      setValidation({
+        status: "error",
+        message: "直近のRunにリポジトリ設定が見つかりませんでした",
+      });
+    } catch {
+      setValidation({
+        status: "error",
+        message: "読み込みに失敗しました",
+      });
+    } finally {
+      setIsLoadingRecent(false);
+    }
+  }, [onChange]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -153,9 +198,19 @@ export function RepoSelector({
       {mode === "existing" && (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              リポジトリ URL
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                リポジトリ URL
+              </label>
+              <button
+                type="button"
+                onClick={handleLoadRecentRepo}
+                disabled={disabled || isLoadingRecent}
+                className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingRecent ? "読み込み中..." : "直近のRunから読み込む"}
+              </button>
+            </div>
             <div className="flex gap-2">
               <input
                 type="url"

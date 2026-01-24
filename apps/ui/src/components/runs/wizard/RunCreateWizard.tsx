@@ -78,6 +78,8 @@ interface WizardFormData {
   confirmed: boolean;
   // GitHub integration (Phase 2)
   github_repo_url: string;
+  // Execution options
+  enable_step1_approval: boolean;
 }
 
 interface RunCreateWizardProps {
@@ -87,6 +89,7 @@ interface RunCreateWizardProps {
   options?: {
     retry_limit?: number;
     repair_enabled?: boolean;
+    enable_step1_approval?: boolean;
   };
 }
 
@@ -110,12 +113,36 @@ export function RunCreateWizard({
     cta: DEFAULT_CTA,
     confirmed: false,
     github_repo_url: "",
+    enable_step1_approval: options?.enable_step1_approval ?? true,
   });
 
-  // Load default GitHub settings on mount
+  // Load GitHub repo URL on mount
+  // Priority: 1. Recent run's github_repo_url, 2. Default settings, 3. Empty
   useEffect(() => {
-    const loadDefaultGitHubSettings = async () => {
+    const loadGitHubRepoUrl = async () => {
       try {
+        // First, try to get github_repo_url from the most recent run
+        const runsResponse = await api.runs.list({ limit: 10 });
+        if (runsResponse.items.length > 0) {
+          // Find the first run with a github_repo_url by fetching details
+          for (const runSummary of runsResponse.items) {
+            try {
+              const run = await api.runs.get(runSummary.id);
+              if (run.github_repo_url) {
+                setFormData((prev) => ({
+                  ...prev,
+                  github_repo_url: run.github_repo_url || "",
+                }));
+                return; // Found a recent repo URL, done
+              }
+            } catch {
+              // Skip this run if we can't fetch it
+              continue;
+            }
+          }
+        }
+
+        // Fallback: try default settings if no recent run has github_repo_url
         const response = await api.settings.get("github");
         const config = response.config as ServiceConfig | null;
         if (config?.default_repo_url) {
@@ -125,10 +152,10 @@ export function RunCreateWizard({
           }));
         }
       } catch {
-        // Ignore errors - default settings are optional
+        // Ignore errors - settings are optional
       }
     };
-    loadDefaultGitHubSettings();
+    loadGitHubRepoUrl();
   }, []);
 
   // Keyword suggestions state
@@ -313,6 +340,7 @@ export function RunCreateWizard({
         cta: template.data.cta,
         confirmed: false, // Always reset confirmation
         github_repo_url: "", // Reset GitHub repo on template load
+        enable_step1_approval: options?.enable_step1_approval ?? true, // Reset to default
       });
       // Clear any validation errors
       setValidationErrors({});
@@ -378,7 +406,10 @@ export function RunCreateWizard({
         model_config: modelConfig,
         step_configs: normalizedStepConfigs,
         tool_config: toolConfig,
-        options,
+        options: {
+          ...options,
+          enable_step1_approval: formData.enable_step1_approval,
+        },
         // GitHub integration (Phase 2) - only send if set
         github_repo_url: formData.github_repo_url || undefined,
       });
@@ -451,6 +482,7 @@ export function RunCreateWizard({
             formData={formData}
             onConfirm={(confirmed: boolean) => setFormData((prev) => ({ ...prev, confirmed }))}
             onGitHubRepoChange={(repoUrl: string) => setFormData((prev) => ({ ...prev, github_repo_url: repoUrl }))}
+            onStep1ApprovalChange={(enabled: boolean) => setFormData((prev) => ({ ...prev, enable_step1_approval: enabled }))}
             errors={validationErrors[6] || []}
           />
         );
