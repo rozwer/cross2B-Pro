@@ -1,99 +1,168 @@
-# 関連KW処理のバグ修正
+# リトライ推奨表示機能
 
-> **作成日**: 2026-01-20
-> **目的**: アンケートで入力した関連KWリストがStep1.5で使われていないバグを修正
-
----
-
-## 概要
-
-### 現状の問題
-
-1. **アンケート入力**: ユーザーが関連キーワードを入力
-   - 格納先: `config["input"]["data"]["keyword"]["related_keywords"]`
-
-2. **Step1.5 の取得方法**:
-   ```python
-   related_keywords = config.get("related_keywords", [])  # 常に []
-   ```
-
-3. **結果**: ユーザー入力が無視され、`step0.recommended_angles` からの推定値のみ使用
-
-### 期待する動作
-
-1. アンケートで入力した `related_keywords` が優先的に使われる
-2. `related_keywords` が未入力の場合のみ `step0.recommended_angles` から推定
+> **作成日**: 2026-01-24
+> **目的**: ステップ失敗時にエラーカテゴリに基づき推奨リトライ方法をボタン表示
 
 ---
 
-## 修正方針
+## ルールベース判定
 
-### 選択肢A: Step1.5 で正しいパスから取得（推奨）
+| エラーカテゴリ | 推奨アクション | 理由 |
+|---------------|---------------|------|
+| `retryable` | 同一ステップをリトライ | 一時的障害のため再試行で解決可能 |
+| `non_retryable` | 同一ステップをリトライ | 設定変更後に再試行が必要 |
+| `validation_fail` | 入力元ステップからリトライ | 入力データ品質問題のため再生成必要 |
 
-**メリット**:
-- 修正箇所が1ファイルのみ
-- configの構造を変えない
-- 後方互換性を維持
+## ステップ依存関係マップ（順序付き候補リスト）
 
-**修正箇所**: `apps/worker/activities/step1_5.py`
+| ステップ | 入力元候補（優先順） | config無効化 |
+|---------|-------------------|-------------|
+| step1 | [step0] | - |
+| step1_5 | [step1] | `enable_step1_5` |
+| step2 | [step1_5, step1] | - |
+| step3a | [step2] | - |
+| step3b | [step2] | - |
+| step3c | [step1] | - |
+| step3_5 | [step3a] | `enable_step3_5` |
+| step4 | [step3_5, step3a] | - |
+| step5 | [step4] | - |
+| step6 | [step4] | - |
+| step6_5 | [step6] | - |
+| step7a | [step6_5] | - |
+| step7b | [step7a] | - |
+| step8 | [step7b] | - |
+| step9 | [step7b] | - |
+| step10 | [step9] | - |
+| step11 | [step10] | `enable_images` |
+| step12 | [step10] | `enable_step12` |
 
-### 選択肢B: config構成時に `related_keywords` を直下に配置
-
-**メリット**:
-- Step1.5 の取得ロジックがシンプルに保たれる
-- 他のstepからも参照しやすい
-
-**デメリット**:
-- 複数ファイルの修正が必要
-- データ構造の変更
-
----
-
-## フェーズ1: バグ修正 ✅完了
-
-### 1.1 Step1.5 の関連KW取得ロジック修正 `[bugfix:reproduce-first]`
-
-**対象ファイル**: `apps/worker/activities/step1_5.py`
-
-**修正内容**: ✅ 実装済み（2026-01-20）
-
-- 正しいパスから関連KWを取得: `config["input"]["data"]["keyword"]["related_keywords"]`
-- `RelatedKeyword` 型（dict）からキーワード文字列を抽出
-- ユーザー入力を優先、入力がない場合のみ `step0.recommended_angles` からフォールバック
-
-**検証結果**:
-- ✅ 構文チェック成功
-- ✅ Ruff lint チェック成功
+**注**: 候補リストは優先順。先頭から探索し、config無効化されていない最初の有効ステップを推奨。
 
 ---
 
-## フェーズ2: テスト追加 `cc:TODO`（オプション）
+## 🔴 フェーズ1: バックエンド実装 `cc:TODO`
 
-### 2.1 ユニットテスト追加
+### 1.1 リトライ推奨ロジック `[feature:tdd]`
 
-**対象ファイル**: `tests/unit/worker/activities/test_step1_5.py`（新規）
+**対象**: `apps/api/services/runs.py`
 
-**テストケース**:
-- [ ] ユーザー入力の関連KWが正しく取得される
-- [ ] ユーザー入力がない場合、step0からフォールバック
-- [ ] RelatedKeyword型（dict）からkeyword抽出
-- [ ] 文字列型の関連KWも処理可能
+**エラーソース**: `Step.error_code`（Run.error_code ではない）
+
+```python
+# 最新の失敗ステップを取得
+failed_step = next(
+    (s for s in sorted(run.steps, key=lambda s: s.completed_at or datetime.min, reverse=True)
+     if s.status == "failed"),
+    None
+)
+if not failed_step:
+    return None
+error_code = failed_step.error_code
+```
+
+**config無効化ステップの除外**:
+```python
+# config無効化チェック対象
+CONFIG_DISABLED_STEPS = {
+    "step1_5": "enable_step1_5",
+    "step3_5": "enable_step3_5",
+    "step11": "enable_images",
+    "step12": "enable_step12",
+}
+
+def is_step_enabled(step: str, config: dict) -> bool:
+    """ステップがconfig で有効かどうかを判定"""
+    config_key = CONFIG_DISABLED_STEPS.get(step)
+    if config_key is None:
+        return True  # 無効化対象でないステップは常に有効
+    return config.get(config_key, True)
+
+def get_valid_target_step(step: str, config: dict) -> str | None:
+    """候補リストから有効な最初のステップを返す"""
+    candidates = STEP_INPUT_MAP.get(step, [])
+    for candidate in candidates:
+        if not is_step_enabled(candidate, config):
+            continue
+        if candidate in RESUME_STEP_ORDER:
+            return candidate
+    return None
+```
+
+#### テストケース
+
+| ケース | error_code | step | config | 期待 |
+|--------|-----------|------|--------|------|
+| validation失敗 | validation_fail | step4 | - | step3_5 |
+| 一時障害 | retryable | step4 | - | step4 |
+| ステップレコードなし | - | - | - | None |
+| step3_5無効 | validation_fail | step4 | enable_step3_5=False | step3a |
+| step1_5無効 | validation_fail | step2 | enable_step1_5=False | step1 |
+| step11無効でstep12失敗 | validation_fail | step12 | enable_images=False | step10 |
+
+### 1.2 RunResponse拡張
+
+**対象**: `apps/api/schemas/runs.py`
+
+```python
+class RetryRecommendation(BaseModel):
+    action: Literal["retry_same", "retry_previous"]
+    target_step: str
+    reason: str
+```
 
 ---
 
-## 修正対象ファイル一覧
+## 🟡 フェーズ2: フロントエンド実装 `cc:TODO`
 
-| ファイル | 変更 | 優先度 |
-|----------|------|--------|
-| `apps/worker/activities/step1_5.py` | 関連KW取得ロジック修正 | 高 |
-| `tests/unit/worker/activities/test_step1_5.py` | テスト追加（新規） | 中 |
+### 2.1 RetryRecommendationBanner `[feature:a11y]`
+
+**対象**: `apps/ui/src/components/runs/RetryRecommendationBanner.tsx`
+
+**表示条件**: `run.status === "failed" && run.retry_recommendation && !run.needs_github_fix`
+
+**既存UIとの優先度**:
+1. `needs_github_fix` → GitHubFixButton/Status
+2. 初回失敗 → RetryRecommendationBanner
+3. 既存retry/resumeボタン → そのまま維持
+
+### 2.2 型定義追加
+
+**対象**: `apps/ui/src/lib/types.ts`
+
+### 2.3 Run詳細ページ統合
+
+**対象**: `apps/ui/src/app/runs/[id]/page.tsx`
 
 ---
 
-## 検証手順
+## 🟢 フェーズ3: テスト `cc:TODO`
 
-1. アンケートで関連KWを3つ入力してrunを作成
-2. Step1.5のログを確認
-   - 期待: `Using 3 user-provided related keywords`
-3. Step1.5の出力を確認
-   - 期待: 入力した関連KWで競合取得されている
+**対象**: `tests/unit/test_retry_recommendation.py`
+
+1. validation_fail時に入力元ステップを推奨
+2. retryable時に同一ステップを推奨
+3. ステップレコードなし時はNone
+4. config無効化ステップは除外
+5. target_stepがRESUME_STEP_ORDERに含まれる
+6. needs_github_fix時はバナー非表示
+
+---
+
+## 参照先
+
+| 項目 | 参照先 |
+|------|--------|
+| Step.error_code | `apps/api/db/models.py` L188 |
+| RESUME_STEP_ORDER | `apps/api/constants.py` L33-52 |
+| 既存retry/resumeボタン | `apps/ui/src/components/workflow/WorkflowPattern1_N8nStyle.tsx` L483-507 |
+
+## 修正対象ファイル
+
+| ファイル | 変更 |
+|----------|------|
+| `apps/api/services/runs.py` | `get_retry_recommendation()` 追加 |
+| `apps/api/schemas/runs.py` | `RetryRecommendation` 追加 |
+| `apps/ui/src/lib/types.ts` | 型追加 |
+| `apps/ui/src/components/runs/RetryRecommendationBanner.tsx` | 新規 |
+| `apps/ui/src/app/runs/[id]/page.tsx` | 統合 |
+| `tests/unit/test_retry_recommendation.py` | 新規 |
