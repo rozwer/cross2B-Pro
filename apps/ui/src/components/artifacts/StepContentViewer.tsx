@@ -56,6 +56,8 @@ export function StepContentViewer({ content, stepName }: StepContentViewerProps)
       return <Step0Viewer data={parsed} />;
     case "step1":
       return <Step1Viewer data={parsed} />;
+    case "step1_5":
+      return <Step1_5Viewer data={parsed} />;
     case "step2":
       return <Step2Viewer data={parsed} />;
     case "step3a":
@@ -457,6 +459,167 @@ function Step1Viewer({ data }: { data: ParsedContent }) {
       <RemainingFields
         data={data}
         excludeKeys={["competitors", "search_results", "serp_query"]}
+      />
+    </div>
+  );
+}
+
+// Step1.5: 関連キーワード競合分析
+function Step1_5Viewer({ data }: { data: ParsedContent }) {
+  const relatedKeywordsAnalyzed = typeof data.related_keywords_analyzed === "number" ? data.related_keywords_analyzed : 0;
+  const relatedCompetitorData = Array.isArray(data.related_competitor_data) ? data.related_competitor_data : [];
+  const skipped = data.skipped === true;
+  const skipReason = typeof data.skip_reason === "string" ? data.skip_reason : null;
+  const metadata = data.metadata as { total_keywords_processed?: number; total_articles_fetched?: number } | undefined;
+
+  if (skipped) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Hash className="h-5 w-5 text-gray-400" />
+          <span className="text-lg font-semibold text-gray-500">関連キーワード分析（スキップ）</span>
+        </div>
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-500">
+          <p>理由: {skipReason || "関連キーワードが指定されていません"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* ヘッダー情報 */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Hash className="h-5 w-5 text-primary-600" />
+          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            関連キーワード競合分析 ({relatedKeywordsAnalyzed}件)
+          </span>
+        </div>
+        {metadata && (
+          <div className="flex items-center gap-3 text-xs text-gray-500">
+            <span>処理KW: {metadata.total_keywords_processed || 0}</span>
+            <span>取得記事: {metadata.total_articles_fetched || 0}</span>
+          </div>
+        )}
+      </div>
+
+      {relatedCompetitorData.length > 0 ? (
+        <div className="space-y-4">
+          {relatedCompetitorData.map((kwData: {
+            keyword?: string;
+            search_results_count?: number;
+            competitors?: Array<{
+              url?: string;
+              title?: string;
+              content_summary?: string;
+              word_count?: number;
+              headings?: string[];
+            }>;
+            fetch_success_count?: number;
+            fetch_failed_count?: number;
+            skipped_duplicate_count?: number;
+          }, kwIndex: number) => (
+            <div
+              key={kwIndex}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+            >
+              {/* キーワードヘッダー */}
+              <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-primary-500" />
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {kwData.keyword || `キーワード ${kwIndex + 1}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>取得: {kwData.fetch_success_count || 0}</span>
+                    {(kwData.fetch_failed_count || 0) > 0 && (
+                      <span className="text-red-500">失敗: {kwData.fetch_failed_count}</span>
+                    )}
+                    {(kwData.skipped_duplicate_count || 0) > 0 && (
+                      <span className="text-amber-500">重複除外: {kwData.skipped_duplicate_count}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 競合記事一覧 */}
+              <div className="p-3 space-y-2">
+                {kwData.competitors && kwData.competitors.length > 0 ? (
+                  kwData.competitors.map((comp, compIndex) => (
+                    <div
+                      key={compIndex}
+                      className="p-3 rounded border border-gray-100 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {comp.title || "タイトルなし"}
+                          </h5>
+                          {comp.url && (
+                            <a
+                              href={comp.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 mt-1"
+                            >
+                              <Globe className="h-3 w-3" />
+                              {(() => {
+                                try {
+                                  return new URL(comp.url).hostname;
+                                } catch {
+                                  return comp.url;
+                                }
+                              })()}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                        {comp.word_count && (
+                          <span className="flex-shrink-0 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                            {comp.word_count.toLocaleString()} 文字
+                          </span>
+                        )}
+                      </div>
+                      {comp.content_summary && (
+                        <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {comp.content_summary.substring(0, 200)}...
+                        </p>
+                      )}
+                      {comp.headings && comp.headings.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {comp.headings.slice(0, 5).map((h: string, hIndex: number) => (
+                            <span
+                              key={hIndex}
+                              className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs"
+                            >
+                              {typeof h === "string" ? h.substring(0, 30) : ""}
+                            </span>
+                          ))}
+                          {comp.headings.length > 5 && (
+                            <span className="text-xs text-gray-400">+{comp.headings.length - 5}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">競合記事なし</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">関連キーワードの競合データがありません</p>
+      )}
+
+      {/* 残りのフィールド */}
+      <RemainingFields
+        data={data}
+        excludeKeys={["related_keywords_analyzed", "related_competitor_data", "skipped", "skip_reason", "metadata"]}
       />
     </div>
   );
