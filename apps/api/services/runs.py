@@ -99,6 +99,17 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
             step=run.current_step,
         )
 
+    # GitHub Fix Guidance: needs_github_fix 計算
+    # 条件: status=failed AND last_resumed_step==current_step AND github_repo_url設定済 AND fix_issue_number未設定
+    needs_github_fix = (
+        run.status == RunStatus.FAILED.value
+        and run.last_resumed_step is not None
+        and run.current_step is not None
+        and run.last_resumed_step == run.current_step
+        and run.github_repo_url is not None
+        and run.fix_issue_number is None
+    )
+
     return RunResponse(
         id=str(run.id),
         tenant_id=run.tenant_id,
@@ -118,6 +129,10 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
         # GitHub integration (Phase 3)
         github_repo_url=run.github_repo_url,
         github_dir_path=run.github_dir_path,
+        # GitHub Fix Guidance
+        needs_github_fix=needs_github_fix,
+        last_resumed_step=run.last_resumed_step,
+        fix_issue_number=run.fix_issue_number,
     )
 
 

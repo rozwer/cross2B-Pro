@@ -177,6 +177,29 @@ class SyncResponse(BaseModel):
     synced: bool
     github_sha: str | None = None
     minio_digest: str | None = None
+
+
+# =============================================================================
+# GitHub Fix Guidance Request/Response Models
+# =============================================================================
+
+
+class FixIssueResponse(BaseModel):
+    """Response for fix issue creation."""
+
+    issue_number: int
+    issue_url: str
+
+
+class FixIssueStatusResponse(BaseModel):
+    """Response for fix issue status."""
+
+    issue_number: int
+    state: str  # "open" or "closed"
+    status: str  # "open", "in_progress", or "closed"
+    pr_url: str | None = None
+    last_comment: str | None = None
+    issue_url: str
     message: str
 
 
@@ -2358,3 +2381,178 @@ async def update_issues(
             status_code=429,
             detail=f"GitHub API rate limit exceeded.{reset_msg}",
         )
+
+
+# =============================================================================
+# GitHub Fix Guidance API
+# =============================================================================
+
+
+@router.post("/runs/{run_id}/fix-issue", response_model=FixIssueResponse)
+async def create_fix_issue(
+    run_id: UUID,
+    user: AuthUser = Depends(get_current_user),
+) -> FixIssueResponse:
+    """Create a GitHub issue for @claude fix request.
+
+    Creates an issue when a workflow fails after resume on the same step.
+    The issue includes error details and mentions @claude for automated fixing.
+
+    Returns:
+        FixIssueResponse with issue number and URL
+
+    Raises:
+        400: GitHub repository not configured for this run
+        404: Run not found
+        500: Failed to create issue
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        # Build issue title and body
+        error_code = run.error_code or "ERROR"
+        error_message = run.error_message or "Unknown error"
+        current_step = run.current_step or "unknown"
+
+        title = f"[Step{current_step}] {error_code}: 修正依頼"
+        body = f"""## エラー情報
+- ステップ: {current_step}
+- エラーコード: {error_code}
+- メッセージ: {error_message}
+
+## Run情報
+- Run ID: {run_id}
+- Tenant ID: {run.tenant_id}
+
+@claude 上記のエラーを修正してください。
+"""
+
+        try:
+            issue_data = await github.create_issue(
+                repo_url=run.github_repo_url,
+                title=title,
+                body=body,
+                labels=["bug", "claude-fix"],
+            )
+
+            issue_number = issue_data.get("number")
+            issue_url = issue_data.get("html_url")
+
+            # Update run with issue number
+            run.fix_issue_number = issue_number
+            await session.commit()
+
+            logger.info(
+                "Fix issue created",
+                extra={
+                    "run_id": str(run_id),
+                    "issue_number": issue_number,
+                    "issue_url": issue_url,
+                },
+            )
+
+            return FixIssueResponse(
+                issue_number=issue_number,
+                issue_url=issue_url,
+            )
+
+        except GitHubAuthenticationError:
+            raise HTTPException(
+                status_code=401,
+                detail="GitHub authentication failed. Please check your token.",
+            )
+        except GitHubPermissionError:
+            raise HTTPException(
+                status_code=403,
+                detail="Permission denied. Cannot create issues.",
+            )
+        except Exception as e:
+            logger.error(f"Failed to create fix issue: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create fix issue: {e}",
+            )
+
+
+@router.get("/runs/{run_id}/fix-issue", response_model=FixIssueStatusResponse)
+async def get_fix_issue_status(
+    run_id: UUID,
+    user: AuthUser = Depends(get_current_user),
+) -> FixIssueStatusResponse:
+    """Get the status of a fix issue.
+
+    Returns the current state of the fix issue including any linked PRs.
+
+    Returns:
+        FixIssueStatusResponse with issue status and PR link if available
+
+    Raises:
+        400: GitHub repository not configured
+        404: Run not found or fix issue not created
+    """
+    github = _get_github_service()
+    db_manager = _get_tenant_db_manager()
+
+    async with db_manager.get_session(user.tenant_id) as session:
+        result = await session.execute(select(Run).where(Run.id == run_id))
+        run = result.scalar_one_or_none()
+
+        if not run:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        if not run.github_repo_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Run does not have a GitHub repository configured",
+            )
+
+        if not run.fix_issue_number:
+            raise HTTPException(
+                status_code=404,
+                detail="Fix issue not created for this run",
+            )
+
+        try:
+            status_data = await github.get_issue_status(
+                repo_url=run.github_repo_url,
+                issue_number=run.fix_issue_number,
+            )
+
+            return FixIssueStatusResponse(
+                issue_number=run.fix_issue_number,
+                state=status_data.get("state", "open"),
+                status=status_data.get("status", "open"),
+                pr_url=status_data.get("pr_url"),
+                last_comment=status_data.get("last_comment"),
+                issue_url=status_data.get("issue_url", ""),
+            )
+
+        except GitHubAuthenticationError:
+            raise HTTPException(
+                status_code=401,
+                detail="GitHub authentication failed. Please check your token.",
+            )
+        except GitHubNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Issue #{run.fix_issue_number} not found.",
+            )
+        except Exception as e:
+            logger.error(f"Failed to get fix issue status: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get fix issue status: {e}",
+            )

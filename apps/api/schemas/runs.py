@@ -445,6 +445,10 @@ class RunResponse(BaseModel):
     # GitHub integration (Phase 3)
     github_repo_url: str | None = None
     github_dir_path: str | None = None
+    # GitHub Fix Guidance: resume後に同一ステップで再失敗した場合にTrue
+    needs_github_fix: bool = False
+    last_resumed_step: str | None = None
+    fix_issue_number: int | None = None
 
     class Config:
         populate_by_name = True

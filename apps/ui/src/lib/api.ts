@@ -1405,6 +1405,46 @@ class ApiClient {
     },
 
     /**
+     * Create a fix issue for @claude to fix workflow errors
+     */
+    createFixIssue: async (
+      runId: string
+    ): Promise<{
+      issue_number: number;
+      issue_url: string;
+    }> => {
+      return this.request<{
+        issue_number: number;
+        issue_url: string;
+      }>(`/api/github/runs/${runId}/fix-issue`, {
+        method: "POST",
+      });
+    },
+
+    /**
+     * Get fix issue status for a run
+     */
+    getFixIssueStatus: async (
+      runId: string
+    ): Promise<{
+      issue_number: number;
+      state: string;
+      status: string;
+      pr_url: string | null;
+      last_comment: string | null;
+      issue_url: string;
+    }> => {
+      return this.request<{
+        issue_number: number;
+        state: string;
+        status: string;
+        pr_url: string | null;
+        last_comment: string | null;
+        issue_url: string;
+      }>(`/api/github/runs/${runId}/fix-issue`);
+    },
+
+    /**
      * Get pull request details
      */
     getPR: async (
