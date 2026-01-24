@@ -74,7 +74,34 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         from .base import load_step_data
 
         config = ctx.config
-        related_keywords: list[str] = config.get("related_keywords", [])
+
+        # Extract related_keywords from user input (correct path)
+        # For article_hearing_v1 format: config["input"]["data"]["keyword"]["related_keywords"]
+        input_data = config.get("input", {})
+        input_format = input_data.get("format", "unknown")
+        logger.info(f"[STEP1.5] Input format: {input_format}, input_data keys: {list(input_data.keys()) if input_data else 'empty'}")
+
+        user_related_keywords: list[dict[str, Any] | str] = []
+
+        if input_format == "article_hearing_v1":
+            keyword_data = input_data.get("data", {}).get("keyword", {})
+            user_related_keywords = keyword_data.get("related_keywords", []) or []
+            logger.info(f"[STEP1.5] Found {len(user_related_keywords)} related keywords in article_hearing_v1 format")
+            if user_related_keywords:
+                logger.info(f"[STEP1.5] Related keywords raw data: {user_related_keywords}")
+
+        # Convert RelatedKeyword objects (dict with "keyword" field) to string list
+        related_keywords: list[str] = []
+        for rk in user_related_keywords:
+            if isinstance(rk, dict):
+                kw = rk.get("keyword", "")
+                if kw and isinstance(kw, str):
+                    related_keywords.append(kw.strip())
+            elif isinstance(rk, str) and rk.strip():
+                related_keywords.append(rk.strip())
+
+        if related_keywords:
+            logger.info(f"[STEP1.5] Using {len(related_keywords)} user-provided related keywords: {related_keywords}")
 
         # Load step1 data to exclude duplicate URLs
         step1_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1") or {}
@@ -90,9 +117,9 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
         recommended_angles = step0_data.get("recommended_angles", [])
 
-        # If no related_keywords in config, try to derive from step0
+        # If no user-provided related_keywords, try to derive from step0 as fallback
         if not related_keywords and recommended_angles:
-            logger.info("[STEP1.5] Attempting to derive keywords from step0 recommended_angles")
+            logger.info("[STEP1.5] No user-provided keywords, deriving from step0 recommended_angles as fallback")
             # Extract keywords from recommended angles with strict type checking
             for angle in recommended_angles[: self.MAX_RELATED_KEYWORDS]:
                 if isinstance(angle, dict):
