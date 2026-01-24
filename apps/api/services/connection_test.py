@@ -29,6 +29,10 @@ class ConnectionTestResult:
     latency_ms: int | None = None
     error_message: str | None = None
     details: dict[str, Any] | None = None
+    # GitHub specific: scope validation
+    scopes: list[str] | None = None
+    missing_scopes: list[str] | None = None
+    scope_warning: str | None = None
 
 
 class ConnectionTestService:
@@ -257,10 +261,46 @@ class ConnectionTestService:
             error_message="Google Ads API real mode not implemented. Use mock mode or implement OAuth.",
         )
 
+    # Required scopes for this system's GitHub integration
+    GITHUB_REQUIRED_SCOPES = {"repo"}
+
+    def _check_github_scopes(self, scopes_header: str | None) -> tuple[list[str], list[str], str | None]:
+        """Check if GitHub token has required scopes.
+
+        Args:
+            scopes_header: X-OAuth-Scopes header value from GitHub API
+
+        Returns:
+            Tuple of (granted_scopes, missing_scopes, warning_message)
+        """
+        if not scopes_header:
+            # Fine-grained PAT or GitHub App token - cannot determine scopes
+            return [], [], None
+
+        granted_scopes = [s.strip() for s in scopes_header.split(",") if s.strip()]
+        missing_scopes = []
+        warnings = []
+
+        for required in self.GITHUB_REQUIRED_SCOPES:
+            if required not in granted_scopes:
+                missing_scopes.append(required)
+
+        if missing_scopes:
+            scope_list = ", ".join(missing_scopes)
+            warnings.append(f"必要な権限が不足しています: {scope_list}")
+
+        # Additional scope checks and warnings
+        if "repo" not in granted_scopes:
+            warnings.append("リポジトリへの読み書きには 'repo' スコープが必要です")
+
+        warning_message = " / ".join(warnings) if warnings else None
+        return granted_scopes, missing_scopes, warning_message
+
     async def _test_github(self, token: str | None = None) -> ConnectionTestResult:
         """Test GitHub API connection.
 
         Uses /user endpoint to verify token validity.
+        Also checks X-OAuth-Scopes header to validate required permissions.
         SECURITY: Response does NOT include the token.
         """
         key = token or os.getenv("GITHUB_TOKEN")
@@ -285,6 +325,17 @@ class ConnectionTestService:
 
             if response.status_code == 200:
                 data = response.json()
+
+                # Check token scopes from response headers
+                scopes_header = response.headers.get("X-OAuth-Scopes")
+                granted_scopes, missing_scopes, scope_warning = self._check_github_scopes(scopes_header)
+
+                # Determine token type
+                token_type = "classic"
+                if not scopes_header:
+                    # Fine-grained PAT or GitHub App - no X-OAuth-Scopes header
+                    token_type = "fine-grained"
+
                 return ConnectionTestResult(
                     success=True,
                     service="github",
@@ -292,8 +343,12 @@ class ConnectionTestService:
                         "username": data.get("login"),
                         "name": data.get("name"),
                         "type": data.get("type"),  # User or Bot
+                        "token_type": token_type,
                         # Do NOT include token in response
                     },
+                    scopes=granted_scopes if granted_scopes else None,
+                    missing_scopes=missing_scopes if missing_scopes else None,
+                    scope_warning=scope_warning,
                 )
             elif response.status_code == 401:
                 return ConnectionTestResult(
