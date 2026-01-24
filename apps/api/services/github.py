@@ -1800,8 +1800,8 @@ _Created via SEO Article Generator_
             data = await self._handle_response(response)
 
         return {
-            "key_id": data.get("key_id"),
-            "key": data.get("key"),
+            "key_id": str(data.get("key_id", "")),
+            "key": str(data.get("key", "")),
         }
 
     async def set_repo_secret(
