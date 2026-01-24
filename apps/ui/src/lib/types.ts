@@ -8,6 +8,7 @@ export type RunStatus =
   | "running"
   | "paused"  // ユーザーによる一時停止（次ステップ開始前に停止）
   | "waiting_approval"
+  | "waiting_step1_approval"  // Step1（競合取得・関連KW抽出）後の承認待ち
   | "waiting_image_input"  // Step11画像生成のユーザー入力待ち
   | "completed"
   | "failed"
@@ -238,6 +239,7 @@ export interface CreateRunInput {
   options?: {
     retry_limit?: number;
     repair_enabled?: boolean;
+    enable_step1_approval?: boolean;
   };
   // GitHub integration (Phase 2)
   github_repo_url?: string;
@@ -289,6 +291,7 @@ export interface Run {
   options?: {
     retry_limit: number;
     repair_enabled: boolean;
+    enable_step1_approval?: boolean;
   };
   steps: Step[];
   created_at: string;
@@ -827,6 +830,7 @@ export function getStatusColor(status: RunStatus | StepStatus): string {
     case "paused":
       return "bg-amber-100 text-amber-800";
     case "waiting_approval":
+    case "waiting_step1_approval":
       return "bg-yellow-100 text-yellow-800";
     case "completed":
       return "bg-green-100 text-green-800";
@@ -852,6 +856,7 @@ export function getStatusIcon(status: RunStatus | StepStatus): string {
     case "paused":
       return "⏸";
     case "waiting_approval":
+    case "waiting_step1_approval":
       return "⏸";
     case "completed":
       return "●";
@@ -992,6 +997,10 @@ export interface ConnectionTestResponse {
   latency_ms: number | null;
   error_message: string | null;
   details: Record<string, unknown> | null;
+  // GitHub specific: scope validation
+  scopes: string[] | null;
+  missing_scopes: string[] | null;
+  scope_warning: string | null;
 }
 
 // ============================================

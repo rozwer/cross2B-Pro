@@ -81,6 +81,10 @@ class ConnectionTestResponse(BaseModel):
     latency_ms: int | None = None
     error_message: str | None = None
     details: dict[str, Any] | None = None
+    # GitHub specific: scope validation
+    scopes: list[str] | None = None
+    missing_scopes: list[str] | None = None
+    scope_warning: str | None = None
 
 
 # =============================================================================
@@ -457,6 +461,9 @@ async def test_connection(
         latency_ms=result.latency_ms,
         error_message=result.error_message,
         details=result.details,
+        scopes=result.scopes,
+        missing_scopes=result.missing_scopes,
+        scope_warning=result.scope_warning,
     )
 
 

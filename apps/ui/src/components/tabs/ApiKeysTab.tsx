@@ -408,6 +408,63 @@ function ServiceCard({ service, setting, onUpdate, onDelete, onTest }: ServiceCa
                   {testResult.error_message}
                 </p>
               )}
+              {/* GitHub scope warning */}
+              {service === "github" && testResult.scope_warning && (
+                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                      <p className="font-medium">権限の警告</p>
+                      <p>{testResult.scope_warning}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* GitHub scopes display */}
+              {service === "github" && testResult.scopes && testResult.scopes.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">付与されたスコープ:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {testResult.scopes.map((scope) => (
+                      <span
+                        key={scope}
+                        className={cn(
+                          "px-1.5 py-0.5 text-xs rounded",
+                          testResult.missing_scopes?.includes(scope)
+                            ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        )}
+                      >
+                        {scope}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* GitHub fine-grained PAT notice */}
+              {service === "github" && testResult.success && testResult.details?.token_type === "fine-grained" && (
+                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    Fine-grained Personal Access Token を使用しています。スコープの詳細確認はGitHub設定画面で行ってください。
+                  </p>
+                </div>
+              )}
+              {/* GitHub missing scopes */}
+              {service === "github" && testResult.missing_scopes && testResult.missing_scopes.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-red-500 dark:text-red-400 mb-1">不足しているスコープ:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {testResult.missing_scopes.map((scope) => (
+                      <span
+                        key={scope}
+                        className="px-1.5 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded"
+                      >
+                        {scope}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {testResult.details && Object.keys(testResult.details).length > 0 && (
                 <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-x-auto">
                   {JSON.stringify(testResult.details, null, 2)}
