@@ -1236,7 +1236,7 @@ class ReviewStatusResponse(BaseModel):
     issue_url: str | None = None
     has_result: bool = False
     result_path: str | None = None
-    result: dict | None = None  # Review result JSON (from GitHub or storage)
+    result: dict[str, Any] | None = None  # Review result JSON (from GitHub or storage)
 
 
 class IssueStatusResponse(BaseModel):
