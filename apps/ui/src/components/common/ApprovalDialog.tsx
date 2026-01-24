@@ -26,8 +26,12 @@ import { HtmlPreview } from "@/components/artifacts/HtmlPreview";
 import { StepContentViewer } from "@/components/artifacts/StepContentViewer";
 import { Loading } from "@/components/common/Loading";
 
-// 承認対象のステップ（並列処理ステップ）
-const APPROVAL_TARGET_STEPS = ["step3a", "step3b", "step3c"];
+// 承認対象のステップ（承認タイプ別）
+const APPROVAL_TARGET_STEPS_STEP1 = ["step1", "step1_5"];  // Step1承認: 競合取得・関連KW抽出
+const APPROVAL_TARGET_STEPS_STEP3 = ["step3a", "step3b", "step3c"];  // Step3承認: 並列処理ステップ
+
+// 承認タイプ
+export type ApprovalType = "step1" | "step3";
 
 interface ApprovalDialogProps {
   isOpen: boolean;
@@ -37,6 +41,8 @@ interface ApprovalDialogProps {
   runId: string;
   artifacts: ArtifactRef[];
   loading?: boolean;
+  approvalType?: ApprovalType;  // 承認タイプ（デフォルト: step3）
+  onApprovalTypeChange?: (type: ApprovalType) => void;  // 承認タイプ切替コールバック
 }
 
 export function ApprovalDialog({
@@ -47,6 +53,8 @@ export function ApprovalDialog({
   runId,
   artifacts: externalArtifacts,
   loading = false,
+  approvalType = "step3",  // デフォルトはStep3承認
+  onApprovalTypeChange,
 }: ApprovalDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [rejectMode, setRejectMode] = useState(false);
@@ -54,7 +62,17 @@ export function ApprovalDialog({
   const [selectedArtifact, setSelectedArtifact] = useState<ArtifactRef | null>(null);
   const [content, setContent] = useState<ArtifactContent | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(APPROVAL_TARGET_STEPS));
+
+  // 承認タイプに応じた対象ステップを取得
+  const targetSteps = approvalType === "step1" ? APPROVAL_TARGET_STEPS_STEP1 : APPROVAL_TARGET_STEPS_STEP3;
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(targetSteps));
+
+  // 承認タイプが変わったら展開状態と選択をリセット
+  useEffect(() => {
+    setExpandedSteps(new Set(targetSteps));
+    setSelectedArtifact(null);
+    setContent(null);
+  }, [approvalType, targetSteps]);
 
   // Internal artifacts state - fetched when dialog opens
   const [internalArtifacts, setInternalArtifacts] = useState<ArtifactRef[]>([]);
@@ -82,8 +100,8 @@ export function ApprovalDialog({
 
   // 承認対象ステップの成果物のみフィルタリング
   const approvalArtifacts = useMemo(() => {
-    return artifacts.filter((a) => APPROVAL_TARGET_STEPS.includes(a.step_name));
-  }, [artifacts]);
+    return artifacts.filter((a) => targetSteps.includes(a.step_name));
+  }, [artifacts, targetSteps]);
 
   // ステップごとにグループ化
   const groupedArtifacts = useMemo(() => {
@@ -100,8 +118,8 @@ export function ApprovalDialog({
     );
 
     // ステップ順序でソート
-    return APPROVAL_TARGET_STEPS.filter((step) => groups[step]).map((step) => [step, groups[step]] as const);
-  }, [approvalArtifacts]);
+    return targetSteps.filter((step) => groups[step]).map((step) => [step, groups[step]] as const);
+  }, [approvalArtifacts, targetSteps]);
 
   // loadContent を useEffect より先に定義（依存関係解決のため）
   const loadContent = useCallback(async (artifact: ArtifactRef) => {
@@ -215,13 +233,42 @@ export function ApprovalDialog({
                 </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="閉じる"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* 承認タイプ切替タブ */}
+              {onApprovalTypeChange && (
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => onApprovalTypeChange("step1")}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                      approvalType === "step1"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    )}
+                  >
+                    Step1（関連KW）
+                  </button>
+                  <button
+                    onClick={() => onApprovalTypeChange("step3")}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                      approvalType === "step3"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    )}
+                  >
+                    Step3（記事）
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="閉じる"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Content Area */}
@@ -236,7 +283,9 @@ export function ApprovalDialog({
                 <Package className="h-16 w-16 text-gray-300 mb-4" />
                 <p className="text-lg font-medium">承認対象の成果物がありません</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  step3a, step3b, step3c の成果物が生成されると表示されます
+                  {approvalType === "step1"
+                    ? "step1, step1_5 の成果物が生成されると表示されます"
+                    : "step3a, step3b, step3c の成果物が生成されると表示されます"}
                 </p>
               </div>
             ) : (
