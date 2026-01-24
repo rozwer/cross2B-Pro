@@ -128,6 +128,8 @@ services:
       # Authentication (dev mode skips auth)
       ENVIRONMENT: ${ENVIRONMENT:-development}
       DEV_TENANT_ID: ${DEV_TENANT_ID:-dev-tenant-001}
+      # Encryption key for API settings
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
