@@ -23,7 +23,7 @@ import { useArtifacts } from "@/hooks/useArtifact";
 import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
-import { ApprovalDialog } from "@/components/common/ApprovalDialog";
+import { ApprovalDialog, type ApprovalType } from "@/components/common/ApprovalDialog";
 import { HelpButton } from "@/components/common/HelpButton";
 import { Step3ReviewDialog } from "@/components/approval/Step3ReviewDialog";
 import { ImageGenerationWizard } from "@/components/imageGeneration";
@@ -58,6 +58,7 @@ export default function RunDetailPage({
   const [activeTab, setActiveTab] = useState<TabType>("timeline");
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalType, setApprovalType] = useState<ApprovalType>("step3");  // 承認タイプ
   const [approvalLoading, setApprovalLoading] = useState(false);
   const [resumeStep, setResumeStep] = useState<string | null>(null);
   const [previewModal, setPreviewModal] = useState<PreviewModalState>({
@@ -426,12 +427,28 @@ export default function RunDetailPage({
                 </button>
                 <HelpButton helpKey="workflow.step3" size="sm" />
               </div>
+            ) : run.status === "waiting_step1_approval" ? (
+              /* Step1承認待ち（競合取得・関連KW抽出後）の場合 */
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    fetchArtifacts();
+                    setApprovalType("step1");
+                    setShowApprovalDialog(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+                >
+                  Step1 承認待ち
+                </button>
+                <HelpButton helpKey="workflow.approval" size="sm" />
+              </div>
             ) : run.status === "waiting_approval" ? (
-              /* その他の承認待ちの場合は承認ボタン */
+              /* その他の承認待ちの場合は承認ボタン（Step3）*/
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     fetchArtifacts();  // Ensure artifacts are loaded before showing dialog
+                    setApprovalType("step3");
                     setShowApprovalDialog(true);
                   }}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
@@ -560,6 +577,8 @@ export default function RunDetailPage({
         runId={id}
         artifacts={artifacts}
         loading={approvalLoading}
+        approvalType={approvalType}
+        onApprovalTypeChange={setApprovalType}
       />
 
       <Step3ReviewDialog
