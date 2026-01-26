@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Activity,
-  CheckCircle,
-  Clock,
-  XCircle,
-  TrendingUp,
-} from "lucide-react";
+import { Activity, CheckCircle, Clock, XCircle, TrendingUp } from "lucide-react";
 import { RunList } from "@/components/runs/RunList";
 import { useRuns } from "@/hooks/useRuns";
 
@@ -18,20 +12,19 @@ export default function Home() {
     total: runs.length,
     completed: runs.filter((r) => r.status === "completed").length,
     running: runs.filter((r) => r.status === "running").length,
-    waiting: runs.filter((r) => r.status === "waiting_approval" || r.status === "waiting_image_input").length,
+    waiting: runs.filter(
+      (r) => r.status === "waiting_approval" || r.status === "waiting_image_input"
+    ).length,
     failed: runs.filter((r) => r.status === "failed").length,
   };
 
-  const successRate =
-    stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const successRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          ダッシュボード
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">ダッシュボード</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           SEO記事生成ワークフローの管理
         </p>
@@ -113,9 +106,7 @@ export default function Home() {
       {/* Run List */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            実行履歴
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">実行履歴</h2>
         </div>
         <RunList />
       </div>

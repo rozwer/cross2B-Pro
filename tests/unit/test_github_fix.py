@@ -7,13 +7,10 @@ Tests for:
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
-import pytest
-
 from apps.api.schemas.enums import RunStatus
-
 
 # =============================================================================
 # Test: needs_github_fix calculation logic
