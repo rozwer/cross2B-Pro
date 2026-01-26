@@ -1,161 +1,71 @@
-#!/bin/bash
-# pre-push hook: 品質チェックと保護ブランチへのpush禁止
+#!/bin/sh
 
-set -e
-
-# 色定義
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# 現在のブランチ
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
-
-echo ""
-echo "🚀 pre-push チェックを実行中..."
-echo ""
-
-HAS_ERROR=0
-
-# ===========================================
-# 1. 保護ブランチへの直接push禁止
-# ===========================================
-PROTECTED_BRANCHES=("main" "master")
-
-for branch in "${PROTECTED_BRANCHES[@]}"; do
-    if [[ "$CURRENT_BRANCH" == "$branch" ]]; then
-        echo -e "${RED}⚠️  直接 $branch への push は禁止されています${NC}"
-        echo ""
-        echo "正しいワークフロー:"
-        echo "  1. ./scripts/worktree.sh create <topic>"
-        echo "  2. feature ブランチで作業"
-        echo "  3. PR を作成してマージ"
-        echo ""
-        echo "緊急時の回避（非推奨）:"
-        echo "  git push --no-verify"
-        echo ""
-        exit 1
-    fi
-done
-
-# ===========================================
-# 2. ブランチ命名規則チェック
-# ===========================================
-echo "📝 ブランチ命名規則をチェック中..."
-
-# 許可されるブランチパターン
-VALID_PATTERNS=(
-    "^main$"
-    "^master$"
-    "^develop$"
-    "^feat/.+"
-    "^feature/.+"
-    "^fix/.+"
-    "^bugfix/.+"
-    "^hotfix/.+"
-    "^docs/.+"
-    "^refactor/.+"
-    "^test/.+"
-    "^chore/.+"
-    "^ci/.+"
-    "^release/.+"
-)
-
-IS_VALID=0
-for pattern in "${VALID_PATTERNS[@]}"; do
-    if [[ "$CURRENT_BRANCH" =~ $pattern ]]; then
-        IS_VALID=1
-        break
-    fi
-done
-
-if [ $IS_VALID -eq 0 ]; then
-    echo -e "${YELLOW}⚠️  ブランチ名が推奨形式ではありません: $CURRENT_BRANCH${NC}"
-    echo ""
-    echo "推奨形式:"
-    echo "  feat/<機能名>     - 新機能"
-    echo "  fix/<バグ名>      - バグ修正"
-    echo "  hotfix/<緊急修正> - 緊急修正"
-    echo "  docs/<内容>       - ドキュメント"
-    echo "  refactor/<内容>   - リファクタリング"
-    echo "  test/<内容>       - テスト"
-    echo "  chore/<内容>      - 雑務"
-    echo ""
-    # 警告のみ（ブロックしない）
+if [ "$LEFTHOOK_VERBOSE" = "1" -o "$LEFTHOOK_VERBOSE" = "true" ]; then
+  set -x
 fi
 
-echo -e "${GREEN}✓ ブランチ: $CURRENT_BRANCH${NC}"
-
-# ===========================================
-# 3. WIP コミットの検出
-# ===========================================
-echo ""
-echo "🔍 WIP コミットをチェック中..."
-
-# リモートとの差分コミットを取得
-REMOTE_BRANCH=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "")
-
-if [ -n "$REMOTE_BRANCH" ]; then
-    WIP_COMMITS=$(git log "$REMOTE_BRANCH"..HEAD --oneline --grep="WIP" --grep="wip" --grep="fixup" --grep="squash" -i 2>/dev/null || true)
-else
-    # リモートブランチがない場合は直近10コミットをチェック
-    WIP_COMMITS=$(git log -10 --oneline --grep="WIP" --grep="wip" --grep="fixup" --grep="squash" -i 2>/dev/null || true)
+if [ "$LEFTHOOK" = "0" ]; then
+  exit 0
 fi
 
-if [ -n "$WIP_COMMITS" ]; then
-    echo -e "${YELLOW}⚠️  WIP/fixup/squash コミットが含まれています:${NC}"
-    echo "$WIP_COMMITS" | head -5
-    echo ""
-    echo "push 前に squash またはメッセージ修正を検討してください"
-    echo ""
-    # 警告のみ（ブロックしない）
-else
-    echo -e "${GREEN}✓ WIP コミットなし${NC}"
-fi
-
-# ===========================================
-# 4. Smoke テスト（オプション）
-# ===========================================
-echo ""
-echo "🧪 smoke テストをチェック中..."
-
-# smoke テストディレクトリが存在する場合のみ実行
-if [ -d "tests/smoke" ]; then
-    # 環境変数で無効化可能
-    if [ "${SKIP_SMOKE_TEST:-}" = "1" ]; then
-        echo -e "${YELLOW}  smoke テストはスキップされました (SKIP_SMOKE_TEST=1)${NC}"
+call_lefthook()
+{
+  if test -n "$LEFTHOOK_BIN"
+  then
+    "$LEFTHOOK_BIN" "$@"
+  elif lefthook -h >/dev/null 2>&1
+  then
+    lefthook "$@"
+  elif /home/rozwer/案件/node_modules/lefthook-linux-x64/bin/lefthook -h >/dev/null 2>&1
+  then
+    /home/rozwer/案件/node_modules/lefthook-linux-x64/bin/lefthook "$@"
+  else
+    dir="$(git rev-parse --show-toplevel)"
+    osArch=$(uname | tr '[:upper:]' '[:lower:]')
+    cpuArch=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/')
+    if test -f "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook"
+    then
+      "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook" "$@"
+    elif test -f "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook"
+    then
+      "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook" "$@"
+    elif test -f "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook"
+    then
+      "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook" "$@"
+    elif test -f "$dir/node_modules/lefthook/bin/index.js"
+    then
+      "$dir/node_modules/lefthook/bin/index.js" "$@"
+    elif go tool lefthook -h >/dev/null 2>&1
+    then
+      go tool lefthook "$@"
+    elif bundle exec lefthook -h >/dev/null 2>&1
+    then
+      bundle exec lefthook "$@"
+    elif yarn lefthook -h >/dev/null 2>&1
+    then
+      yarn lefthook "$@"
+    elif pnpm lefthook -h >/dev/null 2>&1
+    then
+      pnpm lefthook "$@"
+    elif swift package lefthook >/dev/null 2>&1
+    then
+      swift package --build-path .build/lefthook --disable-sandbox lefthook "$@"
+    elif command -v mint >/dev/null 2>&1
+    then
+      mint run csjones/lefthook-plugin "$@"
+    elif uv run lefthook -h >/dev/null 2>&1
+    then
+      uv run lefthook "$@"
+    elif mise exec -- lefthook -h >/dev/null 2>&1
+    then
+      mise exec -- lefthook "$@"
+    elif devbox run lefthook -h >/dev/null 2>&1
+    then
+      devbox run lefthook "$@"
     else
-        if command -v uv &> /dev/null; then
-            echo "  pytest tests/smoke/ を実行中..."
-            if uv run pytest tests/smoke/ -q --tb=no 2>/dev/null; then
-                echo -e "${GREEN}✓ smoke テスト通過${NC}"
-            else
-                echo -e "${RED}⚠️  smoke テスト失敗${NC}"
-                echo ""
-                echo "スキップする場合: SKIP_SMOKE_TEST=1 git push"
-                HAS_ERROR=1
-            fi
-        else
-            echo -e "${YELLOW}  uv が見つかりません（スキップ）${NC}"
-        fi
+      echo "Can't find lefthook in PATH"
     fi
-else
-    echo -e "${YELLOW}  tests/smoke/ が存在しません（スキップ）${NC}"
-fi
+  fi
+}
 
-# ===========================================
-# 結果
-# ===========================================
-echo ""
-if [ $HAS_ERROR -ne 0 ]; then
-    echo -e "${RED}❌ pre-push チェック失敗${NC}"
-    echo ""
-    echo "修正後、再度 push してください。"
-    echo "緊急時: git push --no-verify"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ pre-push チェック完了${NC}"
-echo ""
-exit 0
+call_lefthook run "pre-push" "$@"
