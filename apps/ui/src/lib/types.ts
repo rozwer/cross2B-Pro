@@ -306,6 +306,8 @@ export interface Run {
   needs_github_fix?: boolean;
   last_resumed_step?: string;
   fix_issue_number?: number;
+  // Retry Recommendation: 失敗時の推奨リトライ方法
+  retry_recommendation?: RetryRecommendation;
 }
 
 // ============================================
@@ -327,6 +329,23 @@ export interface RunError {
   message: string;
   step?: string;
   details?: Record<string, unknown>;
+}
+
+// ============================================
+// Retry Recommendation Types
+// ============================================
+
+/**
+ * リトライ推奨情報
+ * ステップ失敗時にどのようにリトライすべきかを推奨する
+ */
+export interface RetryRecommendation {
+  /** アクション: 同一ステップリトライ or 前のステップからリトライ */
+  action: "retry_same" | "retry_previous";
+  /** リトライ対象のステップ */
+  target_step: string;
+  /** 推奨理由 */
+  reason: string;
 }
 
 // ============================================

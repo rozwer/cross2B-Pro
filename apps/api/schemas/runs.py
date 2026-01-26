@@ -409,6 +409,19 @@ class RunError(BaseModel):
     details: dict[str, Any] | None = None
 
 
+class RetryRecommendation(BaseModel):
+    """リトライ推奨情報。
+
+    ステップ失敗時にどのようにリトライすべきかを推奨する。
+    - retry_same: 同一ステップをリトライ（一時的障害、設定変更後）
+    - retry_previous: 入力元ステップからリトライ（入力データ品質問題）
+    """
+
+    action: Literal["retry_same", "retry_previous"]
+    target_step: str
+    reason: str
+
+
 class RunSummary(BaseModel):
     """Run summary for list view."""
 
@@ -449,6 +462,8 @@ class RunResponse(BaseModel):
     needs_github_fix: bool = False
     last_resumed_step: str | None = None
     fix_issue_number: int | None = None
+    # Retry Recommendation: 失敗時の推奨リトライ方法
+    retry_recommendation: RetryRecommendation | None = None
 
     class Config:
         populate_by_name = True

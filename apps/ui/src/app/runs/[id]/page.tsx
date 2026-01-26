@@ -23,6 +23,7 @@ import { useArtifacts } from "@/hooks/useArtifact";
 import { RunStatusBadge } from "@/components/runs/RunStatusBadge";
 import { GitHubFixButton } from "@/components/runs/GitHubFixButton";
 import { GitHubFixStatus } from "@/components/runs/GitHubFixStatus";
+import { RetryRecommendationBanner } from "@/components/runs/RetryRecommendationBanner";
 import { WorkflowProgressView } from "@/components/workflow";
 import { StepDetailPanel } from "@/components/steps/StepDetailPanel";
 import { ApprovalDialog, type ApprovalType } from "@/components/common/ApprovalDialog";
@@ -468,6 +469,13 @@ export default function RunDetailPage({
                   onIssueCreated={() => fetch()}
                 />
               )
+            ) : run.status === "failed" && run.retry_recommendation && !run.needs_github_fix ? (
+              /* Retry Recommendation: 失敗時の推奨リトライ方法を表示 */
+              <RetryRecommendationBanner
+                recommendation={run.retry_recommendation}
+                onRetry={(step) => retry(step)}
+                onResume={(step) => setResumeStep(step)}
+              />
             ) : null}
             {run.status === "completed" && (
               <>
