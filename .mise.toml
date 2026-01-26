@@ -1,0 +1,7 @@
+# mise configuration
+# See: https://mise.jdx.dev/
+
+[tools]
+python = "3.12"
+node = "22"
+bun = "1.3"

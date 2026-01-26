@@ -40,3 +40,6 @@ package-lock.json
 # Claude Code (local configuration)
 .claude/
 .claude-code-harness/
+
+# mise (local overrides)
+.mise.local.toml
