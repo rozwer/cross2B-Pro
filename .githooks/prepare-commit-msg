@@ -1,145 +1,71 @@
-#!/bin/bash
-# prepare-commit-msg hook: ブランチ名からコミットメッセージを自動生成 + Issue番号追加
+#!/bin/sh
 
-COMMIT_MSG_FILE="$1"
-COMMIT_SOURCE="$2"
-
-# マージコミットやamendの場合はスキップ
-if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
-    exit 0
+if [ "$LEFTHOOK_VERBOSE" = "1" -o "$LEFTHOOK_VERBOSE" = "true" ]; then
+  set -x
 fi
 
-# 既にメッセージがある場合（-m オプション）はスキップ
-if [ "$COMMIT_SOURCE" = "message" ]; then
-    exit 0
+if [ "$LEFTHOOK" = "0" ]; then
+  exit 0
 fi
 
-# 現在のブランチ名を取得
-BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
-
-if [ -z "$BRANCH_NAME" ]; then
-    exit 0
-fi
-
-# ===========================================
-# Issue番号の抽出
-# ===========================================
-# パターン: feat/123-user-auth, fix/issue-456, bugfix/GH-789
-ISSUE_NUMBER=""
-
-# #123, issue-123, GH-123, gh-123 パターンを検出
-if [[ "$BRANCH_NAME" =~ [/#-]([0-9]+) ]]; then
-    ISSUE_NUMBER="${BASH_REMATCH[1]}"
-elif [[ "$BRANCH_NAME" =~ [Ii]ssue-?([0-9]+) ]]; then
-    ISSUE_NUMBER="${BASH_REMATCH[1]}"
-elif [[ "$BRANCH_NAME" =~ [Gg][Hh]-?([0-9]+) ]]; then
-    ISSUE_NUMBER="${BASH_REMATCH[1]}"
-fi
-
-# ===========================================
-# ブランチ名のパターンを解析
-# ===========================================
-# 例: feat/user-auth → feat(user-auth):
-#     fix/123-api-timeout → fix(api-timeout): (refs #123)
-#     hotfix/critical-bug → fix(critical-bug):
-
-# type を抽出
-TYPE=$(echo "$BRANCH_NAME" | cut -d'/' -f1)
-# scope を抽出（/ 以降の部分）
-SCOPE=$(echo "$BRANCH_NAME" | cut -d'/' -f2-)
-
-# scope から Issue 番号部分を除去してクリーンアップ
-CLEAN_SCOPE=$(echo "$SCOPE" | sed -E 's/^[0-9]+-//; s/-?[Ii]ssue-?[0-9]+//; s/-?[Gg][Hh]-?[0-9]+//')
-
-# type の正規化
-case "$TYPE" in
-    feat|feature)
-        TYPE="feat"
-        ;;
-    fix|bugfix|hotfix)
-        TYPE="fix"
-        ;;
-    docs|doc)
-        TYPE="docs"
-        ;;
-    style)
-        TYPE="style"
-        ;;
-    refactor)
-        TYPE="refactor"
-        ;;
-    perf|performance)
-        TYPE="perf"
-        ;;
-    test|tests)
-        TYPE="test"
-        ;;
-    build)
-        TYPE="build"
-        ;;
-    ci)
-        TYPE="ci"
-        ;;
-    chore)
-        TYPE="chore"
-        ;;
-    revert)
-        TYPE="revert"
-        ;;
-    *)
-        # 認識できないパターンはスキップ
-        exit 0
-        ;;
-esac
-
-# scope がない場合（例: main, develop）はスキップ
-if [ "$SCOPE" = "$BRANCH_NAME" ]; then
-    exit 0
-fi
-
-# 現在のコミットメッセージを読み取り
-CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
-
-# 既に Conventional Commits 形式の場合はスキップ
-if echo "$CURRENT_MSG" | grep -Eq "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: "; then
-    exit 0
-fi
-
-# ===========================================
-# プレフィックスを生成
-# ===========================================
-# クリーンアップされた scope を使用（空の場合は元の scope）
-FINAL_SCOPE="${CLEAN_SCOPE:-$SCOPE}"
-PREFIX="$TYPE($FINAL_SCOPE): "
-
-# Issue 番号がある場合はフッターを追加
-ISSUE_REF=""
-if [ -n "$ISSUE_NUMBER" ]; then
-    ISSUE_REF="
-
-Refs #$ISSUE_NUMBER"
-fi
-
-# ===========================================
-# コミットメッセージファイルを更新
-# ===========================================
+call_lefthook()
 {
-    echo "$PREFIX"
-    if [ -n "$ISSUE_REF" ]; then
-        echo "$ISSUE_REF"
+  if test -n "$LEFTHOOK_BIN"
+  then
+    "$LEFTHOOK_BIN" "$@"
+  elif lefthook -h >/dev/null 2>&1
+  then
+    lefthook "$@"
+  elif /home/rozwer/案件/node_modules/lefthook-linux-x64/bin/lefthook -h >/dev/null 2>&1
+  then
+    /home/rozwer/案件/node_modules/lefthook-linux-x64/bin/lefthook "$@"
+  else
+    dir="$(git rev-parse --show-toplevel)"
+    osArch=$(uname | tr '[:upper:]' '[:lower:]')
+    cpuArch=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/')
+    if test -f "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook"
+    then
+      "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook" "$@"
+    elif test -f "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook"
+    then
+      "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook" "$@"
+    elif test -f "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook"
+    then
+      "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook" "$@"
+    elif test -f "$dir/node_modules/lefthook/bin/index.js"
+    then
+      "$dir/node_modules/lefthook/bin/index.js" "$@"
+    elif go tool lefthook -h >/dev/null 2>&1
+    then
+      go tool lefthook "$@"
+    elif bundle exec lefthook -h >/dev/null 2>&1
+    then
+      bundle exec lefthook "$@"
+    elif yarn lefthook -h >/dev/null 2>&1
+    then
+      yarn lefthook "$@"
+    elif pnpm lefthook -h >/dev/null 2>&1
+    then
+      pnpm lefthook "$@"
+    elif swift package lefthook >/dev/null 2>&1
+    then
+      swift package --build-path .build/lefthook --disable-sandbox lefthook "$@"
+    elif command -v mint >/dev/null 2>&1
+    then
+      mint run csjones/lefthook-plugin "$@"
+    elif uv run lefthook -h >/dev/null 2>&1
+    then
+      uv run lefthook "$@"
+    elif mise exec -- lefthook -h >/dev/null 2>&1
+    then
+      mise exec -- lefthook "$@"
+    elif devbox run lefthook -h >/dev/null 2>&1
+    then
+      devbox run lefthook "$@"
+    else
+      echo "Can't find lefthook in PATH"
     fi
-    echo ""
-    echo "# ↑ ブランチ名から自動生成されたプレフィックス"
-    if [ -n "$ISSUE_NUMBER" ]; then
-        echo "# Issue #$ISSUE_NUMBER への参照が追加されています"
-    fi
-    echo "# 必要に応じて修正してください"
-    echo "#"
-    echo "# 例: feat(user-auth): ログイン機能を実装"
-    echo "#"
-    cat "$COMMIT_MSG_FILE"
-} > "$COMMIT_MSG_FILE.tmp"
+  fi
+}
 
-mv "$COMMIT_MSG_FILE.tmp" "$COMMIT_MSG_FILE"
-
-exit 0
+call_lefthook run "prepare-commit-msg" "$@"
