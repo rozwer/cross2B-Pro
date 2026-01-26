@@ -1,0 +1,131 @@
+#!/bin/bash
+# prepare-commit-msg hook: ブランチ名からコミットメッセージを自動生成 + Issue番号追加
+# Migrated from .githooks/prepare-commit-msg
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# マージコミットやamendの場合はスキップ
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+    exit 0
+fi
+
+# 既にメッセージがある場合（-m オプション）はスキップ
+if [ "$COMMIT_SOURCE" = "message" ]; then
+    exit 0
+fi
+
+# 現在のブランチ名を取得
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+if [ -z "$BRANCH_NAME" ]; then
+    exit 0
+fi
+
+# ===========================================
+# Issue番号の抽出
+# ===========================================
+ISSUE_NUMBER=""
+
+if [[ "$BRANCH_NAME" =~ [/#-]([0-9]+) ]]; then
+    ISSUE_NUMBER="${BASH_REMATCH[1]}"
+elif [[ "$BRANCH_NAME" =~ [Ii]ssue-?([0-9]+) ]]; then
+    ISSUE_NUMBER="${BASH_REMATCH[1]}"
+elif [[ "$BRANCH_NAME" =~ [Gg][Hh]-?([0-9]+) ]]; then
+    ISSUE_NUMBER="${BASH_REMATCH[1]}"
+fi
+
+# ===========================================
+# ブランチ名のパターンを解析
+# ===========================================
+TYPE=$(echo "$BRANCH_NAME" | cut -d'/' -f1)
+SCOPE=$(echo "$BRANCH_NAME" | cut -d'/' -f2-)
+CLEAN_SCOPE=$(echo "$SCOPE" | sed -E 's/^[0-9]+-//; s/-?[Ii]ssue-?[0-9]+//; s/-?[Gg][Hh]-?[0-9]+//')
+
+# type の正規化
+case "$TYPE" in
+    feat|feature)
+        TYPE="feat"
+        ;;
+    fix|bugfix|hotfix)
+        TYPE="fix"
+        ;;
+    docs|doc)
+        TYPE="docs"
+        ;;
+    style)
+        TYPE="style"
+        ;;
+    refactor)
+        TYPE="refactor"
+        ;;
+    perf|performance)
+        TYPE="perf"
+        ;;
+    test|tests)
+        TYPE="test"
+        ;;
+    build)
+        TYPE="build"
+        ;;
+    ci)
+        TYPE="ci"
+        ;;
+    chore)
+        TYPE="chore"
+        ;;
+    revert)
+        TYPE="revert"
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+# scope がない場合はスキップ
+if [ "$SCOPE" = "$BRANCH_NAME" ]; then
+    exit 0
+fi
+
+# 現在のコミットメッセージを読み取り
+CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# 既に Conventional Commits 形式の場合はスキップ
+if echo "$CURRENT_MSG" | grep -Eq "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: "; then
+    exit 0
+fi
+
+# ===========================================
+# プレフィックスを生成
+# ===========================================
+FINAL_SCOPE="${CLEAN_SCOPE:-$SCOPE}"
+PREFIX="$TYPE($FINAL_SCOPE): "
+
+ISSUE_REF=""
+if [ -n "$ISSUE_NUMBER" ]; then
+    ISSUE_REF="
+
+Refs #$ISSUE_NUMBER"
+fi
+
+# ===========================================
+# コミットメッセージファイルを更新
+# ===========================================
+{
+    echo "$PREFIX"
+    if [ -n "$ISSUE_REF" ]; then
+        echo "$ISSUE_REF"
+    fi
+    echo ""
+    echo "# ↑ ブランチ名から自動生成されたプレフィックス"
+    if [ -n "$ISSUE_NUMBER" ]; then
+        echo "# Issue #$ISSUE_NUMBER への参照が追加されています"
+    fi
+    echo "# 必要に応じて修正してください"
+    echo "#"
+    cat "$COMMIT_MSG_FILE"
+} > "$COMMIT_MSG_FILE.tmp"
+
+mv "$COMMIT_MSG_FILE.tmp" "$COMMIT_MSG_FILE"
+
+exit 0
