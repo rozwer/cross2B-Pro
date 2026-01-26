@@ -6,8 +6,9 @@ inferring step status from storage, and syncing with Temporal.
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
+from apps.api.constants import RESUME_STEP_ORDER
 from apps.api.db import Run, Step
 from apps.api.schemas.article_hearing import ArticleHearingInput
 from apps.api.schemas.enums import RunStatus, StepStatus
@@ -16,6 +17,7 @@ from apps.api.schemas.runs import (
     LegacyRunInput,
     ModelConfig,
     ModelConfigOptions,
+    RetryRecommendation,
     RunError,
     RunOptions,
     RunResponse,
@@ -25,6 +27,148 @@ from apps.api.schemas.runs import (
 )
 
 logger = logging.getLogger(__name__)
+
+# ステップ依存関係マップ（入力元候補を優先順に列挙）
+# validation_fail時に戻るべきステップの候補リスト
+STEP_INPUT_MAP: dict[str, list[str]] = {
+    "step1": ["step0"],
+    "step1_5": ["step1"],
+    "step2": ["step1_5", "step1"],
+    "step3a": ["step2"],
+    "step3b": ["step2"],
+    "step3c": ["step1"],
+    "step3_5": ["step3a"],
+    "step4": ["step3_5", "step3a"],
+    "step5": ["step4"],
+    "step6": ["step4"],
+    "step6_5": ["step6"],
+    "step7a": ["step6_5"],
+    "step7b": ["step7a"],
+    "step8": ["step7b"],
+    "step9": ["step7b"],
+    "step10": ["step9"],
+    "step11": ["step10"],
+    "step12": ["step10"],
+}
+
+# config無効化チェック対象のステップマッピング
+CONFIG_DISABLED_STEPS: dict[str, str] = {
+    "step1_5": "enable_step1_5",
+    "step3_5": "enable_step3_5",
+    "step11": "enable_images",
+    "step12": "enable_step12",
+}
+
+
+def is_step_enabled(step: str, config: dict[str, Any]) -> bool:
+    """ステップがconfigで有効かどうかを判定する。
+
+    Args:
+        step: ステップ名
+        config: Run.config
+
+    Returns:
+        bool: ステップが有効な場合True
+    """
+    config_key = CONFIG_DISABLED_STEPS.get(step)
+    if config_key is None:
+        return True  # 無効化対象でないステップは常に有効
+    # options内のフラグをチェック
+    options = config.get("options", {})
+    return options.get(config_key, True)
+
+
+def get_valid_target_step(step: str, config: dict[str, Any]) -> str | None:
+    """候補リストから有効な最初のステップを返す。
+
+    Args:
+        step: 現在の失敗ステップ
+        config: Run.config
+
+    Returns:
+        str | None: 有効なターゲットステップ、または見つからない場合None
+    """
+    candidates = STEP_INPUT_MAP.get(step, [])
+    for candidate in candidates:
+        if not is_step_enabled(candidate, config):
+            continue
+        if candidate in RESUME_STEP_ORDER:
+            return candidate
+    return None
+
+
+def get_retry_recommendation(
+    run: Run,
+    steps: list[Step] | None = None,
+) -> RetryRecommendation | None:
+    """失敗したRunに対するリトライ推奨を計算する。
+
+    ルール:
+    - validation_fail: 入力元ステップからリトライを推奨
+    - retryable / non_retryable: 同一ステップのリトライを推奨
+
+    Args:
+        run: Run ORMモデル
+        steps: Stepレコードのリスト（オプション）
+
+    Returns:
+        RetryRecommendation | None: 推奨がある場合はRetryRecommendation、なければNone
+    """
+    # failed状態でなければ推奨なし
+    if run.status != RunStatus.FAILED.value:
+        return None
+
+    # stepsが提供されていない場合はrunから取得
+    if steps is None:
+        steps = list(run.steps) if run.steps else []
+
+    if not steps:
+        return None
+
+    # 最新の失敗ステップを取得（completed_atで降順ソート）
+    failed_steps = [s for s in steps if s.status == "failed"]
+    if not failed_steps:
+        return None
+
+    # completed_atでソートして最新の失敗ステップを取得
+    failed_steps.sort(key=lambda s: s.completed_at or datetime.min, reverse=True)
+    failed_step = failed_steps[0]
+    error_code = failed_step.error_code
+    step_name = failed_step.step_name
+
+    config = run.config or {}
+
+    # error_codeに基づいてアクションを決定
+    if error_code == "validation_fail":
+        # 入力元ステップからリトライを推奨
+        target_step = get_valid_target_step(step_name, config)
+        if target_step is None:
+            # 有効な入力元が見つからない場合は同一ステップをリトライ
+            target_step = step_name
+            action: Literal["retry_same", "retry_previous"] = "retry_same"
+            reason = "入力元ステップが見つからないため、同一ステップをリトライ"
+        else:
+            action = "retry_previous"
+            reason = "入力データ品質問題のため、入力元ステップから再生成が必要"
+    elif error_code in ("retryable", "non_retryable"):
+        # 同一ステップをリトライ
+        target_step = step_name
+        action = "retry_same"
+        if error_code == "retryable":
+            reason = "一時的障害のため再試行で解決可能"
+        else:
+            reason = "設定変更後に再試行が必要"
+    else:
+        # 不明なエラーコードの場合は同一ステップをリトライ
+        target_step = step_name
+        action = "retry_same"
+        reason = "エラーが発生したため再試行を推奨"
+
+    return RetryRecommendation(
+        action=action,
+        target_step=target_step,
+        reason=reason,
+    )
 
 
 def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunResponse:
@@ -110,6 +254,12 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
         and run.fix_issue_number is None
     )
 
+    # Retry Recommendation: 失敗時の推奨リトライ方法を計算
+    # needs_github_fix=Trueの場合はGitHubFix優先のためNone
+    retry_recommendation = None
+    if not needs_github_fix:
+        retry_recommendation = get_retry_recommendation(run, steps)
+
     return RunResponse(
         id=str(run.id),
         tenant_id=run.tenant_id,
@@ -133,6 +283,8 @@ def run_orm_to_response(run: Run, steps: list[Step] | None = None) -> RunRespons
         needs_github_fix=needs_github_fix,
         last_resumed_step=run.last_resumed_step,
         fix_issue_number=run.fix_issue_number,
+        # Retry Recommendation
+        retry_recommendation=retry_recommendation,
     )
 
 
