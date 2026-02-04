@@ -26,6 +26,7 @@ import re
 from typing import Any
 
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
@@ -65,6 +66,8 @@ MIN_POLISHED_LENGTH = 500
 META_DESCRIPTION_PATTERN = re.compile(r"<!--\s*META_DESCRIPTION:\s*(.+?)\s*-->", re.DOTALL)
 HEADING_CLEANUP_PATTERN = re.compile(r"^(#+)\s*H\d+-\d+[:\s]*", re.MULTILINE)
 QUALITY_SCORE_THRESHOLD = 0.90
+# Max retry attempts before accepting best available result
+QUALITY_RETRY_MAX_ATTEMPTS = 3
 
 
 class Step9QualityValidator:
@@ -555,6 +558,43 @@ class Step9FinalRewrite(BaseActivity):
                 total_score=total_score,
                 publication_ready=total_score >= QUALITY_SCORE_THRESHOLD,
             )
+
+            # P2 Critical: Enforce quality gate - fail if score below threshold
+            # BUT: If we've exhausted retries, accept the current result to avoid blocking
+            current_attempt = activity.info().attempt
+            if total_score < QUALITY_SCORE_THRESHOLD:
+                low_scores = []
+                if qs_data.get("accuracy", 0.0) < 0.85:
+                    low_scores.append(f"accuracy={qs_data.get('accuracy', 0.0):.2f}")
+                if qs_data.get("seo_optimization", 0.0) < 0.85:
+                    low_scores.append(f"seo={qs_data.get('seo_optimization', 0.0):.2f}")
+                if qs_data.get("cta_effectiveness", 0.0) < 0.80:
+                    low_scores.append(f"cta={qs_data.get('cta_effectiveness', 0.0):.2f}")
+
+                if current_attempt >= QUALITY_RETRY_MAX_ATTEMPTS:
+                    # Exhausted retries - proceed with current result and add warning
+                    activity.logger.warning(
+                        f"Quality score {total_score:.2f} below threshold {QUALITY_SCORE_THRESHOLD}, "
+                        f"but max attempts ({QUALITY_RETRY_MAX_ATTEMPTS}) exhausted. "
+                        f"Proceeding with current result. Low scores: {', '.join(low_scores) if low_scores else 'none'}"
+                    )
+                    quality_warnings.append(
+                        f"Quality score {total_score:.2f} below threshold {QUALITY_SCORE_THRESHOLD} "
+                        f"(accepted after {current_attempt} attempts)"
+                    )
+                else:
+                    # Retry
+                    activity.logger.warning(
+                        f"Quality score below threshold: {total_score:.2f} < {QUALITY_SCORE_THRESHOLD}. "
+                        f"Attempt {current_attempt}/{QUALITY_RETRY_MAX_ATTEMPTS}. "
+                        f"Low scores: {', '.join(low_scores) if low_scores else 'none identified'}"
+                    )
+                    raise ApplicationError(
+                        f"Quality score {total_score:.2f} below threshold {QUALITY_SCORE_THRESHOLD}. "
+                        f"Issues: {', '.join(low_scores) if low_scores else 'general quality'}",
+                        type="QUALITY_BELOW_THRESHOLD",
+                        non_retryable=False,  # Allow retry with same conditions
+                    )
 
         # Build redundancy check
         rc_data = parsed_data.get("redundancy_check")
