@@ -24,6 +24,7 @@ from apps.worker.activities.schemas.step11 import Step11PositionReviewPayload
 from .parallel import run_parallel_steps
 
 # Activity timeouts as defined in workflow.md
+# Extended for long-form content (30,000+ chars) per Codex review
 STEP_TIMEOUTS: dict[str, int] = {
     "step0": 60,
     "step1": 300,
@@ -34,14 +35,14 @@ STEP_TIMEOUTS: dict[str, int] = {
     "step3c": 300,
     "step3_5": 300,
     "step4": 300,
-    "step5": 300,
+    "step5": 600,  # Extended: more queries (12 instead of 5)
     "step6": 300,
     "step6_5": 300,
-    "step7a": 600,
-    "step7b": 300,
-    "step8": 300,
-    "step9": 300,
-    "step10": 900,  # 4記事生成に十分な時間を確保
+    "step7a": 900,  # Extended from 600: long-form content generation (30,000+ chars)
+    "step7b": 600,  # Extended from 300: detailed brushup for long articles
+    "step8": 600,  # Extended from 300: external verification + FAQ generation
+    "step9": 900,  # Extended from 300: max_tokens=32000 requires more time
+    "step10": 1200,  # Extended from 900: 4 article variations with quality checks
     "step11": 600,  # 画像生成は時間がかかる
     "step12": 300,
 }
