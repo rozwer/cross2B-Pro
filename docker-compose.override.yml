@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  api:
+    environment:
+      GEMINI_DEFAULT_MODEL: gemini-3-pro-preview
+
+  worker:
+    environment:
+      GEMINI_DEFAULT_MODEL: gemini-3-pro-preview
