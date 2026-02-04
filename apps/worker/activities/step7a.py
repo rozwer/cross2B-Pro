@@ -125,7 +125,11 @@ class Step7ADraftGeneration(BaseActivity):
         # Load step data from storage
         step6_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step6_5") or {}
         step3_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3_5") or {}
+        step5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step5") or {}
         enable_step3_5 = config.get("enable_step3_5", True)
+
+        # Extract and format primary sources for citation embedding
+        primary_sources = self._format_primary_sources(step5_data.get("sources", []))
 
         # === InputValidator統合 ===
         validation = self.input_validator.validate(
@@ -178,6 +182,7 @@ class Step7ADraftGeneration(BaseActivity):
                 integration_package,
                 prompt_pack,
                 human_touch_elements=human_touch_elements,
+                primary_sources=primary_sources,
             )
 
         # === OutputParser統合 (ハイブリッド) ===
@@ -194,7 +199,20 @@ class Step7ADraftGeneration(BaseActivity):
                 draft_content = str(data.get("draft", current_draft))
                 llm_word_count = data.get("word_count", 0)
                 section_count = data.get("section_count", 0)
-                cta_positions = data.get("cta_positions", [])
+                raw_cta_positions = data.get("cta_positions", [])
+                # Normalize cta_positions to list[str] (LLM may return list[dict])
+                cta_positions = []
+                for pos in raw_cta_positions:
+                    if isinstance(pos, str):
+                        cta_positions.append(pos)
+                    elif isinstance(pos, dict):
+                        # Extract position string from dict (e.g., {"type": "early", "position": "..."})
+                        pos_str = pos.get("type", "") or pos.get("position", "") or pos.get("name", "")
+                        if pos_str:
+                            cta_positions.append(str(pos_str))
+                        else:
+                            # Fallback: join all string values
+                            cta_positions.append(" ".join(str(v) for v in pos.values() if isinstance(v, str)))
 
             if parse_result.fixes_applied:
                 activity.logger.info(f"JSON fixes applied: {parse_result.fixes_applied}")
@@ -356,6 +374,52 @@ class Step7ADraftGeneration(BaseActivity):
         )
 
         return output.model_dump()
+
+    def _format_primary_sources(self, sources: list[dict[str, Any]]) -> str:
+        """Format primary sources for citation embedding in article.
+
+        Converts step5's sources list into a prompt-ready format for LLM
+        to embed citations with URLs in the generated draft.
+        """
+        if not sources:
+            return ""
+
+        formatted_sources: list[str] = []
+        for i, src in enumerate(sources[:15], start=1):  # Limit to 15 most relevant
+            url = src.get("url", "")
+            title = src.get("title", "")
+            source_type = src.get("source_type", "other")
+            excerpt = src.get("excerpt", "")[:200]
+            phase = src.get("phase_alignment", "")
+
+            # Format each source with citation ID
+            source_entry = f"[{i}] {title}"
+            if source_type != "other":
+                source_entry += f" ({source_type})"
+            source_entry += f"\n    URL: {url}"
+            if excerpt:
+                source_entry += f"\n    要約: {excerpt}"
+            if phase:
+                source_entry += f"\n    フェーズ: {phase}"
+
+            # Add data points if available
+            data_points = src.get("data_points", [])
+            if data_points:
+                dp_strs = []
+                for dp in data_points[:3]:
+                    metric = dp.get("metric", "")
+                    value = dp.get("value", "")
+                    if metric and value:
+                        dp_strs.append(f"{metric}: {value}")
+                if dp_strs:
+                    source_entry += f"\n    データ: {', '.join(dp_strs)}"
+
+            formatted_sources.append(source_entry)
+
+        if not formatted_sources:
+            return ""
+
+        return "## 引用可能な一次資料\n以下の出典を記事内で脚注形式で引用してください。\n\n" + "\n\n".join(formatted_sources)
 
     def _extract_human_touch_elements(self, step3_5_data: dict[str, Any]) -> str:
         """Extract human touch elements as a prompt-ready string.
@@ -578,10 +642,25 @@ class Step7ADraftGeneration(BaseActivity):
         mid_pos = section_count // 2 if section_count > 2 else 1
         final_pos = max(0, section_count - 1)
 
+        # Normalize cta_positions to strings for checking
+        def get_position_str(p: Any) -> str:
+            if isinstance(p, str):
+                return p.lower()
+            if isinstance(p, dict):
+                # Try common keys for position name/type
+                for key in ["position", "name", "type", "location"]:
+                    if key in p and isinstance(p[key], str):
+                        return p[key].lower()
+                # Fallback: join all string values
+                return " ".join(str(v).lower() for v in p.values() if isinstance(v, str))
+            return str(p).lower()
+
+        position_strs = [get_position_str(p) for p in cta_positions]
+
         # Check which positions have CTAs
-        early_impl = any("early" in p.lower() or "導入" in p for p in cta_positions)
-        mid_impl = any("mid" in p.lower() or "中盤" in p for p in cta_positions)
-        final_impl = any("final" in p.lower() or "まとめ" in p or "結論" in p for p in cta_positions)
+        early_impl = any("early" in ps or "導入" in ps for ps in position_strs)
+        mid_impl = any("mid" in ps or "中盤" in ps for ps in position_strs)
+        final_impl = any("final" in ps or "まとめ" in ps or "結論" in ps for ps in position_strs)
 
         return {
             "early": {"position": early_pos, "implemented": early_impl},
@@ -662,6 +741,7 @@ class Step7ADraftGeneration(BaseActivity):
         integration_package: str,
         prompt_pack: Any,
         human_touch_elements: str,
+        primary_sources: str = "",
     ) -> str:
         """Generate draft from scratch."""
         # Render prompt
@@ -671,6 +751,7 @@ class Step7ADraftGeneration(BaseActivity):
                 keyword=keyword,
                 integration_package=integration_package,
                 human_touch_elements=human_touch_elements,
+                primary_sources=primary_sources,
             )
         except Exception as e:
             raise ActivityError(
@@ -686,7 +767,7 @@ class Step7ADraftGeneration(BaseActivity):
 
         try:
             llm_config = LLMRequestConfig(
-                max_tokens=config.get("max_tokens", 16000),
+                max_tokens=config.get("max_tokens", 24000),  # Extended from 16000 for 30,000+ char articles
                 temperature=config.get("temperature", 0.7),
             )
             response = await llm.generate(
