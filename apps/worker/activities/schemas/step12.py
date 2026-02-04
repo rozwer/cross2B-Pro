@@ -38,10 +38,11 @@ class YoastSeoMetadata(BaseModel):
 
 
 class StructuredDataBlocks(BaseModel):
-    """構造化データブロック."""
+    """構造化データブロック（E-E-A-T対応強化版）."""
 
-    article_schema: str = Field(default="", description="Article JSON-LDブロック")
-    faq_schema: str | None = Field(default=None, description="FAQ JSON-LDブロック")
+    article_schema: str = Field(default="", description="BlogPosting JSON-LDブロック（E-E-A-T対応）")
+    faq_schema: str | None = Field(default=None, description="FAQPage JSON-LDブロック")
+    breadcrumb_schema: str | None = Field(default=None, description="BreadcrumbList JSON-LDブロック")
 
 
 class ArticleImage(BaseModel):

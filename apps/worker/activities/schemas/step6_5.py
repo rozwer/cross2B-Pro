@@ -52,6 +52,15 @@ class ComprehensiveBlueprint(BaseModel):
     part2_reference_data: ReferenceData = Field(default_factory=ReferenceData, description="参照データ集")
 
 
+class InternalLink(BaseModel):
+    """内部リンク設計（P2: トピッククラスター対応）."""
+
+    anchor_text: str = Field(..., description="アンカーテキスト")
+    target_slug: str = Field(..., description="リンク先スラッグ（例: /recruitment-tips/）")
+    placement_section: str = Field(default="", description="配置セクション")
+    link_intent: str = Field(default="related", description="リンク意図（pillar/cluster/related）")
+
+
 class SectionExecutionInstruction(BaseModel):
     """セクション別の詳細執筆指示.
 
@@ -67,6 +76,7 @@ class SectionExecutionInstruction(BaseModel):
     keywords_to_include: list[str] = Field(default_factory=list, description="含めるキーワード")
     human_touch_to_apply: list[str] = Field(default_factory=list, description="適用する人間味要素")
     word_count_target: int = Field(default=0, ge=0, description="目標文字数")
+    internal_links: list[InternalLink] = Field(default_factory=list, description="内部リンク設計（P2: トピッククラスター）")
 
 
 class VisualElementInstruction(BaseModel):
