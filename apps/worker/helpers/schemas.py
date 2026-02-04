@@ -26,6 +26,11 @@ class QualityResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     scores: dict[str, float] = Field(default_factory=dict)
 
+    @property
+    def is_valid(self) -> bool:
+        """Alias for is_acceptable for backward compatibility."""
+        return self.is_acceptable
+
 
 class InputValidationResult(BaseModel):
     """Input validation result."""

@@ -162,6 +162,68 @@ class CompetitorKeywordGap(BaseModel):
     )
 
 
+# =============================================================================
+# P2: エンティティ連鎖モデル（Codex Review対応）
+# =============================================================================
+
+
+class EntityNode(BaseModel):
+    """エンティティノード（親子関係を持つ）.
+
+    SEOにおいて、エンティティ（概念・物・人など）の関係性を明示することで、
+    検索エンジンがコンテンツの意味を正確に理解できるようになる。
+    """
+
+    name: str = Field(..., description="エンティティ名（例: ドライバー採用）")
+    entity_type: str = Field(default="concept", description="エンティティタイプ（concept/person/organization/place/thing）")
+    parent: str | None = Field(default=None, description="親エンティティ名")
+    children: list[str] = Field(default_factory=list, description="子エンティティ名リスト")
+    related: list[str] = Field(default_factory=list, description="関連エンティティ名リスト")
+    importance: float = Field(default=0.5, ge=0.0, le=1.0, description="重要度スコア")
+
+
+class EntityChain(BaseModel):
+    """エンティティ連鎖（P2: トピッククラスター強化）.
+
+    親→子→関連のエンティティ階層を表現。
+    Step6のH2/H3構造と紐付けて、記事の意味構造を強化。
+    """
+
+    root_entity: str = Field(..., description="ルートエンティティ（主要キーワード）")
+    nodes: list[EntityNode] = Field(default_factory=list, description="エンティティノードリスト")
+    depth: int = Field(default=3, ge=1, le=5, description="連鎖の深さ")
+
+
+class EntitySectionMapping(BaseModel):
+    """エンティティとセクションのマッピング（P2）.
+
+    各エンティティをどのセクション（H2/H3）で扱うかを指定。
+    これにより、記事構成とエンティティ構造の整合性を保証。
+    """
+
+    entity_name: str = Field(..., description="エンティティ名")
+    target_section: str = Field(..., description="対象セクション（H2/H3タイトル）")
+    section_level: int = Field(default=2, ge=2, le=4, description="セクションレベル（2=H2, 3=H3）")
+    coverage_depth: str = Field(default="overview", description="カバレッジ深度（overview/detailed/comprehensive）")
+
+
+class SectionIntentMapping(BaseModel):
+    """セクション別ユーザー意図マッピング（P2）.
+
+    各セクションが満たすべきユーザーの検索意図を明示。
+    これにより、記事全体で検索意図を網羅的にカバー。
+    """
+
+    section_title: str = Field(..., description="セクションタイトル")
+    primary_intent: str = Field(
+        default="informational",
+        description="主要検索意図（informational/navigational/transactional/commercial）",
+    )
+    secondary_intents: list[str] = Field(default_factory=list, description="副次的検索意図")
+    target_keywords: list[str] = Field(default_factory=list, description="このセクションで狙うキーワード")
+    phase: int = Field(default=2, ge=1, le=3, description="3フェーズのどこに位置するか")
+
+
 class KeywordCategorization(BaseModel):
     """Keyword categorization by competitor coverage.
 
@@ -221,4 +283,18 @@ class Step3bOutput(BaseModel):
     extraction_summary: dict[str, int] = Field(
         default_factory=dict,
         description="Summary counts: cooccurrence, related, phase1/2/3, etc.",
+    )
+
+    # P2: エンティティ連鎖（Codex Review対応）
+    entity_chain: EntityChain | None = Field(
+        default=None,
+        description="エンティティ連鎖（親→子→関連）。Step6のH2/H3構造と紐付け",
+    )
+    entity_to_section_map: list[EntitySectionMapping] = Field(
+        default_factory=list,
+        description="エンティティとセクションのマッピング。各エンティティをどのセクションで扱うか",
+    )
+    section_intent_map: list[SectionIntentMapping] = Field(
+        default_factory=list,
+        description="セクション別ユーザー意図マッピング。検索意図の網羅性を保証",
     )

@@ -20,8 +20,12 @@ from apps.worker.activities.schemas.step3a import (
     UserPersona,
 )
 from apps.worker.activities.schemas.step3b import (
+    EntityChain,
+    EntityNode,
+    EntitySectionMapping,
     KeywordCluster,
     KeywordItem,
+    SectionIntentMapping,
     Step3bOutput,
 )
 from apps.worker.activities.schemas.step3c import (
@@ -133,6 +137,10 @@ __all__ = [
     "KeywordItem",
     "KeywordCluster",
     "Step3bOutput",
+    "EntityNode",
+    "EntityChain",
+    "EntitySectionMapping",
+    "SectionIntentMapping",
     # Step3c
     "CompetitorProfile",
     "DifferentiationStrategy",
