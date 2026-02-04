@@ -1,0 +1,253 @@
+{
+  "exportedAt": "2026-01-24T15:30:00+09:00",
+  "description": "Development tooling configuration export for SEO Article Generation System",
+  "version": "1.0.0",
+
+  "mise": {
+    "file": ".mise.toml",
+    "config": {
+      "tools": {
+        "python": "3.12",
+        "node": "22",
+        "bun": "1.3"
+      }
+    },
+    "notes": [
+      "Runtime version manager replacing pyenv/nvm/fnm",
+      "Activate with: eval \"$(mise activate bash)\" or equivalent for your shell",
+      "Install: curl https://mise.run | sh"
+    ]
+  },
+
+  "biome": {
+    "file": "apps/ui/biome.json",
+    "version": "2.3.12",
+    "config": {
+      "$schema": "https://biomejs.dev/schemas/2.3.12/schema.json",
+      "assist": {
+        "actions": {
+          "source": {
+            "organizeImports": "on"
+          }
+        }
+      },
+      "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 2,
+        "lineWidth": 100
+      },
+      "linter": {
+        "enabled": false
+      },
+      "javascript": {
+        "formatter": {
+          "quoteStyle": "double",
+          "semicolons": "always",
+          "trailingCommas": "es5"
+        }
+      },
+      "files": {
+        "includes": ["**", "!**/node_modules", "!**/.next", "!**/dist"]
+      }
+    },
+    "notes": [
+      "Phase 1: Formatter only (linter disabled)",
+      "ESLint retained for Next.js-specific rules",
+      "Run: npm run format (in apps/ui)"
+    ]
+  },
+
+  "lefthook": {
+    "file": "lefthook.yml",
+    "version": "2.0.15",
+    "config": {
+      "pre-commit": {
+        "parallel": true,
+        "commands": {
+          "secrets": {
+            "run": "bash .lefthook/check-secrets.sh {staged_files}",
+            "glob": "*"
+          },
+          "ruff-check": {
+            "glob": "*.py",
+            "run": "ruff check {staged_files} --fix",
+            "stage_fixed": true
+          },
+          "ruff-format": {
+            "glob": "*.py",
+            "run": "ruff format {staged_files}",
+            "stage_fixed": true
+          },
+          "mypy": {
+            "glob": "*.py",
+            "run": "mypy {staged_files} --ignore-missing-imports || true",
+            "notes": "Phase 1: warning only, CI enforcement planned for Phase 2"
+          },
+          "biome": {
+            "glob": "apps/ui/**/*.{ts,tsx}",
+            "run": "npx biome format --write --config-path apps/ui/biome.json {staged_files}",
+            "stage_fixed": true
+          },
+          "tsc": {
+            "root": "apps/ui",
+            "glob": "*.{ts,tsx}",
+            "run": "npx tsc --noEmit || true",
+            "notes": "Phase 1: warning only, CI enforcement planned for Phase 2"
+          },
+          "json": {
+            "glob": "*.json",
+            "run": "for f in {staged_files}; do python3 -m json.tool \"$f\" > /dev/null || exit 1; done"
+          }
+        }
+      },
+      "prepare-commit-msg": {
+        "commands": {
+          "prefix": {
+            "run": "bash .lefthook/prepare-commit-msg.sh {1}"
+          }
+        }
+      },
+      "commit-msg": {
+        "commands": {
+          "conventional": {
+            "run": "bash .lefthook/commit-msg.sh {1}"
+          }
+        }
+      },
+      "pre-push": {
+        "commands": {
+          "protected-branch": {
+            "run": "bash .lefthook/check-protected-branch.sh"
+          },
+          "smoke": {
+            "run": "uv run pytest tests/smoke/ -q --tb=no || echo \"Smoke tests skipped\""
+          }
+        }
+      }
+    },
+    "notes": [
+      "Migrated from .githooks/",
+      "Install: npx lefthook install"
+    ]
+  },
+
+  "helperScripts": {
+    "directory": ".lefthook/",
+    "scripts": {
+      "check-secrets.sh": {
+        "purpose": "Detect secrets and sensitive data in staged files",
+        "patterns": [
+          "OPENAI_API_KEY",
+          "ANTHROPIC_API_KEY",
+          "GEMINI_API_KEY",
+          "AWS_SECRET_ACCESS_KEY",
+          "password=",
+          "api_key="
+        ],
+        "excludes": ["*.md", ".claude/*", "*.example", "tests/*"],
+        "dummyPatterns": ["sk-xxxx", "YOUR_", "example", "dummy", "test", "placeholder"]
+      },
+      "prepare-commit-msg.sh": {
+        "purpose": "Auto-generate Conventional Commits prefix from branch name",
+        "mapping": {
+          "feat/*": "feat(scope): ",
+          "fix/*": "fix(scope): ",
+          "docs/*": "docs: ",
+          "refactor/*": "refactor(scope): ",
+          "test/*": "test(scope): ",
+          "chore/*": "chore: "
+        }
+      },
+      "commit-msg.sh": {
+        "purpose": "Enforce Conventional Commits format",
+        "pattern": "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\\(.+\\))?: .+$",
+        "allowMerge": true,
+        "allowRevert": true
+      },
+      "check-protected-branch.sh": {
+        "purpose": "Block direct push to protected branches",
+        "protectedBranches": ["main", "master"]
+      }
+    }
+  },
+
+  "packageJson": {
+    "root": {
+      "file": "package.json",
+      "devDependencies": {
+        "lefthook": "^2.0.15",
+        "md-to-pdf": "^5.2.5"
+      }
+    },
+    "ui": {
+      "file": "apps/ui/package.json",
+      "scripts": {
+        "format": "biome format --write .",
+        "format:check": "biome check ."
+      },
+      "devDependencies": {
+        "@biomejs/biome": "^2.3.12"
+      }
+    }
+  },
+
+  "gitignore": {
+    "file": ".gitignore",
+    "toolingEntries": [
+      ".mise.local.toml"
+    ]
+  },
+
+  "existingTools": {
+    "python": {
+      "linter": "ruff",
+      "formatter": "ruff",
+      "typeChecker": "mypy",
+      "packageManager": "uv",
+      "config": "pyproject.toml"
+    },
+    "typescript": {
+      "linter": "eslint (Next.js rules)",
+      "formatter": "biome",
+      "typeChecker": "tsc",
+      "packageManager": "npm",
+      "config": "tsconfig.json"
+    }
+  },
+
+  "installationCommands": {
+    "mise": {
+      "install": "curl https://mise.run | sh",
+      "activate": {
+        "bash": "eval \"$(mise activate bash)\"",
+        "zsh": "eval \"$(mise activate zsh)\"",
+        "fish": "mise activate fish | source"
+      },
+      "trust": "mise trust"
+    },
+    "delta": {
+      "macOS": "brew install git-delta",
+      "ubuntu": "apt install git-delta",
+      "windows": "winget install dandavison.delta"
+    },
+    "lefthook": {
+      "install": "npm install lefthook --save-dev",
+      "activate": "npx lefthook install"
+    },
+    "biome": {
+      "install": "npm install @biomejs/biome --save-dev",
+      "migrate": "npx biome migrate --write"
+    }
+  },
+
+  "phase2Plans": {
+    "description": "Planned improvements for Phase 2",
+    "items": [
+      "Remove '|| true' from mypy hook (make type errors blocking)",
+      "Remove '|| true' from tsc hook (make type errors blocking)",
+      "Enable Biome linter (replace ESLint where applicable)",
+      "Add CI enforcement for all checks"
+    ]
+  }
+}
