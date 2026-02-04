@@ -38,7 +38,7 @@ async def login(request: LoginRequest) -> LoginResponse:
     if os.getenv("ENVIRONMENT") == "development":
         user = AuthUser(
             user_id="dev-user",
-            tenant_id="dev-tenant",
+            tenant_id="dev-tenant-001",
             email=request.email,
             roles=["user"],
         )

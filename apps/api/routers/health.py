@@ -121,7 +121,7 @@ async def detailed_health_check() -> DetailedHealthResponse:
     try:
         if tenant_db_manager:
             # Try a simple operation on dev tenant
-            async with tenant_db_manager.get_session("dev-tenant") as session:
+            async with tenant_db_manager.get_session("dev-tenant-001") as session:
                 from sqlalchemy import text
 
                 await session.execute(text("SELECT 1"))
