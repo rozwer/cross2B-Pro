@@ -137,7 +137,9 @@ class Step5PrimaryCollection(BaseActivity):
 
         search_queries: list[str]
         if queries_checkpoint:
-            search_queries = queries_checkpoint.get("queries", [])
+            raw_queries = queries_checkpoint.get("queries", [])
+            # Flatten and ensure we have a list of strings
+            search_queries = self._flatten_queries(raw_queries)
             activity.logger.info(f"Loaded {len(search_queries)} queries from checkpoint")
         else:
             # Step 5.1: Generate search queries using LLM
@@ -167,8 +169,31 @@ class Step5PrimaryCollection(BaseActivity):
                 search_queries = []
                 if parse_result.success and parse_result.data:
                     data = parse_result.data
+                    activity.logger.info(
+                        f"Parsed data type: {type(data).__name__}, keys: {list(data.keys()) if isinstance(data, dict) else 'N/A'}"
+                    )
                     if isinstance(data, dict):
-                        search_queries = data.get("queries", [])
+                        # Try multiple possible keys for queries
+                        raw_queries = None
+                        for key in ["queries", "search_queries", "検索クエリ", "クエリ"]:
+                            if key in data:
+                                raw_queries = data[key]
+                                activity.logger.info(f"Found queries under key '{key}': {type(raw_queries).__name__}")
+                                break
+                        if raw_queries is None:
+                            # If no known key found, log all keys and try to extract
+                            activity.logger.warning(f"No known query key found. Available keys: {list(data.keys())}")
+                            # Try to find any list in the dict
+                            for k, v in data.items():
+                                if isinstance(v, list) and len(v) > 0:
+                                    raw_queries = v
+                                    activity.logger.info(f"Using list from key '{k}' as queries")
+                                    break
+                        if raw_queries is not None:
+                            search_queries = self._flatten_queries(raw_queries)
+                    elif isinstance(data, list):
+                        search_queries = self._flatten_queries(data)
+                    activity.logger.info(f"Extracted {len(search_queries)} queries: {search_queries[:3]}...")
                     if parse_result.fixes_applied:
                         activity.logger.info(f"JSON fixes applied: {parse_result.fixes_applied}")
                 else:
@@ -225,7 +250,7 @@ class Step5PrimaryCollection(BaseActivity):
         failed_queries: list[dict[str, Any]] = []
 
         if primary_collector:
-            for query in search_queries[:5]:  # Limit to 5 queries
+            for query in search_queries[:12]:  # Expanded from 5 to 12 for better source coverage
                 if query in completed_queries_set:
                     continue
 
@@ -364,7 +389,7 @@ class Step5PrimaryCollection(BaseActivity):
         output = Step5Output(
             step=self.step_id,
             keyword=keyword,
-            search_queries=search_queries[:5],
+            search_queries=search_queries[:12],  # Expanded from 5 to 12
             sources=primary_sources,
             invalid_sources=invalid_primary_sources,
             failed_queries=failed_queries,
@@ -382,6 +407,62 @@ class Step5PrimaryCollection(BaseActivity):
         )
 
         return output.model_dump()
+
+    def _flatten_queries(self, raw: Any) -> list[str]:
+        """Flatten and extract string queries from potentially nested structures.
+
+        Handles:
+        - list[str]: returns as-is
+        - list[list[str]]: flattens to list[str]
+        - list[dict]: extracts 'query' key values
+        - dict: extracts values or nested lists
+        - dict with numbered keys: {'1': {...}, '2': {...}} format
+        """
+        result: list[str] = []
+
+        def extract(item: Any) -> None:
+            if isinstance(item, str):
+                if item.strip():
+                    result.append(item.strip())
+            elif isinstance(item, list):
+                for sub in item:
+                    extract(sub)
+            elif isinstance(item, dict):
+                # First check for common query string keys
+                for key in ["query", "text", "search_query", "keyword"]:
+                    if key in item and isinstance(item[key], str):
+                        if item[key].strip():
+                            result.append(item[key].strip())
+                        return
+
+                # Check if dict contains a list (e.g., {"queries": [...]})
+                for key in ["queries", "search_queries", "items", "results"]:
+                    if key in item and isinstance(item[key], list):
+                        for sub in item[key]:
+                            extract(sub)
+                        return
+
+                # Check if dict has numbered keys like {'1': {...}, '2': {...}}
+                # or is a dict of query objects
+                has_query_objects = False
+                for k, v in item.items():
+                    if isinstance(v, dict) and any(qk in v for qk in ["query", "text", "keyword"]):
+                        has_query_objects = True
+                        extract(v)
+
+                if has_query_objects:
+                    return
+
+                # Fallback: extract all string values
+                for v in item.values():
+                    if isinstance(v, str) and v.strip():
+                        result.append(v.strip())
+                    elif isinstance(v, list):
+                        for sub in v:
+                            extract(sub)
+
+        extract(raw)
+        return result
 
     def _parse_queries(self, content: str) -> list[str]:
         """Parse search queries from LLM response (newline-separated format)."""
@@ -404,13 +485,18 @@ class Step5PrimaryCollection(BaseActivity):
         queries: list[str],
         failed: list[dict[str, Any]],
     ) -> QualityResult:
-        """Validate source collection quality."""
+        """Validate source collection quality with freshness gate (P2)."""
         issues: list[str] = []
         warnings: list[str] = []
         scores: dict[str, float] = {}
 
+        # Quality gate thresholds (per Codex review)
+        min_sources = 5  # Increased from 2
+        min_verified_ratio = 0.5
+        min_freshness_ratio = 0.7  # 70% of sources must be within max_age_years
+        max_age_years = 3
+
         # Minimum source count
-        min_sources = 2
         if len(sources) < min_sources:
             issues.append(f"too_few_sources: {len(sources)} < {min_sources}")
 
@@ -426,8 +512,57 @@ class Step5PrimaryCollection(BaseActivity):
             verified_count = sum(1 for s in sources if s.get("verified", False))
             verified_ratio = verified_count / len(sources)
             scores["verified_ratio"] = verified_ratio
-            if verified_ratio < 0.5:
+            if verified_ratio < min_verified_ratio:
                 warnings.append(f"low_verification_rate: {verified_ratio:.2%}")
+
+        # Freshness gate (P2 Critical - per Codex review)
+        if sources:
+            fresh_count: float = 0
+            outdated_sources: list[str] = []
+            current_year = datetime.now().year
+
+            for s in sources:
+                pub_date = s.get("publication_date")
+                if pub_date:
+                    try:
+                        if len(str(pub_date)) == 4:
+                            pub_year = int(pub_date)
+                        else:
+                            pub_year = datetime.fromisoformat(str(pub_date).replace("Z", "+00:00")).year
+                        age = current_year - pub_year
+                        if age <= max_age_years:
+                            fresh_count += 1
+                        else:
+                            outdated_sources.append(f"{s.get('title', 'unknown')[:30]}... ({pub_year})")
+                    except (ValueError, TypeError):
+                        # Unknown date treated as potentially outdated
+                        pass
+                else:
+                    # No date = uncertain, count as 0.5 fresh
+                    fresh_count += 0.5
+
+            freshness_ratio = fresh_count / len(sources) if sources else 0
+            scores["freshness_ratio"] = freshness_ratio
+            scores["fresh_count"] = fresh_count
+            scores["outdated_count"] = len(outdated_sources)
+
+            if freshness_ratio < min_freshness_ratio:
+                issues.append(f"low_freshness_ratio: {freshness_ratio:.2%} < {min_freshness_ratio:.0%} (max_age={max_age_years}y)")
+                if outdated_sources:
+                    warnings.append(f"outdated_sources: {', '.join(outdated_sources[:3])}")
+
+        # High-trust source ratio (government/academic)
+        if sources:
+            high_trust_count = sum(
+                1
+                for s in sources
+                if s.get("source_type") in ("government", "academic", "official")
+                or any(domain in s.get("url", "") for domain in [".go.jp", ".ac.jp", ".gov", ".edu", ".who.int", ".oecd.org"])
+            )
+            high_trust_ratio = high_trust_count / len(sources)
+            scores["high_trust_ratio"] = high_trust_ratio
+            if high_trust_ratio < 0.4:  # At least 40% should be high-trust
+                warnings.append(f"low_high_trust_ratio: {high_trust_ratio:.2%}")
 
         scores["source_count"] = float(len(sources))
 

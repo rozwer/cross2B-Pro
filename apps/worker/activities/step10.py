@@ -704,7 +704,7 @@ class Step10FinalOutput(BaseActivity):
         variation_prompt = prompt_pack.get_prompt("step10_article_variation")
         prompt_text = variation_prompt.render(
             keyword=keyword,
-            base_content=base_content[:8000],  # Limit base content
+            base_content=base_content[:20000],  # Expanded from 8000 to 20000 for long articles
             article_number=article_num,
             variation_type=variation_type.value,
             target_audience=target_audience,
@@ -715,7 +715,7 @@ class Step10FinalOutput(BaseActivity):
 
         # Generate content
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 8000),
+            max_tokens=config.get("max_tokens", 12000),  # Extended from 8000 for longer articles
             temperature=0.7,  # Slightly higher for variation
         )
 
@@ -823,7 +823,7 @@ class Step10FinalOutput(BaseActivity):
         )
 
         html_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 8000),
+            max_tokens=config.get("max_tokens", 12000),  # Extended from 8000 for longer articles
             temperature=0.3,
         )
 

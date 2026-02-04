@@ -352,12 +352,29 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         }
 
     def _markdown_to_html(self, markdown_content: str) -> str:
-        """MarkdownをHTMLに変換（簡易実装）."""
+        """MarkdownをHTMLに変換（P2: アンカーID付与対応）."""
         html = markdown_content
 
-        # 見出し変換
-        html = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html, flags=re.MULTILINE)
-        html = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html, flags=re.MULTILINE)
+        # 見出しカウンター for アンカーID
+        h2_counter = [0]  # Use list for nonlocal mutation
+        h3_counter = [0]
+
+        def add_h2_id(match: re.Match[str]) -> str:
+            h2_counter[0] += 1
+            h3_counter[0] = 0  # Reset h3 counter for each h2
+            title = match.group(1)
+            anchor_id = f"section-{h2_counter[0]}"
+            return f'<h2 id="{anchor_id}">{title}</h2>'
+
+        def add_h3_id(match: re.Match[str]) -> str:
+            h3_counter[0] += 1
+            title = match.group(1)
+            anchor_id = f"section-{h2_counter[0]}-{h3_counter[0]}"
+            return f'<h3 id="{anchor_id}">{title}</h3>'
+
+        # 見出し変換（アンカーID付与）- 順序重要: h3を先に処理
+        html = re.sub(r"^### (.+)$", add_h3_id, html, flags=re.MULTILINE)
+        html = re.sub(r"^## (.+)$", add_h2_id, html, flags=re.MULTILINE)
         html = re.sub(r"^# (.+)$", r"<h1>\1</h1>", html, flags=re.MULTILINE)
 
         # 太字・イタリック
@@ -382,6 +399,29 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         html = "\n".join(processed)
 
         return html
+
+    def _generate_toc_block(self, html_content: str) -> str:
+        """目次（Table of Contents）ブロックを生成（P2）."""
+        toc_items = []
+
+        # H2/H3を抽出
+        headings = re.findall(r'<h([23]) id="([^"]+)">([^<]+)</h\1>', html_content)
+        for level, anchor_id, title in headings:
+            indent = "  " if level == "3" else ""
+            toc_items.append(f'{indent}<li><a href="#{anchor_id}">{title}</a></li>')
+
+        if not toc_items:
+            return ""
+
+        toc_html = f"""<!-- wp:html -->
+<nav class="toc" aria-label="目次">
+<h2>目次</h2>
+<ol>
+{"".join(toc_items)}
+</ol>
+</nav>
+<!-- /wp:html -->"""
+        return toc_html
 
     def _wrap_in_gutenberg_blocks(self, html_content: str) -> str:
         """HTMLをGutenbergブロック形式でラップ.
@@ -721,8 +761,12 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         content: str,
         article_number: int,
         faq_data: list[dict[str, Any]] | None = None,
+        author_name: str | None = None,
+        publisher_name: str | None = None,
+        site_url: str | None = None,
+        category: str | None = None,
     ) -> StructuredDataBlocks:
-        """構造化データブロックを生成.
+        """構造化データブロックを生成（E-E-A-T対応強化版）.
 
         Args:
             title: 記事タイトル
@@ -731,26 +775,58 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             content: 記事本文
             article_number: 記事番号
             faq_data: FAQ データ（あれば）
+            author_name: 著者名（E-E-A-T用）
+            publisher_name: 発行組織名
+            site_url: サイトURL
+            category: カテゴリ名（パンくず用）
 
         Returns:
             StructuredDataBlocks
         """
-        # Article JSON-LD
+        from datetime import datetime
+
+        now_iso = datetime.now().isoformat()
+
+        # デフォルト値（実運用時はconfig/DBから取得推奨）
+        author_name = author_name or "専門ライター"
+        publisher_name = publisher_name or "記事発行元"
+        site_url = site_url or "https://example.com"
+
+        # BlogPosting JSON-LD (Article より詳細、E-E-A-T対応)
         article_schema = {
             "@context": "https://schema.org",
-            "@type": "Article",
+            "@type": "BlogPosting",
             "headline": title,
             "description": meta_description,
             "keywords": keyword,
-            "articleBody": content[:500] + "..." if len(content) > 500 else content,
+            "articleBody": content[:1000] + "..." if len(content) > 1000 else content,
+            "datePublished": now_iso,
+            "dateModified": now_iso,
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": f"{site_url}/articles/{article_number}",
+            },
             "author": {
-                "@type": "Organization",
-                "name": "Author",
+                "@type": "Person",
+                "name": author_name,
+                "url": f"{site_url}/authors/{author_name.replace(' ', '-').lower()}",
             },
             "publisher": {
                 "@type": "Organization",
-                "name": "Publisher",
+                "name": publisher_name,
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": f"{site_url}/logo.png",
+                },
             },
+            "image": {
+                "@type": "ImageObject",
+                "url": f"{site_url}/images/article-{article_number}.jpg",
+                "width": 1200,
+                "height": 630,
+            },
+            "wordCount": len(content),
+            "inLanguage": "ja-JP",
         }
         article_json = json.dumps(article_schema, ensure_ascii=False, indent=2)
 
@@ -776,9 +852,37 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             if faq_schema["mainEntity"]:
                 faq_json = json.dumps(faq_schema, ensure_ascii=False, indent=2)
 
+        # BreadcrumbList JSON-LD
+        breadcrumb_schema = {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "ホーム",
+                    "item": site_url,
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": category or "記事",
+                    "item": f"{site_url}/category/{(category or 'articles').replace(' ', '-').lower()}",
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": title,
+                    "item": f"{site_url}/articles/{article_number}",
+                },
+            ],
+        }
+        breadcrumb_json = json.dumps(breadcrumb_schema, ensure_ascii=False, indent=2)
+
         return StructuredDataBlocks(
             article_schema=article_json,
             faq_schema=faq_json,
+            breadcrumb_schema=breadcrumb_json,
         )
 
     def _collect_gutenberg_block_types(self, gutenberg_html: str) -> list[str]:
