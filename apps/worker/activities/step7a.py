@@ -129,7 +129,11 @@ class Step7ADraftGeneration(BaseActivity):
         enable_step3_5 = config.get("enable_step3_5", True)
 
         # Extract and format primary sources for citation embedding
-        primary_sources = self._format_primary_sources(step5_data.get("sources", []))
+        # Use verified sources first, fallback to invalid_sources if empty
+        step5_sources = step5_data.get("sources", [])
+        if not step5_sources:
+            step5_sources = step5_data.get("invalid_sources", [])
+        primary_sources = self._format_primary_sources(step5_sources)
 
         # === InputValidator統合 ===
         validation = self.input_validator.validate(
