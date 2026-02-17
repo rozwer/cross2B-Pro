@@ -47,10 +47,13 @@ class OpenAIClient(LLMInterface):
     AVAILABLE_MODELS = [
         "gpt-5.2",  # 最新: Thinking + Instant + Pro
         "gpt-5.2-pro",  # 最高精度
+        "gpt-5.2-codex",  # Codex最新（コーディング特化）
         "gpt-5.2-chat-latest",  # Instant版
         "gpt-5.1",  # 前バージョン
+        "gpt-5.1-codex",  # Codex（コーディング特化）
+        "gpt-5.1-codex-mini",  # Codex軽量版
         "gpt-5.1-chat-latest",  # Instant版
-        "gpt-5.1-codex-max",  # Codex向け
+        "gpt-5-codex",  # GPT-5 Codex
         "gpt-5",  # 初代GPT-5
     ]
 

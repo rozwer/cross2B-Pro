@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS runs (
     -- GitHub integration columns
     github_repo_url TEXT,                    -- e.g., https://github.com/owner/repo
     github_dir_path TEXT,                    -- e.g., keyword_20260114_123456
+    -- GitHub Fix Guidance columns
+    last_resumed_step VARCHAR(64),           -- last step resumed via /resume API
+    fix_issue_number INTEGER,                -- GitHub issue number for fix guidance
 
     CONSTRAINT valid_status CHECK (status IN (
         'pending', 'workflow_starting', 'running', 'paused', 'waiting_approval',
@@ -285,10 +288,120 @@ CREATE TRIGGER update_hearing_templates_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- =============================================================================
--- Initial Data
+-- LLM Provider & Model Tables
 -- =============================================================================
 
--- Note: Prompt templates should be loaded from application code or separate migration
--- This ensures version control and proper deployment
+-- LLM providers
+CREATE TABLE IF NOT EXISTS llm_providers (
+    id VARCHAR(32) PRIMARY KEY,
+    display_name VARCHAR(64) NOT NULL,
+    api_base_url TEXT,
+    is_active BOOLEAN DEFAULT true NOT NULL
+);
+
+-- LLM models
+CREATE TABLE IF NOT EXISTS llm_models (
+    id SERIAL PRIMARY KEY,
+    provider_id VARCHAR(32) NOT NULL REFERENCES llm_providers(id),
+    model_name VARCHAR(128) NOT NULL,
+    model_class VARCHAR(32) NOT NULL,
+    cost_per_1k_input_tokens NUMERIC(10, 6),
+    cost_per_1k_output_tokens NUMERIC(10, 6),
+    is_active BOOLEAN DEFAULT true NOT NULL
+);
+
+-- Step-to-LLM default mapping
+CREATE TABLE IF NOT EXISTS step_llm_defaults (
+    step VARCHAR(64) PRIMARY KEY,
+    provider_id VARCHAR(32) NOT NULL REFERENCES llm_providers(id),
+    model_class VARCHAR(32) NOT NULL
+);
+
+-- =============================================================================
+-- Help Contents
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS help_contents (
+    id SERIAL PRIMARY KEY,
+    help_key VARCHAR(128) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(64),
+    display_order INTEGER DEFAULT 0 NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_help_contents_key ON help_contents(help_key);
+CREATE INDEX IF NOT EXISTS idx_help_contents_category ON help_contents(category);
+
+-- =============================================================================
+-- API Settings (per tenant)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS api_settings (
+    id SERIAL PRIMARY KEY,
+    tenant_id VARCHAR(64) NOT NULL,
+    service VARCHAR(32) NOT NULL,
+    api_key_encrypted TEXT,
+    default_model VARCHAR(128),
+    config JSONB,
+    is_active BOOLEAN DEFAULT true NOT NULL,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_api_settings_tenant_service UNIQUE (tenant_id, service)
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_settings_tenant ON api_settings(tenant_id);
+
+-- =============================================================================
+-- Review Requests
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS review_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    run_id UUID NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    step VARCHAR(20) NOT NULL,
+    issue_number INTEGER,
+    issue_url VARCHAR(500),
+    issue_state VARCHAR(20),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_requests_run_id ON review_requests(run_id);
+CREATE INDEX IF NOT EXISTS idx_review_requests_status ON review_requests(status);
+
+-- =============================================================================
+-- Initial Data: LLM Providers & Models
+-- =============================================================================
+
+-- Providers
+INSERT INTO llm_providers (id, display_name, is_active) VALUES
+    ('gemini',    'Google Gemini',    true),
+    ('openai',    'OpenAI',           true),
+    ('anthropic', 'Anthropic Claude', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Models (latest defaults)
+INSERT INTO llm_models (provider_id, model_name, model_class, is_active) VALUES
+    -- Gemini
+    ('gemini',    'gemini-3-pro-preview',          'pro',      true),
+    ('gemini',    'gemini-3-flash-preview',        'standard', true),
+    ('gemini',    'gemini-2.5-flash',              'standard', true),
+    ('gemini',    'gemini-2.5-pro',                'pro',      true),
+    -- OpenAI
+    ('openai',    'gpt-5.2',                       'standard', true),
+    ('openai',    'gpt-5.2-pro',                   'pro',      true),
+    ('openai',    'gpt-5.2-codex',                 'pro',      true),
+    ('openai',    'gpt-5.1',                       'standard', true),
+    ('openai',    'gpt-5.1-codex',                 'pro',      true),
+    ('openai',    'gpt-5.1-codex-mini',            'standard', true),
+    ('openai',    'gpt-5-codex',                   'pro',      true),
+    -- Anthropic
+    ('anthropic', 'claude-opus-4-6',               'pro',      true),
+    ('anthropic', 'claude-sonnet-4-5-20250929',    'standard', true),
+    ('anthropic', 'claude-haiku-4-5',              'standard', true),
+    ('anthropic', 'claude-opus-4-5-20251124',      'pro',      true),
+    ('anthropic', 'claude-sonnet-4-20250514',      'standard', true)
+ON CONFLICT DO NOTHING;
 
 COMMIT;

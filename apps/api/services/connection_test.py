@@ -238,9 +238,9 @@ class ConnectionTestService:
     async def _test_google_ads(self, api_key: str | None = None) -> ConnectionTestResult:
         """Test Google Ads API connection.
 
-        Note: Currently in mock mode. Real implementation requires OAuth.
+        In mock mode, returns success immediately.
+        In real mode, uses CustomerService.ListAccessibleCustomers (free, no quota).
         """
-        # Check if using mock mode
         use_mock = os.getenv("USE_MOCK_GOOGLE_ADS", "true").lower() == "true"
 
         if use_mock:
@@ -253,13 +253,37 @@ class ConnectionTestService:
                 },
             )
 
-        # Real API test would go here
-        # For now, return that it's not implemented
-        return ConnectionTestResult(
-            success=False,
-            service="google_ads",
-            error_message="Google Ads API real mode not implemented. Use mock mode or implement OAuth.",
-        )
+        try:
+            from apps.api.services.google_ads_client import GoogleAdsConfigError, get_google_ads_client
+
+            client, customer_id = get_google_ads_client()
+            customer_service = client.get_service("CustomerService")
+            response = customer_service.list_accessible_customers()
+            accessible = list(response.resource_names)
+
+            return ConnectionTestResult(
+                success=True,
+                service="google_ads",
+                details={
+                    "mode": "real",
+                    "customer_id": customer_id,
+                    "accessible_accounts": len(accessible),
+                },
+            )
+
+        except GoogleAdsConfigError as e:
+            return ConnectionTestResult(
+                success=False,
+                service="google_ads",
+                error_message=f"Configuration error: {e}",
+            )
+        except Exception as e:
+            logger.exception("Google Ads connection test failed")
+            return ConnectionTestResult(
+                success=False,
+                service="google_ads",
+                error_message=f"Connection failed: {e}",
+            )
 
     # Required scopes for this system's GitHub integration
     GITHUB_REQUIRED_SCOPES = {"repo"}

@@ -2,10 +2,11 @@
 検索関連ツール
 
 - serp_fetch: SERP取得（上位N件URL）
-- search_volume: 検索ボリューム取得（モック）
-- related_keywords: 関連キーワード取得（モック）
+- search_volume: 検索ボリューム取得（Google Ads Keyword Planner / モック）
+- related_keywords: 関連キーワード取得（Google Ads Keyword Planner / モック）
 """
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -43,6 +44,48 @@ def _load_mock_data(filename: str) -> dict[str, Any]:
             data: dict[str, Any] = json.load(f)
             return data
     return {}
+
+
+def _handle_google_ads_error(exc: Any) -> ToolResult:
+    """Map Google Ads API errors to ToolResult with proper ErrorCategory."""
+    error = exc.failure.errors[0] if exc.failure.errors else None
+    error_code = str(error.error_code) if error else "UNKNOWN"
+    message = error.message if error else str(exc)
+
+    auth_errors = {"AUTHENTICATION_ERROR", "AUTHORIZATION_ERROR", "USER_PERMISSION_DENIED"}
+    rate_errors = {"RATE_EXCEEDED", "RESOURCE_EXHAUSTED"}
+
+    if any(e in error_code for e in auth_errors):
+        category = ErrorCategory.NON_RETRYABLE.value
+    elif any(e in error_code for e in rate_errors):
+        category = ErrorCategory.RETRYABLE.value
+    elif "QUOTA" in error_code:
+        category = ErrorCategory.NON_RETRYABLE.value
+    elif "INTERNAL" in error_code:
+        category = ErrorCategory.RETRYABLE.value
+    elif "REQUEST_ERROR" in error_code:
+        category = ErrorCategory.VALIDATION_FAIL.value
+    else:
+        category = ErrorCategory.NON_RETRYABLE.value
+
+    logger.error(f"Google Ads API error [{error_code}]: {message}")
+
+    return ToolResult(
+        success=False,
+        error_category=category,
+        error_message=f"Google Ads API error: {message}",
+    )
+
+
+def _build_keyword_ideas_request(client: Any, customer_id: str, keyword: str) -> Any:
+    """Build a GenerateKeywordIdeasRequest for Keyword Planner API."""
+    request = client.get_type("GenerateKeywordIdeasRequest")
+    request.customer_id = customer_id
+    request.language = "languageConstants/1005"  # Japanese
+    request.geo_target_constants.append("geoTargetConstants/2392")  # Japan
+    request.keyword_plan_network = client.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH
+    request.keyword_seed.keywords.append(keyword)
+    return request
 
 
 @ToolRegistry.register(
@@ -231,7 +274,7 @@ class SerpFetchTool(ToolInterface):
 
 @ToolRegistry.register(
     tool_id="search_volume",
-    description="キーワードの検索ボリュームを取得（Google Ads API未取得のためモック）",
+    description="キーワードの検索ボリュームを取得（Google Ads Keyword Planner API）",
     required_env=["USE_MOCK_GOOGLE_ADS"],
     input_schema={
         "type": "object",
@@ -246,8 +289,7 @@ class SearchVolumeTool(ToolInterface):
     """
     検索ボリューム取得ツール
 
-    注意: Google Ads API が未取得のため、現在はモック実装
-    将来的に実API実装に切り替える際は USE_MOCK_GOOGLE_ADS=false を設定
+    USE_MOCK_GOOGLE_ADS=true でモックデータ、false で実 Google Ads Keyword Planner API を使用。
     """
 
     tool_id = "search_volume"
@@ -291,14 +333,62 @@ class SearchVolumeTool(ToolInterface):
         )
 
     async def _execute_real(self, keyword: str) -> ToolResult:
-        """実API実行: Google Ads API を使用"""
-        # TODO: Google Ads API 取得後に実装
-        raise NotImplementedError("Real Google Ads API not implemented. Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()")
+        """実API実行: Google Ads Keyword Planner API で検索ボリュームを取得"""
+        try:
+            from google.ads.googleads.errors import GoogleAdsException
+
+            from apps.api.services.google_ads_client import GoogleAdsConfigError, get_google_ads_client
+
+            client, customer_id = get_google_ads_client()
+            service = client.get_service("KeywordPlanIdeaService")
+            request = _build_keyword_ideas_request(client, customer_id, keyword)
+
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                service.generate_keyword_ideas,
+                request,
+            )
+
+            # Find exact keyword match or take the first result
+            volume = 0
+            for idea in response.results:
+                if idea.text.lower() == keyword.lower():
+                    volume = idea.keyword_idea_metrics.avg_monthly_searches
+                    break
+            else:
+                if response.results:
+                    volume = response.results[0].keyword_idea_metrics.avg_monthly_searches
+
+            logger.info(f"SearchVolume (REAL): {keyword} -> {volume}")
+
+            return ToolResult(
+                success=True,
+                data={"keyword": keyword, "volume": volume, "source": "google_ads"},
+                is_mock=False,
+            )
+
+        except GoogleAdsConfigError as e:
+            logger.error(f"SearchVolume config error: {e}")
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.NON_RETRYABLE.value,
+                error_message=f"Google Ads configuration error: {e}",
+            )
+        except GoogleAdsException as e:
+            return _handle_google_ads_error(e)
+        except Exception as e:
+            logger.exception(f"SearchVolume unexpected error: {e}")
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.RETRYABLE.value,
+                error_message=f"Unexpected error calling Google Ads API: {e}",
+            )
 
 
 @ToolRegistry.register(
     tool_id="related_keywords",
-    description="関連キーワードを取得（Google Ads API未取得のためモック）",
+    description="関連キーワードを取得（Google Ads Keyword Planner API）",
     required_env=["USE_MOCK_GOOGLE_ADS"],
     input_schema={
         "type": "object",
@@ -318,8 +408,7 @@ class RelatedKeywordsTool(ToolInterface):
     """
     関連キーワード取得ツール
 
-    注意: Google Ads API が未取得のため、現在はモック実装
-    将来的に実API実装に切り替える際は USE_MOCK_GOOGLE_ADS=false を設定
+    USE_MOCK_GOOGLE_ADS=true でモックデータ、false で実 Google Ads Keyword Planner API を使用。
     """
 
     tool_id = "related_keywords"
@@ -375,6 +464,52 @@ class RelatedKeywordsTool(ToolInterface):
         )
 
     async def _execute_real(self, keyword: str, limit: int) -> ToolResult:
-        """実API実行: Google Ads API を使用"""
-        # TODO: Google Ads API 取得後に実装
-        raise NotImplementedError("Real Google Ads API not implemented. Set USE_MOCK_GOOGLE_ADS=true or implement _execute_real()")
+        """実API実行: Google Ads Keyword Planner API で関連キーワードを取得"""
+        try:
+            from google.ads.googleads.errors import GoogleAdsException
+
+            from apps.api.services.google_ads_client import GoogleAdsConfigError, get_google_ads_client
+
+            client, customer_id = get_google_ads_client()
+            service = client.get_service("KeywordPlanIdeaService")
+            request = _build_keyword_ideas_request(client, customer_id, keyword)
+
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                service.generate_keyword_ideas,
+                request,
+            )
+
+            # Collect related keywords (excluding the exact seed keyword)
+            related: list[str] = []
+            for idea in response.results:
+                if idea.text.lower() != keyword.lower():
+                    related.append(idea.text)
+                if len(related) >= limit:
+                    break
+
+            logger.info(f"RelatedKeywords (REAL): {keyword} -> {len(related)} keywords")
+
+            return ToolResult(
+                success=True,
+                data={"keyword": keyword, "related": related, "source": "google_ads"},
+                is_mock=False,
+            )
+
+        except GoogleAdsConfigError as e:
+            logger.error(f"RelatedKeywords config error: {e}")
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.NON_RETRYABLE.value,
+                error_message=f"Google Ads configuration error: {e}",
+            )
+        except GoogleAdsException as e:
+            return _handle_google_ads_error(e)
+        except Exception as e:
+            logger.exception(f"RelatedKeywords unexpected error: {e}")
+            return ToolResult(
+                success=False,
+                error_category=ErrorCategory.RETRYABLE.value,
+                error_message=f"Unexpected error calling Google Ads API: {e}",
+            )

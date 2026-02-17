@@ -106,7 +106,7 @@ ENV_VAR_MAP = {
     "openai": "OPENAI_API_KEY",
     "anthropic": "ANTHROPIC_API_KEY",
     "serp": "SERP_API_KEY",
-    "google_ads": "GOOGLE_ADS_API_KEY",
+    "google_ads": "GOOGLE_ADS_DEVELOPER_TOKEN",
     "github": "GITHUB_TOKEN",
 }
 
