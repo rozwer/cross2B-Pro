@@ -30,10 +30,12 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 # Supported models (no fallback - explicit selection only)
-# 最新: claude-opus-4.5, claude-sonnet-4.5
+# 最新: claude-opus-4.6, claude-sonnet-4.5
 SUPPORTED_MODELS = [
-    "claude-opus-4-5-20251124",  # 最新Opus 4.5
-    "claude-sonnet-4-5-20250929",  # 最新Sonnet 4.5
+    "claude-opus-4-6",  # 最新Opus 4.6
+    "claude-opus-4-5-20251124",  # Opus 4.5
+    "claude-sonnet-4-5-20250929",  # Sonnet 4.5
+    "claude-haiku-4-5",  # Haiku 4.5（高速・低コスト）
     "claude-opus-4-1-20250805",  # Opus 4.1
     "claude-sonnet-4-20250514",  # Sonnet 4
     "claude-opus-4-20250514",  # Opus 4

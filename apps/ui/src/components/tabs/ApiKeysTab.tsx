@@ -82,7 +82,7 @@ const SERVICE_INFO: Record<
   },
   google_ads: {
     name: "Google Ads",
-    description: "キーワード候補・検索ボリューム取得（将来実装）",
+    description: "Keyword Planner API（検索ボリューム・関連キーワード取得）",
     isLLM: false,
     docsUrl: "https://ads.google.com/",
     color: "text-yellow-700 dark:text-yellow-300",
@@ -610,7 +610,7 @@ export function ApiKeysTab() {
         </p>
         <div className="mt-3 text-xs text-gray-500 dark:text-gray-500 font-mono">
           <div>GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY</div>
-          <div>SERP_API_KEY, GOOGLE_ADS_API_KEY, GITHUB_TOKEN</div>
+          <div>SERP_API_KEY, GOOGLE_ADS_DEVELOPER_TOKEN, GITHUB_TOKEN</div>
         </div>
       </div>
     </div>

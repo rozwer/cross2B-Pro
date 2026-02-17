@@ -45,8 +45,16 @@ ENV_VAR_MAP = {
     "openai": "OPENAI_API_KEY",
     "anthropic": "ANTHROPIC_API_KEY",
     "serp": "SERP_API_KEY",
-    "google_ads": "GOOGLE_ADS_API_KEY",
+    "google_ads": "GOOGLE_ADS_DEVELOPER_TOKEN",
     "github": "GITHUB_TOKEN",
+}
+
+# Google Ads extended config environment variables
+GOOGLE_ADS_CONFIG_ENV_MAP = {
+    "client_id": "GOOGLE_ADS_CLIENT_ID",
+    "client_secret": "GOOGLE_ADS_CLIENT_SECRET",
+    "refresh_token": "GOOGLE_ADS_REFRESH_TOKEN",
+    "customer_id": "GOOGLE_ADS_CUSTOMER_ID",
 }
 
 # Default model environment variables
@@ -185,11 +193,19 @@ class SettingsProvider:
         model_env = DEFAULT_MODEL_ENV_MAP.get(service)
         default_model = os.getenv(model_env) if model_env else None
 
+        # Build config from extended env vars (e.g., Google Ads OAuth fields)
+        config: dict[str, Any] = {}
+        if service == "google_ads":
+            for field, env in GOOGLE_ADS_CONFIG_ENV_MAP.items():
+                value = os.getenv(env)
+                if value:
+                    config[field] = value
+
         return ServiceSettings(
             service=service,
             api_key=api_key,
             default_model=default_model,
-            config={},
+            config=config,
             is_active=True,
             source="env" if api_key else "none",
         )
