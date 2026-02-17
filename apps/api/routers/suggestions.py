@@ -4,7 +4,6 @@ This module provides endpoints for generating AI suggestions for various input f
 in the article hearing form. Uses Gemini 2.5 Flash for cost-effective suggestions.
 """
 
-import json
 import logging
 import os
 from datetime import datetime
@@ -14,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.llm import GeminiClient, LLMError, sanitize_user_input
+from apps.worker.helpers import OutputParser
 from apps.api.schemas.article_hearing import (
     ChildTopicSuggestion,
     ChildTopicSuggestionRequest,
@@ -45,20 +45,19 @@ def get_llm_client() -> GeminiClient:
     return _llm_client
 
 
+_parser = OutputParser()
+
+
 def extract_json_from_response(content: str) -> dict[str, object]:
-    """Extract JSON from LLM response, handling markdown code blocks."""
-    content = content.strip()
+    """Extract JSON from LLM response using OutputParser.
 
-    if "```json" in content:
-        start = content.find("```json") + 7
-        end = content.find("```", start)
-        content = content[start:end].strip()
-    elif "```" in content:
-        start = content.find("```") + 3
-        end = content.find("```", start)
-        content = content[start:end].strip()
-
-    return json.loads(content)
+    Handles code blocks, embedded JSON, trailing commas, JS comments,
+    and control characters.
+    """
+    result = _parser.parse_json(content)
+    if not result.success or not isinstance(result.data, dict):
+        raise ValueError(f"Failed to parse JSON from LLM response: format={result.format_detected}")
+    return result.data
 
 
 # =============================================================================
@@ -162,7 +161,7 @@ async def suggest_target_audience(
     except LLMError as e:
         logger.error(f"LLM error: {e}", exc_info=True)
         raise HTTPException(status_code=503, detail=f"LLM service error: {e}") from e
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         logger.error(f"JSON parse error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to parse response: {e}") from e
     except Exception as e:
@@ -275,7 +274,7 @@ async def suggest_related_keywords(
     except LLMError as e:
         logger.error(f"LLM error: {e}", exc_info=True)
         raise HTTPException(status_code=503, detail=f"LLM service error: {e}") from e
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         logger.error(f"JSON parse error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to parse response: {e}") from e
     except Exception as e:
@@ -386,7 +385,7 @@ async def suggest_child_topics(
     except LLMError as e:
         logger.error(f"LLM error: {e}", exc_info=True)
         raise HTTPException(status_code=503, detail=f"LLM service error: {e}") from e
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         logger.error(f"JSON parse error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to parse response: {e}") from e
     except Exception as e:

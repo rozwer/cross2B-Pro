@@ -651,29 +651,26 @@ class Step9FinalRewrite(BaseActivity):
         return output.model_dump()
 
     def _parse_json_response(self, content: str) -> dict[str, Any]:
-        """Parse JSON response from LLM."""
-        content = content.strip()
+        """Parse JSON response from LLM.
 
-        # Try to extract JSON from code block
-        json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
-        if json_match:
-            json_str = json_match.group(1)
-        else:
-            # Try to find JSON object directly
-            start_idx = content.find("{")
-            end_idx = content.rfind("}") + 1
-            if start_idx >= 0 and end_idx > start_idx:
-                json_str = content[start_idx:end_idx]
-            else:
-                # Fallback: treat entire content as final_content (backward compatible)
-                logger.warning("[STEP9] Could not parse JSON, using raw content as final_content")
-                return {"final_content": content}
+        Uses OutputParser for robust extraction (code blocks, embedded JSON,
+        comment removal, trailing commas, control chars). Falls back to
+        wrapping raw content as {"final_content": content} for backward
+        compatibility.
+        """
+        result = self.parser.parse_json(content)
 
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError as e:
-            logger.warning(f"[STEP9] JSON parse error: {e}, using raw content")
-            return {"final_content": content}
+        if result.success and isinstance(result.data, dict):
+            if result.fixes_applied:
+                logger.info(f"[STEP9] JSON fixes applied: {result.fixes_applied}")
+            return result.data
+
+        # Fallback: treat entire content as final_content (backward compatible)
+        logger.warning(
+            "[STEP9] Could not parse JSON, using raw content as final_content",
+            extra={"format_detected": result.format_detected},
+        )
+        return {"final_content": content}
 
 
 @activity.defn(name="step9_final_rewrite")

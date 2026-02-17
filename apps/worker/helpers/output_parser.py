@@ -15,11 +15,10 @@ from apps.worker.helpers.schemas import ParseResult
 class OutputParser:
     """LLM output parser."""
 
-    # Regex patterns for code block extraction
-    # Support both with and without newline after ```json
+    # Regex patterns for code block extraction (case-insensitive for ```JSON, ```Json, etc.)
     _JSON_BLOCK_PATTERN = re.compile(
         r"```json\s*(.*?)\s*```",
-        re.DOTALL,
+        re.DOTALL | re.IGNORECASE,
     )
     _GENERIC_BLOCK_PATTERN = re.compile(
         r"```\s*(.*?)\s*```",
@@ -28,7 +27,7 @@ class OutputParser:
     # Pattern for truncated JSON blocks (no closing ```)
     _TRUNCATED_JSON_BLOCK_PATTERN = re.compile(
         r"```json\s*(.*)",
-        re.DOTALL,
+        re.DOTALL | re.IGNORECASE,
     )
     _TRUNCATED_GENERIC_BLOCK_PATTERN = re.compile(
         r"```\s*(.*)",
@@ -48,6 +47,11 @@ class OutputParser:
     # Regex for trailing comma fix
     _TRAILING_COMMA_OBJ = re.compile(r",\s*}")
     _TRAILING_COMMA_ARR = re.compile(r",\s*]")
+
+    # Control characters to strip (BOM, zero-width spaces, bidi marks, line/paragraph separators)
+    _CONTROL_CHARS = re.compile(
+        r"[\x00-\x08\x0b\x0c\x0e-\x1f\ufeff\u200b\u200c\u200d\u200e\u200f\u2028\u2029\u2060]"
+    )
 
     def parse_json(self, content: str) -> ParseResult:
         """
@@ -161,8 +165,177 @@ class OutputParser:
         if match:
             return match.group(1).strip(), True
 
+        # Try to extract raw JSON object/array from surrounding text
+        raw_json = self._extract_raw_json(content)
+        if raw_json:
+            return raw_json, True
+
         # Return as-is
         return content.strip(), False
+
+    def _extract_raw_json(self, content: str) -> str | None:
+        """
+        Extract a JSON object or array embedded in free text.
+
+        Finds ``{`` or ``[`` and its matching closing bracket by tracking
+        nesting depth while respecting string literals.  If the first
+        candidate is not valid JSON, retries from the next ``{`` / ``[``.
+
+        Returns:
+            str or None: Extracted JSON string, or None if not found.
+        """
+        stripped = content.strip()
+
+        # If content already looks like bare JSON, skip extraction
+        if stripped.startswith(("{", "[")):
+            return None
+
+        search_from = 0
+        while search_from < len(stripped):
+            candidate = self._find_balanced_json(stripped, search_from)
+            if candidate is None:
+                return None
+
+            text, end_pos = candidate
+            # Validate: try as-is first, then with comment stripping
+            try:
+                json.loads(text)
+                return text
+            except json.JSONDecodeError:
+                cleaned = self._strip_js_comments(text)
+                try:
+                    json.loads(cleaned)
+                    return cleaned
+                except json.JSONDecodeError:
+                    # False positive — resume search after this opening bracket
+                    search_from = end_pos + 1
+
+        return None
+
+    def _find_balanced_json(self, content: str, search_from: int) -> tuple[str, int] | None:
+        """
+        Find the next balanced ``{...}`` or ``[...]`` starting at *search_from*.
+
+        Returns:
+            tuple of (extracted_text, end_position) or None.
+        """
+        start = -1
+        open_char = ""
+        close_char = ""
+        for i in range(search_from, len(content)):
+            ch = content[i]
+            if ch == "{":
+                start = i
+                open_char, close_char = "{", "}"
+                break
+            if ch == "[":
+                start = i
+                open_char, close_char = "[", "]"
+                break
+
+        if start == -1:
+            return None
+
+        # Walk forward tracking depth and string state
+        depth = 0
+        in_string = False
+        escape_next = False
+
+        for i in range(start, len(content)):
+            ch = content[i]
+
+            if escape_next:
+                escape_next = False
+                continue
+
+            if ch == "\\":
+                if in_string:
+                    escape_next = True
+                continue
+
+            if ch == '"':
+                in_string = not in_string
+                continue
+
+            if in_string:
+                continue
+
+            if ch == open_char:
+                depth += 1
+            elif ch == close_char:
+                depth -= 1
+                if depth == 0:
+                    return content[start : i + 1], i
+
+        return None
+
+    @staticmethod
+    def _strip_js_comments(content: str) -> str:
+        """
+        Remove JS-style comments while preserving string literals.
+
+        Tracks whether the current position is inside a JSON string to avoid
+        stripping ``//`` in URLs like ``"https://example.com"`` or ``//`` in
+        string values like ``"a // b"``.
+
+        Handles both ``// line`` and ``/* block */`` comments.
+        """
+        result: list[str] = []
+        i = 0
+        length = len(content)
+        in_string = False
+        escape_next = False
+
+        while i < length:
+            ch = content[i]
+
+            # Handle escape sequences inside strings
+            if escape_next:
+                result.append(ch)
+                escape_next = False
+                i += 1
+                continue
+
+            if in_string:
+                result.append(ch)
+                if ch == "\\":
+                    escape_next = True
+                elif ch == '"':
+                    in_string = False
+                i += 1
+                continue
+
+            # Outside string: check for comments
+            if ch == '"':
+                in_string = True
+                result.append(ch)
+                i += 1
+                continue
+
+            if ch == "/" and i + 1 < length:
+                next_ch = content[i + 1]
+                if next_ch == "/":
+                    # Line comment: skip until newline
+                    i += 2
+                    while i < length and content[i] != "\n":
+                        i += 1
+                    continue
+                if next_ch == "*":
+                    # Block comment: skip until */
+                    i += 2
+                    while i + 1 < length:
+                        if content[i] == "*" and content[i + 1] == "/":
+                            i += 2
+                            break
+                        i += 1
+                    else:
+                        i = length  # unterminated block comment
+                    continue
+
+            result.append(ch)
+            i += 1
+
+        return "".join(result)
 
     def apply_deterministic_fixes(self, content: str) -> tuple[str | None, list[str]]:
         """
@@ -185,6 +358,18 @@ class OutputParser:
         """
         fixes_applied: list[str] = []
         fixed = content
+
+        # Strip control characters (BOM, zero-width spaces)
+        cleaned = self._CONTROL_CHARS.sub("", fixed)
+        if cleaned != fixed:
+            fixed = cleaned
+            fixes_applied.append("control_chars_removed")
+
+        # Remove JS-style comments (string-aware scanner)
+        without_comments = self._strip_js_comments(fixed)
+        if without_comments != fixed:
+            fixed = without_comments
+            fixes_applied.append("js_comments_removed")
 
         # Fix trailing commas in objects: ,} -> }
         if self._TRAILING_COMMA_OBJ.search(fixed):
