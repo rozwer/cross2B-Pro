@@ -1,0 +1,70 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用\",\n  \"search_intent\": {\n    \"primary\": \"transactional\",\n    \"secondary\": \"informational\",\n    \"user_journey_stage\": \"consideration\"\n  },\n  \"target_persona\": {\n    \"role\": \"中小規模の運送会社の経営者または人事担当者\",\n    \"pain_points\": [\n      \"ドライバー不足が深刻で、業務が回らない\",\n      \"採用コストが高く、費用対効果が悪い\",\n      \"採用してもすぐに辞めてしまう\",\n      \"高齢化が進み、若手ドライバーの採用が難しい\",\n      \"求人広告を出しても応募が少ない\"\n    ],\n    \"desired_outcome\": \"優秀なドライバーを効率的に採用し、長期的に定着させたい\",\n    \"urgency_level\": \"high\"\n  },\n  \"difficulty\": \"medium\",\n  \"difficulty_reason\": \"大手求人サイトや人材紹介会社が上位表示されているが、ドライバー採用に特化した情報や、中小企業向けの具体的なノウハウは少ない。\",\n  \"suggested_topics\": [\n    \"ドライバー採用の最新トレンド\",\n    \"中小企業向けドライバー採用戦略\",\n    \"ドライバーの定着率向上施策\",\n    \"効果的な求人広告の作成方法\",\n    \"ドライバー採用に役立つ助成金・補助金情報\"\n  ],\n  \"cta_design\": {\n    \"primary_cta_text\": \"ドライバー採用の悩みを相談する\",\n    \"cta_url_placeholder\": \"[リンク先URL]\",\n    \"early_cta\": {\n      \"position\": \"800-1000字\",\n      \"appeal\": \"無料・簡単\",\n      \"text\": \":::info\\n**【無料】ドライバー採用の悩みを相談する**\\nドライバー不足でお困りではありませんか？貴社の状況に合わせて最適な解決策をご提案します。\\n[今すぐ相談する]\\n:::\"\n    },\n    \"mid_cta\": {\n      \"position\": \"4500字付近\",\n      \"appeal\": \"実績・専門性\",\n      \"text\": \":::info\\n**【3分で完了】ドライバー採用課題診断を受ける**\\n貴社のドライバー採用における課題を無料で診断。改善ポイントが明確になります。\\n[無料診断をスタートする]\\n:::\"\n    },\n    \"final_cta\": {\n      \"position\": \"目標文字数の75〜85%地点（まとめ前）\",\n      \"appeal\": \"限定・特典\",\n      \"text\": \":::info\\n**【特典付き】ドライバー採用成功事例集をダウンロードする**\\n中小企業がドライバー採用を成功させた秘訣を無料でプレゼント。すぐに使えるノウハウ満載です。\\n[今すぐ資料をダウンロード]\\n:::\"\n    }\n  },\n  \"content_strategy\": {\n    \"target_word_count\": 10000,\n    \"differentiation_hypothesis\": \"中小企業に特化したドライバー採用ノウハウ、独自の成功事例、採用後の定着支援策などを盛り込み、大手求人サイトや人材紹介会社では提供できない価値を提供する。\",\n    \"unique_value_proposition\": \"中小企業のドライバー採用の課題解決に特化した、実践的かつ具体的な情報を提供し、採用から定着までをトータルで支援する。\"\n  }\n}\n```",
+  "search_intent": {
+    "primary": "transactional",
+    "secondary": "informational",
+    "user_journey_stage": "consideration"
+  },
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 1334,
+    "output": 759
+  },
+  "metrics": {
+    "char_count": 1715,
+    "word_count": 738
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

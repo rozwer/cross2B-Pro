@@ -1,0 +1,353 @@
+{
+  "step": "step5",
+  "keyword": "従業員募集こない",
+  "search_queries": [
+    "有効求人倍率 最新 統計",
+    "労働経済動向調査 厚生労働省",
+    "中小企業 人手不足 現状",
+    "求人広告 効果測定 指標",
+    "採用ブランディング 成功事例 中小企業"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_67666.html",
+      "title": "一般職業紹介状況(令和7年11月分)について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jil.go.jp/kokunai/statistics/shuyo/0210.html",
+      "title": "職業紹介-都道府県別有効求人倍率：主要労働統計指標",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_69302.html",
+      "title": "一般職業紹介状況(令和7年12月分及び令和7年分)について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.e-stat.go.jp/stat-search?page=1&query=%E6%9C%89%E5%8A%B9%E6%B1%82%E4%BA%BA%E5%80%8D%E7%8E%87&layout=dataset",
+      "title": "すべて | 統計データを探す | 政府統計の総合 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://topics.type.jp/womantype-all/market-trends/",
+      "title": "【2026年2月最新】有効求人倍率の推移を職種別に紹介！ ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/toukei/list/43-1.html",
+      "title": "労働経済動向調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/toukei/itiran/roudou/koyou/keizai/2505/",
+      "title": "労働経済動向調査（令和7年5月）の概況",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/toukei/oshirase/260105.html",
+      "title": "労働経済動向調査にご協力をお願いします ～ 令和8(2026)年 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.e-stat.go.jp/stat-search/files?page=1&toukei=00450072&tstat=000001018522",
+      "title": "労働経済動向調査 | ファイル | 統計データを探す",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/toukei/list/43-1b.html",
+      "title": "労働経済動向調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://rpa-technologies.com/insights/smaller-companies-hr-shortage/",
+      "title": "中小企業の人手不足はなぜ起こる?原因と対策について詳しく ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.naito.jp/knowledge/information/1445/",
+      "title": "中小企業の人手不足の現状をデータでチェック！企業側が取る ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.tdb.co.jp/report/economic/20250221-laborshortage202501/",
+      "title": "人手不足に対する企業の動向調査（2025年1月）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://corp.miidas.jp/assessment/2197/",
+      "title": "人手不足が深刻化する日本の現状と原因、企業が実施したい ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.zinzai-kikaku.jp/zinzai-kikaku-indeed/articles/kyujinkoukoku-seika-sokutei-sihyou/",
+      "title": "求人広告の成果を測定するための指標と改善方法",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.tracom.co.jp/tralog/effect-measurement/",
+      "title": "求人広告の費用対効果はどう測る？効果測定の方法や高め方を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://bizpla.com/blog/koukasokutei/",
+      "title": "求人広告の効果測定をすべき理由と具体的な方法とは？重要 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.dodadsj.com/content/180813_kyujin_kpicost/",
+      "title": "【完全版】効果が出る求人広告の作り方③～効果を分析し",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://inden-seminar.com/blog/20250801-14-document/",
+      "title": "求人広告の効果測定のやり方｜出しっぱなし運用から脱却する ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.leggenda.co.jp/article/column_recruit_20250221/",
+      "title": "【最新版】採用ブランディングとは？戦略の秘訣と大手・中小の ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.kk-sun.co.jp/blog/2024/07/30/%E4%B8%AD%E5%B0%8F%E4%BC%81%E6%A5%AD%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E6%8E%A1%E7%94%A8%E3%83%96%E3%83%A9%E3%83%B3%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E6%88%A6%E7%95%A5%EF%BC%9A%E5%85%B7%E4%BD%93/",
+      "title": "中小企業のための採用ブランディング戦略：具体的事例と効果",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://backlight.co.jp/column/139/",
+      "title": "中小企業の採用ブランディングとは？成功事例と戦略で人材 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://service.r-4.co.jp/knowhow/recruiting/blandingsuccessstory/",
+      "title": "中小企業でもできる！採用ブランディング成功事例4選",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://ryo-ma.art/blog/recruitment-branding-case-2025/",
+      "title": "採用ブランディングの成功事例を紹介！よくある失敗と対策も解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 24,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

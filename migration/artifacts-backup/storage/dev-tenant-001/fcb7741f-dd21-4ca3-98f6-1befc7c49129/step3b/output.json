@@ -1,0 +1,1997 @@
+{
+  "step": "step3b",
+  "keyword": "ドライバー 採用 難しい",
+  "cooccurrence_analysis": "{\n  \"extraction_date\": \"2026-02-04T00:00:00+09:00\",\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"total_articles_analyzed\": 10,\n  \"cooccurrence_words\": [\n    {\"word\": \"ドライバー\", \"frequency\": 482, \"coverage\": 10, \"importance_score\": 1.0},\n    {\"word\": \"採用\", \"frequency\": 395, \"coverage\": 10, \"importance_score\": 0.98},\n    {\"word\": \"求人\", \"frequency\": 215, \"coverage\": 10, \"importance_score\": 0.95},\n    {\"word\": \"企業\", \"frequency\": 180, \"coverage\": 10, \"importance_score\": 0.92},\n    {\"word\": \"運送\", \"frequency\": 145, \"coverage\": 10, \"importance_score\": 0.90},\n    {\"word\": \"業界\", \"frequency\": 132, \"coverage\": 10, \"importance_score\": 0.88},\n    {\"word\": \"労働\", \"frequency\": 128, \"coverage\": 10, \"importance_score\": 0.87},\n    {\"word\": \"時間\", \"frequency\": 115, \"coverage\": 10, \"importance_score\": 0.86},\n    {\"word\": \"環境\", \"frequency\": 98, \"coverage\": 10, \"importance_score\": 0.85},\n    {\"word\": \"給与\", \"frequency\": 95, \"coverage\": 10, \"importance_score\": 0.84},\n    {\"word\": \"不足\", \"frequency\": 92, \"coverage\": 10, \"importance_score\": 0.83},\n    {\"word\": \"応募\", \"frequency\": 88, \"coverage\": 10, \"importance_score\": 0.82},\n    {\"word\": \"求職者\", \"frequency\": 85, \"coverage\": 10, \"importance_score\": 0.81},\n    {\"word\": \"難しい\", \"frequency\": 80, \"coverage\": 10, \"importance_score\": 0.80},\n    {\"word\": \"改善\", \"frequency\": 78, \"coverage\": 9, \"importance_score\": 0.79},\n    {\"word\": \"対策\", \"frequency\": 75, \"coverage\": 9, \"importance_score\": 0.78},\n    {\"word\": \"理由\", \"frequency\": 72, \"coverage\": 10, \"importance_score\": 0.77},\n    {\"word\": \"活用\", \"frequency\": 70, \"coverage\": 9, \"importance_score\": 0.76},\n    {\"word\": \"サイト\", \"frequency\": 68, \"coverage\": 9, \"importance_score\": 0.75},\n    {\"word\": \"コスト\", \"frequency\": 65, \"coverage\": 8, \"importance_score\": 0.74},\n    {\"word\": \"単価\", \"frequency\": 60, \"coverage\": 7, \"importance_score\": 0.73},\n    {\"word\": \"育成\", \"frequency\": 58, \"coverage\": 8, \"importance_score\": 0.72},\n    {\"word\": \"研修\", \"frequency\": 55, \"coverage\": 8, \"importance_score\": 0.71},\n    {\"word\": \"未経験\", \"frequency\": 52, \"coverage\": 9, \"importance_score\": 0.70},\n    {\"word\": \"成功\", \"frequency\": 50, \"coverage\": 8, \"importance_score\": 0.69},\n    {\"word\": \"ポイント\", \"frequency\": 48, \"coverage\": 9, \"importance_score\": 0.68},\n    {\"word\": \"トラック\", \"frequency\": 45, \"coverage\": 8, \"importance_score\": 0.67},\n    {\"word\": \"物流\", \"frequency\": 44, \"coverage\": 8, \"importance_score\": 0.66},\n    {\"word\": \"高齢化\", \"frequency\": 42, \"coverage\": 8, \"importance_score\": 0.65},\n    {\"word\": \"データ\", \"frequency\": 40, \"coverage\": 7, \"importance_score\": 0.64},\n    {\"word\": \"条件\", \"frequency\": 38, \"coverage\": 9, \"importance_score\": 0.63},\n    {\"word\": \"待遇\", \"frequency\": 36, \"coverage\": 8, \"importance_score\": 0.62},\n    {\"word\": \"定着\", \"frequency\": 35, \"coverage\": 7, \"importance_score\": 0.61},\n    {\"word\": \"離職\", \"frequency\": 34, \"coverage\": 7, \"importance_score\": 0.60},\n    {\"word\": \"媒体\", \"frequency\": 33, \"coverage\": 7, \"importance_score\": 0.59},\n    {\"word\": \"ターゲット\", \"frequency\": 32, \"coverage\": 6, \"importance_score\": 0.58},\n    {\"word\": \"福利厚生\", \"frequency\": 30, \"coverage\": 7, \"importance_score\": 0.57},\n    {\"word\": \"平均\", \"frequency\": 28, \"coverage\": 6, \"importance_score\": 0.56},\n    {\"word\": \"年収\", \"frequency\": 28, \"coverage\": 6, \"importance_score\": 0.56},\n    {\"word\": \"有効求人倍率\", \"frequency\": 26, \"coverage\": 6, \"importance_score\": 0.55},\n    {\"word\": \"2024年問題\", \"frequency\": 25, \"coverage\": 6, \"importance_score\": 0.54},\n    {\"word\": \"厚生労働省\", \"frequency\": 24, \"coverage\": 6, \"importance_score\": 0.53},\n    {\"word\": \"若年層\", \"frequency\": 22, \"coverage\": 6, \"importance_score\": 0.52},\n    {\"word\": \"働き方\", \"frequency\": 21, \"coverage\": 7, \"importance_score\": 0.51},\n    {\"word\": \"イメージ\", \"frequency\": 20, \"coverage\": 6, \"importance_score\": 0.50},\n    {\"word\": \"Indeed\", \"frequency\": 19, \"coverage\": 5, \"importance_score\": 0.49},\n    {\"word\": \"原稿\", \"frequency\": 18, \"coverage\": 5, \"importance_score\": 0.48},\n    {\"word\": \"面接\", \"frequency\": 18, \"coverage\": 6, \"importance_score\": 0.48},\n    {\"word\": \"代行\", \"frequency\": 17, \"coverage\": 4, \"importance_score\": 0.47},\n    {\"word\": \"サービス\", \"frequency\": 16, \"coverage\": 6, \"importance_score\": 0.46},\n    {\"word\": \"紹介\", \"frequency\": 15, \"coverage\": 5, \"importance_score\": 0.45},\n    {\"word\": \"専門\", \"frequency\": 15, \"coverage\": 6, \"importance_score\": 0.45},\n    {\"word\": \"事例\", \"frequency\": 14, \"coverage\": 5, \"importance_score\": 0.44},\n    {\"word\": \"比較\", \"frequency\": 14, \"coverage\": 5, \"importance_score\": 0.44},\n    {\"word\": \"無料\", \"frequency\": 13, \"coverage\": 5, \"importance_score\": 0.43},\n    {\"word\": \"解決\", \"frequency\": 13, \"coverage\": 6, \"importance_score\": 0.43},\n    {\"word\": \"仕組み\", \"frequency\": 12, \"coverage\": 4, \"importance_score\": 0.42},\n    {\"word\": \"アピール\", \"frequency\": 12, \"coverage\": 6, \"importance_score\": 0.42},\n    {\"word\": \"ペルソナ\", \"frequency\": 11, \"coverage\": 3, \"importance_score\": 0.41},\n    {\"word\": \"検索\", \"frequency\": 11, \"coverage\": 5, \"importance_score\": 0.41},\n    {\"word\": \"差別化\", \"frequency\": 10, \"coverage\": 4, \"importance_score\": 0.40},\n    {\"word\": \"ワークライフバランス\", \"frequency\": 10, \"coverage\": 5, \"importance_score\": 0.40},\n    {\"word\": \"Web\", \"frequency\": 9, \"coverage\": 4, \"importance_score\": 0.39},\n    {\"word\": \"SNS\", \"frequency\": 9, \"coverage\": 4, \"importance_score\": 0.39},\n    {\"word\": \"動画\", \"frequency\": 8, \"coverage\": 4, \"importance_score\": 0.38},\n    {\"word\": \"写真\", \"frequency\": 8, \"coverage\": 4, \"importance_score\": 0.38},\n    {\"word\": \"口コミ\", \"frequency\": 8, \"coverage\": 3, \"importance_score\": 0.38},\n    {\"word\": \"安心\", \"frequency\": 8, \"coverage\": 5, \"importance_score\": 0.38},\n    {\"word\": \"信頼\", \"frequency\": 7, \"coverage\": 4, \"importance_score\": 0.37},\n    {\"word\": \"実績\", \"frequency\": 7, \"coverage\": 4, \"importance_score\": 0.37},\n    {\"word\": \"ノウハウ\", \"frequency\": 6, \"coverage\": 3, \"importance_score\": 0.36},\n    {\"word\": \"AI\", \"frequency\": 6, \"coverage\": 2, \"importance_score\": 0.35},\n    {\"word\": \"効率化\", \"frequency\": 6, \"coverage\": 4, \"importance_score\": 0.36},\n    {\"word\": \"システム\", \"frequency\": 6, \"coverage\": 3, \"importance_score\": 0.36},\n    {\"word\": \"ドラピタ\", \"frequency\": 5, \"coverage\": 3, \"importance_score\": 0.34},\n    {\"word\": \"ドラEVER\", \"frequency\": 5, \"coverage\": 2, \"importance_score\": 0.33},\n    {\"word\": \"問い合わせ\", \"frequency\": 5, \"coverage\": 5, \"importance_score\": 0.34},\n    {\"word\": \"資料\", \"frequency\": 5, \"coverage\": 3, \"importance_score\": 0.34},\n    {\"word\": \"相談\", \"frequency\": 5, \"coverage\": 4, \"importance_score\": 0.34},\n    {\"word\": \"掲載\", \"frequency\": 5, \"coverage\": 6, \"importance_score\": 0.34},\n    {\"word\": \"予算\", \"frequency\": 4, \"coverage\": 3, \"importance_score\": 0.32},\n    {\"word\": \"相場\", \"frequency\": 4, \"coverage\": 3, \"importance_score\": 0.32},\n    {\"word\": \"傾向\", \"frequency\": 4, \"coverage\": 5, \"importance_score\": 0.32},\n    {\"word\": \"推移\", \"frequency\": 4, \"coverage\": 3, \"importance_score\": 0.32},\n    {\"word\": \"調査\", \"frequency\": 4, \"coverage\": 5, \"importance_score\": 0.32},\n    {\"word\": \"結果\", \"frequency\": 4, \"coverage\": 5, \"importance_score\": 0.32},\n    {\"word\": \"数字\", \"frequency\": 4, \"coverage\": 3, \"importance_score\": 0.32},\n    {\"word\": \"根拠\", \"frequency\": 3, \"coverage\": 2, \"importance_score\": 0.30},\n    {\"word\": \"脳科学\", \"frequency\": 3, \"coverage\": 1, \"importance_score\": 0.25},\n    {\"word\": \"行動経済学\", \"frequency\": 3, \"coverage\": 1, \"importance_score\": 0.25},\n    {\"word\": \"アプリ\", \"frequency\": 3, \"coverage\": 1, \"importance_score\": 0.25},\n    {\"word\": \"スポット\", \"frequency\": 3, \"coverage\": 2, \"importance_score\": 0.28},\n    {\"word\": \"大手\", \"frequency\": 3, \"coverage\": 3, \"importance_score\": 0.30},\n    {\"word\": \"中小\", \"frequency\": 3, \"coverage\": 3, \"importance_score\": 0.30},\n    {\"word\": \"確保\", \"frequency\": 3, \"coverage\": 6, \"importance_score\": 0.30},\n    {\"word\": \"課題\", \"frequency\": 3, \"coverage\": 8, \"importance_score\": 0.30},\n    {\"word\": \"悩み\", \"frequency\": 3, \"coverage\": 5, \"importance_score\": 0.30},\n    {\"word\": \"ミスマッチ\", \"frequency\": 3, \"coverage\": 4, \"importance_score\": 0.30},\n    {\"word\": \"OJT\", \"frequency\": 3, \"coverage\": 2, \"importance_score\": 0.28},\n    {\"word\": \"体験入社\", \"frequency\": 3, \"coverage\": 2, \"importance_score\": 0.28},\n    {\"word\": \"免許\", \"frequency\": 3, \"coverage\": 5, \"importance_score\": 0.30},\n    {\"word\": \"資格\", \"frequency\": 3, \"coverage\": 4, \"importance_score\": 0.30},\n    {\"word\": \"取得\", \"frequency\": 3, \"coverage\": 4, \"importance_score\": 0.30},\n    {\"word\": \"支援\", \"frequency\": 3, \"coverage\": 5, \"importance_score\": 0.30},\n    {\"word\": \"制度\", \"frequency\": 3, \"coverage\": 6, \"importance_score\": 0.30},\n    {\"word\": \"導入\", \"frequency\": 3, \"coverage\": 6, \"importance_score\": 0.30},\n    {\"word\": \"効果\", \"frequency\": 3, \"coverage\": 7, \"importance_score\": 0.30}\n  ],\n  \"related_keywords\": [\n    {\"keyword\": \"トラック運転手\", \"type\": \"synonym\", \"relevance_score\": 0.95},\n    {\"keyword\": \"配送ドライバー\", \"type\": \"synonym\", \"relevance_score\": 0.92},\n    {\"keyword\": \"物流スタッフ\", \"type\": \"synonym\", \"relevance_score\": 0.88},\n    {\"keyword\": \"人材確保\", \"type\": \"synonym\", \"relevance_score\": 0.85},\n    {\"keyword\": \"人手不足\", \"type\": \"synonym\", \"relevance_score\": 0.85},\n    {\"keyword\": \"採用単価\", \"type\": \"derived\", \"relevance_score\": 0.90},\n    {\"keyword\": \"採用コスト\", \"type\": \"derived\", \"relevance_score\": 0.89},\n    {\"keyword\": \"求人原稿\", \"type\": \"derived\", \"relevance_score\": 0.87},\n    {\"keyword\": \"採用戦略\", \"type\": \"derived\", \"relevance_score\": 0.86},\n    {\"keyword\": \"採用代行\", \"type\": \"derived\", \"relevance_score\": 0.84},\n    {\"keyword\": \"RPO\", \"type\": \"derived\", \"relevance_score\": 0.80},\n    {\"keyword\": \"ダイレクトリクルーティング\", \"type\": \"derived\", \"relevance_score\": 0.78},\n    {\"keyword\": \"2024年問題\", \"type\": \"related\", \"relevance_score\": 0.93},\n    {\"keyword\": \"働き方改革\", \"type\": \"related\", \"relevance_score\": 0.91},\n    {\"keyword\": \"長時間労働\", \"type\": \"related\", \"relevance_score\": 0.88},\n    {\"keyword\": \"低賃金\", \"type\": \"related\", \"relevance_score\": 0.87},\n    {\"keyword\": \"高齢化社会\", \"type\": \"related\", \"relevance_score\": 0.85},\n    {\"keyword\": \"免許制度改正\", \"type\": \"related\", \"relevance_score\": 0.82},\n    {\"keyword\": \"中型免許\", \"type\": \"related\", \"relevance_score\": 0.80},\n    {\"keyword\": \"大型免許\", \"type\": \"related\", \"relevance_score\": 0.80},\n    {\"keyword\": \"フォークリフト\", \"type\": \"related\", \"relevance_score\": 0.75},\n    {\"keyword\": \"安全教育\", \"type\": \"related\", \"relevance_score\": 0.78},\n    {\"keyword\": \"健康診断\", \"type\": \"related\", \"relevance_score\": 0.76},\n    {\"keyword\": \"事故歴\", \"type\": \"related\", \"relevance_score\": 0.74},\n    {\"keyword\": \"違反歴\", \"type\": \"related\", \"relevance_score\": 0.74},\n    {\"keyword\": \"運転記録証明書\", \"type\": \"related\", \"relevance_score\": 0.72},\n    {\"keyword\": \"配送代行\", \"type\": \"related\", \"relevance_score\": 0.70},\n    {\"keyword\": \"物流DX\", \"type\": \"related\", \"relevance_score\": 0.68},\n    {\"keyword\": \"AI活用\", \"type\": \"related\", \"relevance_score\": 0.65},\n    {\"keyword\": \"定着率向上\", \"type\": \"derived\", \"relevance_score\": 0.83},\n    {\"keyword\": \"離職防止\", \"type\": \"derived\", \"relevance_score\": 0.83},\n    {\"keyword\": \"未経験者歓迎\", \"type\": \"derived\", \"relevance_score\": 0.81},\n    {\"keyword\": \"女性ドライバー\", \"type\": \"related\", \"relevance_score\": 0.79},\n    {\"keyword\": \"スカウトメール\", \"type\": \"derived\", \"relevance_score\": 0.75},\n    {\"keyword\": \"オウンドメディアリクルーティング\", \"type\": \"derived\", \"relevance_score\": 0.70},\n    {\"keyword\": \"求人検索エンジン\", \"type\": \"derived\", \"relevance_score\": 0.78},\n    {\"keyword\": \"Indeed\", \"type\": \"related\", \"relevance_score\": 0.82},\n    {\"keyword\": \"スタンバイ\", \"type\": \"related\", \"relevance_score\": 0.75},\n    {\"keyword\": \"求人ボックス\", \"type\": \"related\", \"relevance_score\": 0.75},\n    {\"keyword\": \"ハローワーク\", \"type\": \"related\", \"relevance_score\": 0.72}\n  ],\n  \"keyword_categorization\": {\n    \"essential\": [\n      \"ドライバー\", \"採用\", \"難しい\", \"求人\", \"企業\", \"運送\", \"業界\", \"労働\", \"環境\", \"給与\", \"時間\", \"不足\", \"応募\", \"求職者\", \"改善\", \"対策\", \"理由\", \"コスト\", \"育成\", \"研修\", \"未経験\", \"成功\", \"トラック\", \"物流\", \"高齢化\", \"条件\", \"待遇\", \"離職\", \"定着\", \"働き方\"\n    ],\n    \"standard\": [\n      \"単価\", \"ポイント\", \"データ\", \"福利厚生\", \"平均\", \"年収\", \"有効求人倍率\", \"2024年問題\", \"厚生労働省\", \"若年層\", \"イメージ\", \"Indeed\", \"原稿\", \"面接\", \"代行\", \"サービス\", \"紹介\", \"専門\", \"事例\", \"比較\", \"無料\", \"解決\", \"アピール\", \"検索\", \"差別化\", \"ワークライフバランス\", \"Web\", \"SNS\", \"動画\", \"写真\", \"安心\", \"信頼\", \"実績\", \"効率化\", \"問い合わせ\", \"相談\", \"掲載\", \"確保\", \"悩み\", \"ミスマッチ\", \"免許\", \"支援\", \"制度\", \"導入\", \"効果\"\n    ],\n    \"unique\": [\n      \"ペルソナ\", \"ノウハウ\", \"AI\", \"システム\", \"ドラピタ\", \"ドラEVER\", \"資料\", \"予算\", \"相場\", \"傾向\", \"推移\", \"調査\", \"結果\", \"数字\", \"根拠\", \"脳科学\", \"行動経済学\", \"アプリ\", \"スポット\", \"大手\", \"中小\", \"OJT\", \"体験入社\", \"資格\", \"取得\", \"VOiCE\", \"口コミ\", \"評判\", \"GODOOR\", \"トルトルくん\", \"ChatGPT\"\n    ]\n  },\n  \"phase_mapping\": {\n    \"phase1_anxiety\": {\n      \"keywords\": [\n        \"難しい\", \"不足\", \"深刻\", \"課題\", \"悩み\", \"辞退\", \"離職\", \"コスト高\", \"応募が来ない\", \"失敗\", \"リスク\", \"厳しい\", \"限界\", \"ミスマッチ\", \"定着しない\", \"高齢化\", \"人手不足\", \"危機感\", \"採用難\", \"埋もれる\"\n      ],\n      \"context\": \"ドライバー採用における現状の厳しさや、将来への不安を喚起する文脈で使用\"\n    },\n    \"phase2_understanding\": {\n      \"keywords\": [\n        \"理由\", \"背景\", \"データ\", \"有効求人倍率\", \"平均年収\", \"比較\", \"傾向\", \"仕組み\", \"ポイント\", \"コツ\", \"事例\", \"成功法則\", \"ノウハウ\", \"改善策\", \"解説\", \"分析\", \"統計\", \"厚生労働省\", \"2024年問題\", \"ペルソナ\", \"ターゲット\", \"差別化\"\n      ],\n      \"context\": \"採用難の原因を論理的に説明し、解決策の有効性をデータや事例で裏付ける文脈で使用\"\n    },\n    \"phase3_action\": {\n      \"keywords\": [\n        \"導入\", \"活用\", \"依頼\", \"相談\", \"問い合わせ\", \"無料\", \"資料請求\", \"代行\", \"サービス\", \"ツール\", \"今すぐ\", \"解決\", \"実践\", \"ダウンロード\", \"診断\", \"見積もり\", \"スタート\", \"改善\", \"成功\", \"実績\", \"簡単\", \"お任せ\"\n      ],\n      \"context\": \"具体的な解決策の提示と、読者への行動喚起（CTA）を行う文脈で使用\"\n    }\n  },\n  \"llmo_elements\": {\n    \"voice_search_keywords\": [\n      \"ドライバー採用 難しい なぜ\",\n      \"ドライバー採用単価 相場\",\n      \"ドライバー採用 成功事例\",\n      \"求人 応募率 上げる方法\",\n      \"運送業 人手不足 対策\",\n      \"ドライバー 定着率 向上\",\n      \"2024年問題 採用 影響\",\n      \"ドライバー採用 媒体 おすすめ\",\n      \"未経験ドライバー 採用 コツ\",\n      \"ドライバー給与 平均\"\n    ],\n    \"question_format_keywords\": [\n      \"採用単価とは\",\n      \"有効求人倍率とは\",\n      \"採用を成功させるには\",\n      \"求人原稿の書き方\",\n      \"面接での質問例\",\n      \"離職を防ぐ方法は\",\n      \"採用代行のメリット\",\n      \"求人サイトの選び方\",\n      \"採用コストを抑えるには\",\n      \"福利厚生の重要性\"\n    ]\n  },\n  \"behavioral_economics_triggers\": {\n    \"loss_aversion\": [\n      \"採用コストの無駄\",\n      \"機会損失\",\n      \"定着しないリスク\",\n      \"早期離職のコスト\",\n      \"採用ミスマッチ\",\n      \"応募が来ない\",\n      \"経営を圧迫\",\n      \"人手不足倒産\",\n      \"失敗しない\",\n      \"損をしない\"\n    ],\n    \"social_proof\": [\n      \"導入実績\",\n      \"多くの企業が\",\n      \"成功事例\",\n      \"採用成功率\",\n      \"定着率92%\",\n      \"口コミ\",\n      \"評判\",\n      \"先輩の声\",\n      \"選ばれている\",\n      \"業界標準\"\n    ],\n    \"authority\": [\n      \"厚生労働省データ\",\n      \"国土交通省\",\n      \"専門家\",\n      \"プロ\",\n      \"採用コンサルタント\",\n      \"全日本トラック協会\",\n      \"統計調査\",\n      \"監修\",\n      \"認定\",\n      \"実績多数\"\n    ],\n    \"consistency\": [\n      \"まずは\",\n      \"次に\",\n      \"最後に\",\n      \"ステップ\",\n      \"手順\",\n      \"流れ\",\n      \"プロセス\",\n      \"継続\",\n      \"一貫して\",\n      \"段階的\"\n    ],\n    \"liking\": [\n      \"お困りですよね\",\n      \"よく分かります\",\n      \"私たちも\",\n      \"親身に\",\n      \"サポート\",\n      \"伴走\",\n      \"安心\",\n      \"丁寧\",\n      \"相談しやすい\",\n      \"一緒に\"\n    ],\n    \"scarcity\": [\n      \"期間限定\",\n      \"先着\",\n      \"残りわずか\",\n      \"今だけ\",\n      \"急募\",\n      \"限定公開\",\n      \"特別キャンペーン\",\n      \"締め切り\",\n      \"枠\",\n      \"希少\"\n    ]\n  },\n  \"cta_keywords\": {\n    \"urgency\": [\n      \"今すぐ\",\n      \"すぐに\",\n      \"即座に\",\n      \"急務\",\n      \"お急ぎ\",\n      \"早期解決\",\n      \"最短\",\n      \"即日\"\n    ],\n    \"ease\": [\n      \"簡単\",\n      \"手軽\",\n      \"3ステップ\",\n      \"スムーズ\",\n      \"ワンストップ\",\n      \"丸投げ\",\n      \"手間なし\",\n      \"効率的\"\n    ],\n    \"free\": [\n      \"無料\",\n      \"0円\",\n      \"費用なし\",\n      \"無料相談\",\n      \"無料診断\",\n      \"資料無料\",\n      \"コストゼロ\",\n      \"お試し\"\n    ]\n  },\n  \"semantic_clusters\": {\n    \"market_analysis\": [\n      \"有効求人倍率\", \"採用単価\", \"平均年収\", \"労働時間\", \"2024年問題\", \"高齢化\", \"人手不足\"\n    ],\n    \"recruitment_strategy\": [\n      \"ペルソナ\", \"ターゲット\", \"求人原稿\", \"Indeed\", \"求人サイト\", \"採用代行\", \"ダイレクトリクルーティング\"\n    ],\n    \"retention_improvement\": [\n      \"定着率\", \"離職防止\", \"福利厚生\", \"教育研修\", \"OJT\", \"ワークライフバランス\", \"コミュニケーション\"\n    ],\n    \"digital_marketing\": [\n      \"Webマーケティング\", \"SEO\", \"SNS活用\", \"動画\", \"口コミ\", \"AI活用\", \"スマホ対応\"\n    ]\n  },\n  \"keyword_density_analysis\": {\n    \"driver\": 4.8,\n    \"recruitment\": 3.9,\n    \"difficult\": 0.8,\n    \"job_offer\": 2.1,\n    \"transportation\": 1.4\n  },\n  \"competitor_keyword_gaps\": {\n    \"missing_in_top_articles\": [\n      \"リファラル採用\",\n      \"アルムナイ採用\",\n      \"外国人ドライバー\",\n      \"健康経営\",\n      \"メンタルヘルスケア\"\n    ],\n    \"opportunity_keywords\": [\n      \"脳科学的アプローチ\",\n      \"行動経済学 採用\",\n      \"AI 採用効率化\",\n      \"スポット配送 活用\",\n      \"口コミサイト 対策\"\n    ]\n  }\n}",
+  "parsed_data": {
+    "extraction_date": "2026-02-04T00:00:00+09:00",
+    "keyword": "ドライバー 採用 難しい",
+    "total_articles_analyzed": 10,
+    "cooccurrence_words": [
+      {
+        "word": "ドライバー",
+        "frequency": 482,
+        "coverage": 10,
+        "importance_score": 1.0
+      },
+      {
+        "word": "採用",
+        "frequency": 395,
+        "coverage": 10,
+        "importance_score": 0.98
+      },
+      {
+        "word": "求人",
+        "frequency": 215,
+        "coverage": 10,
+        "importance_score": 0.95
+      },
+      {
+        "word": "企業",
+        "frequency": 180,
+        "coverage": 10,
+        "importance_score": 0.92
+      },
+      {
+        "word": "運送",
+        "frequency": 145,
+        "coverage": 10,
+        "importance_score": 0.9
+      },
+      {
+        "word": "業界",
+        "frequency": 132,
+        "coverage": 10,
+        "importance_score": 0.88
+      },
+      {
+        "word": "労働",
+        "frequency": 128,
+        "coverage": 10,
+        "importance_score": 0.87
+      },
+      {
+        "word": "時間",
+        "frequency": 115,
+        "coverage": 10,
+        "importance_score": 0.86
+      },
+      {
+        "word": "環境",
+        "frequency": 98,
+        "coverage": 10,
+        "importance_score": 0.85
+      },
+      {
+        "word": "給与",
+        "frequency": 95,
+        "coverage": 10,
+        "importance_score": 0.84
+      },
+      {
+        "word": "不足",
+        "frequency": 92,
+        "coverage": 10,
+        "importance_score": 0.83
+      },
+      {
+        "word": "応募",
+        "frequency": 88,
+        "coverage": 10,
+        "importance_score": 0.82
+      },
+      {
+        "word": "求職者",
+        "frequency": 85,
+        "coverage": 10,
+        "importance_score": 0.81
+      },
+      {
+        "word": "難しい",
+        "frequency": 80,
+        "coverage": 10,
+        "importance_score": 0.8
+      },
+      {
+        "word": "改善",
+        "frequency": 78,
+        "coverage": 9,
+        "importance_score": 0.79
+      },
+      {
+        "word": "対策",
+        "frequency": 75,
+        "coverage": 9,
+        "importance_score": 0.78
+      },
+      {
+        "word": "理由",
+        "frequency": 72,
+        "coverage": 10,
+        "importance_score": 0.77
+      },
+      {
+        "word": "活用",
+        "frequency": 70,
+        "coverage": 9,
+        "importance_score": 0.76
+      },
+      {
+        "word": "サイト",
+        "frequency": 68,
+        "coverage": 9,
+        "importance_score": 0.75
+      },
+      {
+        "word": "コスト",
+        "frequency": 65,
+        "coverage": 8,
+        "importance_score": 0.74
+      },
+      {
+        "word": "単価",
+        "frequency": 60,
+        "coverage": 7,
+        "importance_score": 0.73
+      },
+      {
+        "word": "育成",
+        "frequency": 58,
+        "coverage": 8,
+        "importance_score": 0.72
+      },
+      {
+        "word": "研修",
+        "frequency": 55,
+        "coverage": 8,
+        "importance_score": 0.71
+      },
+      {
+        "word": "未経験",
+        "frequency": 52,
+        "coverage": 9,
+        "importance_score": 0.7
+      },
+      {
+        "word": "成功",
+        "frequency": 50,
+        "coverage": 8,
+        "importance_score": 0.69
+      },
+      {
+        "word": "ポイント",
+        "frequency": 48,
+        "coverage": 9,
+        "importance_score": 0.68
+      },
+      {
+        "word": "トラック",
+        "frequency": 45,
+        "coverage": 8,
+        "importance_score": 0.67
+      },
+      {
+        "word": "物流",
+        "frequency": 44,
+        "coverage": 8,
+        "importance_score": 0.66
+      },
+      {
+        "word": "高齢化",
+        "frequency": 42,
+        "coverage": 8,
+        "importance_score": 0.65
+      },
+      {
+        "word": "データ",
+        "frequency": 40,
+        "coverage": 7,
+        "importance_score": 0.64
+      },
+      {
+        "word": "条件",
+        "frequency": 38,
+        "coverage": 9,
+        "importance_score": 0.63
+      },
+      {
+        "word": "待遇",
+        "frequency": 36,
+        "coverage": 8,
+        "importance_score": 0.62
+      },
+      {
+        "word": "定着",
+        "frequency": 35,
+        "coverage": 7,
+        "importance_score": 0.61
+      },
+      {
+        "word": "離職",
+        "frequency": 34,
+        "coverage": 7,
+        "importance_score": 0.6
+      },
+      {
+        "word": "媒体",
+        "frequency": 33,
+        "coverage": 7,
+        "importance_score": 0.59
+      },
+      {
+        "word": "ターゲット",
+        "frequency": 32,
+        "coverage": 6,
+        "importance_score": 0.58
+      },
+      {
+        "word": "福利厚生",
+        "frequency": 30,
+        "coverage": 7,
+        "importance_score": 0.57
+      },
+      {
+        "word": "平均",
+        "frequency": 28,
+        "coverage": 6,
+        "importance_score": 0.56
+      },
+      {
+        "word": "年収",
+        "frequency": 28,
+        "coverage": 6,
+        "importance_score": 0.56
+      },
+      {
+        "word": "有効求人倍率",
+        "frequency": 26,
+        "coverage": 6,
+        "importance_score": 0.55
+      },
+      {
+        "word": "2024年問題",
+        "frequency": 25,
+        "coverage": 6,
+        "importance_score": 0.54
+      },
+      {
+        "word": "厚生労働省",
+        "frequency": 24,
+        "coverage": 6,
+        "importance_score": 0.53
+      },
+      {
+        "word": "若年層",
+        "frequency": 22,
+        "coverage": 6,
+        "importance_score": 0.52
+      },
+      {
+        "word": "働き方",
+        "frequency": 21,
+        "coverage": 7,
+        "importance_score": 0.51
+      },
+      {
+        "word": "イメージ",
+        "frequency": 20,
+        "coverage": 6,
+        "importance_score": 0.5
+      },
+      {
+        "word": "Indeed",
+        "frequency": 19,
+        "coverage": 5,
+        "importance_score": 0.49
+      },
+      {
+        "word": "原稿",
+        "frequency": 18,
+        "coverage": 5,
+        "importance_score": 0.48
+      },
+      {
+        "word": "面接",
+        "frequency": 18,
+        "coverage": 6,
+        "importance_score": 0.48
+      },
+      {
+        "word": "代行",
+        "frequency": 17,
+        "coverage": 4,
+        "importance_score": 0.47
+      },
+      {
+        "word": "サービス",
+        "frequency": 16,
+        "coverage": 6,
+        "importance_score": 0.46
+      },
+      {
+        "word": "紹介",
+        "frequency": 15,
+        "coverage": 5,
+        "importance_score": 0.45
+      },
+      {
+        "word": "専門",
+        "frequency": 15,
+        "coverage": 6,
+        "importance_score": 0.45
+      },
+      {
+        "word": "事例",
+        "frequency": 14,
+        "coverage": 5,
+        "importance_score": 0.44
+      },
+      {
+        "word": "比較",
+        "frequency": 14,
+        "coverage": 5,
+        "importance_score": 0.44
+      },
+      {
+        "word": "無料",
+        "frequency": 13,
+        "coverage": 5,
+        "importance_score": 0.43
+      },
+      {
+        "word": "解決",
+        "frequency": 13,
+        "coverage": 6,
+        "importance_score": 0.43
+      },
+      {
+        "word": "仕組み",
+        "frequency": 12,
+        "coverage": 4,
+        "importance_score": 0.42
+      },
+      {
+        "word": "アピール",
+        "frequency": 12,
+        "coverage": 6,
+        "importance_score": 0.42
+      },
+      {
+        "word": "ペルソナ",
+        "frequency": 11,
+        "coverage": 3,
+        "importance_score": 0.41
+      },
+      {
+        "word": "検索",
+        "frequency": 11,
+        "coverage": 5,
+        "importance_score": 0.41
+      },
+      {
+        "word": "差別化",
+        "frequency": 10,
+        "coverage": 4,
+        "importance_score": 0.4
+      },
+      {
+        "word": "ワークライフバランス",
+        "frequency": 10,
+        "coverage": 5,
+        "importance_score": 0.4
+      },
+      {
+        "word": "Web",
+        "frequency": 9,
+        "coverage": 4,
+        "importance_score": 0.39
+      },
+      {
+        "word": "SNS",
+        "frequency": 9,
+        "coverage": 4,
+        "importance_score": 0.39
+      },
+      {
+        "word": "動画",
+        "frequency": 8,
+        "coverage": 4,
+        "importance_score": 0.38
+      },
+      {
+        "word": "写真",
+        "frequency": 8,
+        "coverage": 4,
+        "importance_score": 0.38
+      },
+      {
+        "word": "口コミ",
+        "frequency": 8,
+        "coverage": 3,
+        "importance_score": 0.38
+      },
+      {
+        "word": "安心",
+        "frequency": 8,
+        "coverage": 5,
+        "importance_score": 0.38
+      },
+      {
+        "word": "信頼",
+        "frequency": 7,
+        "coverage": 4,
+        "importance_score": 0.37
+      },
+      {
+        "word": "実績",
+        "frequency": 7,
+        "coverage": 4,
+        "importance_score": 0.37
+      },
+      {
+        "word": "ノウハウ",
+        "frequency": 6,
+        "coverage": 3,
+        "importance_score": 0.36
+      },
+      {
+        "word": "AI",
+        "frequency": 6,
+        "coverage": 2,
+        "importance_score": 0.35
+      },
+      {
+        "word": "効率化",
+        "frequency": 6,
+        "coverage": 4,
+        "importance_score": 0.36
+      },
+      {
+        "word": "システム",
+        "frequency": 6,
+        "coverage": 3,
+        "importance_score": 0.36
+      },
+      {
+        "word": "ドラピタ",
+        "frequency": 5,
+        "coverage": 3,
+        "importance_score": 0.34
+      },
+      {
+        "word": "ドラEVER",
+        "frequency": 5,
+        "coverage": 2,
+        "importance_score": 0.33
+      },
+      {
+        "word": "問い合わせ",
+        "frequency": 5,
+        "coverage": 5,
+        "importance_score": 0.34
+      },
+      {
+        "word": "資料",
+        "frequency": 5,
+        "coverage": 3,
+        "importance_score": 0.34
+      },
+      {
+        "word": "相談",
+        "frequency": 5,
+        "coverage": 4,
+        "importance_score": 0.34
+      },
+      {
+        "word": "掲載",
+        "frequency": 5,
+        "coverage": 6,
+        "importance_score": 0.34
+      },
+      {
+        "word": "予算",
+        "frequency": 4,
+        "coverage": 3,
+        "importance_score": 0.32
+      },
+      {
+        "word": "相場",
+        "frequency": 4,
+        "coverage": 3,
+        "importance_score": 0.32
+      },
+      {
+        "word": "傾向",
+        "frequency": 4,
+        "coverage": 5,
+        "importance_score": 0.32
+      },
+      {
+        "word": "推移",
+        "frequency": 4,
+        "coverage": 3,
+        "importance_score": 0.32
+      },
+      {
+        "word": "調査",
+        "frequency": 4,
+        "coverage": 5,
+        "importance_score": 0.32
+      },
+      {
+        "word": "結果",
+        "frequency": 4,
+        "coverage": 5,
+        "importance_score": 0.32
+      },
+      {
+        "word": "数字",
+        "frequency": 4,
+        "coverage": 3,
+        "importance_score": 0.32
+      },
+      {
+        "word": "根拠",
+        "frequency": 3,
+        "coverage": 2,
+        "importance_score": 0.3
+      },
+      {
+        "word": "脳科学",
+        "frequency": 3,
+        "coverage": 1,
+        "importance_score": 0.25
+      },
+      {
+        "word": "行動経済学",
+        "frequency": 3,
+        "coverage": 1,
+        "importance_score": 0.25
+      },
+      {
+        "word": "アプリ",
+        "frequency": 3,
+        "coverage": 1,
+        "importance_score": 0.25
+      },
+      {
+        "word": "スポット",
+        "frequency": 3,
+        "coverage": 2,
+        "importance_score": 0.28
+      },
+      {
+        "word": "大手",
+        "frequency": 3,
+        "coverage": 3,
+        "importance_score": 0.3
+      },
+      {
+        "word": "中小",
+        "frequency": 3,
+        "coverage": 3,
+        "importance_score": 0.3
+      },
+      {
+        "word": "確保",
+        "frequency": 3,
+        "coverage": 6,
+        "importance_score": 0.3
+      },
+      {
+        "word": "課題",
+        "frequency": 3,
+        "coverage": 8,
+        "importance_score": 0.3
+      },
+      {
+        "word": "悩み",
+        "frequency": 3,
+        "coverage": 5,
+        "importance_score": 0.3
+      },
+      {
+        "word": "ミスマッチ",
+        "frequency": 3,
+        "coverage": 4,
+        "importance_score": 0.3
+      },
+      {
+        "word": "OJT",
+        "frequency": 3,
+        "coverage": 2,
+        "importance_score": 0.28
+      },
+      {
+        "word": "体験入社",
+        "frequency": 3,
+        "coverage": 2,
+        "importance_score": 0.28
+      },
+      {
+        "word": "免許",
+        "frequency": 3,
+        "coverage": 5,
+        "importance_score": 0.3
+      },
+      {
+        "word": "資格",
+        "frequency": 3,
+        "coverage": 4,
+        "importance_score": 0.3
+      },
+      {
+        "word": "取得",
+        "frequency": 3,
+        "coverage": 4,
+        "importance_score": 0.3
+      },
+      {
+        "word": "支援",
+        "frequency": 3,
+        "coverage": 5,
+        "importance_score": 0.3
+      },
+      {
+        "word": "制度",
+        "frequency": 3,
+        "coverage": 6,
+        "importance_score": 0.3
+      },
+      {
+        "word": "導入",
+        "frequency": 3,
+        "coverage": 6,
+        "importance_score": 0.3
+      },
+      {
+        "word": "効果",
+        "frequency": 3,
+        "coverage": 7,
+        "importance_score": 0.3
+      }
+    ],
+    "related_keywords": [
+      {
+        "keyword": "トラック運転手",
+        "type": "synonym",
+        "relevance_score": 0.95
+      },
+      {
+        "keyword": "配送ドライバー",
+        "type": "synonym",
+        "relevance_score": 0.92
+      },
+      {
+        "keyword": "物流スタッフ",
+        "type": "synonym",
+        "relevance_score": 0.88
+      },
+      {
+        "keyword": "人材確保",
+        "type": "synonym",
+        "relevance_score": 0.85
+      },
+      {
+        "keyword": "人手不足",
+        "type": "synonym",
+        "relevance_score": 0.85
+      },
+      {
+        "keyword": "採用単価",
+        "type": "derived",
+        "relevance_score": 0.9
+      },
+      {
+        "keyword": "採用コスト",
+        "type": "derived",
+        "relevance_score": 0.89
+      },
+      {
+        "keyword": "求人原稿",
+        "type": "derived",
+        "relevance_score": 0.87
+      },
+      {
+        "keyword": "採用戦略",
+        "type": "derived",
+        "relevance_score": 0.86
+      },
+      {
+        "keyword": "採用代行",
+        "type": "derived",
+        "relevance_score": 0.84
+      },
+      {
+        "keyword": "RPO",
+        "type": "derived",
+        "relevance_score": 0.8
+      },
+      {
+        "keyword": "ダイレクトリクルーティング",
+        "type": "derived",
+        "relevance_score": 0.78
+      },
+      {
+        "keyword": "2024年問題",
+        "type": "related",
+        "relevance_score": 0.93
+      },
+      {
+        "keyword": "働き方改革",
+        "type": "related",
+        "relevance_score": 0.91
+      },
+      {
+        "keyword": "長時間労働",
+        "type": "related",
+        "relevance_score": 0.88
+      },
+      {
+        "keyword": "低賃金",
+        "type": "related",
+        "relevance_score": 0.87
+      },
+      {
+        "keyword": "高齢化社会",
+        "type": "related",
+        "relevance_score": 0.85
+      },
+      {
+        "keyword": "免許制度改正",
+        "type": "related",
+        "relevance_score": 0.82
+      },
+      {
+        "keyword": "中型免許",
+        "type": "related",
+        "relevance_score": 0.8
+      },
+      {
+        "keyword": "大型免許",
+        "type": "related",
+        "relevance_score": 0.8
+      },
+      {
+        "keyword": "フォークリフト",
+        "type": "related",
+        "relevance_score": 0.75
+      },
+      {
+        "keyword": "安全教育",
+        "type": "related",
+        "relevance_score": 0.78
+      },
+      {
+        "keyword": "健康診断",
+        "type": "related",
+        "relevance_score": 0.76
+      },
+      {
+        "keyword": "事故歴",
+        "type": "related",
+        "relevance_score": 0.74
+      },
+      {
+        "keyword": "違反歴",
+        "type": "related",
+        "relevance_score": 0.74
+      },
+      {
+        "keyword": "運転記録証明書",
+        "type": "related",
+        "relevance_score": 0.72
+      },
+      {
+        "keyword": "配送代行",
+        "type": "related",
+        "relevance_score": 0.7
+      },
+      {
+        "keyword": "物流DX",
+        "type": "related",
+        "relevance_score": 0.68
+      },
+      {
+        "keyword": "AI活用",
+        "type": "related",
+        "relevance_score": 0.65
+      },
+      {
+        "keyword": "定着率向上",
+        "type": "derived",
+        "relevance_score": 0.83
+      },
+      {
+        "keyword": "離職防止",
+        "type": "derived",
+        "relevance_score": 0.83
+      },
+      {
+        "keyword": "未経験者歓迎",
+        "type": "derived",
+        "relevance_score": 0.81
+      },
+      {
+        "keyword": "女性ドライバー",
+        "type": "related",
+        "relevance_score": 0.79
+      },
+      {
+        "keyword": "スカウトメール",
+        "type": "derived",
+        "relevance_score": 0.75
+      },
+      {
+        "keyword": "オウンドメディアリクルーティング",
+        "type": "derived",
+        "relevance_score": 0.7
+      },
+      {
+        "keyword": "求人検索エンジン",
+        "type": "derived",
+        "relevance_score": 0.78
+      },
+      {
+        "keyword": "Indeed",
+        "type": "related",
+        "relevance_score": 0.82
+      },
+      {
+        "keyword": "スタンバイ",
+        "type": "related",
+        "relevance_score": 0.75
+      },
+      {
+        "keyword": "求人ボックス",
+        "type": "related",
+        "relevance_score": 0.75
+      },
+      {
+        "keyword": "ハローワーク",
+        "type": "related",
+        "relevance_score": 0.72
+      }
+    ],
+    "keyword_categorization": {
+      "essential": [
+        {
+          "keyword": "2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "長時間労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        }
+      ],
+      "standard": [
+        {
+          "keyword": "配送ドライバー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "採用単価",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "求人原稿",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "採用代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "働き方改革",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "健康診断",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "Indeed",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        }
+      ],
+      "unique": [
+        {
+          "keyword": "トラック運転手",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "物流スタッフ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人手不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "RPO",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "ダイレクトリクルーティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "低賃金",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "高齢化社会",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "免許制度改正",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "大型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "フォークリフト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "安全教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "事故歴",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "違反歴",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "運転記録証明書",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "配送代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "物流DX",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "AI活用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "定着率向上",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "離職防止",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "未経験者歓迎",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "女性ドライバー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "スカウトメール",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "オウンドメディアリクルーティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "求人検索エンジン",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "スタンバイ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "求人ボックス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "ハローワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        }
+      ]
+    },
+    "phase_mapping": {
+      "phase1_anxiety": {
+        "keywords": [
+          "難しい",
+          "不足",
+          "深刻",
+          "課題",
+          "悩み",
+          "辞退",
+          "離職",
+          "コスト高",
+          "応募が来ない",
+          "失敗",
+          "リスク",
+          "厳しい",
+          "限界",
+          "ミスマッチ",
+          "定着しない",
+          "高齢化",
+          "人手不足",
+          "危機感",
+          "採用難",
+          "埋もれる"
+        ],
+        "context": "ドライバー採用における現状の厳しさや、将来への不安を喚起する文脈で使用"
+      },
+      "phase2_understanding": {
+        "keywords": [
+          "理由",
+          "背景",
+          "データ",
+          "有効求人倍率",
+          "平均年収",
+          "比較",
+          "傾向",
+          "仕組み",
+          "ポイント",
+          "コツ",
+          "事例",
+          "成功法則",
+          "ノウハウ",
+          "改善策",
+          "解説",
+          "分析",
+          "統計",
+          "厚生労働省",
+          "2024年問題",
+          "ペルソナ",
+          "ターゲット",
+          "差別化"
+        ],
+        "context": "採用難の原因を論理的に説明し、解決策の有効性をデータや事例で裏付ける文脈で使用"
+      },
+      "phase3_action": {
+        "keywords": [
+          "導入",
+          "活用",
+          "依頼",
+          "相談",
+          "問い合わせ",
+          "無料",
+          "資料請求",
+          "代行",
+          "サービス",
+          "ツール",
+          "今すぐ",
+          "解決",
+          "実践",
+          "ダウンロード",
+          "診断",
+          "見積もり",
+          "スタート",
+          "改善",
+          "成功",
+          "実績",
+          "簡単",
+          "お任せ"
+        ],
+        "context": "具体的な解決策の提示と、読者への行動喚起（CTA）を行う文脈で使用"
+      }
+    },
+    "llmo_elements": {
+      "voice_search_keywords": [
+        "ドライバー採用 難しい なぜ",
+        "ドライバー採用単価 相場",
+        "ドライバー採用 成功事例",
+        "求人 応募率 上げる方法",
+        "運送業 人手不足 対策",
+        "ドライバー 定着率 向上",
+        "2024年問題 採用 影響",
+        "ドライバー採用 媒体 おすすめ",
+        "未経験ドライバー 採用 コツ",
+        "ドライバー給与 平均"
+      ],
+      "question_format_keywords": [
+        "採用単価とは",
+        "有効求人倍率とは",
+        "採用を成功させるには",
+        "求人原稿の書き方",
+        "面接での質問例",
+        "離職を防ぐ方法は",
+        "採用代行のメリット",
+        "求人サイトの選び方",
+        "採用コストを抑えるには",
+        "福利厚生の重要性"
+      ]
+    },
+    "behavioral_economics_triggers": {
+      "loss_aversion": [
+        "採用コスト"
+      ],
+      "social_proof": [
+        "人材確保",
+        "人手不足",
+        "求人原稿",
+        "高齢化社会",
+        "求人検索エンジン",
+        "求人ボックス"
+      ],
+      "authority": [],
+      "consistency": [],
+      "liking": [],
+      "scarcity": []
+    },
+    "cta_keywords": {
+      "urgency": [],
+      "ease": [],
+      "free": [],
+      "expertise": [
+        "未経験者歓迎"
+      ]
+    },
+    "semantic_clusters": {
+      "market_analysis": [
+        "有効求人倍率",
+        "採用単価",
+        "平均年収",
+        "労働時間",
+        "2024年問題",
+        "高齢化",
+        "人手不足"
+      ],
+      "recruitment_strategy": [
+        "ペルソナ",
+        "ターゲット",
+        "求人原稿",
+        "Indeed",
+        "求人サイト",
+        "採用代行",
+        "ダイレクトリクルーティング"
+      ],
+      "retention_improvement": [
+        "定着率",
+        "離職防止",
+        "福利厚生",
+        "教育研修",
+        "OJT",
+        "ワークライフバランス",
+        "コミュニケーション"
+      ],
+      "digital_marketing": [
+        "Webマーケティング",
+        "SEO",
+        "SNS活用",
+        "動画",
+        "口コミ",
+        "AI活用",
+        "スマホ対応"
+      ]
+    },
+    "keyword_density_analysis": {
+      "main_keyword_density": 0.0,
+      "cooccurrence_densities": {}
+    },
+    "competitor_keyword_gaps": [
+      {
+        "keyword": "トラック運転手",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "物流スタッフ",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "高齢化社会",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "免許制度改正",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "物流DX",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "中型免許",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "フォークリフト",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "安全教育",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "事故歴",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "配送代行",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "AI活用",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "離職防止",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "未経験者歓迎",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "スカウトメール",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "オウンドメディアリクルーティング",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "スタンバイ",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "RPO",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      },
+      {
+        "keyword": "ダイレクトリクルーティング",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      },
+      {
+        "keyword": "低賃金",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      },
+      {
+        "keyword": "大型免許",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      }
+    ],
+    "three_phase_distribution": {
+      "phase1_keywords": [
+        {
+          "keyword": "2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "離職防止",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase2_keywords": [
+        {
+          "keyword": "トラック運転手",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "配送ドライバー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "物流スタッフ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人手不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用単価",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人原稿",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "RPO",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ダイレクトリクルーティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "働き方改革",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "長時間労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "低賃金",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "高齢化社会",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "免許制度改正",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "大型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "フォークリフト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "安全教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "健康診断",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "事故歴",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "違反歴",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運転記録証明書",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "配送代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "物流DX",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "AI活用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "定着率向上",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "未経験者歓迎",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "女性ドライバー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "スカウトメール",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "オウンドメディアリクルーティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人検索エンジン",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "Indeed",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "スタンバイ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人ボックス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ハローワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase3_keywords": []
+    },
+    "llmo_optimized_keywords": {
+      "question_format": [],
+      "voice_search": []
+    }
+  },
+  "format_detected": "json",
+  "competitor_count": 10,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 75722,
+    "output": 6742
+  },
+  "metrics": {
+    "char_count": 15959,
+    "word_count": 2598
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": [
+      "insufficient_keyword_count",
+      "no_keyword_categories",
+      "no_llmo_elements"
+    ],
+    "warnings": [
+      "cooccurrence_count: 0 (target: 150)",
+      "lsi_count: 0 (target: 30)",
+      "no_phase3_keywords"
+    ]
+  },
+  "extraction_summary": {
+    "cooccurrence": 0,
+    "lsi": 0,
+    "related": 40,
+    "phase1": 2,
+    "phase2": 38,
+    "phase3": 0,
+    "question_format": 0,
+    "voice_search": 0,
+    "loss_aversion": 1,
+    "social_proof": 6,
+    "authority": 0,
+    "essential": 2,
+    "standard": 10,
+    "unique": 28,
+    "cta_total": 1,
+    "gaps": 20
+  }
+}

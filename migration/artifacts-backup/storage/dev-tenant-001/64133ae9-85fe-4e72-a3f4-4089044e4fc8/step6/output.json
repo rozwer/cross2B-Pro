@@ -1,0 +1,71 @@
+{
+  "step": "step6",
+  "keyword": "従業員募集こない",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 1023,
+    "output": 1794
+  },
+  "warnings": [
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'heading': 'なぜ従業員募集に人が来ない？応募ゼロの根本原因を徹底解剖', 'subheadings': ['時代は変わった！求職者のホンネと企業のミスマッチ', '求人広告の落とし穴！魅力が伝わらない、そもそも見られていない？', '中小企業ならではの壁！ネームバリュー不足を乗り越えるには？', '【チェックリスト】あなたの会社は大丈夫？応募が来ない原因診断'], 'sources': [{'title': '労働力調査（基本集計）2024年5月分', 'url': 'https://www.e-stat.go.jp/stat-search/files?tclass=000001011499', 'relevance': '労働人口の減少傾向を裏付ける公的データとして引用。有効求人倍率の推移も確認。', 'type': '政府統計'}, {'title': '求職者が企業を選ぶ際に重視する点に関する調査', 'url': 'https://www.disc.co.jp/wp/wp-content/uploads/2023/04/202304_kigyosenko.pdf', 'relevance': '求職者が重視する点（給与、ワークライフバランス、企業文化など）に関するアンケート調査結果を引用。', 'type': '民間調査'}], 'key_points': ['労働人口減少と求職者の価値観の変化（ワークライフバランス重視、企業の社会貢献性など）', '求人広告の内容（給与、待遇、仕事内容、企業文化の記載不足、魅力的な表現の欠如）', '求人広告の露出不足（求人媒体の選定ミス、SEO対策不足）', '中小企業の認知度不足、大手企業との待遇差', '採用ターゲットの明確化の重要性', '競合他社の採用活動の分析の必要性']}, {'heading': '【即効性あり】応募数を劇的に増やす！今日からできる7つの改善策', 'subheadings': ['求人広告を徹底的に見直す！求職者の心に響く書き方講座', '採用ターゲットを再定義！本当に欲しい人材像を明確にする', '採用チャネルを多様化！ハローワークだけではもったいない', 'SNS採用を始めよう！企業の魅力をダイレクトに発信する', '社員紹介制度を活性化！インセンティブ設計と広報戦略', '採用ブランディングで差をつける！企業の個性を打ち出す', '採用代行(RPO)サービスを賢く利用！プロの力を借りるのもアリ'], 'sources': [{'title': 'Indeed Japan 公式サイト', 'url': 'https://jp.indeed.com/', 'relevance': 'Indeedの活用方法、成功事例、料金体系などを参照。', 'type': '企業公式サイト'}, {'title': '経済産業省「中小企業白書」', 'url': 'https://www.chusho.meti.go.jp/pamflet/hakusyo/index.html', 'relevance': '中小企業の採用状況、課題、成功事例に関する記述を参照。', 'type': '政府資料'}], 'key_points': ['求人広告のターゲット層に合わせた表現、キーワード選定', '給与、待遇、福利厚生の見直し（競合他社との比較）', '仕事内容の魅力的な表現、キャリアパスの提示', '企業の強み、企業文化、社風のアピール', '採用ターゲットに合わせた求人媒体の選定', 'Indeed、求人ボックスなどのアグリゲーションサイトの活用', 'SNS（Twitter, Facebook, Instagram, LinkedIn）での情報発信', '社員紹介制度のインセンティブ設計（金銭的報酬だけでなく、昇進、表彰など）', '採用ブランディングの重要性（企業の理念、ビジョン、価値観の発信）', '採用代行(RPO)サービスのメリット、デメリット、選定ポイント']}, {'heading': '成功事例から学ぶ！採用難を克服した中小企業のリアルストーリー', 'subheadings': ['事例1：地方の中小企業がSNS採用で優秀なエンジニアを獲得', '事例2：社員紹介制度を刷新し、採用コストを大幅削減', '事例3：採用ブランディングで応募者が殺到する人気企業へ'], 'sources': [{'title': '中小企業庁「中小企業事例集」', 'url': 'https://www.chusho.meti.go.jp/keiei/koyou/jirei/index.html', 'relevance': '中小企業の採用成功事例に関する情報源として活用。', 'type': '政府資料'}, {'title': 'HRBrain 導入事例', 'url': 'https://www.hrbrain.jp/case', 'relevance': 'タレントマネジメントシステムを活用した採用成功事例', 'type': '企業サイト'}], 'key_points': ['各事例における課題、解決策、効果', '中小企業が参考にできるポイント', '成功事例から得られる教訓']}, {'heading': '未来を見据えた採用戦略！変化に対応し続けるためのヒント', 'subheadings': ['採用における最新トレンド（ダイレクトリクルーティング、リファラル採用、AI活用など）', 'エンゲージメントの高い採用活動とは？', '採用担当者のスキルアップの重要性', '採用活動の効果測定と改善サイクル'], 'sources': [{'title': 'Wantedly', 'url': 'https://www.wantedly.com/', 'relevance': 'ダイレクトリクルーティングのプラットフォームとして。', 'type': '企業公式サイト'}, {'title': 'HR Tech カオスマップ 2024', 'url': 'https://www.google.com/', 'relevance': '採用におけるテクノロジー活用を俯瞰的に把握。', 'type': 'その他'}], 'key_points': ['採用の最新トレンドの解説', 'エンゲージメントの高い採用活動の具体的な方法（応募者とのコミュニケーション、選考プロセスの改善など）', '採用担当者に必要なスキル（コミュニケーション能力、マーケティングスキル、データ分析スキルなど）', '採用活動の効果測定指標（応募数、採用数、採用コスト、離職率など）', 'PDCAサイクルを回し、採用活動を継続的に改善していくことの重要性']}, {'heading': 'まとめ｜「従業員募集こない」の悩みを克服し、理想の人材を獲得するために', 'subheadings': [], 'sources': [], 'key_points': ['本記事の要約', '読者へのメッセージ（諦めずに、改善を続けることの重要性）', '今後の展望（採用市場の変化に対応していくことの重要性）']}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 428
+  },
+  "source_citations": {},
+  "original_outline_hash": "d1ebd440ba1d9a6d",
+  "metrics": {
+    "word_count": 1647,
+    "char_count": 3037,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 1219,
+    "word_increase": 428
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 208.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "neuroscience_weak: 感情トリガーや認知負荷軽減の要素が不足",
+      "llmo_weak: 見出し構造が不十分（H2が3未満）",
+      "kgi_weak: KGI導線が不足"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 0.0,
+      "behavioral_economics": 0.5,
+      "llmo": 0.0,
+      "kgi": 0.0
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用 難しい",
+  "analysis": "工程0「キーワード選定・分析」の専門家として、キーワード「ドライバー 採用 難しい」の分析結果をJSON形式で出力します。\n\nこのキーワードは、日本の物流業界における「2024年問題」を背景とした深刻な課題意識を反映しており、単なるハウツーではなく、市場構造の理解と抜本的な戦略転換を提案する記事構成が求められます。\n\n```json\n{\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"search_intent\": \"運送・物流企業の採用担当者や経営者が、求人を出しても応募が来ない、または採用できない現状に直面し、その構造的な原因（市場背景）と、現状を打破するための具体的な改善策・新しい採用手法を求めている。単なる慰めではなく、他社が成功している事例やデータに基づいた解決策を知りたいというTransactional（解決策模索）に近いInformational（情報収集）意図を持つ。\",\n  \"target_audience\": \"中小〜中堅の運送・物流会社の経営者または採用責任者。高齢化や長時間労働規制（2024年問題）によるドライバー不足に危機感を抱いており、従来のハローワークや紙媒体の求人では効果が出なくなっている層。\",\n  \"four_pillars_evaluation\": {\n    \"neuroscience\": {\n      \"phase\": 2,\n      \"brain_activation\": \"前頭前野\",\n      \"score\": 85,\n      \"rationale\": \"ユーザーは既に「採用できない」という不安（扁桃体活性）状態にあるため、記事の役割はそれを煽ることではなく、前頭前野に働きかけて「なぜ難しいのか（論理的理解）」と「どうすれば解決するか（計画）」を提供し、冷静な意思決定を促すことにある。\"\n    },\n    \"behavioral_economics\": {\n      \"applicable_principles\": [\n        \"損失回避\",\n        \"社会的証明\",\n        \"希少性\"\n      ],\n      \"score\": 90,\n      \"rationale\": \"「ドライバーを確保できない＝事業継続不可」という強力な損失回避性が働く。また、「有効求人倍率の高さ（希少性）」や「成功している他社の事例（社会的証明）」を示すことで、従来の手法からの脱却（行動変容）を強く促すことができる。\"\n    },\n    \"llmo\": {\n      \"citation_potential\": \"high\",\n      \"score\": 80,\n      \"rationale\": \"「ドライバー採用難の理由」「解決策」といった構造化された情報はAIによる回答生成で引用されやすい。公的データ（国交省や厚労省の統計）と組み合わせることで、信頼性の高いソースとして認識される可能性が高い。\"\n    },\n    \"kgi\": {\n      \"expected_cvr\": 1.5,\n      \"score\": 75,\n      \"rationale\": \"課題が深刻であるため、具体的な解決策（採用代行、特化型求人媒体、待遇改善コンサル等）へのニーズは極めて高い。ただし、競合も多いため、差別化されたオファーが必要。検討段階は比較的高く、問い合わせにつながりやすい。\"\n    }\n  },\n  \"article_strategy\": {\n    \"type\": \"comprehensive_guide\",\n    \"strategy\": \"standard\",\n    \"background\": {\n      \"why_now\": \"2024年4月からの時間外労働上限規制適用により、ドライバー不足が「物流が止まる」レベルの経営リスクとして顕在化しているため。\",\n      \"target_pain\": \"求人費をかけても応募ゼロ、応募があっても条件が合わない、若手が採用できず組織が高齢化している。\",\n      \"key_message\": \"「採用難」は市場構造の問題だが、ターゲット選定と訴求軸（働き方改革）を変えることで採用成功の勝機はある。\",\n      \"urgency\": \"high\"\n    }\n  },\n  \"recommended_angles\": [\n    {\n      \"angle\": \"市場データに基づく構造分析アプローチ\",\n      \"expected_effect\": \"「自社だけが悪いわけではない」という納得感を与えつつ、市場平均と乖離している自社の課題（給与、労働時間等）を客観視させる。\",\n      \"differentiation\": \"厚労省や国交省の最新統計データを図解し、感情論ではなく数値で現状を解説する。\"\n    },\n    {\n      \"angle\": \"ターゲット再定義（女性・未経験・シニア）アプローチ\",\n      \"expected_effect\": \"「経験者・即戦力」というレッドオーシャンから視点をずらし、潜在層へのアプローチ方法を提示することで採用可能性を広げる。\",\n      \"differentiation\": \"「トラガール」や「未経験育成スキーム」など、具体的なターゲット変更の成功パターンを提示する。\"\n    },\n    {\n      \"angle\": \"採用マーケティング（Owned Media Recruiting）アプローチ\",\n      \"expected_effect\": \"求人媒体に依存しない、自社サイトやSNSを活用した直接採用の重要性を説き、採用コスト削減とマッチング精度向上を訴求する。\",\n      \"differentiation\": \"待ちの採用（求人掲載）から攻めの採用（魅力発信）への転換手法を具体的に解説する。\"\n    }\n  ],\n  \"content_type_suggestion\": \"深刻な課題に対し、データと事例で論理的に解決策を提示するガイド記事\",\n  \"difficulty_score\": 7,\n  \"industry_category\": \"logistics\"\n}\n```",
+  "search_intent": "運送・物流企業の採用担当者や経営者が、求人を出しても応募が来ない、または採用できない現状に直面し、その構造的な原因（市場背景）と、現状を打破するための具体的な改善策・新しい採用手法を求めている。単なる慰めではなく、他社が成功している事例やデータに基づいた解決策を知りたいというTransactional（解決策模索）に近いInformational（情報収集）意図を持つ。",
+  "difficulty_score": 7,
+  "recommended_angles": [
+    {
+      "angle": "市場データに基づく構造分析アプローチ",
+      "expected_effect": "「自社だけが悪いわけではない」という納得感を与えつつ、市場平均と乖離している自社の課題（給与、労働時間等）を客観視させる。",
+      "differentiation": "厚労省や国交省の最新統計データを図解し、感情論ではなく数値で現状を解説する。"
+    },
+    {
+      "angle": "ターゲット再定義（女性・未経験・シニア）アプローチ",
+      "expected_effect": "「経験者・即戦力」というレッドオーシャンから視点をずらし、潜在層へのアプローチ方法を提示することで採用可能性を広げる。",
+      "differentiation": "「トラガール」や「未経験育成スキーム」など、具体的なターゲット変更の成功パターンを提示する。"
+    },
+    {
+      "angle": "採用マーケティング（Owned Media Recruiting）アプローチ",
+      "expected_effect": "求人媒体に依存しない、自社サイトやSNSを活用した直接採用の重要性を説き、採用コスト削減とマッチング精度向上を訴求する。",
+      "differentiation": "待ちの採用（求人掲載）から攻めの採用（魅力発信）への転換手法を具体的に解説する。"
+    }
+  ],
+  "target_audience": "中小〜中堅の運送・物流会社の経営者または採用責任者。高齢化や長時間労働規制（2024年問題）によるドライバー不足に危機感を抱いており、従来のハローワークや紙媒体の求人では効果が出なくなっている層。",
+  "content_type_suggestion": "深刻な課題に対し、データと事例で論理的に解決策を提示するガイド記事",
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": 2,
+      "brain_activation": "前頭前野",
+      "score": 85
+    },
+    "behavioral_economics": {
+      "applicable_principles": [
+        "損失回避",
+        "社会的証明",
+        "希少性"
+      ],
+      "score": 90
+    },
+    "llmo": {
+      "citation_potential": "high",
+      "score": 80
+    },
+    "kgi": {
+      "expected_cvr": 1.5,
+      "score": 75
+    }
+  },
+  "article_strategy": {
+    "type": "comprehensive_guide",
+    "strategy": "standard",
+    "background": {
+      "why_now": "2024年4月からの時間外労働上限規制適用により、ドライバー不足が「物流が止まる」レベルの経営リスクとして顕在化しているため。",
+      "target_pain": "求人費をかけても応募ゼロ、応募があっても条件が合わない、若手が採用できず組織が高齢化している。",
+      "key_message": "「採用難」は市場構造の問題だが、ターゲット選定と訴求軸（働き方改革）を変えることで採用成功の勝機はある。",
+      "urgency": "high"
+    }
+  },
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 1861,
+    "output": 1238
+  },
+  "metrics": {
+    "char_count": 2663,
+    "word_count": 1356
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

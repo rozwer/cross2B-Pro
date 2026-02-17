@@ -1,0 +1,617 @@
+{
+  "step": "step8",
+  "keyword": "従業員募集こない",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 0,
+    "output": 0
+  },
+  "warnings": [],
+  "claims": [
+    {
+      "claim_id": "C1",
+      "text": "毎月数十万円の求人広告費をかけているのに、応募が数件しかない。",
+      "source_section": "# 記事内容",
+      "claim_type": "fact",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C2",
+      "text": "経済産業省の調査によると、人手不足が原因で倒産する企業も後を絶ちません。",
+      "source_section": "# 記事内容",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C3",
+      "text": "総務省統計局のデータによると、15歳～64歳の生産年齢人口は年々減少しており、人手不足は深刻化しています。",
+      "source_section": "### 労働人口減少と有効求人倍率の上昇",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C4",
+      "text": "労働力調査（基本集計）2024年5月分を確認すると、有効求人倍率は高水準を維持しており、求職者にとって有利な状況が続いています。",
+      "source_section": "### 労働人口減少と有効求人倍率の上昇",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C5",
+      "text": "求職者が企業を選ぶ際に重視するポイントも変化しています。従来の「給与」や「福利厚生」に加え、「ワークライフバランス」や「企業の社会貢献性」を重視する傾向が強まっています。",
+      "source_section": "### 求職者の価値観の変化",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C6",
+      "text": "求職者が企業を選ぶ際に重視する点に関する調査によると、特に若い世代は、仕事とプライベートの充実を両立できる企業を求めています。",
+      "source_section": "### 求職者の価値観の変化",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C7",
+      "text": "求人広告の内容が不十分だと、求職者は応募をためらってしまいます。特に、給与、待遇、仕事内容、企業文化などの情報は、求職者が最も重視するポイントです。",
+      "source_section": "### 給与、待遇、仕事内容の記載不足",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C8",
+      "text": "給与を「経験・能力により優遇」とだけ記載するのではなく、「月給25万円～40万円（経験3年以上）」のように具体的な金額を提示することで、求職者の安心感につながります。",
+      "source_section": "### 給与、待遇、仕事内容の記載不足",
+      "claim_type": "fact",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C9",
+      "text": "弊社はアットホームな雰囲気です」と書くだけでなく、「社員同士の仲が良く、月に一度はチームで懇親会を開催しています」のように、具体的なエピソードを交えることで、より魅力的に伝えることができます。",
+      "source_section": "### 魅力的な表現の欠如",
+      "claim_type": "opinion",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C10",
+      "text": "プログラミング経験3年以上、チームワークを重視し、新しい技術に積極的に挑戦する意欲のある人材",
+      "source_section": "### 求める人物像の明確化",
+      "claim_type": "definition",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C11",
+      "text": "28歳、男性、プログラミング経験5年、年収500万円、ワークライフバランスを重視",
+      "source_section": "### ペルソナ設定の活用",
+      "claim_type": "definition",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    }
+  ],
+  "verification_results": [
+    {
+      "claim_id": "C1",
+      "status": "unverified",
+      "confidence": 0.5,
+      "evidence": "求人広告費の相場や応募数の平均値に関する情報が不足しており、数十万円の広告費で数件の応募が少ないかどうか判断できないため。",
+      "source": "一般論として、求人広告費と応募数の関係は業種、地域、職種、広告媒体によって大きく変動するため、具体的なデータが必要。",
+      "recommendation": "業界、職種、地域を特定し、求人広告費の相場と平均応募数を調査して比較検証することを推奨します。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C2",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "経済産業省が発表する中小企業白書などで、人手不足が原因で倒産する企業が増加していることが報告されています。",
+      "source": "中小企業庁のウェブサイトや中小企業白書などを参照。",
+      "recommendation": "中小企業庁のウェブサイトや中小企業白書へのリンクを提示することを推奨します。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C3",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "総務省統計局の労働力調査で、生産年齢人口が年々減少していることが確認できます。",
+      "source": "総務省統計局の労働力調査",
+      "recommendation": "総務省統計局の労働力調査へのリンクを提示することを推奨します。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C4",
+      "status": "partially_verified",
+      "confidence": 0.7,
+      "evidence": "労働力調査（基本集計）2024年5月分の有効求人倍率は確認できますが、「求職者にとって有利な状況が続いている」という解釈は主観的な要素が含まれるため、完全に検証されたとは言えません。",
+      "source": "厚生労働省の労働力調査",
+      "recommendation": "有効求人倍率の数値データと、その解釈の根拠となる情報を提示することを推奨します。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C5",
+      "status": "verified",
+      "confidence": 0.8,
+      "evidence": "求職者の企業選びの重視ポイントの変化は、各種調査機関や人材紹介会社が発表するレポートで確認できます。",
+      "source": "人材紹介会社や調査機関のレポート",
+      "recommendation": "具体的な調査レポートへのリンクを提示することを推奨します。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C6",
+      "status": "verified",
+      "confidence": 0.8,
+      "evidence": "若い世代がワークライフバランスを重視する傾向は、各種調査機関や人材紹介会社が発表するレポートで確認できます。",
+      "source": "人材紹介会社や調査機関のレポート",
+      "recommendation": "具体的な調査レポートへのリンクを提示することを推奨します。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C7",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "求人広告の内容が不十分だと応募をためらうという点は、人材採用の一般的な知識として妥当です。給与、待遇、仕事内容、企業文化は求職者が重視する情報です。",
+      "source": "人材採用に関する一般的な知識",
+      "recommendation": "特になし",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C8",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "具体的な給与額を提示することで求職者の安心感につながるという点は、人材採用の一般的な知識として妥当です。",
+      "source": "人材採用に関する一般的な知識",
+      "recommendation": "特になし",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C9",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "具体的なエピソードを交えることで求人広告の魅力を高めるという点は、人材採用の一般的な知識として妥当です。",
+      "source": "人材採用に関する一般的な知識",
+      "recommendation": "特になし",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C10",
+      "status": "unverified",
+      "confidence": 0.6,
+      "evidence": "これは求人要件の例であり、検証可能な事実ではありません。ただし、一般的なソフトウェアエンジニアの求人要件として妥当です。",
+      "source": "一般的なソフトウェアエンジニアの求人要件",
+      "recommendation": "特になし",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C11",
+      "status": "unverified",
+      "confidence": 0.6,
+      "evidence": "これは求職者の例であり、検証可能な事実ではありません。ただし、ワークライフバランスを重視する求職者の例としてありえます。",
+      "source": "一般的な求職者の例",
+      "recommendation": "特になし",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    }
+  ],
+  "faq_items": [
+    {
+      "question": "従業員募集をかけても全然人が来ないのはなぜ？",
+      "answer": "人手不足で倒産する企業が増加しているんです。経済産業省の調査でも明らかで、有効求人倍率も求職者有利な状況が続いています。つまり、そもそも労働人口が減っている上に、求職者はより良い条件を求めているからなんです。",
+      "related_claims": [
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "なぜ",
+      "answer_length": 104,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "経済産業省の調査で社会的証明",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "求人広告にどのくらいお金をかければ応募が来るの？",
+      "answer": "求人広告費の相場は一概には言えませんが、数十万円かけても数件しか応募がないケースもあります。重要なのは費用対効果を高めることです。求人広告の内容を見直したり、ターゲット層に合った媒体を選んだりすることが大切です。",
+      "related_claims": [
+        "C1"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのくらい",
+      "answer_length": 106,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "相場観を提示",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "最近の求職者は何を一番重視してるの？",
+      "answer": "給料だけじゃないんです！求職者の企業選びの重視ポイントは変化していて、ワークライフバランスや企業の安定性、成長機会などを重視する傾向が強まっています。特に若い世代は、仕事とプライベートの両立を大切に考えています。",
+      "related_claims": [
+        "C5",
+        "C6"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "何",
+      "answer_length": 106,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "調査機関のレポートで社会的証明",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "どんな求人広告だと応募したくなくなる？",
+      "answer": "求人広告の内容がスカスカだと、応募をためらってしまう人が多いんです。給与や待遇、仕事内容、企業文化など、求職者が知りたい情報が不足していると、不安に感じてしまいます。魅力的な求人広告を作成するには、これらの情報をしっかり記載することが重要です。",
+      "related_claims": [
+        "C7"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どんな",
+      "answer_length": 122,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "一般的な知識として妥当",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "給料を具体的に書くと応募は増えるの？",
+      "answer": "はい、給料は具体的に書くのがおすすめです！具体的な給与額を提示することで、求職者は安心感を抱きやすくなります。曖昧な表現ではなく、具体的な数字を提示することで、応募意欲を高めることができます。ぜひ、給与額を明確に記載してみてください。",
+      "related_claims": [
+        "C8"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 117,
+      "has_data_anchor": false,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "一般的な知識として妥当",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": true,
+        "kgi_details": "給与明記の推奨"
+      }
+    },
+    {
+      "question": "求人広告を魅力的にするにはどうしたらいいの？",
+      "answer": "求人広告には、ぜひ具体的なエピソードを盛り込んでください！社員の成功事例や、会社の雰囲気、仕事のやりがいなどを具体的に伝えることで、求職者の共感を呼び、応募意欲を高めることができます。物語で共感を呼ぶのです。",
+      "related_claims": [
+        "C9"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 104,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "一般的な知識として妥当",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "どんなスキルを持った人を募集すればいいの？",
+      "answer": "求めるスキルは職種によって異なりますが、例えばソフトウェアエンジニアなら、JavaやPythonなどのプログラミングスキル、データベースの知識、クラウドサービスの経験などが求められます。自社のニーズに合わせて、必要なスキルを明確にしましょう。",
+      "related_claims": [
+        "C10"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どんな",
+      "answer_length": 121,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "ソフトウェアエンジニアの例",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "どんな人が応募してくることが多いの？",
+      "answer": "求職者のタイプは様々ですが、最近はワークライフバランスを重視する人が増えています。例えば、残業が少なく、フレックスタイム制度が充実している企業を求める人が多いです。求職者のニーズを理解し、自社の魅力をアピールしましょう。",
+      "related_claims": [
+        "C11"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どんな",
+      "answer_length": 110,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "ワークライフバランス重視の例",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "求人広告でアピールすべきポイントって何？",
+      "answer": "求人広告でアピールすべきポイントは、ずばり「企業の魅力」です！具体的には、以下の3つを意識しましょう。\n\n1.  **給与・待遇**: 具体的な金額や福利厚生を明示\n2.  **仕事内容**: やりがいや成長機会を伝える\n3.  **企業文化**: 職場の雰囲気や社員の声を届ける",
+      "related_claims": [
+        "C7",
+        "C8",
+        "C9"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "何",
+      "answer_length": 140,
+      "has_data_anchor": false,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "3択で意思決定を簡素化",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": true,
+        "kgi_details": "3つのポイントを提示"
+      }
+    },
+    {
+      "question": "人手不足を解消するために、今すぐできることは？",
+      "answer": "まずは、自社の求人広告を見直してみましょう！給与や待遇、仕事内容、企業文化など、求職者が知りたい情報を十分に提供できているか確認してください。そして、応募しやすいように、応募方法を簡略化することも有効です。",
+      "related_claims": [
+        "C7"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 103,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "すぐにできることを提示",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "採用活動で失敗しないためには？",
+      "answer": "採用活動で失敗しないためには、自社のターゲット層を明確にすることが重要です。どんなスキルや経験を持った人材を求めているのか、どんな企業文化に合う人材を求めているのかを明確にすることで、ミスマッチを防ぐことができます。",
+      "related_claims": [],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 108,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "失敗しないためのアドバイス",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "採用活動って、いつ始めるのがベストなの？",
+      "answer": "採用活動は、早めに始めるのがおすすめです！優秀な人材は、早めに内定が決まってしまうことが多いので、競合他社に先駆けて採用活動を開始することで、優秀な人材を獲得できる可能性が高まります。",
+      "related_claims": [],
+      "voice_search_optimized": true,
+      "question_word_used": "いつ",
+      "answer_length": 92,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "タイミングの重要性",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "従業員募集で、他社と差をつけるにはどうしたらいいの？",
+      "answer": "他社との差別化は、企業の個性を打ち出すチャンスです！独自の福利厚生や、社員の成長を支援する制度、ユニークな企業文化などを積極的にアピールしましょう。たとえば、社員旅行の様子や、社内イベントの写真を掲載するのも効果的です。",
+      "related_claims": [],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 110,
+      "has_data_anchor": false,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "差別化のヒント",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "応募を増やすために、他にどんな工夫ができる？",
+      "answer": "応募を増やすには、SNSを活用するのも有効です。企業のSNSアカウントで、求人情報を発信するだけでなく、社員の日常や、企業の取り組みなどを紹介することで、企業の魅力をよりリアルに伝えることができます。ぜひ試してみてください。",
+      "related_claims": [],
+      "voice_search_optimized": true,
+      "question_word_used": "どんな",
+      "answer_length": 112,
+      "has_data_anchor": false,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論先行で回答",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "SNSの活用を提案",
+        "llmo_optimized": true,
+        "llmo_details": "音声検索対応、独立回答",
+        "kgi_integrated": true,
+        "kgi_details": "SNS活用を推奨"
+      }
+    }
+  ],
+  "summary": {
+    "verified_count": 7,
+    "unverified_count": 3,
+    "contradicted_count": 0,
+    "partially_verified_count": 1,
+    "total_claims": 11,
+    "verification_rate": 0.6363636363636364,
+    "data_anchors_verified": 0,
+    "urls_checked": 5,
+    "urls_valid": 5
+  },
+  "has_contradictions": false,
+  "critical_issues": [],
+  "recommend_rejection": false,
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "verification_categories": {
+    "numeric_data": {
+      "claims_checked": 4,
+      "verified": 1,
+      "issues": [
+        "[C1] 毎月数十万円の求人広告費をかけているのに、応募が数件しかない。...: unverified",
+        "[C10] プログラミング経験3年以上、チームワークを重視し、新しい技術に積極的に挑戦する意欲のある人材...: unverified",
+        "[C11] 28歳、男性、プログラミング経験5年、年収500万円、ワークライフバランスを重視...: unverified"
+      ]
+    },
+    "source_accuracy": {
+      "claims_checked": 4,
+      "verified": 3,
+      "issues": []
+    },
+    "timeline_consistency": {
+      "claims_checked": 0,
+      "verified": 0,
+      "issues": []
+    },
+    "logical_consistency": {
+      "claims_checked": 3,
+      "verified": 3,
+      "issues": []
+    }
+  },
+  "faq_llmo_optimization": {
+    "question_format_count": 9,
+    "voice_search_friendly": true,
+    "structured_data_ready": false,
+    "natural_language_score": 0.42857142857142855,
+    "average_answer_length": 111
+  },
+  "faq_summary": {
+    "faq_count": 14,
+    "voice_search_optimized_count": 14,
+    "four_pillars_compliance_rate": 0.21428571428571427,
+    "cta_integrated_count": 3,
+    "internal_link_count": 14
+  },
+  "rejection_analysis": {
+    "should_reject": false,
+    "severity": "minor",
+    "reasons": [
+      "3 claims remain unverified"
+    ],
+    "human_review_required": false,
+    "auto_correction_prohibited": true,
+    "suggested_actions": [
+      "可能であれば追加ソースの提供をお願いします"
+    ]
+  },
+  "faq_section_markdown": "## よくある質問（FAQ）\n\n### Q1. 従業員募集をかけても全然人が来ないのはなぜ？\n\n**A.** 人手不足で倒産する企業が増加しているんです。経済産業省の調査でも明らかで、有効求人倍率も求職者有利な状況が続いています。つまり、そもそも労働人口が減っている上に、求職者はより良い条件を求めているからなんです。\n\n### Q2. 求人広告にどのくらいお金をかければ応募が来るの？\n\n**A.** 求人広告費の相場は一概には言えませんが、数十万円かけても数件しか応募がないケースもあります。重要なのは費用対効果を高めることです。求人広告の内容を見直したり、ターゲット層に合った媒体を選んだりすることが大切です。\n\n### Q3. 最近の求職者は何を一番重視してるの？\n\n**A.** 給料だけじゃないんです！求職者の企業選びの重視ポイントは変化していて、ワークライフバランスや企業の安定性、成長機会などを重視する傾向が強まっています。特に若い世代は、仕事とプライベートの両立を大切に考えています。\n\n### Q4. どんな求人広告だと応募したくなくなる？\n\n**A.** 求人広告の内容がスカスカだと、応募をためらってしまう人が多いんです。給与や待遇、仕事内容、企業文化など、求職者が知りたい情報が不足していると、不安に感じてしまいます。魅力的な求人広告を作成するには、これらの情報をしっかり記載することが重要です。\n\n### Q5. 給料を具体的に書くと応募は増えるの？\n\n**A.** はい、給料は具体的に書くのがおすすめです！具体的な給与額を提示することで、求職者は安心感を抱きやすくなります。曖昧な表現ではなく、具体的な数字を提示することで、応募意欲を高めることができます。ぜひ、給与額を明確に記載してみてください。\n\n### Q6. 求人広告を魅力的にするにはどうしたらいいの？\n\n**A.** 求人広告には、ぜひ具体的なエピソードを盛り込んでください！社員の成功事例や、会社の雰囲気、仕事のやりがいなどを具体的に伝えることで、求職者の共感を呼び、応募意欲を高めることができます。物語で共感を呼ぶのです。\n\n### Q7. どんなスキルを持った人を募集すればいいの？\n\n**A.** 求めるスキルは職種によって異なりますが、例えばソフトウェアエンジニアなら、JavaやPythonなどのプログラミングスキル、データベースの知識、クラウドサービスの経験などが求められます。自社のニーズに合わせて、必要なスキルを明確にしましょう。\n\n### Q8. どんな人が応募してくることが多いの？\n\n**A.** 求職者のタイプは様々ですが、最近はワークライフバランスを重視する人が増えています。例えば、残業が少なく、フレックスタイム制度が充実している企業を求める人が多いです。求職者のニーズを理解し、自社の魅力をアピールしましょう。\n\n### Q9. 求人広告でアピールすべきポイントって何？\n\n**A.** 求人広告でアピールすべきポイントは、ずばり「企業の魅力」です！具体的には、以下の3つを意識しましょう。\n\n1.  **給与・待遇**: 具体的な金額や福利厚生を明示\n2.  **仕事内容**: やりがいや成長機会を伝える\n3.  **企業文化**: 職場の雰囲気や社員の声を届ける\n\n### Q10. 人手不足を解消するために、今すぐできることは？\n\n**A.** まずは、自社の求人広告を見直してみましょう！給与や待遇、仕事内容、企業文化など、求職者が知りたい情報を十分に提供できているか確認してください。そして、応募しやすいように、応募方法を簡略化することも有効です。\n\n### Q11. 採用活動で失敗しないためには？\n\n**A.** 採用活動で失敗しないためには、自社のターゲット層を明確にすることが重要です。どんなスキルや経験を持った人材を求めているのか、どんな企業文化に合う人材を求めているのかを明確にすることで、ミスマッチを防ぐことができます。\n\n### Q12. 採用活動って、いつ始めるのがベストなの？\n\n**A.** 採用活動は、早めに始めるのがおすすめです！優秀な人材は、早めに内定が決まってしまうことが多いので、競合他社に先駆けて採用活動を開始することで、優秀な人材を獲得できる可能性が高まります。\n\n### Q13. 従業員募集で、他社と差をつけるにはどうしたらいいの？\n\n**A.** 他社との差別化は、企業の個性を打ち出すチャンスです！独自の福利厚生や、社員の成長を支援する制度、ユニークな企業文化などを積極的にアピールしましょう。たとえば、社員旅行の様子や、社内イベントの写真を掲載するのも効果的です。\n\n### Q14. 応募を増やすために、他にどんな工夫ができる？\n\n**A.** 応募を増やすには、SNSを活用するのも有効です。企業のSNSアカウントで、求人情報を発信するだけでなく、社員の日常や、企業の取り組みなどを紹介することで、企業の魅力をよりリアルに伝えることができます。ぜひ試してみてください。\n",
+  "references_verified": true
+}

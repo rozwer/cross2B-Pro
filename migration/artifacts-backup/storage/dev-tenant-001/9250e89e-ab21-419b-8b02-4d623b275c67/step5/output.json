@@ -1,0 +1,353 @@
+{
+  "step": "step5",
+  "keyword": "ドライバー採用難しい",
+  "search_queries": [
+    "ドライバー不足 現状 データ",
+    "トラック運転手 有効求人倍率",
+    "運輸業界 労働時間 統計",
+    "2024年問題 運輸業界 影響",
+    "ドライバー採用 課題 調査"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://www.mlit.go.jp/common/001242557.pdf",
+      "title": "トラック運送業の現状等について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://hacobu.jp/blog/archives/3182",
+      "title": "ドライバー不足の要因とは？2024年問題による影響や効果的 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://driveboss.automotive.panasonic.com/media/column/250701-1",
+      "title": "ドライバー不足の現状と対策：2024年問題と輸配送システム ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://logipoke.com/column/logistics-driver-fusoku",
+      "title": "ドライバー不足で運送が困難に？物流業界の現状と企業が取る ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://driver-roudou-jikan.mhlw.go.jp/truck/work",
+      "title": "統計からみるトラック運転者の仕事",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.ex-agent.co.jp/column/article044/",
+      "title": "令和7年8月分有効求人倍率発表！ドライバー職は2.59倍",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://cargo-news.online/news/detail.php?id=8667",
+      "title": "10月の有効求人倍率 ドライバー職は2.59倍",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://loogia.jp/column/shortage_of_truckdriver/",
+      "title": "トラック運転手不足の原因と解決策を解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/common/001242557.pdf",
+      "title": "トラック運送業の現状等について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/content/11200000/000511972.pdf",
+      "title": "第3章 運送業における労働時間と働き方に関する 調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jta.or.jp/member/chosa/2024chinginjittai.html",
+      "title": "「2024年度版トラック運送事業の賃金・労働時間等の実態」 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://suslab.net/casestudy/240614/",
+      "title": "運送業界・業種別データから見る労働環境の変化ー2024年 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://wwwtb.mlit.go.jp/kanto/content/000349157.pdf",
+      "title": "トラック運転手の労働時間等の現状と取組について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.sompo-ri.co.jp/2025/04/01/17565/",
+      "title": "物流の2024年問題でトラック運転手の働き方改革は進んだか",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mitsui-soko.com/sustainalink/column/2501",
+      "title": "物流2024年問題とは？ 運送業界の労働時間規制による影響と ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "http://wwwtb.mlit.go.jp/tohoku/00001_00251.html",
+      "title": "物流の「2024年問題」とは - 東北運輸局",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jta.or.jp/logistics2024-lp/",
+      "title": "知っていますか？物流の2024年問題",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.brainpad.co.jp/doors/contents/logistics_industry_year_2024_problem/",
+      "title": "物流2024年問題とは？社会や運送業界への影響と対策法を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.smart-logistic.jp/hub/ja-jp/blog/article01-2024.html",
+      "title": "2024年問題で物流業界はどう変わった？ 企業が今",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://doraducts.jp/column/chosa001/",
+      "title": "運送業の92.4％が2024年問題によるドライバー不足を懸念 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.xmile.co.jp/news/release154",
+      "title": "ドライバー不足6割超の一方、2割が退職理由を「把握できてい ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://wwwtb.mlit.go.jp/tohoku/mg/kyg_20(6).pdf",
+      "title": "トラック運転者の人材確保に関する現状把握 （アンケート及び ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://hacobu.jp/blog/archives/3182",
+      "title": "ドライバー不足の要因とは？2024年問題による影響や効果的 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000143.000063503.html",
+      "title": "外国人ドライバー雇用、物流・旅客企業の5割超が「日本語 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 24,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

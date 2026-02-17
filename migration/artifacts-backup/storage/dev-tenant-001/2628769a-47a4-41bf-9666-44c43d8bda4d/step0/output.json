@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用 難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"search_intent\": \"物流・運送業界の採用担当者や経営者が、ドライバー不足の構造的な原因（2024年問題、労働環境、低賃金など）を深く理解し、現状の採用難を打破するための具体的な改善策、成功事例、または効果的な求人手法・媒体を探している。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n        \"物流2024年問題とドライバー不足の現状データ\",\n        \"ドライバー採用を成功させる求人票の書き方・差別化\",\n        \"未経験者・女性・シニア層を取り込むターゲット拡大戦略\",\n        \"離職を防ぐための労働環境改善と福利厚生\",\n        \"リファラル採用やSNS活用など新しい採用手法\"\n  ],\n  \"target_audience\": \"運送会社・物流企業の経営者、人事部長、採用担当者\"\n}\n```",
+  "search_intent": "物流・運送業界の採用担当者や経営者が、ドライバー不足の構造的な原因（2024年問題、労働環境、低賃金など）を深く理解し、現状の採用難を打破するための具体的な改善策、成功事例、または効果的な求人手法・媒体を探している。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運送会社・物流企業の経営者、人事部長、採用担当者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 110,
+    "output": 220
+  },
+  "metrics": {
+    "char_count": 449,
+    "word_count": 245
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "営業採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"営業採用難しい\",\n  \"search_intent\": \"営業職の採用に苦戦している人事担当者や経営者が、なぜ採用できないのかという市場背景や原因を知り、現状を打破するための具体的な解決策（採用手法の見直し、ターゲットの再設定、求人魅力の伝え方、外部リソースの活用など）を求めている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n        \"営業職の有効求人倍率と最新の市場動向\",\n        \"営業職が不人気とされる理由と払拭するためのブランディング\",\n        \"未経験者採用（ポテンシャル採用）への切り替えと育成スキーム\",\n        \"ダイレクトリクルーティングやリファラル採用の活用法\",\n        \"採用要件（ペルソナ）の再定義とミスマッチ防止策\"\n  ],\n  \"target_audience\": \"企業の採用担当者（人事）、営業部門のマネージャー・責任者、中小・ベンチャー企業の経営者\"\n}\n```",
+  "search_intent": "営業職の採用に苦戦している人事担当者や経営者が、なぜ採用できないのかという市場背景や原因を知り、現状を打破するための具体的な解決策（採用手法の見直し、ターゲットの再設定、求人魅力の伝え方、外部リソースの活用など）を求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "企業の採用担当者（人事）、営業部門のマネージャー・責任者、中小・ベンチャー企業の経営者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 109,
+    "output": 236
+  },
+  "metrics": {
+    "char_count": 477,
+    "word_count": 280
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

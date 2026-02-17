@@ -1,0 +1,3481 @@
+{
+  "step": "step3b",
+  "keyword": "自動車整備士採用難しい",
+  "cooccurrence_analysis": "```json\n{\n  \"primary_keyword\": \"自動車整備士採用難しい\",\n  \"total_articles_analyzed\": 10,\n  \"cooccurrence_keywords\": [\n    {\n      \"keyword\": \"採用難\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.9,\n      \"frequency\": 25,\n      \"article_coverage\": 10,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"人手不足\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 22,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"scarcity\"\n    },\n    {\n      \"keyword\": \"有効求人倍率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 20,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"若者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 18,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備士\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 16,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用活動\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"求人\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 12,\n      \"article_coverage\": 8,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"自動車整備士\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.95,\n      \"frequency\": 30,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.9,\n      \"frequency\": 28,\n      \"article_coverage\": 10,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"理由\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 23,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"対策\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 19,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ポイント\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 17,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"企業\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 15,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備工場\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 13,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"課題\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 18,\n      \"article_coverage\": 8,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"定着率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"採用手法\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"求職者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"業界\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"給与\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 20,\n      \"article_coverage\": 8,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"労働環境\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 17,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"募集\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"戦略\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 13,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"応募\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 11,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用担当者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"要因\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"イメージ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"人材\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"自動車\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"高齢化\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"求人倍率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"採用コスト\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"ミスマッチ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"採用計画\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"学校\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 7,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"資格\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 22,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"経験\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"技術\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"教育\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"育成\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 7,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"外国人\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"採用成功\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 18,\n      \"article_coverage\": 8,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"自動車業界\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備士不足\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 23,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"scarcity\"\n    },\n    {\n      \"keyword\": \"求人広告\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用戦略\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"職場環境\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 19,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"キャリア\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"待遇\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"求人サイト\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n     {\n      \"keyword\": \"人材確保\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"scarcity\"\n    },\n    {\n      \"keyword\": \"採用活動\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"求人\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 12,\n      \"article_coverage\": 8,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"自動車整備士\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.95,\n      \"frequency\": 30,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.9,\n      \"frequency\": 28,\n      \"article_coverage\": 10,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"理由\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 23,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"対策\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 19,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ポイント\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 17,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"企業\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 15,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備工場\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 13,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"課題\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 18,\n      \"article_coverage\": 8,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"定着率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"採用手法\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"求職者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"業界\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"給与\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 20,\n      \"article_coverage\": 8,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"労働環境\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 17,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"募集\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"戦略\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 13,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"応募\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 11,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用担当者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"要因\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"イメージ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"人材\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"自動車\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"高齢化\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"求人倍率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"採用コスト\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"ミスマッチ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"採用計画\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"学校\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 7,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"資格\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 22,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"経験\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"技術\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"教育\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"育成\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 7,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"外国人\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"採用成功\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 18,\n      \"article_coverage\": 8,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"自動車業界\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備士不足\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 23,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"scarcity\"\n    },\n    {\n      \"keyword\": \"求人広告\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用戦略\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 16,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"職場環境\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 19,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"キャリア\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"待遇\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"求人サイト\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n     {\n      \"keyword\": \"人材確保\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"scarcity\"\n    },\n    {\n      \"keyword\": \"自動車整備\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 17,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備士資格\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 15,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"採用課題\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 13,\n      \"article_coverage\": 6,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"離職\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"採用コスト削減\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"技術力\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"整備士学校\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 7,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"求人情報\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用活動\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"consistency\"\n    }\n  ],\n  \"lsi_keywords\": [\n    {\n      \"keyword\": \"自動車整備士の求人\",\n      \"category\": \"lsi\",\n      \"importance\": 0.8,\n      \"frequency\": 18,\n      \"article_coverage\": 7\n    },\n    {\n      \"keyword\": \"整備士の仕事内容\",\n      \"category\": \"lsi\",\n      \"importance\": 0.75,\n      \"frequency\": 15,\n      \"article_coverage\": 6\n    },\n    {\n      \"keyword\": \"整備士の給料\",\n      \"category\": \"lsi\",\n      \"importance\": 0.7,\n      \"frequency\": 13,\n      \"article_coverage\": 5\n    },\n    {\n      \"keyword\": \"整備士の資格取得\",\n      \"category\": \"lsi\",\n      \"importance\": 0.65,\n      \"frequency\": 11,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"整備士のキャリアパス\",\n      \"category\": \"lsi\",\n      \"importance\": 0.6,\n      \"frequency\": 9,\n      \"article_coverage\": 3\n    },\n     {\n      \"keyword\": \"自動車整備士の将来性\",\n      \"category\": \"lsi\",\n      \"importance\": 0.7,\n      \"frequency\": 14,\n      \"article_coverage\": 6\n    },\n    {\n      \"keyword\": \"整備士の離職理由\",\n      \"category\": \"lsi\",\n      \"importance\": 0.65,\n      \"frequency\": 12,\n      \"article_coverage\": 5\n    },\n    {\n      \"keyword\": \"",
+  "parsed_data": {
+    "primary_keyword": "自動車整備士採用難しい",
+    "total_articles_analyzed": 10,
+    "cooccurrence_keywords": [
+      {
+        "keyword": "採用難",
+        "category": "cooccurrence",
+        "importance": 0.9,
+        "frequency": 25,
+        "article_coverage": 10,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "人手不足",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 22,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": "scarcity"
+      },
+      {
+        "keyword": "有効求人倍率",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 20,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "若者",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 18,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備士",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 16,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用活動",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "求人",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 12,
+        "article_coverage": 8,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "自動車整備士",
+        "category": "cooccurrence",
+        "importance": 0.95,
+        "frequency": 30,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用",
+        "category": "cooccurrence",
+        "importance": 0.9,
+        "frequency": 28,
+        "article_coverage": 10,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "理由",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 23,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "対策",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 19,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ポイント",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 17,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "企業",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 15,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備工場",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 13,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "課題",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 18,
+        "article_coverage": 8,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "定着率",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "採用手法",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "求職者",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "業界",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "給与",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 20,
+        "article_coverage": 8,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "労働環境",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 17,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "募集",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "戦略",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 13,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "応募",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 11,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用担当者",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "要因",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "イメージ",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "人材",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "自動車",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "高齢化",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "求人倍率",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "採用コスト",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "ミスマッチ",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "採用計画",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "学校",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 7,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "資格",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 22,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "経験",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "技術",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "教育",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "育成",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 7,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "外国人",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "採用成功",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 18,
+        "article_coverage": 8,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "自動車業界",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備士不足",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 23,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": "scarcity"
+      },
+      {
+        "keyword": "求人広告",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用戦略",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "職場環境",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 19,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "キャリア",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "待遇",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "求人サイト",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "人材確保",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "scarcity"
+      },
+      {
+        "keyword": "採用活動",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "求人",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 12,
+        "article_coverage": 8,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "自動車整備士",
+        "category": "cooccurrence",
+        "importance": 0.95,
+        "frequency": 30,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用",
+        "category": "cooccurrence",
+        "importance": 0.9,
+        "frequency": 28,
+        "article_coverage": 10,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "理由",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 23,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "対策",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 19,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ポイント",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 17,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "企業",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 15,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備工場",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 13,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "課題",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 18,
+        "article_coverage": 8,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "定着率",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "採用手法",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "求職者",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "業界",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "給与",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 20,
+        "article_coverage": 8,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "労働環境",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 17,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "募集",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "戦略",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 13,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "応募",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 11,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用担当者",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "要因",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "イメージ",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "人材",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "自動車",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "高齢化",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "求人倍率",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "採用コスト",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "ミスマッチ",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "採用計画",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "学校",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 7,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "資格",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 22,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "経験",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "技術",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "教育",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "育成",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 7,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "外国人",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "採用成功",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 18,
+        "article_coverage": 8,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "自動車業界",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備士不足",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 23,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": "scarcity"
+      },
+      {
+        "keyword": "求人広告",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用戦略",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 16,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "職場環境",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 19,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "キャリア",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "待遇",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "求人サイト",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "人材確保",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 3,
+        "behavioral_trigger": "scarcity"
+      },
+      {
+        "keyword": "自動車整備",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 17,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備士資格",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 15,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "採用課題",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 13,
+        "article_coverage": 6,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "離職",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "採用コスト削減",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "技術力",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "整備士学校",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 7,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "求人情報",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用活動",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "consistency"
+      }
+    ],
+    "lsi_keywords": [
+      {
+        "keyword": "自動車整備士の求人",
+        "category": "lsi",
+        "importance": 0.8,
+        "frequency": 18,
+        "article_coverage": 7
+      },
+      {
+        "keyword": "整備士の仕事内容",
+        "category": "lsi",
+        "importance": 0.75,
+        "frequency": 15,
+        "article_coverage": 6
+      },
+      {
+        "keyword": "整備士の給料",
+        "category": "lsi",
+        "importance": 0.7,
+        "frequency": 13,
+        "article_coverage": 5
+      },
+      {
+        "keyword": "整備士の資格取得",
+        "category": "lsi",
+        "importance": 0.65,
+        "frequency": 11,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "整備士のキャリアパス",
+        "category": "lsi",
+        "importance": 0.6,
+        "frequency": 9,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "自動車整備士の将来性",
+        "category": "lsi",
+        "importance": 0.7,
+        "frequency": 14,
+        "article_coverage": 6
+      },
+      {
+        "keyword": "整備士の離職理由",
+        "category": "lsi",
+        "importance": 0.65,
+        "frequency": 12,
+        "article_coverage": 5
+      }
+    ],
+    "three_phase_distribution": {
+      "phase1_keywords": [
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "離職",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の離職理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase2_keywords": [
+        {
+          "keyword": "採用難",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人手不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "有効求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "若者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "対策",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "企業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備工場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "定着率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用手法",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "労働環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "募集",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用担当者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "要因",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用計画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "技術",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "育成",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "外国人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人広告",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "職場環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "キャリア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "対策",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "企業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備工場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "定着率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用手法",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "労働環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "募集",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用担当者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "要因",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用計画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "技術",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "育成",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "外国人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人広告",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "職場環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "キャリア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用コスト削減",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "技術力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人情報",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車整備士の求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の仕事内容",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の給料",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の資格取得",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士のキャリアパス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "自動車整備士の将来性",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase3_keywords": [
+        {
+          "keyword": "採用成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ]
+    },
+    "llmo_optimized_keywords": {
+      "question_format": [],
+      "voice_search": []
+    },
+    "behavioral_economics_triggers": {
+      "loss_aversion": [
+        "採用コスト",
+        "採用コスト",
+        "採用コスト削減"
+      ],
+      "social_proof": [
+        "人手不足",
+        "有効求人倍率",
+        "求人",
+        "人材",
+        "求人倍率",
+        "外国人",
+        "求人広告",
+        "求人サイト",
+        "人材確保",
+        "求人",
+        "人材",
+        "求人倍率",
+        "外国人",
+        "求人広告",
+        "求人サイト",
+        "人材確保",
+        "求人情報",
+        "自動車整備士の求人"
+      ],
+      "authority": [
+        "資格",
+        "資格",
+        "整備士資格",
+        "整備士の資格取得"
+      ],
+      "consistency": [],
+      "liking": [],
+      "scarcity": []
+    },
+    "cta_keywords": {
+      "urgency": [],
+      "ease": [],
+      "free": [],
+      "expertise": [
+        "経験",
+        "経験"
+      ]
+    },
+    "keyword_density_analysis": {
+      "main_keyword_density": 0.0,
+      "cooccurrence_densities": {}
+    },
+    "competitor_keyword_gaps": [
+      {
+        "keyword": "ミスマッチ",
+        "coverage_rate": 0.0,
+        "differentiation_score": 1.0
+      },
+      {
+        "keyword": "採用手法",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "採用コスト",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "採用計画",
+        "coverage_rate": 0.1,
+        "differentiation_score": 0.9
+      },
+      {
+        "keyword": "採用担当者",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      },
+      {
+        "keyword": "採用戦略",
+        "coverage_rate": 0.2,
+        "differentiation_score": 0.8
+      }
+    ],
+    "keyword_categorization": {
+      "essential": [
+        {
+          "keyword": "整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "自動車整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "対策",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "企業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "人材",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "自動車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "技術",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "育成",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "キャリア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "自動車整備士",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "対策",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "企業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "人材",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "自動車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "技術",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "育成",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "キャリア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "自動車整備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "採用活動",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        }
+      ],
+      "standard": [
+        {
+          "keyword": "採用難",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "人手不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "有効求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "若者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "整備工場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "定着率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "労働環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "募集",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "要因",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "採用成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "自動車業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "整備士不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "求人広告",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "職場環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "整備工場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "定着率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "労働環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "募集",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "要因",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "教育",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "採用成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "自動車業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "整備士不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "求人広告",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "職場環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "人材確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "離職",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        }
+      ],
+      "unique": [
+        {
+          "keyword": "採用手法",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "採用担当者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用計画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "外国人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "求人サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用手法",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "採用担当者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "採用コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用計画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "外国人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用戦略",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "求人サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "整備士資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用コスト削減",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "技術力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士学校",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人情報",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "自動車整備士の求人",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "整備士の仕事内容",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "整備士の給料",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の資格取得",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "整備士のキャリアパス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "自動車整備士の将来性",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "整備士の離職理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ]
+    }
+  },
+  "format_detected": "json",
+  "competitor_count": 10,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 9162,
+    "output": 8192
+  },
+  "metrics": {
+    "char_count": 23147,
+    "word_count": 1691
+  },
+  "quality": {
+    "attempts": 3,
+    "issues": [
+      "no_keyword_list",
+      "insufficient_keyword_count",
+      "insufficient_phase_distribution",
+      "no_llmo_elements"
+    ],
+    "warnings": [
+      "lsi_count: 7 (target: 30)",
+      "related_count: 0 (target: 50)"
+    ]
+  },
+  "extraction_summary": {
+    "cooccurrence": 108,
+    "lsi": 7,
+    "related": 0,
+    "phase1": 7,
+    "phase2": 106,
+    "phase3": 2,
+    "question_format": 0,
+    "voice_search": 0,
+    "loss_aversion": 3,
+    "social_proof": 18,
+    "authority": 4,
+    "essential": 49,
+    "standard": 37,
+    "unique": 29,
+    "cta_total": 2,
+    "gaps": 6
+  }
+}

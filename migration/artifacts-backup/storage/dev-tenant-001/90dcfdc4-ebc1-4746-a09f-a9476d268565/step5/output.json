@@ -1,0 +1,353 @@
+{
+  "step": "step5",
+  "keyword": "営業採用難しい",
+  "search_queries": [
+    "営業職 採用 市場動向 統計",
+    "営業採用 難易度 データ",
+    "営業職 離職率 調査",
+    "求職者の価値観 変化 調査",
+    "採用ブランディング 成功事例 営業"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://doda.jp/guide/market/006.html",
+      "title": "営業の転職市場動向 2026上半期",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jac-recruitment.jp/market/articles/marketInsights/",
+      "title": "2026年転職市場・中途採用動向｜21業界中20 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.pasona.co.jp/clients/service/column/career/jobchangereport_total2510/",
+      "title": "最新の採用市場・転職動向は？（2025年10月版）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://directscout.recruit.co.jp/contents/article/22660/",
+      "title": "【調査】「新しい営業職」に関する求人と転職の動向",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://sales.persol-mk.co.jp/column/sales-shortage-solutions/",
+      "title": "営業職が足りない！人手不足の原因と効果的な対策について解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://partners.en-japan.com/special/250219/",
+      "title": "[2025年版]採用難易度レポート - 人事のミカタ - エン・ジャパン",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://doda.jp/guide/market/006.html",
+      "title": "営業の転職市場動向 2026上半期",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://xn--pckya3kg.jp/eiten-magazine/2025/12/01/%E5%96%B6%E6%A5%AD%E3%81%AF%E5%A3%B2%E3%82%8A%E6%89%8B%E5%B8%82%E5%A0%B4%EF%BD%9C%E6%9C%89%E5%8A%B9%E6%B1%82%E4%BA%BA%E5%80%8D%E7%8E%87%E3%81%8B%E3%82%89%E8%AA%AD%E3%81%BF%E8%A7%A3%E3%81%8F2025/",
+      "title": "営業は売り手市場｜有効求人倍率から読み解く2025採用 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.9e-career.com/column/sales/article00004/",
+      "title": "【2026年完全版・全31種】営業職の転職難易度をランキング ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://marugotoinc.jp/blog/sales_saiyou/",
+      "title": "営業職採用は難しい？7つの見極めポイントと8つの成功戦略",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.kotora.jp/c/67920/",
+      "title": "営業職の離職率が高い理由とは？本音で語る職場環境の実態",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://saleszine.jp/news/detail/2620",
+      "title": "営業職の「退職」に関する調査 「現在退職を検討している」は約6割",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://ameand.co.jp/service/hr-pentest/contents/sales-retention/",
+      "title": "営業職の離職率が高い原因は？よくある退職理由や対策 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000017.000074057.html",
+      "title": "約7割が最近退職を検討したと回答「営業職の勤務意識 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://meet.acesinc.co.jp/blog/sales-retirement/",
+      "title": "離職が多い？営業職の実態、離職による影響と防ぐ方法8選を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://rc.persol-group.co.jp/thinktank/spe/pgstop/pgs/",
+      "title": "働く10,000人の就業・成長定点調査 - パーソル総合研究所",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://career-research.mynavi.jp/column/20250818_98924/",
+      "title": "仕事の価値観とは？調査結果の紹介やZ世代などの世代別も ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://corp.miidas.jp/assessment/2207/",
+      "title": "働く人の価値観は変化している？活躍人材の特徴や採用方法 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://trend.bestmatch.co.jp/ja/besttrend/article/trend/howto-jobhunting",
+      "title": "求職者の仕事探しにおける新たな価値観と変化",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jobsoken.jp/info/20241223/",
+      "title": "Job総研『2024年 価値観変化の実態調査』を実施しました",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://tomorrowgate.co.jp/blog/5408/",
+      "title": "採用ブランディングの成功事例7選｜人気企業の採用戦略を分析",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.ageha.tv/magazine/magazine_rcb/recruiting_branding_4examples/",
+      "title": "採用ブランディング成功事例4選！企業が実施する採用設計 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://corp.miidas.jp/assessment/19200/",
+      "title": "営業職の採用が難しい理由は？採用を成功させるポイントを解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.leggenda.co.jp/article/column_recruit_20250221/",
+      "title": "【最新版】採用ブランディングとは？戦略の秘訣と大手・中小の ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 24,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

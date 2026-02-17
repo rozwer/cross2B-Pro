@@ -1,0 +1,333 @@
+{
+  "step": "step3a",
+  "keyword": "ドライバー 採用 難しい",
+  "query_analysis": "```json\n{\n  \"analysis_date\": \"2026-02-03\",\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"core_question\": {\n    \"main_question\": \"求人を出しても応募が来ない現状を打破し、予算内で確実にドライバーを採用・定着させる具体策は何か？\",\n    \"underlying_concern\": \"このまま人手不足が続けば業務が回らなくなり、最悪の場合、倒産や事業縮小に追い込まれるのではないかという生存への恐怖\",\n    \"urgency_level\": \"high\"\n  },\n  \"question_hierarchy\": {\n    \"level1\": [\n      {\n        \"question\": \"なぜ自社の求人には応募が全く来ないのか（市場要因 vs 自社要因）\",\n        \"priority\": \"high\"\n      },\n      {\n        \"question\": \"採用単価が高騰する中で、コストを抑えて採用する方法はあるか\",\n        \"priority\": \"high\"\n      },\n      {\n        \"question\": \"採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか\",\n        \"priority\": \"medium\"\n      },\n      {\n        \"question\": \"大手企業に勝てる中小運送会社の採用戦略（差別化）は何か\",\n        \"priority\": \"medium\"\n      }\n    ],\n    \"level2\": [\n      {\n        \"parent\": \"なぜ自社の求人には応募が全く来ないのか\",\n        \"questions\": [\n          \"求人票の書き方に問題があるのか？\",\n          \"使うべき求人媒体（Indeed、ドラEVER等）が間違っているのか？\",\n          \"給与や労働条件が相場より低すぎるのか？\"\n        ]\n      },\n      {\n        \"parent\": \"採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか\",\n        \"questions\": [\n          \"未経験者を育てる余裕がないがどうすべきか\",\n          \"面接での見極めポイントはどこか\",\n          \"若手や女性ドライバーを取り込むには？\"\n        ]\n      }\n    ]\n  },\n  \"persona_deep_dive\": {\n    \"detailed_profile\": {\n      \"role\": \"中小規模の運送・物流会社 経営者 または 採用兼任の拠点長\",\n      \"age\": \"45〜55歳\",\n      \"gender\": \"男性\",\n      \"background\": \"元ドライバーからの叩き上げで現場には詳しいが、Webマーケティングや最新の採用手法には疎い。PCスキルはメールとExcel程度。\",\n      \"company_size\": \"トラック保有台数10〜30台、従業員数20〜50名\"\n    },\n    \"search_scenario\": {\n      \"timing\": \"欠員が出て配車が組めなくなった時、または高い掲載費を払った求人広告の契約更新時期に応募ゼロで焦った時。\",\n      \"location\": \"営業所のデスク、または帰宅後の自宅でスマホ片手に。\",\n      \"trigger\": \"「また面接すっぽかされた」「求人費だけで赤字だ」という徒労感と怒り。\"\n    },\n    \"emotional_state\": {\n      \"primary\": \"焦燥感（ドライバー不足＝売上減直結）\",\n      \"secondary\": \"疲弊感（採用活動にかける時間と労力の無駄）\",\n      \"tertiary\": \"疑念（求人媒体の営業トークへの不信感）\"\n    },\n    \"information_processing_style\": {\n      \"type\": \"スキャン型だが、解決策部分は熟読型\",\n      \"preferred_format\": \"結論ファースト、図解や太字での強調、スマホで読みやすい短文、具体的な成功事例（数字入り）\"\n    },\n    \"behavioral_economics_profile\": {\n      \"loss_aversion\": {\n        \"feared_loss\": \"効果のない求人広告に支払う数十万円の「サンクコスト」と、面接待ちぼうけによる「時間の浪費」。\",\n        \"specifics\": \"30万円払って応募0件、採用後の早期離職による教育コストの喪失。\"\n      },\n      \"social_proof\": {\n        \"trusted_cases\": \"同規模・同地域の運送会社での成功事例。\",\n        \"required_metrics\": \"「応募数0→10件」「採用単価5万円以下」などの具体的改善数値。\"\n      },\n      \"authority\": {\n        \"trusted_experts\": \"現場の苦労を知っている業界専門コンサルタント、または厚労省などの公的データ。\",\n        \"trusted_institutions\": \"全日本トラック協会、信頼できる同業者の口コミ。\"\n      },\n      \"consistency\": {\n        \"past_behavior\": \"「ハローワークに出しておけば来る」「紙媒体の折り込みチラシ」など従来のやり方に固執。\",\n        \"decision_process\": \"「これまで通りではダメだ」と頭では分かっているが、新しいデジタルツールへの移行には心理的抵抗がある。\"\n      },\n      \"liking\": {\n        \"preferred_tone\": \"現場へのリスペクトがあり、実直で泥臭いトーン。「魔法のような解決策」より「堅実な改善策」。\",\n        \"disliked_tone\": \"横文字（マーケティング用語）を多用する意識高い系のトーン、現場を知らない上から目線。\"\n      },\n      \"scarcity\": {\n        \"urgency_factors\": \"「2024年問題」による拘束時間規制、ドライバーの高齢化による引退ラッシュ。\",\n        \"action_triggers\": \"「今すぐ対策しないと手遅れになる」「エリア内の競合に人材を奪われる」という警告。\"\n      }\n    }\n  },\n  \"search_intent_analysis\": {\n    \"informational\": 60,\n    \"navigational\": 5,\n    \"transactional\": 10,\n    \"commercial_investigation\": 25\n  },\n  \"three_phase_psychological_mapping\": {\n    \"phase1_anxiety\": {\n      \"emotional_state\": {\n        \"label\": \"危機的焦燥\",\n        \"description\": \"「なぜうちには誰も来ないのか？」という孤立感と、事業継続への不安。\"\n      },\n      \"brain_trigger\": {\n        \"type\": \"扁桃体（恐怖・不安）\",\n        \"content\": \"有効求人倍率2.82倍（全産業の2倍超）という絶望的なデータと、倒産件数増加の事実提示。\"\n      },\n      \"content_strategy\": {\n        \"focus\": \"共感と現状肯定\",\n        \"message\": \"「採用が難しいのはあなたのせいではなく、構造的な問題です」と寄り添い、敵（市場環境）を明確にする。\"\n      }\n    },\n    \"phase2_understanding\": {\n      \"emotional_state\": {\n        \"label\": \"論理的納得\",\n        \"description\": \"「やり方を変えれば勝機はあるかもしれない」という希望と冷静な分析。\"\n      },\n      \"judgment_criteria\": {\n        \"cost_performance\": \"掛け捨ての広告費ではなく、資産になる採用手法か\",\n        \"feasibility\": \"ITに詳しくない自社でも実践可能か\"\n      },\n      \"brain_trigger\": {\n        \"type\": \"前頭前野（論理・比較）\",\n        \"content\": \"「失敗する求人票 vs 成功する求人票」の比較画像、媒体別の費用対効果比較表。\"\n      },\n      \"content_strategy\": {\n        \"focus\": \"差別化と具体策\",\n        \"message\": \"給与競争ではなく「働きやすさ」や「安心感」で選ばれるための具体的なライティング術と媒体選定ロジック。\"\n      }\n    },\n    \"phase3_action\": {\n      \"emotional_state\": {\n        \"label\": \"決断と期待\",\n        \"description\": \"「これなら失敗のリスクが低く、試す価値がある」という確信。\"\n      },\n      \"action_barriers\": {\n        \"internal\": \"新しい手法（Web応募対応やスカウト）への業務負荷懸念\",\n        \"financial\": \"追加予算の捻出\"\n      },\n      \"brain_trigger\": {\n        \"type\": \"線条体（報酬予測）\",\n        \"content\": \"「最短3日で応募獲得」「採用単価を1/3に圧縮」といった具体的メリットの提示。\"\n      },\n      \"content_strategy\": {\n        \"focus\": \"リスク低減と簡易性\",\n        \"message\": \"無料トライアル、成果報酬型、丸投げ可能な代行サービスへの誘導、または今すぐ使える求人テンプレート配布。\",\n        \"offer\": \"「まずは無料診断」や「資料ダウンロード」などハードルの低いCTA。\"\n      },\n      \"cvr_targets\": {\n        \"early_cta\": 3,\n        \"mid_cta\": 4,\n        \"final_cta\": 5\n      }\n    }\n  }\n}\n```",
+  "parsed_data": {
+    "analysis_date": "2026-02-03",
+    "keyword": "ドライバー 採用 難しい",
+    "core_question": {
+      "main_question": "求人を出しても応募が来ない現状を打破し、予算内で確実にドライバーを採用・定着させる具体策は何か？",
+      "underlying_concern": "このまま人手不足が続けば業務が回らなくなり、最悪の場合、倒産や事業縮小に追い込まれるのではないかという生存への恐怖",
+      "urgency_level": "high"
+    },
+    "question_hierarchy": {
+      "level1": [
+        {
+          "question": "なぜ自社の求人には応募が全く来ないのか（市場要因 vs 自社要因）",
+          "priority": "high"
+        },
+        {
+          "question": "採用単価が高騰する中で、コストを抑えて採用する方法はあるか",
+          "priority": "high"
+        },
+        {
+          "question": "採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか",
+          "priority": "medium"
+        },
+        {
+          "question": "大手企業に勝てる中小運送会社の採用戦略（差別化）は何か",
+          "priority": "medium"
+        }
+      ],
+      "level2": [
+        {
+          "parent": "なぜ自社の求人には応募が全く来ないのか",
+          "questions": [
+            "求人票の書き方に問題があるのか？",
+            "使うべき求人媒体（Indeed、ドラEVER等）が間違っているのか？",
+            "給与や労働条件が相場より低すぎるのか？"
+          ]
+        },
+        {
+          "parent": "採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか",
+          "questions": [
+            "未経験者を育てる余裕がないがどうすべきか",
+            "面接での見極めポイントはどこか",
+            "若手や女性ドライバーを取り込むには？"
+          ]
+        }
+      ]
+    },
+    "persona_deep_dive": {
+      "detailed_profile": {
+        "role": "中小規模の運送・物流会社 経営者 または 採用兼任の拠点長",
+        "age": "45〜55歳",
+        "gender": "男性",
+        "background": "元ドライバーからの叩き上げで現場には詳しいが、Webマーケティングや最新の採用手法には疎い。PCスキルはメールとExcel程度。",
+        "company_size": "トラック保有台数10〜30台、従業員数20〜50名"
+      },
+      "search_scenario": {
+        "timing": "欠員が出て配車が組めなくなった時、または高い掲載費を払った求人広告の契約更新時期に応募ゼロで焦った時。",
+        "location": "営業所のデスク、または帰宅後の自宅でスマホ片手に。",
+        "trigger": "「また面接すっぽかされた」「求人費だけで赤字だ」という徒労感と怒り。"
+      },
+      "emotional_state": {
+        "primary": "焦燥感（ドライバー不足＝売上減直結）",
+        "secondary": "疲弊感（採用活動にかける時間と労力の無駄）",
+        "tertiary": "疑念（求人媒体の営業トークへの不信感）"
+      },
+      "information_processing_style": {
+        "type": "スキャン型だが、解決策部分は熟読型",
+        "preferred_format": "結論ファースト、図解や太字での強調、スマホで読みやすい短文、具体的な成功事例（数字入り）"
+      },
+      "behavioral_economics_profile": {
+        "loss_aversion": {
+          "feared_loss": "効果のない求人広告に支払う数十万円の「サンクコスト」と、面接待ちぼうけによる「時間の浪費」。",
+          "specifics": "30万円払って応募0件、採用後の早期離職による教育コストの喪失。"
+        },
+        "social_proof": {
+          "trusted_cases": "同規模・同地域の運送会社での成功事例。",
+          "required_metrics": "「応募数0→10件」「採用単価5万円以下」などの具体的改善数値。"
+        },
+        "authority": {
+          "trusted_experts": "現場の苦労を知っている業界専門コンサルタント、または厚労省などの公的データ。",
+          "trusted_institutions": "全日本トラック協会、信頼できる同業者の口コミ。"
+        },
+        "consistency": {
+          "past_behavior": "「ハローワークに出しておけば来る」「紙媒体の折り込みチラシ」など従来のやり方に固執。",
+          "decision_process": "「これまで通りではダメだ」と頭では分かっているが、新しいデジタルツールへの移行には心理的抵抗がある。"
+        },
+        "liking": {
+          "preferred_tone": "現場へのリスペクトがあり、実直で泥臭いトーン。「魔法のような解決策」より「堅実な改善策」。",
+          "disliked_tone": "横文字（マーケティング用語）を多用する意識高い系のトーン、現場を知らない上から目線。"
+        },
+        "scarcity": {
+          "urgency_factors": "「2024年問題」による拘束時間規制、ドライバーの高齢化による引退ラッシュ。",
+          "action_triggers": "「今すぐ対策しないと手遅れになる」「エリア内の競合に人材を奪われる」という警告。"
+        }
+      }
+    },
+    "search_intent_analysis": {
+      "informational": 60,
+      "navigational": 5,
+      "transactional": 10,
+      "commercial_investigation": 25
+    },
+    "three_phase_psychological_mapping": {
+      "phase1_anxiety": {
+        "emotional_state": {
+          "label": "危機的焦燥",
+          "description": "「なぜうちには誰も来ないのか？」という孤立感と、事業継続への不安。"
+        },
+        "brain_trigger": {
+          "type": "扁桃体（恐怖・不安）",
+          "content": "有効求人倍率2.82倍（全産業の2倍超）という絶望的なデータと、倒産件数増加の事実提示。"
+        },
+        "content_strategy": {
+          "focus": "共感と現状肯定",
+          "message": "「採用が難しいのはあなたのせいではなく、構造的な問題です」と寄り添い、敵（市場環境）を明確にする。"
+        }
+      },
+      "phase2_understanding": {
+        "emotional_state": {
+          "label": "論理的納得",
+          "description": "「やり方を変えれば勝機はあるかもしれない」という希望と冷静な分析。"
+        },
+        "judgment_criteria": {
+          "cost_performance": "掛け捨ての広告費ではなく、資産になる採用手法か",
+          "feasibility": "ITに詳しくない自社でも実践可能か"
+        },
+        "brain_trigger": {
+          "type": "前頭前野（論理・比較）",
+          "content": "「失敗する求人票 vs 成功する求人票」の比較画像、媒体別の費用対効果比較表。"
+        },
+        "content_strategy": {
+          "focus": "差別化と具体策",
+          "message": "給与競争ではなく「働きやすさ」や「安心感」で選ばれるための具体的なライティング術と媒体選定ロジック。"
+        }
+      },
+      "phase3_action": {
+        "emotional_state": {
+          "label": "決断と期待",
+          "description": "「これなら失敗のリスクが低く、試す価値がある」という確信。"
+        },
+        "action_barriers": {
+          "internal": "新しい手法（Web応募対応やスカウト）への業務負荷懸念",
+          "financial": "追加予算の捻出"
+        },
+        "brain_trigger": {
+          "type": "線条体（報酬予測）",
+          "content": "「最短3日で応募獲得」「採用単価を1/3に圧縮」といった具体的メリットの提示。"
+        },
+        "content_strategy": {
+          "focus": "リスク低減と簡易性",
+          "message": "無料トライアル、成果報酬型、丸投げ可能な代行サービスへの誘導、または今すぐ使える求人テンプレート配布。",
+          "offer": "「まずは無料診断」や「資料ダウンロード」などハードルの低いCTA。"
+        },
+        "cvr_targets": {
+          "early_cta": 3,
+          "mid_cta": 4,
+          "final_cta": 5
+        }
+      }
+    }
+  },
+  "format_detected": "json",
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 75682,
+    "output": 2076
+  },
+  "metrics": {
+    "char_count": 4832,
+    "word_count": 1702
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": [
+      "missing_pain_points"
+    ]
+  },
+  "is_v2": true,
+  "v2_fields": {
+    "core_question": {
+      "main_question": "求人を出しても応募が来ない現状を打破し、予算内で確実にドライバーを採用・定着させる具体策は何か？",
+      "underlying_concern": "このまま人手不足が続けば業務が回らなくなり、最悪の場合、倒産や事業縮小に追い込まれるのではないかという生存への恐怖",
+      "urgency_level": "high"
+    },
+    "question_hierarchy": {
+      "level1": [
+        {
+          "question": "なぜ自社の求人には応募が全く来ないのか（市場要因 vs 自社要因）",
+          "priority": "high"
+        },
+        {
+          "question": "採用単価が高騰する中で、コストを抑えて採用する方法はあるか",
+          "priority": "high"
+        },
+        {
+          "question": "採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか",
+          "priority": "medium"
+        },
+        {
+          "question": "大手企業に勝てる中小運送会社の採用戦略（差別化）は何か",
+          "priority": "medium"
+        }
+      ],
+      "level2": [
+        {
+          "parent": "なぜ自社の求人には応募が全く来ないのか",
+          "questions": [
+            "求人票の書き方に問題があるのか？",
+            "使うべき求人媒体（Indeed、ドラEVER等）が間違っているのか？",
+            "給与や労働条件が相場より低すぎるのか？"
+          ]
+        },
+        {
+          "parent": "採用してもすぐに辞めてしまうのを防ぐにはどうすればよいか",
+          "questions": [
+            "未経験者を育てる余裕がないがどうすべきか",
+            "面接での見極めポイントはどこか",
+            "若手や女性ドライバーを取り込むには？"
+          ]
+        }
+      ]
+    },
+    "behavioral_economics_profile": {
+      "loss_aversion": {
+        "feared_loss": "効果のない求人広告に支払う数十万円の「サンクコスト」と、面接待ちぼうけによる「時間の浪費」。",
+        "specifics": "30万円払って応募0件、採用後の早期離職による教育コストの喪失。"
+      },
+      "social_proof": {
+        "trusted_cases": "同規模・同地域の運送会社での成功事例。",
+        "required_metrics": "「応募数0→10件」「採用単価5万円以下」などの具体的改善数値。"
+      },
+      "authority": {
+        "trusted_experts": "現場の苦労を知っている業界専門コンサルタント、または厚労省などの公的データ。",
+        "trusted_institutions": "全日本トラック協会、信頼できる同業者の口コミ。"
+      },
+      "consistency": {
+        "past_behavior": "「ハローワークに出しておけば来る」「紙媒体の折り込みチラシ」など従来のやり方に固執。",
+        "decision_process": "「これまで通りではダメだ」と頭では分かっているが、新しいデジタルツールへの移行には心理的抵抗がある。"
+      },
+      "liking": {
+        "preferred_tone": "現場へのリスペクトがあり、実直で泥臭いトーン。「魔法のような解決策」より「堅実な改善策」。",
+        "disliked_tone": "横文字（マーケティング用語）を多用する意識高い系のトーン、現場を知らない上から目線。"
+      },
+      "scarcity": {
+        "urgency_factors": "「2024年問題」による拘束時間規制、ドライバーの高齢化による引退ラッシュ。",
+        "action_triggers": "「今すぐ対策しないと手遅れになる」「エリア内の競合に人材を奪われる」という警告。"
+      }
+    },
+    "three_phase_mapping": {
+      "phase1_anxiety": {
+        "emotional_state": {
+          "label": "危機的焦燥",
+          "description": "「なぜうちには誰も来ないのか？」という孤立感と、事業継続への不安。"
+        },
+        "brain_trigger": {
+          "type": "扁桃体（恐怖・不安）",
+          "content": "有効求人倍率2.82倍（全産業の2倍超）という絶望的なデータと、倒産件数増加の事実提示。"
+        },
+        "content_strategy": {
+          "focus": "共感と現状肯定",
+          "message": "「採用が難しいのはあなたのせいではなく、構造的な問題です」と寄り添い、敵（市場環境）を明確にする。"
+        }
+      },
+      "phase2_understanding": {
+        "emotional_state": {
+          "label": "論理的納得",
+          "description": "「やり方を変えれば勝機はあるかもしれない」という希望と冷静な分析。"
+        },
+        "judgment_criteria": {
+          "cost_performance": "掛け捨ての広告費ではなく、資産になる採用手法か",
+          "feasibility": "ITに詳しくない自社でも実践可能か"
+        },
+        "brain_trigger": {
+          "type": "前頭前野（論理・比較）",
+          "content": "「失敗する求人票 vs 成功する求人票」の比較画像、媒体別の費用対効果比較表。"
+        },
+        "content_strategy": {
+          "focus": "差別化と具体策",
+          "message": "給与競争ではなく「働きやすさ」や「安心感」で選ばれるための具体的なライティング術と媒体選定ロジック。"
+        }
+      },
+      "phase3_action": {
+        "emotional_state": {
+          "label": "決断と期待",
+          "description": "「これなら失敗のリスクが低く、試す価値がある」という確信。"
+        },
+        "action_barriers": {
+          "internal": "新しい手法（Web応募対応やスカウト）への業務負荷懸念",
+          "financial": "追加予算の捻出"
+        },
+        "brain_trigger": {
+          "type": "線条体（報酬予測）",
+          "content": "「最短3日で応募獲得」「採用単価を1/3に圧縮」といった具体的メリットの提示。"
+        },
+        "content_strategy": {
+          "focus": "リスク低減と簡易性",
+          "message": "無料トライアル、成果報酬型、丸投げ可能な代行サービスへの誘導、または今すぐ使える求人テンプレート配布。",
+          "offer": "「まずは無料診断」や「資料ダウンロード」などハードルの低いCTA。"
+        },
+        "cvr_targets": {
+          "early_cta": 3,
+          "mid_cta": 4,
+          "final_cta": 5
+        }
+      }
+    },
+    "detailed_persona": {
+      "name": "",
+      "age": "45〜55歳",
+      "job_title": "",
+      "company_size": "トラック保有台数10〜30台、従業員数20〜50名",
+      "pain_points": [],
+      "goals": [],
+      "search_scenario": {
+        "timing": "欠員が出て配車が組めなくなった時、または高い掲載費を払った求人広告の契約更新時期に応募ゼロで焦った時。",
+        "location": "営業所のデスク、または帰宅後の自宅でスマホ片手に。",
+        "trigger": "「また面接すっぽかされた」「求人費だけで赤字だ」という徒労感と怒り。"
+      },
+      "emotional_state": {
+        "primary": "焦燥感（ドライバー不足＝売上減直結）",
+        "secondary": "疲弊感（採用活動にかける時間と労力の無駄）",
+        "tertiary": "疑念（求人媒体の営業トークへの不信感）"
+      }
+    }
+  }
+}

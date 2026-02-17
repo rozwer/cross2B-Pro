@@ -1,0 +1,113 @@
+{
+  "step": "step0",
+  "keyword": "トラックドライバー 求人 書き方",
+  "analysis": "```json\n{\n  \"keyword\": \"トラックドライバー 求人 書き方\",\n  \"search_intent\": \"運送会社の採用担当者や経営者が、ドライバー不足を解消するために、効果的な求人票や求人広告の文面を作成したいと考えている。単なるフォーマットだけでなく、応募数を増やすための魅力的なアピール方法、法的に適切な記載内容、他社と差別化するコピーライティングの技術を求めている（Informational / Transactional）。\",\n  \"target_audience\": \"中小規模の運送会社経営者または採用担当者。専任の人事がおらず、大手求人サイトに掲載しても反応が薄いことに悩んでいる。物流2024年問題への危機感があり、給与や待遇の見せ方を改善したい層。\",\n  \"four_pillars_evaluation\": {\n    \"neuroscience\": {\n      \"phase\": 2,\n      \"brain_activation\": \"前頭前野\",\n      \"score\": 85,\n      \"rationale\": \"「書き方」という具体的なノウハウを求めているため、論理的な構成案やテンプレートを提供し、前頭前野での情報処理（理解・納得）を促すアプローチが最適。ただし、冒頭で採用難の現状（扁桃体刺激）に触れることも有効。\"\n    },\n    \"behavioral_economics\": {\n      \"applicable_principles\": [\n        \"損失回避\",\n        \"社会的証明\",\n        \"権威性\"\n      ],\n      \"score\": 78,\n      \"rationale\": \"「NGな書き方による機会損失」を訴求する損失回避、「応募殺到企業の事例」を示す社会的証明が極めて有効。また、労働基準法や改善基準告示への準拠を示す権威性も信頼獲得に寄与する。\"\n    },\n    \"llmo\": {\n      \"citation_potential\": \"high\",\n      \"score\": 88,\n      \"rationale\": \"「職種別テンプレート」「OK/NG例文集」などの構造化データを提供しやすいため、AI検索（SGE/ChatGPT等）での引用可能性が高い。具体的なフレーズ集はAIが回答として抽出しやすい。\"\n    },\n    \"kgi\": {\n      \"expected_cvr\": 3.5,\n      \"score\": 82,\n      \"rationale\": \"課題が明確（応募が来ない）であり、解決策（採用支援サービス、求人媒体掲載、ATS導入）への動線が引きやすい。BtoBリードとしての質も高く、適切なCTA配置で高CVRが期待できる。\"\n    }\n  },\n  \"article_strategy\": {\n    \"type\": \"how_to\",\n    \"strategy\": \"standard\",\n    \"background\": {\n      \"why_now\": \"物流2024年問題によるドライバー不足の深刻化と、求職者の売り手市場化により、従来の求人票では反応が得られなくなっているため。\",\n      \"target_pain\": \"高い掲載費を払っても応募ゼロ、面接に来ても条件が合わず辞退される、どのような言葉がドライバーに響くか分からない。\",\n      \"key_message\": \"「条件」の羅列ではなく、ドライバーの「生活」と「安心」を具体的にイメージさせる書き方が採用成功の鍵。\",\n      \"urgency\": \"high\"\n    }\n  },\n  \"recommended_angles\": [\n    {\n      \"angle\": \"ターゲット別（長距離・地場・未経験）の訴求テンプレート化\",\n      \"expected_effect\": \"読者がそのまま使える実用性を提供し、滞在時間を延ばすとともに信頼性を高める。\",\n      \"differentiation\": \"汎用的な書き方ではなく、車種や配送形態ごとの具体的な例文を提供することで差別化する。\"\n    },\n    {\n      \"angle\": \"「NGワード」と「言い換え表現」の対比\",\n      \"expected_effect\": \"損失回避の心理を突き、現状の求人票を見直させるきっかけを作る。\",\n      \"differentiation\": \"「アットホームな職場」など、よくあるが実は逆効果になり得る表現を論理的に解説する。\"\n    },\n    {\n      \"angle\": \"スマホ閲覧を前提とした「ファーストビュー」攻略法\",\n      \"expected_effect\": \"Indeedや求人サイトのスマホ表示に特化したテクニカルな視点を提供。\",\n      \"differentiation\": \"文章の内容だけでなく、視認性や検索対策（SEO）の観点を盛り込む。\"\n    }\n  ],\n  \"content_type_suggestion\": \"テンプレート・例文付きの実践的ハウツー記事\",\n  \"difficulty_score\": 6,\n  \"industry_category\": \"logistics\"\n}\n```",
+  "search_intent": "運送会社の採用担当者や経営者が、ドライバー不足を解消するために、効果的な求人票や求人広告の文面を作成したいと考えている。単なるフォーマットだけでなく、応募数を増やすための魅力的なアピール方法、法的に適切な記載内容、他社と差別化するコピーライティングの技術を求めている（Informational / Transactional）。",
+  "difficulty_score": 6,
+  "recommended_angles": [
+    {
+      "angle": "ターゲット別（長距離・地場・未経験）の訴求テンプレート化",
+      "expected_effect": "読者がそのまま使える実用性を提供し、滞在時間を延ばすとともに信頼性を高める。",
+      "differentiation": "汎用的な書き方ではなく、車種や配送形態ごとの具体的な例文を提供することで差別化する。"
+    },
+    {
+      "angle": "「NGワード」と「言い換え表現」の対比",
+      "expected_effect": "損失回避の心理を突き、現状の求人票を見直させるきっかけを作る。",
+      "differentiation": "「アットホームな職場」など、よくあるが実は逆効果になり得る表現を論理的に解説する。"
+    },
+    {
+      "angle": "スマホ閲覧を前提とした「ファーストビュー」攻略法",
+      "expected_effect": "Indeedや求人サイトのスマホ表示に特化したテクニカルな視点を提供。",
+      "differentiation": "文章の内容だけでなく、視認性や検索対策（SEO）の観点を盛り込む。"
+    }
+  ],
+  "target_audience": "中小規模の運送会社経営者または採用担当者。専任の人事がおらず、大手求人サイトに掲載しても反応が薄いことに悩んでいる。物流2024年問題への危機感があり、給与や待遇の見せ方を改善したい層。",
+  "content_type_suggestion": "テンプレート・例文付きの実践的ハウツー記事",
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": 2,
+      "brain_activation": "前頭前野",
+      "score": 85
+    },
+    "behavioral_economics": {
+      "applicable_principles": [
+        "損失回避",
+        "社会的証明",
+        "権威性"
+      ],
+      "score": 78
+    },
+    "llmo": {
+      "citation_potential": "high",
+      "score": 88
+    },
+    "kgi": {
+      "expected_cvr": 3.5,
+      "score": 82
+    }
+  },
+  "article_strategy": {
+    "type": "how_to",
+    "strategy": "standard",
+    "background": {
+      "why_now": "物流2024年問題によるドライバー不足の深刻化と、求職者の売り手市場化により、従来の求人票では反応が得られなくなっているため。",
+      "target_pain": "高い掲載費を払っても応募ゼロ、面接に来ても条件が合わず辞退される、どのような言葉がドライバーに響くか分からない。",
+      "key_message": "「条件」の羅列ではなく、ドライバーの「生活」と「安心」を具体的にイメージさせる書き方が採用成功の鍵。",
+      "urgency": "high"
+    }
+  },
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 1862,
+    "output": 1057
+  },
+  "metrics": {
+    "char_count": 2309,
+    "word_count": 1057
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

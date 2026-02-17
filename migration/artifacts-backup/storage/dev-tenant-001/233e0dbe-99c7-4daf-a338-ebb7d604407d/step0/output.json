@@ -1,0 +1,66 @@
+{
+  "step": "step0",
+  "keyword": "eラーニング 企業",
+  "analysis": "```json\n{\n  \"keyword\": \"eラーニング 企業\",\n  \"search_intent\": \"法人向けeラーニングシステムや研修サービスの導入検討および比較。社員研修の効率化、コスト削減、リモートワーク対応などの課題解決を目的としており、具体的なサービスの特徴、LMS（学習管理システム）の機能、料金体系、他社導入事例などの情報を求めている（Commercial/Transactional）。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"法人向けeラーニングサービスの徹底比較・おすすめランキング\",\n    \"企業がeラーニングを導入するメリット・デメリットと失敗しない選び方\",\n    \"LMS（学習管理システム）の基本機能と価格相場\",\n    \"階層別（新人・管理職）や目的別（コンプライアンス・DX）の研修コンテンツ紹介\",\n    \"eラーニング導入企業の成功事例と効果測定の方法\"\n  ],\n  \"target_audience\": \"企業の人事・労務担当者、人材育成・教育研修担当者、経営者・役員、社内研修のデジタル化を検討している部門責任者\"\n}\n```",
+  "search_intent": "法人向けeラーニングシステムや研修サービスの導入検討および比較。社員研修の効率化、コスト削減、リモートワーク対応などの課題解決を目的としており、具体的なサービスの特徴、LMS（学習管理システム）の機能、料金体系、他社導入事例などの情報を求めている（Commercial/Transactional）。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "企業の人事・労務担当者、人材育成・教育研修担当者、経営者・役員、社内研修のデジタル化を検討している部門責任者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 110,
+    "output": 254
+  },
+  "metrics": {
+    "char_count": 530,
+    "word_count": 320
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "step": "step4",
+  "keyword": "ドライバー 採用",
+  "article_title": "",
+  "meta_description": "",
+  "outline": "[{'section_id': 'S01', 'heading': 'なぜ中小企業はドライバー採用に苦戦するのか？', 'phase': 1, 'word_count_target': 2000, 'purpose': 'ドライバー不足の現状を認識させ、記事を読む必要性を感じさせる。', 'key_points': ['中小企業のドライバー採用の現状', 'ドライバー不足による損失', '採用コスト増加の背景'], 'subheadings': [{'heading': '深刻化するドライバー不足：中小企業への影響', 'word_count_target': 500, 'content_type': 'data'}, {'heading': '採用コストは年々増加：中小企業を圧迫する現状', 'word_count_target': 500, 'content_type': 'data'}, {'heading': '高齢化と若手不足：中小企業が抱える構造的な問題', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': 'もし、ドライバーが不足し続けたら…？中小企業の未来', 'word_count_target': 500, 'content_type': 'explanation'}], 'required_elements': ['ドライバー不足の統計データ', '中小企業の経営者の共感表現'], 'cta_placement': None}, {'section_id': 'S02', 'heading': '中小企業がドライバー採用を成功させるための第一歩とは？', 'phase': 1, 'word_count_target': 500, 'purpose': 'Early CTA配置セクション。現状の課題を認識させた上で、解決策の提案を行う。', 'key_points': ['採用戦略の重要性', '中小企業向け採用戦略のポイント'], 'subheadings': [{'heading': '中小企業ならではの強みを活かす採用戦略', 'word_count_target': 250, 'content_type': 'explanation'}, {'heading': '採用戦略を立てる上で重要な3つの視点', 'word_count_target': 250, 'content_type': 'list'}], 'required_elements': ['中小企業向けの具体的な提案'], 'cta_placement': 'early'}, {'section_id': 'S03', 'heading': '効果的な求人広告を作成するには？中小企業向けノウハウ', 'phase': 2, 'word_count_target': 1500, 'purpose': '具体的な解決策を提示し、読者の理解を深める。', 'key_points': ['求人広告の基本', '中小企業向け求人広告の書き方', '効果測定'], 'subheadings': [{'heading': '求職者の心に響く！求人広告の5つの基本要素', 'word_count_target': 300, 'content_type': 'list'}, {'heading': '中小企業だからこそできる！求人広告の差別化戦略', 'word_count_target': 400, 'content_type': 'explanation'}, {'heading': '未経験者も応募したくなる！求人広告の書き方', 'word_count_target': 400, 'content_type': 'explanation'}, {'heading': '求人広告の効果を最大化！効果測定と改善のポイント', 'word_count_target': 400, 'content_type': 'explanation'}], 'required_elements': ['求人広告のテンプレート', '成功事例'], 'cta_placement': None}, {'section_id': 'S04', 'heading': 'ドライバーの定着率を向上させるには？中小企業ができること', 'phase': 2, 'word_count_target': 1500, 'purpose': '定着率向上施策を提示し、長期的な視点での採用を促す。', 'key_points': ['定着率向上の重要性', '中小企業向け定着率向上施策', '労働環境改善'], 'subheadings': [{'heading': 'なぜ定着率が重要なのか？中小企業へのメリット', 'word_count_target': 300, 'content_type': 'explanation'}, {'heading': '中小企業でもできる！定着率を向上させる7つの施策', 'word_count_target': 400, 'content_type': 'list'}, {'heading': 'ドライバーの労働環境改善：中小企業が取り組むべきこと', 'word_count_target': 400, 'content_type': 'explanation'}, {'heading': 'ドライバーとのコミュニケーション：信頼関係を築くために', 'word_count_target': 400, 'content_type': 'explanation'}], 'required_elements': ['具体的な施策', '労働環境改善の事例'], 'cta_placement': None}, {'section_id': 'S05', 'heading': 'ドライバー採用を成功させた中小企業の事例とは？', 'phase': 2, 'word_count_target': 1000, 'purpose': '成功事例を紹介し、読者の行動を促す。', 'key_points': ['成功事例の紹介', '事例から学ぶポイント'], 'subheadings': [{'heading': '事例1：未経験者歓迎で採用を成功させたA社', 'word_count_target': 500, 'content_type': 'example'}, {'heading': '事例2：労働環境改善で定着率を向上させたB社', 'word_count_target': 500, 'content_type': 'example'}], 'required_elements': ['具体的な数値データ', '成功要因の分析'], 'cta_placement': 'mid'}, {'section_id': 'S06', 'heading': 'ドライバー採用でよくある質問（FAQ）', 'phase': 3, 'word_count_target': 1500, 'purpose': '読者の疑問を解消し、不安を取り除く。', 'key_points': ['よくある質問', '回答'], 'subheadings': [{'heading': 'Q1：未経験者でも採用できますか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q2：採用コストを抑える方法はありますか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q3：どのような求人媒体が効果的ですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q4：面接でどのような質問をすれば良いですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q5：採用後の研修はどのようにすれば良いですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q6：ドライバーのモチベーションを維持するには？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q7：女性ドライバーを採用するメリットは？', 'word_count_target': 200, 'content_type': 'explanation'}], 'required_elements': ['8問以上のFAQ'], 'cta_placement': None}, {'section_id': 'S07', 'heading': '中小企業のドライバー採用成功の鍵：まとめ', 'phase': 3, 'word_count_target': 800, 'purpose': '記事全体の要点をまとめ、読者の行動を促す。', 'key_points': ['記事全体のまとめ', '次のステップの提案'], 'subheadings': [{'heading': '今すぐできる！ドライバー採用成功のための3つのステップ', 'word_count_target': 400, 'content_type': 'list'}, {'heading': 'ドライバー採用に関する無料相談はこちら', 'word_count_target': 400, 'content_type': 'cta'}], 'required_elements': ['要点の再確認', 'CTAへの誘導'], 'cta_placement': 'final'}]",
+  "sections": [],
+  "key_differentiators": [],
+  "metrics": {
+    "word_count": 1370,
+    "char_count": 4268,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 439.0
+    }
+  },
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 3738,
+    "output": 2663
+  },
+  "title_metadata": null,
+  "three_phase_structure": null,
+  "four_pillars_per_section": [],
+  "cta_placements": null,
+  "word_count_tracking": null
+}

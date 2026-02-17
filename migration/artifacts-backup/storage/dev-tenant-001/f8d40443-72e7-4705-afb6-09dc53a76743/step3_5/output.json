@@ -1,0 +1,65 @@
+{
+  "step": "step3_5",
+  "keyword": "ドライバー 採用",
+  "emotional_analysis": {
+    "primary_emotion": "",
+    "secondary_emotions": [],
+    "pain_points": [],
+    "desires": []
+  },
+  "human_touch_patterns": [],
+  "experience_episodes": [],
+  "emotional_hooks": [],
+  "phase_emotional_map": {
+    "phase1": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase2": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase3": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    }
+  },
+  "behavioral_economics_hooks": {
+    "loss_aversion_hook": "",
+    "social_proof_hook": "",
+    "authority_hook": "",
+    "scarcity_hook": ""
+  },
+  "placement_instructions": [],
+  "raw_output": "```json\n{\n  \"emotional_analysis\": {\n    \"primary_emotion\": \"焦り\",\n    \"secondary_emotions\": [\"不安\", \"期待\"],\n    \"pain_points\": [\n      \"慢性的なドライバー不足による業務逼迫\",\n      \"採用コストの増大\",\n      \"採用後の早期退職\"\n    ],\n    \"desires\": [\n      \"安定した事業運営\",\n      \"優秀な人材の確保\",\n      \"長期的な人材定着\"\n    ]\n  },\n  \"phase_aligned_elements\": {\n    \"phase1_anxiety\": {\n      \"target_brain\": \"扁桃体（危険検知）\",\n      \"emotional_goal\": \"「このままでは危険」という認識\",\n      \"human_touch\": {\n        \"experience\": \"月末の配送スケジュールを前に、頭を抱える経営者。ドライバーの高齢化が進み、若手はなかなか定着しない。求人広告を出しても応募は数えるほど。このままでは、顧客からの信頼を失い、事業継続も危うい…。\",\n        \"emotion_hook\": \"「もし、今すぐドライバーが一人でも減ったら、どうしますか？」\",\n        \"empathy\": \"「ドライバー不足で、夜も眠れない日々が続いていませんか？」\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"8-12%\",\n        \"cta_type\": \"early_hook\",\n        \"message_tone\": \"問題意識の確認（例：「まずはドライバー不足の現状を把握しましょう」）\"\n      }\n    },\n    \"phase2_understanding\": {\n      \"target_brain\": \"前頭前野（論理的思考）\",\n      \"emotional_goal\": \"「なるほど、これが解決策か」という納得\",\n      \"human_touch\": {\n        \"experience\": \"ある運送会社では、未経験者歓迎の求人広告を出し、採用後の研修制度を充実させた結果、応募者が3倍に増加。さらに、ドライバーの意見を積極的に取り入れることで、定着率も大幅に向上しました。専門家は言います。「ドライバーの労働環境改善こそが、採用成功の鍵です」\",\n        \"emotion_hook\": \"「ご安心ください。ドライバー採用を成功させるための具体的なステップがあります。」\",\n        \"empathy\": \"「実は、多くの運送会社様が同じ悩みを持っています。成功事例を知ることで、解決の糸口が見つかります。」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"35-45%\",\n        \"cta_type\": \"mid_engagement\",\n        \"message_tone\": \"具体的なアクション提案（例：「ドライバー採用成功事例集を今すぐダウンロード」）\"\n      }\n    },\n    \"phase3_action\": {\n      \"target_brain\": \"線条体（報酬系）\",\n      \"emotional_goal\": \"「今行動すれば報酬が得られる」という期待\",\n      \"human_touch\": {\n        \"experience\": \"新しいドライバーが加わり、配送スケジュールに余裕が生まれたA社。残業時間が減り、ドライバーの満足度も向上。顧客からの評価も上がり、新規契約も続々と獲得。経営者は笑顔で語ります。「あの時、思い切って採用戦略を見直して本当に良かった」\",\n        \"emotion_hook\": \"「今すぐ行動すれば、ドライバー不足の悩みから解放され、事業拡大のチャンスを掴めます！」\",\n        \"empathy\": \"「あなたもA社のように、ドライバー採用を成功させることができます。まずは一歩を踏み出しましょう！」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"75-85%\",\n        \"cta_type\": \"final_conversion\",\n        \"message_tone\": \"即行動を促す（例：「今すぐ無料相談に申し込む」「期間限定！採用コンサルティング無料」）\"\n      }\n    }\n  },\n  \"experience_episodes\": [\n    {\n      \"phase\": \"phase1\",\n      \"scenario\": \"問題に直面した状況\",\n      \"narrative\": \"ある日、急なドライバーの退職。代わりのドライバーが見つからず、社長自らハンドルを握る羽目に。顧客からのクレームも増え、頭を抱える日々。\",\n      \"lesson\": \"「このままではいけない。早急にドライバー採用に取り組まなければ、事業が立ち行かなくなる。」\"\n    },\n    {\n      \"phase\": \"phase2\",\n      \"scenario\": \"解決策を発見した状況\",\n      \"narrative\": \"インターネットでドライバー採用のノウハウを検索。成功事例や専門家の意見を参考に、自社に合った採用戦略を練り直す。求人広告の改善、研修制度の充実など、具体的な施策を検討。\",\n      \"lesson\": \"「これなら解決できるかもしれない。ドライバーの働きがいを高めることが、採用成功への近道だ。」\"\n    },\n    {\n      \"phase\": \"phase3\",\n      \"scenario\": \"行動して成功した状況\",\n      \"narrative\": \"新しい採用戦略を実行。求人広告の効果が上がり、応募者が増加。面接では、人柄や意欲を重視。採用後の研修制度も充実させ、ドライバーの定着率が向上。業績もV字回復。\",\n      \"lesson\": \"「あの時、思い切って行動して本当に良かった。ドライバーは会社の宝だと改めて実感した。」\"\n    }\n  ],\n  \"behavioral_economics_hooks\": {\n    \"loss_aversion\": \"損失回避：「ドライバー不足で顧客を失う前に」「今行動しないと、競合に先を越されます」\",\n    \"social_proof\": \"社会的証明：「多くの運送会社がドライバー採用に成功しています」「90%の企業が採用戦略の見直しで効果を実感」\",\n    \"authority\": \"権威性：「国土交通省も推奨するドライバー採用戦略」「業界専門家が監修」\",\n    \"scarcity\": \"希少性：「今だけ！採用コンサルティング無料」「限定5社！高待遇求人」\",\n    \"consistency\": \"一貫性：「ドライバーの定着率を上げたいと思った方へ」「長期的な人材育成を目指すなら」\",\n    \"liking\": \"好意：「あなたと同じようにドライバー不足で悩む経営者の方へ」「現場のドライバーの気持ちを理解する採用担当者様へ」\n  }\n}\n```",
+  "parsed_data": null,
+  "metadata": {
+    "generated_at": "2026-02-04T08:09:05.438425",
+    "model": "gemini-2.0-flash",
+    "model_config": {
+      "platform": "gemini",
+      "model": "gemini-2.0-flash"
+    },
+    "input_files": [
+      "step0",
+      "step1",
+      "step3a",
+      "step3b",
+      "step3c",
+      "step1_5"
+    ]
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  },
+  "token_usage": {
+    "input": 16885,
+    "output": 1450
+  },
+  "output_path": "storage/dev-tenant-001/f8d40443-72e7-4705-afb6-09dc53a76743/step3_5/output.json",
+  "output_digest": "5cb369249435d5d6"
+}

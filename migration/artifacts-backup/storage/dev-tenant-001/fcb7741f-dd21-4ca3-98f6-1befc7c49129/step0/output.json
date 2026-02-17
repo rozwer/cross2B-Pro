@@ -1,0 +1,113 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用 難しい",
+  "analysis": "工程0「キーワード選定・分析」の専門家として、指定されたキーワード「ドライバー 採用 難しい」を分析します。\n\nこのキーワードは、物流業界の深刻な労働力不足（2024年問題など）を背景に、切実な課題を抱える事業者による検索です。不安（Phase 1）から解決策の模索（Phase 2）への移行期にあり、B2Bコンバージョン（採用支援サービスの導入など）へのポテンシャルが高いキーワードです。\n\n以下に分析結果をJSON形式で出力します。\n\n```json\n{\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"search_intent\": \"物流・運送業の採用担当者や経営者が、慢性的なドライバー不足や応募者不足の原因を理解し、具体的な打開策（採用手法の見直し、待遇改善、新しい求人媒体の選定など）を求めている。背景には「2024年問題」や「高齢化」への危機感がある。\",\n  \"target_audience\": \"運送会社・物流企業の経営者および人事担当者。既存の求人媒体で効果が出ず、トラックの稼働率低下や事業継続に不安を感じている層。\",\n  \"four_pillars_evaluation\": {\n    \"neuroscience\": {\n      \"phase\": 1,\n      \"brain_activation\": \"扁桃体\",\n      \"score\": 85,\n      \"rationale\": \"「難しい」というネガティブな現状認識は、扁桃体を強く刺激し、事業存続への不安（恐怖）を喚起しています。まずはこの不安に寄り添い、Phase 2（前頭前野での論理的解決）へ誘導する構成が最適です。\"\n    },\n    \"behavioral_economics\": {\n      \"applicable_principles\": [\n        \"損失回避\",\n        \"希少性\",\n        \"社会的証明\"\n      ],\n      \"score\": 80,\n      \"rationale\": \"「ドライバーを確保できない＝売上逸失・事業縮小」という損失回避の心理が強く働きます。また、労働市場の「希少性」を強調しつつ、他社の成功事例（社会的証明）を示すことが有効です。\"\n    },\n    \"llmo\": {\n      \"citation_potential\": \"high\",\n      \"score\": 75,\n      \"rationale\": \"「なぜ難しいのか（理由）」と「どうすれば採用できるか（解決策）」という構造が明確で、AIによる回答生成で引用されやすいトピックです。統計データやリスト形式の対策が好まれます。\"\n    },\n    \"kgi\": {\n      \"expected_cvr\": 3.5,\n      \"score\": 70,\n      \"rationale\": \"課題が顕在化しており、解決策（採用代行、特化型求人媒体、コンサルティング）へのニーズが高い状態です。適切なオファーがあれば問い合わせにつながりやすいキーワードです。\"\n    }\n  },\n  \"article_strategy\": {\n    \"type\": \"comprehensive_guide\",\n    \"strategy\": \"standard\",\n    \"background\": {\n      \"why_now\": \"物流の2024年問題により労働時間規制が強化され、ドライバー不足が事業リスクとして最大化しているため。\",\n      \"target_pain\": \"求人を出しても応募が来ない、若手が入らない、採用コストばかり嵩む。\",\n      \"key_message\": \"「採用難」は構造的な問題だが、ターゲット選定と訴求軸のズレを修正し、選ばれる職場づくりを行うことで解決可能である。\",\n      \"urgency\": \"high\"\n    }\n  },\n  \"recommended_angles\": [\n    {\n      \"angle\": \"市場構造と2024年問題からの分析\",\n      \"expected_effect\": \"業界全体の課題であることを示し、読者の「自社だけが悪い」という不安を軽減しつつ、構造改革の必要性を説く。\",\n      \"differentiation\": \"単なる精神論ではなく、国交省のデータ等を用いた論理的な市場分析。\"\n    },\n    {\n      \"angle\": \"ターゲット別アプローチ（若年層 vs シニア vs 女性）\",\n      \"expected_effect\": \"「誰でもいい」から脱却させ、ターゲットごとの具体的な訴求方法（給与重視か、休日重視か等）を提示し、マッチング精度を高める。\",\n      \"differentiation\": \"ペルソナ別の具体的な求人原稿の書き方や訴求ポイントの対比。\"\n    },\n    {\n      \"angle\": \"「採用」ではなく「定着」と「環境改善」への転換\",\n      \"expected_effect\": \"採用難易度が高い現状では、離職防止（リテンション）こそが最大の採用活動であることを啓蒙する。\",\n      \"differentiation\": \"福利厚生や労働時間管理ツールの導入など、採用以外の解決策の提示。\"\n    }\n  ],\n  \"content_type_suggestion\": \"現状の厳しいデータを提示した上で、具体的な改善チェックリストを提供するガイド記事\",\n  \"difficulty_score\": 7,\n  \"industry_category\": \"logistics\"\n}\n```",
+  "search_intent": "物流・運送業の採用担当者や経営者が、慢性的なドライバー不足や応募者不足の原因を理解し、具体的な打開策（採用手法の見直し、待遇改善、新しい求人媒体の選定など）を求めている。背景には「2024年問題」や「高齢化」への危機感がある。",
+  "difficulty_score": 7,
+  "recommended_angles": [
+    {
+      "angle": "市場構造と2024年問題からの分析",
+      "expected_effect": "業界全体の課題であることを示し、読者の「自社だけが悪い」という不安を軽減しつつ、構造改革の必要性を説く。",
+      "differentiation": "単なる精神論ではなく、国交省のデータ等を用いた論理的な市場分析。"
+    },
+    {
+      "angle": "ターゲット別アプローチ（若年層 vs シニア vs 女性）",
+      "expected_effect": "「誰でもいい」から脱却させ、ターゲットごとの具体的な訴求方法（給与重視か、休日重視か等）を提示し、マッチング精度を高める。",
+      "differentiation": "ペルソナ別の具体的な求人原稿の書き方や訴求ポイントの対比。"
+    },
+    {
+      "angle": "「採用」ではなく「定着」と「環境改善」への転換",
+      "expected_effect": "採用難易度が高い現状では、離職防止（リテンション）こそが最大の採用活動であることを啓蒙する。",
+      "differentiation": "福利厚生や労働時間管理ツールの導入など、採用以外の解決策の提示。"
+    }
+  ],
+  "target_audience": "運送会社・物流企業の経営者および人事担当者。既存の求人媒体で効果が出ず、トラックの稼働率低下や事業継続に不安を感じている層。",
+  "content_type_suggestion": "現状の厳しいデータを提示した上で、具体的な改善チェックリストを提供するガイド記事",
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": 1,
+      "brain_activation": "扁桃体",
+      "score": 85
+    },
+    "behavioral_economics": {
+      "applicable_principles": [
+        "損失回避",
+        "希少性",
+        "社会的証明"
+      ],
+      "score": 80
+    },
+    "llmo": {
+      "citation_potential": "high",
+      "score": 75
+    },
+    "kgi": {
+      "expected_cvr": 3.5,
+      "score": 70
+    }
+  },
+  "article_strategy": {
+    "type": "comprehensive_guide",
+    "strategy": "standard",
+    "background": {
+      "why_now": "物流の2024年問題により労働時間規制が強化され、ドライバー不足が事業リスクとして最大化しているため。",
+      "target_pain": "求人を出しても応募が来ない、若手が入らない、採用コストばかり嵩む。",
+      "key_message": "「採用難」は構造的な問題だが、ターゲット選定と訴求軸のズレを修正し、選ばれる職場づくりを行うことで解決可能である。",
+      "urgency": "high"
+    }
+  },
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 1861,
+    "output": 1152
+  },
+  "metrics": {
+    "char_count": 2454,
+    "word_count": 1175
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

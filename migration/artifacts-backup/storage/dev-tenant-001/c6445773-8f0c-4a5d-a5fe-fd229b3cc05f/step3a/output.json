@@ -1,0 +1,93 @@
+{
+  "step": "step3a",
+  "keyword": "従業員 募集 こない",
+  "query_analysis": "```json\n{\n  \"query_type\": \"informational\",\n  \"user_intent\": \"従業員募集がうまくいかない原因の特定と解決策の探索\",\n  \"related_queries\": [\n    \"従業員 募集 応募 こない なぜ\",\n    \"求人 応募 来ない 対策\",\n    \"採用 応募 増やす\",\n    \"採用コスト 削減\",\n    \"中小企業 採用 難しい\",\n    \"求人広告 効果がない\",\n    \"採用 代行 おすすめ\"\n  ],\n  \"content_format_suggestion\": \"ブログ記事、事例紹介、チェックリスト、動画、セミナー情報\",\n  \"user_persona\": {\n    \"name\": \"中小企業人事担当者 田中さん\",\n    \"age\": \"30代\",\n    \"job_title\": \"人事担当\",\n    \"company_size\": \"50名\",\n    \"industry\": \"製造業\",\n    \"experience\": \"3年\",\n    \"goals\": \"採用目標の達成、採用コストの削減、優秀な人材の獲得\",\n    \"technical_skill\": \"基本的なPCスキル、求人サイトの利用経験\",\n    \"personality\": \"真面目、責任感が強い、新しい情報に敏感\",\n    \"motivation\": \"会社の成長に貢献したい、従業員の満足度を向上させたい\",\n    \"frustration\": \"応募が来ない、採用コストが高い、競合他社に人材を取られる\"\n  },\n  \"user_problem\": \"求人を出しても応募が来ないため、採用活動が停滞し、業務に支障が出ている。原因が分からず、効果的な対策を講じることができない。\",\n  \"core_question\": \"なぜ従業員募集に応募が来ないのか？効果的な対策は？\",\n  \"behavioral_economics\": {\n    \"loss_aversion\": \"採用できないことによる事業機会の損失、既存社員への負担増を避けたい。\",\n    \"social_proof\": \"他社が成功している採用手法を知りたい、成功事例を参考にしたい。\",\n    \"authority\": \"採用コンサルタントや専門家の意見を参考にしたい。\",\n    \"consistency\": \"過去の採用手法に固執せず、新しい手法を取り入れたい。\",\n    \"liking\": \"自社の魅力が伝わるような求人情報を作成したい。\",\n    \"scarcity\": \"優秀な人材は限られているため、早めに確保したい。\"\n  },\n  \"psychological_mapping\": {\n    \"phase_1\": {\n      \"emotion\": \"焦燥感、不安、無力感\",\n      \"needs\": \"原因の特定、現状の把握\",\n      \"questions\": [\n        \"何が問題なのか？\",\n        \"どこを改善すべきか？\",\n        \"他社はどうしているのか？\"\n      ]\n    },\n    \"phase_2\": {\n      \"emotion\": \"理解、納得、期待\",\n      \"needs\": \"具体的な解決策、成功事例、根拠\",\n      \"questions\": [\n        \"具体的な対策は？\",\n        \"成功事例は？\",\n        \"費用対効果は？\"\n      ]\n    },\n    \"phase_3\": {\n      \"emotion\": \"決意、行動、満足\",\n      \"needs\": \"具体的な行動計画、サポート体制、成功体験\",\n      \"questions\": [\n        \"すぐにできることは？\",\n        \"誰に相談すれば良い？\",\n        \"効果測定の方法は？\"\n      ]\n    }\n  }\n}\n```",
+  "parsed_data": {
+    "query_type": "informational",
+    "user_intent": "従業員募集がうまくいかない原因の特定と解決策の探索",
+    "related_queries": [
+      "従業員 募集 応募 こない なぜ",
+      "求人 応募 来ない 対策",
+      "採用 応募 増やす",
+      "採用コスト 削減",
+      "中小企業 採用 難しい",
+      "求人広告 効果がない",
+      "採用 代行 おすすめ"
+    ],
+    "content_format_suggestion": "ブログ記事、事例紹介、チェックリスト、動画、セミナー情報",
+    "user_persona": {
+      "name": "中小企業人事担当者 田中さん",
+      "age": "30代",
+      "job_title": "人事担当",
+      "company_size": "50名",
+      "industry": "製造業",
+      "experience": "3年",
+      "goals": "採用目標の達成、採用コストの削減、優秀な人材の獲得",
+      "technical_skill": "基本的なPCスキル、求人サイトの利用経験",
+      "personality": "真面目、責任感が強い、新しい情報に敏感",
+      "motivation": "会社の成長に貢献したい、従業員の満足度を向上させたい",
+      "frustration": "応募が来ない、採用コストが高い、競合他社に人材を取られる"
+    },
+    "user_problem": "求人を出しても応募が来ないため、採用活動が停滞し、業務に支障が出ている。原因が分からず、効果的な対策を講じることができない。",
+    "core_question": "なぜ従業員募集に応募が来ないのか？効果的な対策は？",
+    "behavioral_economics": {
+      "loss_aversion": "採用できないことによる事業機会の損失、既存社員への負担増を避けたい。",
+      "social_proof": "他社が成功している採用手法を知りたい、成功事例を参考にしたい。",
+      "authority": "採用コンサルタントや専門家の意見を参考にしたい。",
+      "consistency": "過去の採用手法に固執せず、新しい手法を取り入れたい。",
+      "liking": "自社の魅力が伝わるような求人情報を作成したい。",
+      "scarcity": "優秀な人材は限られているため、早めに確保したい。"
+    },
+    "psychological_mapping": {
+      "phase_1": {
+        "emotion": "焦燥感、不安、無力感",
+        "needs": "原因の特定、現状の把握",
+        "questions": [
+          "何が問題なのか？",
+          "どこを改善すべきか？",
+          "他社はどうしているのか？"
+        ]
+      },
+      "phase_2": {
+        "emotion": "理解、納得、期待",
+        "needs": "具体的な解決策、成功事例、根拠",
+        "questions": [
+          "具体的な対策は？",
+          "成功事例は？",
+          "費用対効果は？"
+        ]
+      },
+      "phase_3": {
+        "emotion": "決意、行動、満足",
+        "needs": "具体的な行動計画、サポート体制、成功体験",
+        "questions": [
+          "すぐにできることは？",
+          "誰に相談すれば良い？",
+          "効果測定の方法は？"
+        ]
+      }
+    }
+  },
+  "format_detected": "json",
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 521,
+    "output": 788
+  },
+  "metrics": {
+    "char_count": 1742,
+    "word_count": 661
+  },
+  "quality": {
+    "attempts": 2,
+    "issues": [
+      "missing_pain_points",
+      "missing_three_phase"
+    ]
+  },
+  "is_v2": false
+}

@@ -1,0 +1,341 @@
+{
+  "step": "step5",
+  "keyword": "従業員募集こない",
+  "search_queries": [
+    "中小企業 採用活動実態調査 2024 データ",
+    "求職者意識調査 仕事選び 重視する項目 ランキング",
+    "求人 応募が来ない理由 調査データ",
+    "求人媒体別 応募単価 CPA 平均相場",
+    "Indeed 採用市場トレンド レポート 公式"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://www.shokochukin.co.jp/report/data/assets/pdf/futai202401.pdf",
+      "title": "中小企業の人材確保に関する調査（2024 年 1 月）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://career-research.mynavi.jp/reserch/20230718_54858/",
+      "title": "2024年卒企業新卒採用活動調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.cas.go.jp/jp/seisaku/shushoku_katsudou/kanji_dai6/siryou4.pdf",
+      "title": "令和5年度就職・採用活動に関する調査（企業） 調査結果【速報 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://note.com/warks_inc/n/nc7ffa35ddbfd",
+      "title": "【レポート】日本の中小企業における採用活動の現状と課題",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000075.000047449.html",
+      "title": "【Z世代の就活意識調査】就職先選びで最も重視する項目",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://edenred.jp/article/hr-recruiting/223/",
+      "title": "【企業選びの条件】優先順位ランキング｜選ばれる企業が実践 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://reashu.com/shigoto-erabukijun/",
+      "title": "【優先順位は？】仕事選びの基準ランキングTOP15",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://corp.en-japan.com/newsrelease/2025/43776.html",
+      "title": "年代別、男女別「仕事選びの軸」調査ー『エン転職』ユーザー ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://mcs.mynavi.jp/column/2022/12/popular_industry_ranking/",
+      "title": "2026年卒の大学生が選んだ人気業界は？ランキングや志望 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jbrc.recruit.co.jp/data/data20250417_3747.html",
+      "title": "「働く」に関する2万人調査 2025 データ集",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/",
+      "title": "求人を出しても応募者が来ない理由と、人手不足を解消する ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.tracom.co.jp/tralog/oubo-improvement/",
+      "title": "求人募集で応募が来ない原因は？求職者が重視する点と対策 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://shachomeshi.com/media/no-applications-received/",
+      "title": "【なぜ？】求人に応募が来ない原因6つと応募者を増やす7つの ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.naito.jp/knowledge/circumstance/3046/",
+      "title": "中小企業の求人に応募が来ないのはなぜ？考えられる原因と ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.careermart.co.jp/blog/33217",
+      "title": "【2025年最新版】応募単価とは？計算方法・相場・改善策を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://aggregate.eole.co.jp/column/column046/",
+      "title": "【2025年版】Indeedのクリック単価と応募単価の目安",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.tracom.co.jp/tralog/indeed-cpa-simulation/",
+      "title": "Indeedの掲載効果をシミュレーションで解説！応募単価・採用 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://service.r-4.co.jp/knowhow/recruiting/saiyocost/",
+      "title": "採用コストは一人当たりいくら？平均相場と内訳をわかりやすく ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://megdai.jp/markebatake/know_how/6450/",
+      "title": "【CPAの”平均”に騙されない採用戦略】採用に100万円かけて ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.tracom.co.jp/tralog/indeed-report-2/",
+      "title": "Indeedの採用市場レポート（労働市場分析）とは？機能の活用 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/c/info/how-to-use-the-labormarket-analysis-on-indeed",
+      "title": "求職者が検索しているキーワードがわかる!? Indeed（インディー ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://indeedinc.my.site.com/employerSupport1/s/article/What-is-Hiring-Insights?language=ja",
+      "title": "採用市場レポートとは",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/c/info/how-to-understand-the-needs-of-job-seekers",
+      "title": "Indeed（インディード）で人気の検索キーワードから、求職者の ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 23,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

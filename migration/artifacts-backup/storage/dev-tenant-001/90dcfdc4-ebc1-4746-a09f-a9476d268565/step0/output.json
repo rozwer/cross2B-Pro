@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "営業採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"営業採用難しい\",\n  \"search_intent\": \"営業職の採用活動が困難である現状に対する原因、対策、成功事例などの情報を求めている。人事担当者や採用責任者などが、現状の課題を解決するための具体的な方法やノウハウを探している可能性が高い。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\"営業採用の現状と課題\", \"営業採用が難しい理由（業界、企業規模、待遇など）\", \"効果的な営業採用戦略\", \"営業職の採用ターゲット設定\", \"採用チャネルの最適化\", \"採用ブランディング\", \"面接における評価ポイント\", \"採用後のオンボーディング\", \"営業採用成功事例\", \"営業採用における最新トレンド（ダイレクトリクルーティング、リファラル採用など）\", \"採用代行（RPO）の活用\", \"採用基準の見直し\", \"給与・待遇の見直し\"],\n  \"target_audience\": \"企業の採用担当者、人事責任者、営業部門のマネージャー、経営者\"\n}\n```",
+  "search_intent": "営業職の採用活動が困難である現状に対する原因、対策、成功事例などの情報を求めている。人事担当者や採用責任者などが、現状の課題を解決するための具体的な方法やノウハウを探している可能性が高い。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "企業の採用担当者、人事責任者、営業部門のマネージャー、経営者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 107,
+    "output": 232
+  },
+  "metrics": {
+    "char_count": 486,
+    "word_count": 298
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

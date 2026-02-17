@@ -1,0 +1,775 @@
+{
+  "step": "step3c",
+  "keyword": "営業採用難しい",
+  "word_count_mode": "ai_balanced",
+  "competitor_analysis": "```json\n{\n  \"keyword\": \"営業採用難しい\",\n  \"market_overview\": \"営業職の採用は、人材不足や求職者の価値観の変化により、多くの企業にとって困難な課題となっています。上位表示されている記事は、採用が難しい理由の分析、採用成功のためのノウハウ、具体的な事例紹介など、多角的な情報を提供することで、企業の採用活動を支援しています。特に、採用市場の現状、企業側の課題、効果的な採用手法の提案などが重視されています。\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html\",\n      \"title\": \"営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ\",\n      \"strengths\": [\"求職者のタイプ別分析\", \"具体的な解決策の提示\", \"採用代行サービスの訴求\"],\n      \"weaknesses\": [\"コンテンツが冗長\", \"事例が少ない\"],\n      \"content_focus\": [\"営業職採用の現状\", \"求職者のタイプ\", \"採用戦略\"],\n      \"unique_value\": \"求職者のタイプに焦点を当てた詳細な分析と解決策\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://topics.type.jp/mid-career-recruitment/sales/\",\n      \"title\": \"営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介\",\n      \"strengths\": [\"採用成功のノウハウ\", \"具体的なコツの提示\", \"事例紹介\"],\n      \"weaknesses\": [\"情報が一般的\", \"深掘りが不足\"],\n      \"content_focus\": [\"営業採用の課題\", \"採用ノウハウ\", \"成功事例\"],\n      \"unique_value\": \"採用成功のためのノウハウと事例の網羅的な紹介\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://marugotoinc.jp/blog/sales_saiyou/\",\n      \"title\": \"営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社\",\n      \"strengths\": [\"見極めポイントの明確化\", \"成功戦略の提示\", \"採用代行サービスの訴求\"],\n      \"weaknesses\": [\"情報が表面的\", \"独自性が低い\"],\n      \"content_focus\": [\"営業職採用の難しさ\", \"人材の見極め\", \"採用戦略\"],\n      \"unique_value\": \"人材の見極めポイントと成功戦略の具体的な提示\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.systems.nakashima.co.jp/dutiessolution/nice-sfa-kintone/column/skillup/sfa12.html\",\n      \"title\": \"営業マンの採用が難しい理由や優秀な営業マンを採用するコツとは | SFA(営業支援ツール)ならNICE営業物語 on kintone\",\n      \"strengths\": [\"SFAツールとの連携\", \"具体的なコツの提示\"],\n      \"weaknesses\": [\"情報が少ない\", \"対象が中小企業向け\"],\n      \"content_focus\": [\"営業マン採用の難しさ\", \"採用のコツ\", \"SFAツール\"],\n      \"unique_value\": \"SFAツールを活用した営業マン採用の提案\",\n      \"threat_level\": \"low\"\n    },\n    {\n      \"url\": \"https://corp.miidas.jp/assessment/19200/\",\n      \"title\": \"営業職の採用が難しい理由は？採用を成功させるポイントを解説｜人材アセスメントラボ｜ミイダス\",\n      \"strengths\": [\"採用成功のポイント\", \"人材アセスメントツールの紹介\", \"事例紹介\"],\n      \"weaknesses\": [\"情報が一般的\", \"深掘りが不足\"],\n      \"content_focus\": [\"営業職採用の課題\", \"採用のポイント\", \"成功事例\"],\n      \"unique_value\": \"人材アセスメントツールを活用した採用戦略の提案\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.r-agent.com/business/knowhow/article/1959/\",\n      \"title\": \"営業職の採用は難しい？採用段階別にポイントを解説 - 【中途採用ノウハウ】 | リクルートエージェント\",\n      \"strengths\": [\"採用段階別の解説\", \"転職市場の動向分析\"],\n      \"weaknesses\": [\"情報が一般的\", \"深掘りが不足\"],\n      \"content_focus\": [\"営業職採用の難しさ\", \"採用段階別のポイント\", \"転職市場\"],\n      \"unique_value\": \"採用段階に応じた詳細なポイント解説\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://service.gakujo.ne.jp/jinji-library/saiyo/00134/\",\n      \"title\": \"営業職の採用方法とは？採用が難しい理由や採用成功のコツを解説\",\n      \"strengths\": [\"採用方法の解説\", \"採用成功のコツ\", \"具体的な事例\"],\n      \"weaknesses\": [\"情報が表面的\", \"独自性が低い\"],\n      \"content_focus\": [\"営業職採用の難しさ\", \"採用方法\", \"採用成功のコツ\"],\n      \"unique_value\": \"採用方法と成功のコツを網羅的に解説\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://saiyo.employment.en-japan.com/blog/eigyo2\",\n      \"title\": \"採用できない「営業職募集」の特徴とは？｜すぐできる改善策を解説！ | エン株式会社\",\n      \"strengths\": [\"採用できない特徴の分析\", \"具体的な改善策の提示\"],\n      \"weaknesses\": [\"情報が一般的\", \"深掘りが不足\"],\n      \"content_focus\": [\"営業職採用の課題\", \"募集の特徴\", \"改善策\"],\n      \"unique_value\": \"採用できない募集の特徴に焦点を当てた分析と改善策\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://stock-sun.com/column/sales-recruitment-is-difficult/\",\n      \"title\": \"営業職の採用が難しい4つの理由｜おすすめの手法や成功させるためのポイントを解説 | StockSun株式会社\",\n      \"strengths\": [\"採用が難しい理由の分析\", \"おすすめの手法\", \"成功のポイント\"],\n      \"weaknesses\": [\"情報が表面的\", \"独自性が低い\"],\n      \"content_focus\": [\"営業職採用の難しさ\", \"採用手法\", \"成功のポイント\"],\n      \"unique_value\": \"採用が難しい理由と成功のための手法を解説\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.branding-t.co.jp/branlab/sales_recruitment_difficult/\",\n      \"title\": \"営業採用が難しい理由と対策｜優秀な営業人材を採用する方法とは - BranLab\",\n      \"strengths\": [\"採用が難しい理由の分析\", \"具体的な対策\", \"優秀な人材採用の方法\"],\n      \"weaknesses\": [\"情報が一般的\", \"深掘りが不足\"],\n      \"content_focus\": [\"営業職採用の難しさ\", \"採用対策\", \"優秀な人材採用\"],\n      \"unique_value\": \"優秀な人材採用に焦点を当てた対策\",\n      \"threat_level\": \"medium\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"ai_balanced\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"営業採用難しい\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 9425.4,\n      \"median_word_count\": 9446.5,\n      \"max_word_count\": 15015,\n      \"min_word_count\": 3025,\n      \"standard_deviation\": 4041.04,\n      \"data_points\": 10\n    },\n    \"article_details\": [\n      {\n        \"rank\": 1,\n        \"title\": \"営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ\",\n        \"url\": \"https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html\",\n        \"word_count\": 15015,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介\",\n        \"url\": \"https://topics.type.jp/mid-career-recruitment/sales/\",\n        \"word_count\": 11065,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社\",\n        \"url\": \"https://marugotoinc.jp/blog/sales_saiyou/\",\n        \"word_count\": 14432,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 4,\n        \"title\": \"営業マンの採用が難しい理由や優秀な営業マンを採用するコツとは | SFA(営業支援ツール)ならNICE営業物語 on kintone\",\n        \"url\": \"https://www.systems.nakashima.co.jp/dutiessolution/nice-sfa-kintone/column/skillup/sfa12.html\",\n        \"word_count\": 3025,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 5,\n        \"title\": \"営業職の採用が難しい理由は？採用を成功させるポイントを解説｜人材アセスメントラボ｜ミイダス\",\n        \"url\": \"https://corp.miidas.jp/assessment/19200/\",\n        \"word_count\": 11925,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 6,\n        \"title\": \"営業職の採用は難しい？採用段階別にポイントを解説 - 【中途採用ノウハウ】 | リクルートエージェント\",\n        \"url\": \"https://www.r-agent.com/business/knowhow/article/1959/\",\n        \"word_count\": 8205,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 7,\n        \"title\": \"営業職の採用方法とは？採用が難しい理由や採用成功のコツを解説\",\n        \"url\": \"https://service.gakujo.ne.jp/jinji-library/saiyo/00134/\",\n        \"word_count\": 6127,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 8,\n        \"title\": \"採用できない「営業職募集」の特徴とは？｜すぐできる改善策を解説！ | エン株式会社\",\n        \"url\": \"https://saiyo.employment.en-japan.com/blog/eigyo2\",\n        \"word_count\": 15015,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 9,\n        \"title\": \"営業職の採用が難しい4つの理由｜おすすめの手法や成功させるためのポイントを解説 | StockSun株式会社\",\n        \"url\": \"https://stock-sun.com/column/sales-recruitment-is-difficult/\",\n        \"word_count\": 10688,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 10,\n        \"title\": \"営業採用が難しい理由と対策｜優秀な営業人材を採用する方法とは - BranLab\",\n        \"url\": \"https://www.branding-t.co.jp/branlab/sales_recruitment_difficult/\",\n        \"word_count\": 7252,\n        \"notes\": \"\"\n      }\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 9425,\n      \"suggestion_logic\": \"平均9425.4字 × 1.0 = 9425字\",\n      \"note\": \"\"\n    },\n    \"ai_suggested_word_count\": 9425,\n    \"rationale\": \"平均9425.4字 × 1.0 = 9425字\",\n    \"target_word_count_range\": {\n      \"min\": 8954,\n      \"min_relaxed\": 8500,\n      \"max\": 9896,\n      \"target\": 9425\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±471字です。\"\n  },\n  \"target_word_count\": 9425,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は、営業職採用が難しい理由を明確に示し、その解決策として具体的な採用戦略やノウハウを提供しています。また、成功事例や求職者の視点を取り入れることで、読者の共感を呼び、信頼性を高めています。E-E-A-Tの観点では、経験に基づいた具体的なアドバイス、専門知識の深さ、信頼できる情報源の引用などが重要視されています。\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 1,\n        \"title\": \"営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ\",\n        \"url\": \"https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"求職者のタイプ別分析\",\n            \"level_1\": \"求職者のタイプを理解できる\",\n            \"level_2\": \"採用ターゲットを明確にできる\",\n            \"level_3\": \"採用ミスマッチを防げない\",\n            \"level_4\": \"採用基準が曖昧\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"具体的な解決策の提示\",\n            \"level_1\": \"採用活動の不安を軽減できる\",\n            \"level_2\": \"具体的な行動指針を得られる\",\n            \"level_3\": \"採用活動が停滞する\",\n            \"level_4\": \"採用戦略の不明確さ\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"採用代行サービスの訴求\",\n            \"level_1\": \"採用代行サービスを利用できる\",\n            \"level_2\": \"採用活動を効率化できる\",\n            \"level_3\": \"採用活動にリソースを割けない\",\n            \"level_4\": \"人材不足\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"不確実性の解消\", \"時間/労力の節約\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"人材派遣会社の経験に基づく求職者タイプ分析\",\n          \"expertise\": \"採用市場に関する専門知識\",\n          \"authoritativeness\": \"業界での実績と信頼性\",\n          \"trustworthiness\": \"正確なデータと情報\",\n          \"search_intent_fulfillment\": \"営業職採用の難しさに対する解決策の提示\",\n          \"user_experience_signals\": \"適切な見出しと段落構成\"\n        },\n        \"user_journey_fulfillment\": \"課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介\",\n        \"url\": \"https://topics.type.jp/mid-career-recruitment/sales/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"採用成功のノウハウ\",\n            \"level_1\": \"採用成功のヒントを得られる\",\n            \"level_2\": \"効果的な採用戦略を立てられる\",\n            \"level_3\": \"採用活動が手探りになる\",\n            \"level_4\": \"ノウハウ不足\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"具体的なコツの提示\",\n            \"level_1\": \"採用活動への自信が高まる\",\n            \"level_2\": \"具体的な行動がイメージできる\",\n            \"level_3\": \"採用活動への不安が残る\",\n            \"level_4\": \"成功イメージの欠如\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"事例紹介\",\n            \"level_1\": \"成功事例を参考にできる\",\n            \"level_2\": \"自社に合った戦略を立てられる\",\n            \"level_3\": \"戦略が立てられない\",\n            \"level_4\": \"成功モデルの欠如\",\n            \"level_5_root\": \"意思決定の正当化\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"自己効力感の向上\", \"意思決定の正当化\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"採用支援サービスの経験に基づくノウハウ\",\n          \"expertise\": \"採用市場に関する専門知識\",\n          \"authoritativeness\": \"業界での実績と信頼性\",\n          \"trustworthiness\": \"正確なデータと情報\",\n          \"search_intent_fulfillment\": \"営業採用の難しさに対する解決策の提示\",\n          \"user_experience_signals\": \"適切な見出しと段落構成\"\n        },\n        \"user_journey_fulfillment\": \"課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社\",\n        \"url\": \"https://marugotoinc.jp/blog/sales_saiyou/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"見極めポイントの明確化\",\n            \"level_1\": \"人材の見極め方を理解できる\",\n            \"level_2\": \"採用ミスマッチを減らせる\",\n            \"level_3\": \"採用ミスマッチが多発する\",\n            \"level_4\": \"人材の見極めが難しい\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"成功戦略の提示\",\n            \"level_1\": \"採用成功への期待感が高まる\",\n            \"level_2\": \"具体的な行動がイメージできる\",\n            \"level_3\": \"採用活動への不安が残る\",\n            \"level_4\": \"成功イメージの欠如\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"採用代行サービスの訴求\",\n            \"level_1\": \"採用代行サービスを利用できる\",\n            \"level_2\": \"採用活動を効率化できる\",\n            \"level_3\": \"採用活動にリソースを割けない\",\n            \"level_4\": \"人材不足\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"自己効力感の向上\", \"時間/労力の節約\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"採用代行会社の経験に基づく見極めポイント\",\n          \"expertise\": \"採用市場に関する専門知識\",\n          \"authoritativeness\": \"業界での実績と信頼性\",\n          \"trustworthiness\": \"正確なデータと情報\",\n          \"search_intent_fulfillment\": \"営業職採用の難しさに対する解決策の提示\",\n          \"user_experience_signals\": \"適切な見出しと段落構成\"\n        },\n        \"user_journey_fulfillment\": \"課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計\"\n      }\n    ],\n    \"common_ranking_factors\": [\"網羅性\", \"具体性\", \"事例の提示\", \"E-E-A-T\", \"ユーザー体験\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"採用が難しい理由の明確な説明\", \"具体的な採用戦略の提示\", \"成功事例の紹介\"],\n      \"emotional_satisfaction\": [\"採用活動への不安軽減\", \"具体的な行動指針の提示\", \"成功事例による安心感\"],\n      \"actionable_satisfaction\": [\"採用戦略の立案\", \"人材の見極め\", \"採用活動の効率化\"]\n    },\n    \"actionable_insights\": [\"採用が難しい理由を深掘りし、具体的な解決策を提示する\", \"成功事例を詳細に分析し、自社に合った戦略を立てる\", \"求職者の視点を取り入れ、共感を呼ぶコンテンツを作成する\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"営業職採用が難しい理由\", \"具体的な採用戦略\", \"成功事例\"],\n      \"differentiation_opportunities\": [\"求職者の心理的ニーズに焦点を当てたコンテンツ\", \"採用担当者の感情に寄り添ったコンテンツ\", \"最新の採用トレンドに対応したコンテンツ\"],\n      \"user_journey_design\": \"課題認識から解決策の提示、行動喚起まで一貫したジャーニー設計\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"営業採用市場の現状と課題を提示\",\n        \"our_differentiation\": \"営業採用の失敗事例とその損失額を具体的に提示\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"採用戦略やノウハウを解説\",\n        \"our_differentiation\": \"脳科学に基づいた人材の見極め方、面接方法を解説\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"採用代行サービスやツールを訴求\",\n        \"our_differentiation\": \"採用成功後の具体的なメリット（売上増加、組織活性化）を提示\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\"competitor_approach\": \"採用失敗のリスクを曖昧に示唆\", \"our_differentiation\": \"採用失敗による具体的損失額を明示\"},\n      \"social_proof\": {\"competitor_approach\": \"導入事例を抽象的に提示\", \"our_differentiation\": \"具体的な数値データを用いた成功事例\"},\n      \"authority\": {\"competitor_approach\": \"一般的な専門家の意見を紹介\", \"our_differentiation\": \"脳科学者、行動経済学者の引用\"},\n      \"consistency\": {\"competitor_approach\": \"採用戦略を一方的に提示\", \"our_differentiation\": \"採用担当者の現状認識から段階的にコミットメント\"},\n      \"liking\": {\"competitor_approach\": \"事務的なトーン\", \"our_differentiation\": \"採用担当者の悩みに共感するトーン\"},\n      \"scarcity\": {\"competitor_approach\": \"緊急性を曖昧に示唆\", \"our_differentiation\": \"期間限定の特典やキャンペーン\"}\n    },\n    \"llmo\": {\n      \"question_headings\": {\"competitor_count\": 2, \"our_target\": 5},\n      \"section_independence\": {\"competitor_issue\": \"セクション間の依存関係が強く、RAG検索に不向き\", \"our_approach\": \"各セクションを独立させ、RAG検索に最適化\"},\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\"competitor_average\": 1.2, \"our_strategy\": \"3段階CTA\"},\n      \"cta_appeal\": {\"competitor_approach\": \"一般的な訴求\", \"our_differentiation\": \"具体的なベネフィット（例：3ヶ月で採用コスト30%削減）\"},\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"営業採用がうまくいかない現状への不安\",\n      \"competitor_weakness\": \"営業採用の失敗事例とその損失額が不明確\",\n      \"our_differentiation\": [\"営業採用の失敗事例とその損失額を具体的に提示\", \"採用担当者の感情に寄り添った共感的なトーン\"],\n      \"expected_metrics\": \"離脱率-13pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"効果的な採用戦略を知りたい\",\n      \"competitor_weakness\": \"脳科学や行動経済学に基づいた人材の見極め方、面接方法の解説が不足\",\n      \"our_differentiation\": [\"脳科学に基づいた人材の見極め方、面接方法を解説\", \"具体的な事例やデータを用いた説得力のある説明\"],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"採用活動を成功させたい\",\n      \"competitor_weakness\": \"採用成功後の具体的なメリット（売上増加、組織活性化）の提示が不足\",\n      \"our_differentiation\": [\"採用成功後の具体的なメリット（売上増加、組織活性化）を提示\", \"期間限定の特典やキャンペーンの告知\"],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.8,\n    \"average_cta_count\": 1.2,\n    \"main_cta_positions\": [\"記事末尾\", \"サイドバー\"],\n    \"our_differentiation_strategy\": \"3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置。各CTAで異なるベネフィットを訴求\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"脳科学・行動経済学に基づいた採用戦略の解説\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"脳科学者、行動経済学者の引用、具体的なデータを用いた事例紹介\"\n    },\n    {\n      \"category\": \"tone\",\n      \"description\": \"採用担当者の感情に寄り添った共感的なトーン\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"採用担当者の悩みを具体的に記述、共感する言葉を使用\"\n    },\n    {\n      \"category\": \"cta\",\n      \"description\": \"3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"各CTAで異なるベネフィットを訴求、行動を促す具体的な言葉を使用\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"心理的ニーズへの対応\",\n      \"description\": \"採用担当者の心理的な負担や不安に寄り添うコンテンツが不足\",\n      \"competitors_missing\": [\"https://topics.type.jp/mid-career-recruitment/sales/\", \"https://www.r-agent.com/business/knowhow/article/1959/\"],\n      \"value_potential\": 0.8\n    },\n    {\n      \"gap_type\": \"データに基づいた事例\",\n      \"description\": \"具体的な数値データを用いた成功事例の提示が不足\",\n      \"competitors_missing\": [\"https://marugotoinc.jp/blog/sales_saiyou/\", \"https://service.gakujo.ne.jp/jinji-library/saiyo/00134/\"],\n      \"value_potential\": 0.7\n    },\n    {\n      \"gap_type\": \"最新トレンドへの対応\",\n      \"description\": \"最新の採用トレンド（例：ダイレクトリクルーティング、リファラル採用）に対応したコンテンツが不足\",\n      \"competitors_missing\": [\"https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html\", \"https://saiyo.employment.en-japan.com/blog/eigyo2\"],\n      \"value_potential\": 0.6\n    }\n  ],\n  \"content_recommendations\": [\"採用担当者の心理的な負担や不安に寄り添うコンテンツを作成\", \"具体的な数値データを用いた成功事例を提示\", \"最新の採用トレンドに対応したコンテンツを作成\"]\n}\n```",
+  "parsed_data": {
+    "keyword": "営業採用難しい",
+    "market_overview": "営業職の採用は、人材不足や求職者の価値観の変化により、多くの企業にとって困難な課題となっています。上位表示されている記事は、採用が難しい理由の分析、採用成功のためのノウハウ、具体的な事例紹介など、多角的な情報を提供することで、企業の採用活動を支援しています。特に、採用市場の現状、企業側の課題、効果的な採用手法の提案などが重視されています。",
+    "competitor_profiles": [
+      {
+        "url": "https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html",
+        "title": "営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ",
+        "strengths": [
+          "求職者のタイプ別分析",
+          "具体的な解決策の提示",
+          "採用代行サービスの訴求"
+        ],
+        "weaknesses": [
+          "コンテンツが冗長",
+          "事例が少ない"
+        ],
+        "content_focus": [
+          "営業職採用の現状",
+          "求職者のタイプ",
+          "採用戦略"
+        ],
+        "unique_value": "求職者のタイプに焦点を当てた詳細な分析と解決策",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://topics.type.jp/mid-career-recruitment/sales/",
+        "title": "営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介",
+        "strengths": [
+          "採用成功のノウハウ",
+          "具体的なコツの提示",
+          "事例紹介"
+        ],
+        "weaknesses": [
+          "情報が一般的",
+          "深掘りが不足"
+        ],
+        "content_focus": [
+          "営業採用の課題",
+          "採用ノウハウ",
+          "成功事例"
+        ],
+        "unique_value": "採用成功のためのノウハウと事例の網羅的な紹介",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://marugotoinc.jp/blog/sales_saiyou/",
+        "title": "営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社",
+        "strengths": [
+          "見極めポイントの明確化",
+          "成功戦略の提示",
+          "採用代行サービスの訴求"
+        ],
+        "weaknesses": [
+          "情報が表面的",
+          "独自性が低い"
+        ],
+        "content_focus": [
+          "営業職採用の難しさ",
+          "人材の見極め",
+          "採用戦略"
+        ],
+        "unique_value": "人材の見極めポイントと成功戦略の具体的な提示",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.systems.nakashima.co.jp/dutiessolution/nice-sfa-kintone/column/skillup/sfa12.html",
+        "title": "営業マンの採用が難しい理由や優秀な営業マンを採用するコツとは | SFA(営業支援ツール)ならNICE営業物語 on kintone",
+        "strengths": [
+          "SFAツールとの連携",
+          "具体的なコツの提示"
+        ],
+        "weaknesses": [
+          "情報が少ない",
+          "対象が中小企業向け"
+        ],
+        "content_focus": [
+          "営業マン採用の難しさ",
+          "採用のコツ",
+          "SFAツール"
+        ],
+        "unique_value": "SFAツールを活用した営業マン採用の提案",
+        "threat_level": "low"
+      },
+      {
+        "url": "https://corp.miidas.jp/assessment/19200/",
+        "title": "営業職の採用が難しい理由は？採用を成功させるポイントを解説｜人材アセスメントラボ｜ミイダス",
+        "strengths": [
+          "採用成功のポイント",
+          "人材アセスメントツールの紹介",
+          "事例紹介"
+        ],
+        "weaknesses": [
+          "情報が一般的",
+          "深掘りが不足"
+        ],
+        "content_focus": [
+          "営業職採用の課題",
+          "採用のポイント",
+          "成功事例"
+        ],
+        "unique_value": "人材アセスメントツールを活用した採用戦略の提案",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.r-agent.com/business/knowhow/article/1959/",
+        "title": "営業職の採用は難しい？採用段階別にポイントを解説 - 【中途採用ノウハウ】 | リクルートエージェント",
+        "strengths": [
+          "採用段階別の解説",
+          "転職市場の動向分析"
+        ],
+        "weaknesses": [
+          "情報が一般的",
+          "深掘りが不足"
+        ],
+        "content_focus": [
+          "営業職採用の難しさ",
+          "採用段階別のポイント",
+          "転職市場"
+        ],
+        "unique_value": "採用段階に応じた詳細なポイント解説",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://service.gakujo.ne.jp/jinji-library/saiyo/00134/",
+        "title": "営業職の採用方法とは？採用が難しい理由や採用成功のコツを解説",
+        "strengths": [
+          "採用方法の解説",
+          "採用成功のコツ",
+          "具体的な事例"
+        ],
+        "weaknesses": [
+          "情報が表面的",
+          "独自性が低い"
+        ],
+        "content_focus": [
+          "営業職採用の難しさ",
+          "採用方法",
+          "採用成功のコツ"
+        ],
+        "unique_value": "採用方法と成功のコツを網羅的に解説",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://saiyo.employment.en-japan.com/blog/eigyo2",
+        "title": "採用できない「営業職募集」の特徴とは？｜すぐできる改善策を解説！ | エン株式会社",
+        "strengths": [
+          "採用できない特徴の分析",
+          "具体的な改善策の提示"
+        ],
+        "weaknesses": [
+          "情報が一般的",
+          "深掘りが不足"
+        ],
+        "content_focus": [
+          "営業職採用の課題",
+          "募集の特徴",
+          "改善策"
+        ],
+        "unique_value": "採用できない募集の特徴に焦点を当てた分析と改善策",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://stock-sun.com/column/sales-recruitment-is-difficult/",
+        "title": "営業職の採用が難しい4つの理由｜おすすめの手法や成功させるためのポイントを解説 | StockSun株式会社",
+        "strengths": [
+          "採用が難しい理由の分析",
+          "おすすめの手法",
+          "成功のポイント"
+        ],
+        "weaknesses": [
+          "情報が表面的",
+          "独自性が低い"
+        ],
+        "content_focus": [
+          "営業職採用の難しさ",
+          "採用手法",
+          "成功のポイント"
+        ],
+        "unique_value": "採用が難しい理由と成功のための手法を解説",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.branding-t.co.jp/branlab/sales_recruitment_difficult/",
+        "title": "営業採用が難しい理由と対策｜優秀な営業人材を採用する方法とは - BranLab",
+        "strengths": [
+          "採用が難しい理由の分析",
+          "具体的な対策",
+          "優秀な人材採用の方法"
+        ],
+        "weaknesses": [
+          "情報が一般的",
+          "深掘りが不足"
+        ],
+        "content_focus": [
+          "営業職採用の難しさ",
+          "採用対策",
+          "優秀な人材採用"
+        ],
+        "unique_value": "優秀な人材採用に焦点を当てた対策",
+        "threat_level": "medium"
+      }
+    ],
+    "word_count_analysis": {
+      "mode": "ai_balanced",
+      "analysis_skipped": false,
+      "skip_reason": "",
+      "target_keyword": "営業採用難しい",
+      "competitor_statistics": {
+        "average_word_count": 9425.4,
+        "median_word_count": 9446.5,
+        "max_word_count": 15015,
+        "min_word_count": 3025,
+        "standard_deviation": 4041.04,
+        "data_points": 10
+      },
+      "article_details": [
+        {
+          "rank": 1,
+          "title": "営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ",
+          "url": "https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html",
+          "word_count": 15015,
+          "notes": ""
+        },
+        {
+          "rank": 2,
+          "title": "営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介",
+          "url": "https://topics.type.jp/mid-career-recruitment/sales/",
+          "word_count": 11065,
+          "notes": ""
+        },
+        {
+          "rank": 3,
+          "title": "営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社",
+          "url": "https://marugotoinc.jp/blog/sales_saiyou/",
+          "word_count": 14432,
+          "notes": ""
+        },
+        {
+          "rank": 4,
+          "title": "営業マンの採用が難しい理由や優秀な営業マンを採用するコツとは | SFA(営業支援ツール)ならNICE営業物語 on kintone",
+          "url": "https://www.systems.nakashima.co.jp/dutiessolution/nice-sfa-kintone/column/skillup/sfa12.html",
+          "word_count": 3025,
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "title": "営業職の採用が難しい理由は？採用を成功させるポイントを解説｜人材アセスメントラボ｜ミイダス",
+          "url": "https://corp.miidas.jp/assessment/19200/",
+          "word_count": 11925,
+          "notes": ""
+        },
+        {
+          "rank": 6,
+          "title": "営業職の採用は難しい？採用段階別にポイントを解説 - 【中途採用ノウハウ】 | リクルートエージェント",
+          "url": "https://www.r-agent.com/business/knowhow/article/1959/",
+          "word_count": 8205,
+          "notes": ""
+        },
+        {
+          "rank": 7,
+          "title": "営業職の採用方法とは？採用が難しい理由や採用成功のコツを解説",
+          "url": "https://service.gakujo.ne.jp/jinji-library/saiyo/00134/",
+          "word_count": 6127,
+          "notes": ""
+        },
+        {
+          "rank": 8,
+          "title": "採用できない「営業職募集」の特徴とは？｜すぐできる改善策を解説！ | エン株式会社",
+          "url": "https://saiyo.employment.en-japan.com/blog/eigyo2",
+          "word_count": 15015,
+          "notes": ""
+        },
+        {
+          "rank": 9,
+          "title": "営業職の採用が難しい4つの理由｜おすすめの手法や成功させるためのポイントを解説 | StockSun株式会社",
+          "url": "https://stock-sun.com/column/sales-recruitment-is-difficult/",
+          "word_count": 10688,
+          "notes": ""
+        },
+        {
+          "rank": 10,
+          "title": "営業採用が難しい理由と対策｜優秀な営業人材を採用する方法とは - BranLab",
+          "url": "https://www.branding-t.co.jp/branlab/sales_recruitment_difficult/",
+          "word_count": 7252,
+          "notes": ""
+        }
+      ],
+      "ai_suggestion": {
+        "ai_suggested_word_count": 9425,
+        "suggestion_logic": "平均9425.4字 × 1.0 = 9425字",
+        "note": ""
+      },
+      "ai_suggested_word_count": 9425,
+      "rationale": "平均9425.4字 × 1.0 = 9425字",
+      "target_word_count_range": {
+        "min": 8954,
+        "min_relaxed": 8500,
+        "max": 9896,
+        "target": 9425
+      },
+      "note": "この文字数は達成すべき目標値です。目標範囲は±471字です。"
+    },
+    "target_word_count": 9425,
+    "ranking_factor_analysis": {
+      "analysis_summary": "上位記事は、営業職採用が難しい理由を明確に示し、その解決策として具体的な採用戦略やノウハウを提供しています。また、成功事例や求職者の視点を取り入れることで、読者の共感を呼び、信頼性を高めています。E-E-A-Tの観点では、経験に基づいた具体的なアドバイス、専門知識の深さ、信頼できる情報源の引用などが重要視されています。",
+      "top_articles_deep_analysis": [
+        {
+          "rank": 1,
+          "title": "営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ",
+          "url": "https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "求職者のタイプ別分析",
+              "level_1": "求職者のタイプを理解できる",
+              "level_2": "採用ターゲットを明確にできる",
+              "level_3": "採用ミスマッチを防げない",
+              "level_4": "採用基準が曖昧",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "具体的な解決策の提示",
+              "level_1": "採用活動の不安を軽減できる",
+              "level_2": "具体的な行動指針を得られる",
+              "level_3": "採用活動が停滞する",
+              "level_4": "採用戦略の不明確さ",
+              "level_5_root": "不確実性の解消"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "採用代行サービスの訴求",
+              "level_1": "採用代行サービスを利用できる",
+              "level_2": "採用活動を効率化できる",
+              "level_3": "採用活動にリソースを割けない",
+              "level_4": "人材不足",
+              "level_5_root": "時間/労力の節約"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "不確実性の解消",
+              "時間/労力の節約"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "人材派遣会社の経験に基づく求職者タイプ分析",
+            "expertise": "採用市場に関する専門知識",
+            "authoritativeness": "業界での実績と信頼性",
+            "trustworthiness": "正確なデータと情報",
+            "search_intent_fulfillment": "営業職採用の難しさに対する解決策の提示",
+            "user_experience_signals": "適切な見出しと段落構成"
+          },
+          "user_journey_fulfillment": "課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計"
+        },
+        {
+          "rank": 2,
+          "title": "営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介",
+          "url": "https://topics.type.jp/mid-career-recruitment/sales/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "採用成功のノウハウ",
+              "level_1": "採用成功のヒントを得られる",
+              "level_2": "効果的な採用戦略を立てられる",
+              "level_3": "採用活動が手探りになる",
+              "level_4": "ノウハウ不足",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "具体的なコツの提示",
+              "level_1": "採用活動への自信が高まる",
+              "level_2": "具体的な行動がイメージできる",
+              "level_3": "採用活動への不安が残る",
+              "level_4": "成功イメージの欠如",
+              "level_5_root": "自己効力感の向上"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "事例紹介",
+              "level_1": "成功事例を参考にできる",
+              "level_2": "自社に合った戦略を立てられる",
+              "level_3": "戦略が立てられない",
+              "level_4": "成功モデルの欠如",
+              "level_5_root": "意思決定の正当化"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "自己効力感の向上",
+              "意思決定の正当化"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "採用支援サービスの経験に基づくノウハウ",
+            "expertise": "採用市場に関する専門知識",
+            "authoritativeness": "業界での実績と信頼性",
+            "trustworthiness": "正確なデータと情報",
+            "search_intent_fulfillment": "営業採用の難しさに対する解決策の提示",
+            "user_experience_signals": "適切な見出しと段落構成"
+          },
+          "user_journey_fulfillment": "課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計"
+        },
+        {
+          "rank": 3,
+          "title": "営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社",
+          "url": "https://marugotoinc.jp/blog/sales_saiyou/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "見極めポイントの明確化",
+              "level_1": "人材の見極め方を理解できる",
+              "level_2": "採用ミスマッチを減らせる",
+              "level_3": "採用ミスマッチが多発する",
+              "level_4": "人材の見極めが難しい",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "成功戦略の提示",
+              "level_1": "採用成功への期待感が高まる",
+              "level_2": "具体的な行動がイメージできる",
+              "level_3": "採用活動への不安が残る",
+              "level_4": "成功イメージの欠如",
+              "level_5_root": "自己効力感の向上"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "採用代行サービスの訴求",
+              "level_1": "採用代行サービスを利用できる",
+              "level_2": "採用活動を効率化できる",
+              "level_3": "採用活動にリソースを割けない",
+              "level_4": "人材不足",
+              "level_5_root": "時間/労力の節約"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "自己効力感の向上",
+              "時間/労力の節約"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "採用代行会社の経験に基づく見極めポイント",
+            "expertise": "採用市場に関する専門知識",
+            "authoritativeness": "業界での実績と信頼性",
+            "trustworthiness": "正確なデータと情報",
+            "search_intent_fulfillment": "営業職採用の難しさに対する解決策の提示",
+            "user_experience_signals": "適切な見出しと段落構成"
+          },
+          "user_journey_fulfillment": "課題認識から解決策の提示、サービス利用まで一貫したジャーニー設計"
+        }
+      ],
+      "common_ranking_factors": [
+        "網羅性",
+        "具体性",
+        "事例の提示",
+        "E-E-A-T",
+        "ユーザー体験"
+      ],
+      "satisfaction_patterns": {
+        "informational_satisfaction": [
+          "採用が難しい理由の明確な説明",
+          "具体的な採用戦略の提示",
+          "成功事例の紹介"
+        ],
+        "emotional_satisfaction": [
+          "採用活動への不安軽減",
+          "具体的な行動指針の提示",
+          "成功事例による安心感"
+        ],
+        "actionable_satisfaction": [
+          "採用戦略の立案",
+          "人材の見極め",
+          "採用活動の効率化"
+        ]
+      },
+      "actionable_insights": [
+        "採用が難しい理由を深掘りし、具体的な解決策を提示する",
+        "成功事例を詳細に分析し、自社に合った戦略を立てる",
+        "求職者の視点を取り入れ、共感を呼ぶコンテンツを作成する"
+      ],
+      "implications_for_our_article": {
+        "must_include": [
+          "営業職採用が難しい理由",
+          "具体的な採用戦略",
+          "成功事例"
+        ],
+        "differentiation_opportunities": [
+          "求職者の心理的ニーズに焦点を当てたコンテンツ",
+          "採用担当者の感情に寄り添ったコンテンツ",
+          "最新の採用トレンドに対応したコンテンツ"
+        ],
+        "user_journey_design": "課題認識から解決策の提示、行動喚起まで一貫したジャーニー設計"
+      }
+    },
+    "four_pillars_differentiation": {
+      "neuroscience": {
+        "phase1_fear_recognition": {
+          "competitor_approach": "営業採用市場の現状と課題を提示",
+          "our_differentiation": "営業採用の失敗事例とその損失額を具体的に提示",
+          "expected_effect": "扁桃体活性化+30%"
+        },
+        "phase2_understanding": {
+          "competitor_approach": "採用戦略やノウハウを解説",
+          "our_differentiation": "脳科学に基づいた人材の見極め方、面接方法を解説",
+          "expected_effect": "前頭前野処理満足度+40%"
+        },
+        "phase3_action": {
+          "competitor_approach": "採用代行サービスやツールを訴求",
+          "our_differentiation": "採用成功後の具体的なメリット（売上増加、組織活性化）を提示",
+          "expected_effect": "CVR+50%"
+        }
+      },
+      "behavioral_economics": {
+        "loss_aversion": {
+          "competitor_approach": "採用失敗のリスクを曖昧に示唆",
+          "our_differentiation": "採用失敗による具体的損失額を明示"
+        },
+        "social_proof": {
+          "competitor_approach": "導入事例を抽象的に提示",
+          "our_differentiation": "具体的な数値データを用いた成功事例"
+        },
+        "authority": {
+          "competitor_approach": "一般的な専門家の意見を紹介",
+          "our_differentiation": "脳科学者、行動経済学者の引用"
+        },
+        "consistency": {
+          "competitor_approach": "採用戦略を一方的に提示",
+          "our_differentiation": "採用担当者の現状認識から段階的にコミットメント"
+        },
+        "liking": {
+          "competitor_approach": "事務的なトーン",
+          "our_differentiation": "採用担当者の悩みに共感するトーン"
+        },
+        "scarcity": {
+          "competitor_approach": "緊急性を曖昧に示唆",
+          "our_differentiation": "期間限定の特典やキャンペーン"
+        }
+      },
+      "llmo": {
+        "question_headings": {
+          "competitor_count": 2,
+          "our_target": 5
+        },
+        "section_independence": {
+          "competitor_issue": "セクション間の依存関係が強く、RAG検索に不向き",
+          "our_approach": "各セクションを独立させ、RAG検索に最適化"
+        },
+        "expected_effect": "AI引用率+35%"
+      },
+      "kgi": {
+        "cta_placement": {
+          "competitor_average": 1.2,
+          "our_strategy": "3段階CTA"
+        },
+        "cta_appeal": {
+          "competitor_approach": "一般的な訴求",
+          "our_differentiation": "具体的なベネフィット（例：3ヶ月で採用コスト30%削減）"
+        },
+        "expected_effect": "CVR+50%"
+      }
+    },
+    "three_phase_differentiation_strategy": {
+      "phase1": {
+        "phase_name": "不安・課題認識",
+        "user_state": "営業採用がうまくいかない現状への不安",
+        "competitor_weakness": "営業採用の失敗事例とその損失額が不明確",
+        "our_differentiation": [
+          "営業採用の失敗事例とその損失額を具体的に提示",
+          "採用担当者の感情に寄り添った共感的なトーン"
+        ],
+        "expected_metrics": "離脱率-13pt"
+      },
+      "phase2": {
+        "phase_name": "理解・納得",
+        "user_state": "効果的な採用戦略を知りたい",
+        "competitor_weakness": "脳科学や行動経済学に基づいた人材の見極め方、面接方法の解説が不足",
+        "our_differentiation": [
+          "脳科学に基づいた人材の見極め方、面接方法を解説",
+          "具体的な事例やデータを用いた説得力のある説明"
+        ],
+        "expected_metrics": "滞在時間+40%"
+      },
+      "phase3": {
+        "phase_name": "行動決定",
+        "user_state": "採用活動を成功させたい",
+        "competitor_weakness": "採用成功後の具体的なメリット（売上増加、組織活性化）の提示が不足",
+        "our_differentiation": [
+          "採用成功後の具体的なメリット（売上増加、組織活性化）を提示",
+          "期間限定の特典やキャンペーンの告知"
+        ],
+        "expected_metrics": "CVR+50%"
+      }
+    },
+    "competitor_cta_analysis": {
+      "cta_deployment_rate": 0.8,
+      "average_cta_count": 1.2,
+      "main_cta_positions": [
+        "記事末尾",
+        "サイドバー"
+      ],
+      "our_differentiation_strategy": "3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置。各CTAで異なるベネフィットを訴求"
+    },
+    "differentiation_strategies": [
+      {
+        "category": "content",
+        "description": "脳科学・行動経済学に基づいた採用戦略の解説",
+        "priority": "must",
+        "implementation_hint": "脳科学者、行動経済学者の引用、具体的なデータを用いた事例紹介"
+      },
+      {
+        "category": "tone",
+        "description": "採用担当者の感情に寄り添った共感的なトーン",
+        "priority": "must",
+        "implementation_hint": "採用担当者の悩みを具体的に記述、共感する言葉を使用"
+      },
+      {
+        "category": "cta",
+        "description": "3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置",
+        "priority": "must",
+        "implementation_hint": "各CTAで異なるベネフィットを訴求、行動を促す具体的な言葉を使用"
+      }
+    ],
+    "gap_opportunities": [
+      {
+        "gap_type": "心理的ニーズへの対応",
+        "description": "採用担当者の心理的な負担や不安に寄り添うコンテンツが不足",
+        "competitors_missing": [
+          "https://topics.type.jp/mid-career-recruitment/sales/",
+          "https://www.r-agent.com/business/knowhow/article/1959/"
+        ],
+        "value_potential": 0.8
+      },
+      {
+        "gap_type": "データに基づいた事例",
+        "description": "具体的な数値データを用いた成功事例の提示が不足",
+        "competitors_missing": [
+          "https://marugotoinc.jp/blog/sales_saiyou/",
+          "https://service.gakujo.ne.jp/jinji-library/saiyo/00134/"
+        ],
+        "value_potential": 0.7
+      },
+      {
+        "gap_type": "最新トレンドへの対応",
+        "description": "最新の採用トレンド（例：ダイレクトリクルーティング、リファラル採用）に対応したコンテンツが不足",
+        "competitors_missing": [
+          "https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html",
+          "https://saiyo.employment.en-japan.com/blog/eigyo2"
+        ],
+        "value_potential": 0.6
+      }
+    ],
+    "content_recommendations": [
+      "採用担当者の心理的な負担や不安に寄り添うコンテンツを作成",
+      "具体的な数値データを用いた成功事例を提示",
+      "最新の採用トレンドに対応したコンテンツを作成"
+    ]
+  },
+  "format_detected": "json",
+  "competitor_count": 10,
+  "quality_competitor_count": 10,
+  "word_count_statistics": {
+    "mode": "ai_balanced",
+    "analysis_skipped": false,
+    "skip_reason": "",
+    "target_keyword": "営業採用難しい",
+    "competitor_statistics": {
+      "average_word_count": 10274.9,
+      "median_word_count": 10876.5,
+      "max_word_count": 15015,
+      "min_word_count": 3025,
+      "standard_deviation": 4067.8,
+      "data_points": 10
+    },
+    "article_details": [
+      {
+        "rank": 1,
+        "title": "営業職採用が難しい理由とは？求職者のタイプと解決策を解説 | 人材派遣・人材紹介のマンパワーグループ",
+        "url": "https://www.manpowergroup.jp/client/manpowerclip/employ/sales-recruitment.html",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 2,
+        "title": "営業採用が難しい！採用成功のノウハウやコツ、事例をご紹介",
+        "url": "https://topics.type.jp/mid-career-recruitment/sales/",
+        "word_count": 11065,
+        "notes": ""
+      },
+      {
+        "rank": 3,
+        "title": "営業職採用は難しい？7つの見極めポイントと8つの成功戦略 | まるごと人事｜成長企業向けの採用代行｜マルゴト株式会社",
+        "url": "https://marugotoinc.jp/blog/sales_saiyou/",
+        "word_count": 14432,
+        "notes": ""
+      },
+      {
+        "rank": 4,
+        "title": "営業マンの採用が難しい理由や優秀な営業マンを採用するコツとは | SFA(営業支援ツール)ならNICE営業物語 on kintone",
+        "url": "https://www.systems.nakashima.co.jp/dutiessolution/nice-sfa-kintone/column/skillup/sfa12.html",
+        "word_count": 3025,
+        "notes": ""
+      },
+      {
+        "rank": 5,
+        "title": "営業職の採用が難しい理由は？採用を成功させるポイントを解説｜人材アセスメントラボ｜ミイダス",
+        "url": "https://corp.miidas.jp/assessment/19200/",
+        "word_count": 11925,
+        "notes": ""
+      },
+      {
+        "rank": 6,
+        "title": "営業職の採用は難しい？採用段階別にポイントを解説 - 【中途採用ノウハウ】 | リクルートエージェント",
+        "url": "https://www.r-agent.com/business/knowhow/article/1959/",
+        "word_count": 8205,
+        "notes": ""
+      },
+      {
+        "rank": 7,
+        "title": "営業職の採用方法とは？採用が難しい理由や採用成功のコツを解説",
+        "url": "https://service.gakujo.ne.jp/jinji-library/saiyo/00134/",
+        "word_count": 6127,
+        "notes": ""
+      },
+      {
+        "rank": 8,
+        "title": "採用できない「営業職募集」の特徴とは？｜すぐできる改善策を解説！ | エン株式会社",
+        "url": "https://saiyo.employment.en-japan.com/blog/eigyo2",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 9,
+        "title": "営業職の採用が難しい4つの理由｜おすすめの手法や成功させるためのポイントを解説 | StockSun株式会社",
+        "url": "https://stock-sun.com/column/sales-recruitment-is-difficult/",
+        "word_count": 10688,
+        "notes": ""
+      },
+      {
+        "rank": 10,
+        "title": "営業採用が難しい理由と対策｜優秀な営業人材を採用する方法とは - BranLab",
+        "url": "https://www.branding-t.co.jp/branlab/sales_recruitment_difficult/",
+        "word_count": 7252,
+        "notes": ""
+      }
+    ],
+    "ai_suggestion": {
+      "ai_suggested_word_count": 10788,
+      "suggestion_logic": "平均10274字 × 1.05（バランス）= 10788字",
+      "note": ""
+    },
+    "ai_suggested_word_count": 10788,
+    "rationale": "平均10274字 × 1.05（バランス）= 10788字",
+    "target_word_count_range": {
+      "min": 10488,
+      "min_relaxed": 10288,
+      "max": 11088,
+      "target": 10788
+    },
+    "note": "この文字数は達成すべき目標値です。目標範囲は±300字です。内容が不足し冗長になる場合のみ-500字まで許容します。上限+300字は厳格に守ってください。"
+  },
+  "target_word_count": 9425,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 6857,
+    "output": 6902
+  },
+  "metrics": {
+    "char_count": 17385,
+    "word_count": 5135
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  }
+}

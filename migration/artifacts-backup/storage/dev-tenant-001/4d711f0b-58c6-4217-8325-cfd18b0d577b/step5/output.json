@@ -1,0 +1,365 @@
+{
+  "step": "step5",
+  "keyword": "自動車整備士採用難しい",
+  "search_queries": [
+    "自動車整備士 有効求人倍率",
+    "自動車整備士 年齢構成 統計",
+    "自動車整備士 離職率",
+    "自動車整備士 採用 課題",
+    "自動車整備士 若者 イメージ"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://news.yahoo.co.jp/articles/448ebe0646915ff31071274c84e1a0550c0b1929",
+      "title": "自動車整備工、求人倍率5倍超え 人手不足深刻、安全懸念も",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://seibishi.me/blog/mechanic-husoku/",
+      "title": "自動車整備士は不足している？理由と現状について解説！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://shigoto.mhlw.go.jp/User/Occupation/Detail/197",
+      "title": "自動車整備士 - 職業詳細 | 職業情報提供サイト（job tag）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/content/001877732.pdf",
+      "title": "自動車整備士の確保・育成に係る課題とこれまでの取組",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://recruiting.cast-er.com/column/cbr-0069/",
+      "title": "整備士の採用が難しい理由と成功のポイント",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://divergence.co.jp/column/%E8%87%AA%E5%8B%95%E8%BB%8A%E6%95%B4%E5%82%99%E5%A3%AB%E3%81%AE%E5%B9%B3%E5%9D%87%E5%B9%B4%E9%BD%A2%E3%81%A8%E3%81%AF/",
+      "title": "自動車整備士の平均年齢とは - 株式会社ダイバージェンス",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.aba-j.or.jp/info/industry/21290/",
+      "title": "日本自動車整備振興会連合会 23年度実態調査、整備士高齢 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/koku/content/001729973.pdf",
+      "title": "自動車整備分野における人材確保に係る取組",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jaspa.or.jp/Portals/0/resources/jaspahp/member/data/pdf/R06jittaityousa.pdf",
+      "title": "令和 6年度 自動車特定整備業実態調査結果の概要について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://carworkassist.com/column/27814.html",
+      "title": "自動車整備士とは？様々な角度から徹底解説！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://kanto-koudai.com/blog/auto-mechanics-quit/",
+      "title": "自動車整備士が辞める理由とは？業界の現状を徹底解説！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/common/001106233.pdf",
+      "title": "元自動車整備業であった者に対する アンケート調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://seniorjob.jp/factory/automotive-technician/low-turnover-rate/ni-kyuu-jidousha-seibi-shi/",
+      "title": "自動車整備士 - 離職率5%以下の企業",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q1313495463",
+      "title": "自動車整備士は何故離職率が高いのですか？ - Yahoo!知恵袋",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://kanaeru-web.jp/blog/2660/",
+      "title": "自動車整備業界が人手不足に陥る原因と対策について解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/content/001877732.pdf",
+      "title": "自動車整備士の確保・育成に係る課題とこれまでの取組",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.nri.com/jp/media/column/scs_blog/20250530.html",
+      "title": "自動車整備業界における整備士不足問題",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://bsrweb.jp/article/604894?srsltid=AfmBOooRqWx0_u7y3gP-ZI5bdupcQx8jA2TrOeEhkaJM6NdSfYAEFiCt",
+      "title": "整備士の採用が難しい理由は？今すぐできる対策と定着率を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.shain-voice.com/hrcontents/recruit/93",
+      "title": "整備士の採用が難しい本当の理由とは？応募を増やす ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://recruit.carmarke.com/automobile-mechanics-cannot-be-hired/",
+      "title": "【2025年最新】自動車整備士が採用できない！？人手不足 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://kanto-koudai.com/blog/auto-mechanic-unpopular-kids-survey/",
+      "title": "自動車整備士は中学生・高校生の保護者にどのようなイメージ ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.fnn.jp/articles/-/850755",
+      "title": "【意識調査】若者の自動車整備士へのイメージは？ 職業認知度 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://note.com/id_yoshino/n/n5bb90933bf1c",
+      "title": "なぜ若者は整備士にならないのか？──構造問題と解決のヒント",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://news.yahoo.co.jp/articles/08550bbb3abb9336c115388878026ea24ca4b299",
+      "title": "“若者の車離れ”で志願者が激減…「自動車整備士」の過酷な ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000005.000143836.html",
+      "title": "整備士の未来を問う──全国の整備士学生を対象に意識調査 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 25,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

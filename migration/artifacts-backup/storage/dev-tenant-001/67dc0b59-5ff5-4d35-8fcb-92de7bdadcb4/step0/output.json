@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "営業採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"営業採用難しい\",\n  \"search_intent\": \"営業職の採用がうまくいかない原因の特定、市場背景（売り手市場）の理解、および現状を打破するための具体的な採用手法や成功事例の模索。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"営業職の有効求人倍率と市場トレンド\",\n    \"採用がうまくいかない企業に共通する特徴と改善策\",\n    \"未経験者採用（ポテンシャル採用）へのシフトと育成体制\",\n    \"ダイレクトリクルーティングやリファラル採用の活用法\",\n    \"求人票の書き方・アピールポイントの見直し\"\n  ],\n  \"target_audience\": \"中小企業の経営者、人事担当者、採用に苦戦している営業マネージャー\"\n}\n```",
+  "search_intent": "営業職の採用がうまくいかない原因の特定、市場背景（売り手市場）の理解、および現状を打破するための具体的な採用手法や成功事例の模索。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "中小企業の経営者、人事担当者、採用に苦戦している営業マネージャー",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 109,
+    "output": 194
+  },
+  "metrics": {
+    "char_count": 386,
+    "word_count": 216
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

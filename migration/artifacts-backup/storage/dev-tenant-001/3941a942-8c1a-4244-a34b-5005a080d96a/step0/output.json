@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "従業員募集こない",
+  "analysis": "```json\n{\n  \"keyword\": \"従業員募集こない\",\n  \"search_intent\": \"求人広告を出しているにもかかわらず応募が集まらない原因を特定し、応募数を増やすための具体的な改善策（求人票の書き方、媒体選び、待遇の見直しなど）を知りたい。\",\n  \"difficulty\": \"medium\",\n  \"suggested_topics\": [\n    \"応募が来ない求人票の共通点と改善チェックリスト\",\n    \"ハローワークやIndeedで応募を増やすためのテクニック\",\n    \"中小企業が大手と差別化して人材を集める方法\",\n    \"給与以外の条件（福利厚生・働きやすさ）でアピールするコツ\",\n    \"採用ミスマッチを防ぐターゲット設定の重要性\"\n  ],\n  \"target_audience\": \"中小企業の経営者、店舗の店長・マネージャー、専任の採用担当者がいない企業の担当者、採用予算が限られている個人事業主\"\n}\n```",
+  "search_intent": "求人広告を出しているにもかかわらず応募が集まらない原因を特定し、応募数を増やすための具体的な改善策（求人票の書き方、媒体選び、待遇の見直しなど）を知りたい。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "中小企業の経営者、店舗の店長・マネージャー、専任の採用担当者がいない企業の担当者、採用予算が限られている個人事業主",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 111,
+    "output": 221
+  },
+  "metrics": {
+    "char_count": 437,
+    "word_count": 258
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

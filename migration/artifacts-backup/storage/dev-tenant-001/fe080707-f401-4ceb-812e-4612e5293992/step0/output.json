@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "トラックドライバー 求人 書き方",
+  "analysis": "```json\n{\n  \"keyword\": \"トラックドライバー 求人 書き方\",\n  \"search_intent\": \"深刻なドライバー不足（2024年問題など）を背景に、単に求人を出すだけでなく「実際に応募が集まる」効果的な求人票や求人広告の作成ノウハウを知りたい。具体的なテンプレート、目を引くキャッチコピー、給与や待遇の魅力的な伝え方、法的な記載ルールなどを求めている。\",\n  \"difficulty\": \"Medium\",\n  \"suggested_topics\": [\n        \"応募が増える求人キャッチコピーの例文集\",\n        \"未経験者ターゲットと経験者ターゲットの書き分け方\",\n        \"求人票の必須項目と記載してはいけないNGワード\",\n        \"2024年問題（働き方改革）への対応アピール方法\",\n        \"IndeedやGoogleしごと検索で上位表示させるコツ\"\n  ],\n  \"target_audience\": \"運送会社・物流企業の経営者、採用担当者、人事スタッフ\"\n}\n```",
+  "search_intent": "深刻なドライバー不足（2024年問題など）を背景に、単に求人を出すだけでなく「実際に応募が集まる」効果的な求人票や求人広告の作成ノウハウを知りたい。具体的なテンプレート、目を引くキャッチコピー、給与や待遇の魅力的な伝え方、法的な記載ルールなどを求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運送会社・物流企業の経営者、採用担当者、人事スタッフ",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 112,
+    "output": 232
+  },
+  "metrics": {
+    "char_count": 481,
+    "word_count": 263
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

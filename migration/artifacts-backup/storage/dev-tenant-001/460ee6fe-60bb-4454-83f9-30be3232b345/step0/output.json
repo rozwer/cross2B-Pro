@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "トラックドライバー 求人 書き方",
+  "analysis": "```json\n{\n  \"keyword\": \"トラックドライバー 求人 書き方\",\n  \"search_intent\": \"深刻なドライバー不足を解消するため、応募が集まる効果的な求人原稿の作成ノウハウを知りたいという意図。具体的には、ドライバー求職者に響くアピールポイント、法的に適切な記載内容、すぐに使える例文（テンプレート）、他社と差別化するためのキャッチコピーなどを求めている。\",\n  \"difficulty\": \"medium\",\n  \"suggested_topics\": [\n    \"反応率が上がる求人票の例文・テンプレート集\",\n    \"ドライバーが本当知りたい情報（手取り給与・待機時間・積み降ろし方法）の書き方\",\n    \"未経験者歓迎 vs 経験者優遇：ターゲット別の訴求ポイント\",\n    \"2024年問題対応：労働条件の法令順守アピールとNG表現\",\n    \"Indeedやドラエバーなど媒体ごとの効果的な掲載テクニック\"\n  ],\n  \"target_audience\": \"中小運送会社の経営者、物流企業の採用担当者・人事、配車係兼務の採用担当\"\n}\n```",
+  "search_intent": "深刻なドライバー不足を解消するため、応募が集まる効果的な求人原稿の作成ノウハウを知りたいという意図。具体的には、ドライバー求職者に響くアピールポイント、法的に適切な記載内容、すぐに使える例文（テンプレート）、他社と差別化するためのキャッチコピーなどを求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "中小運送会社の経営者、物流企業の採用担当者・人事、配車係兼務の採用担当",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 112,
+    "output": 254
+  },
+  "metrics": {
+    "char_count": 501,
+    "word_count": 308
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

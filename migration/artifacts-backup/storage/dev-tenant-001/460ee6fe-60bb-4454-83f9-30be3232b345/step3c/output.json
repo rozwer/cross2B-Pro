@@ -1,0 +1,497 @@
+{
+  "step": "step3c",
+  "keyword": "トラックドライバー 求人 書き方",
+  "word_count_mode": "ai_balanced",
+  "competitor_analysis": "```json\n{\n  \"keyword\": \"トラックドライバー 求人 書き方\",\n  \"market_overview\": \"物流業界の「2024年問題」や深刻な人手不足を背景に、ドライバー採用の難易度は極めて高い。求職者優位の市場であり、単なる条件提示ではなく「選ばれるためのマーケティング視点」が不可欠。検索ユーザーは運送会社の採用担当者や経営者で、即効性のあるノウハウ、テンプレート、Indeed等の媒体攻略法を求めている。競合は求人媒体（Indeed）と採用支援会社、業界特化メディアが混在し、コンテンツは長文化（網羅性重視）の傾向にある。\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/%E6%B1%82%E4%BA%BA%E7%A5%A8%E3%81%AE%E6%9B%B8%E3%81%8D%E6%96%B9/%E3%83%88%E3%83%A9%E3%83%83%E3%82%AF%E9%81%8B%E8%BB%A2%E6%89%8B\",\n      \"title\": \"トラック運転手の効果的な求人票の書き方とは\",\n      \"strengths\": [\n        \"圧倒的なドメインパワーと権威性\",\n        \"シンプルで読みやすい構成\",\n        \"求人掲載への導線がスムーズ\"\n      ],\n      \"weaknesses\": [\n        \"内容は基礎的・一般的で深みがない\",\n        \"個別の課題（不人気条件など）への対策が薄い\",\n        \"定性的なアドバイスに留まる\"\n      ],\n      \"content_focus\": [\n        \"Indeed内での職種名の書き方\",\n        \"基本的な項目（仕事内容、給与）の記載例\"\n      ],\n      \"unique_value\": \"世界最大の求人検索エンジン公式によるガイドラインとしての信頼性\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://www.recpar-marketing.com/indeed_driver_kotsu\",\n      \"title\": \"コピペOK！すぐに効果が出る！「ドライバー」のIndeed求人票の書き方\",\n      \"strengths\": [\n        \"「コピペOK」という強力な行動的ベネフィット\",\n        \"代理店ならではの現場視点と運用ノウハウ\",\n        \"NG例と改善例の対比が明確\"\n      ],\n      \"weaknesses\": [\n        \"情報の鮮度が一部古い可能性がある\",\n        \"デザインやUXがやや古いブログ形式\"\n      ],\n      \"content_focus\": [\n        \"Indeed特化のテクニック\",\n        \"職種名と仕事内容の具体例\",\n        \"検索キーワード対策\"\n      ],\n      \"unique_value\": \"実務担当者がすぐに使えるテンプレート的な利便性\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://doraducts.jp/column/026/\",\n      \"title\": \"ドライバーの応募を増やす求人方法とは？｜求人の書き方のポイントも解説\",\n      \"strengths\": [\n        \"業界特化メディア（ドラピタ）の専門性\",\n        \"9000字超の網羅的な情報量\",\n        \"採用市場の背景から解説し納得感が高い\"\n      ],\n      \"weaknesses\": [\n        \"文章が長く、要点をつかむのに時間がかかる\",\n        \"書き方以外の「採用手法」の解説も多く、焦点が分散している\"\n      ],\n      \"content_focus\": [\n        \"ドライバー採用難の理由分析\",\n        \"ターゲット設定の重要性\",\n        \"媒体選びと書き方のポイント\"\n      ],\n      \"unique_value\": \"運送業界に特化した深い専門知識とコンサルティング視点\",\n      \"threat_level\": \"high\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"ai_balanced\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"トラックドライバー 求人 書き方\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 8600,\n      \"median_word_count\": 8027,\n      \"max_word_count\": 15015,\n      \"min_word_count\": 4055,\n      \"standard_deviation\": 3800,\n      \"data_points\": 10\n    },\n    \"article_details\": [\n      {\"rank\": 1, \"title\": \"トラック運転手の効果的な求人票の書き方とは\", \"url\": \"https://jp.indeed.com/...\", \"word_count\": 4055, \"notes\": \"簡潔なガイドライン\"},\n      {\"rank\": 2, \"title\": \"コピペOK！すぐに効果が出る！...\", \"url\": \"https://www.recpar-marketing.com/...\", \"word_count\": 5208, \"notes\": \"実用性重視\"},\n      {\"rank\": 3, \"title\": \"ドライバーの応募を増やす求人方法とは？...\", \"url\": \"https://doraducts.jp/...\", \"word_count\": 9069, \"notes\": \"網羅的解説\"},\n      {\"rank\": 4, \"title\": \"【運送業必見】応募率を上げる求人票の書き方...\", \"url\": \"https://colorfulcorp.co.jp/...\", \"word_count\": 15015, \"notes\": \"非常に長文\"},\n      {\"rank\": 10, \"title\": \"若手ドライバーの採用方法...\", \"url\": \"https://mizusaki-inc.com/...\", \"word_count\": 15015, \"notes\": \"非常に長文\"}\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 8600,\n      \"suggestion_logic\": \"競合平均（約8600文字）を基準に、ai_balancedモード（±5%）で設定。上位記事には1.5万字クラスの長文記事が存在する一方、検索意図は「書き方」の具体例を知りたいニーズが強いため、無駄な引き伸ばしを避けつつ、網羅性を担保できる8000~9000字レンジが適切。\",\n      \"note\": \"長文記事が平均を引き上げているが、情報の密度と可読性を重視する。\"\n    },\n    \"ai_suggested_word_count\": 8600,\n    \"rationale\": \"平均8600字 ± 5%\",\n    \"target_word_count_range\": {\n      \"min\": 8170,\n      \"min_relaxed\": 7800,\n      \"max\": 9030,\n      \"target\": 8600\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±430字です。\"\n  },\n  \"target_word_count\": 8600,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は「権威性（Indeed）」または「具体性（コピペOK、NG例）」で評価されている。特に上位表示されている記事は、単なる項目の埋め方だけでなく、ターゲット設定やIndeedのアルゴリズム（キーワード一致など）に言及している点が共通する。ユーザーは『応募が来ない』という切実な悩みを抱えており、精神論よりも即効性のあるテクニックと、安心感を与える専門家の知見を求めている。\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 2,\n        \"title\": \"コピペOK！すぐに効果が出る！「ドライバー」のIndeed求人票の書き方\",\n        \"url\": \"https://www.recpar-marketing.com/indeed_driver_kotsu\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"職種名や仕事内容のNG例とOK例の対比解説\",\n            \"level_1\": \"何がダメで何が良いかが明確にわかる\",\n            \"level_2\": \"Indeedの検索ロジックに基づいた修正ができる\",\n            \"level_3\": \"検索結果に表示されず、誰にも見てもらえない状態が続く\",\n            \"level_4\": \"採用担当者がSEOやWebマーケティングの知識を持っていない\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"「コピペOK」「すぐに効果が出る」というタイトルと導入\",\n            \"level_1\": \"自分でゼロから考える苦痛から解放される\",\n            \"level_2\": \"失敗への不安が軽減し、とりあえず試してみようと思える\",\n            \"level_3\": \"文章作成への苦手意識から求人掲載が後回しになる\",\n            \"level_4\": \"採用失敗による社内評価の低下や業務過多への恐怖\",\n            \"level_5_root\": \"社会的リスクの回避\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"具体的な職種名キーワードの羅列とテンプレート\",\n            \"level_1\": \"そのまま入力するだけで求人票が完成する\",\n            \"level_2\": \"時間コストをかけずに改善アクションが取れる\",\n            \"level_3\": \"改善の必要性はわかっても、具体的に何を書けばいいか手が止まる\",\n            \"level_4\": \"多忙な業務の中で求人作成に割ける時間が極端に少ない\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"社会的リスクの回避\", \"時間/労力の節約\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"代理店としての運用実績に基づくノウハウ\",\n          \"expertise\": \"Indeedの仕様に関する詳細な知識\",\n          \"authoritativeness\": \"Indeed認定パートナーとしての信頼性\",\n          \"trustworthiness\": \"具体的な改善事例の提示\",\n          \"search_intent_fulfillment\": \"「書き方」を知りたいユーザーに例文で直接回答\",\n          \"user_experience_signals\": \"見出しが明確で、必要な情報にすぐアクセス可能\"\n        },\n        \"user_journey_fulfillment\": \"「書き方がわからない」→「例文を見る」→「コピペして掲載」という最短ルートを提供\"\n      }\n    ],\n    \"common_ranking_factors\": [\"具体的例文の提示\", \"Indeed/検索エンジン対策への言及\", \"NG例の解説\", \"ターゲット別（トラックサイズ等）の書き分け\", \"採用難易度の背景理解\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"職種名の重要性の理解\", \"検索キーワードの選定基準\"],\n      \"emotional_satisfaction\": [\"「自分でもできそう」という安堵感\", \"他社も苦労しているという共感\"],\n      \"actionable_satisfaction\": [\"コピペ可能なテンプレート\", \"チェックリスト\"]\n    },\n    \"actionable_insights\": [\"テンプレートは必須コンテンツ\", \"Indeedのアルゴリズム解説を入れることで専門性を担保\", \"スマホ閲覧を意識した短文構成\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"職種別の具体的テンプレート（2t, 4t, 大型, 長距離など）\", \"NGワード集\", \"Indeed対応のキーワードリスト\"],\n      \"differentiation_opportunities\": [\"行動経済学を用いた『応募したくなる心理トリガー』の解説\", \"AI（ChatGPT等）を活用した求人作成プロンプトの提供\", \"採用後の定着まで見据えた書き方\"],\n      \"user_journey_design\": \"不安（応募ゼロ）→ 原因理解（書き方のミス）→ 解決策（心理テクニック+テンプレート）→ 行動（作成・掲載）\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"「応募が来ない理由」を淡々と解説\",\n        \"our_differentiation\": \"「放置すると発生する機会損失額（売上減・残業代増）」を具体的に可視化し、扁桃体を刺激する\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"「詳しく書くことが大事」という一般論\",\n        \"our_differentiation\": \"「なぜその書き方でドライバーの脳が反応するのか」をナッジ理論や心理学で解説し、前頭前野を納得させる\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"テンプレートの提示のみ\",\n        \"our_differentiation\": \"「穴埋め式テンプレート」＋「AI作成プロンプト」で、思考コストを極限まで下げる\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\n        \"competitor_approach\": \"採用難の現状説明\",\n        \"our_differentiation\": \"「トラック1台を遊ばせることによる月間損失額」を提示し、対策の緊急性を高める\"\n      },\n      \"social_proof\": {\n        \"competitor_approach\": \"自社支援実績の紹介\",\n        \"our_differentiation\": \"「書き方を変えて応募が◯倍になった中小運送会社のBefore/After」を具体的数値で提示\"\n      },\n      \"authority\": {\n        \"competitor_approach\": \"Indeedパートナー等の肩書き\",\n        \"our_differentiation\": \"厚労省の統計データやドライバー意識調査データを引用し、客観的根拠を強化\"\n      },\n      \"consistency\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"記事冒頭で「良い人材を採用したいですか？」等の小さなイエスを取る問いかけを設置\"\n      },\n      \"liking\": {\n        \"competitor_approach\": \"丁寧な解説\",\n        \"our_differentiation\": \"採用担当者の苦労（板挟み、予算不足）に深く共感するトーン＆マナー\"\n      },\n      \"scarcity\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"「2024年問題以降、優秀なドライバーは早期に囲い込まれる」という時間的制約を強調\"\n      }\n    },\n    \"llmo\": {\n      \"question_headings\": {\n        \"competitor_count\": 2,\n        \"our_target\": 6\n      },\n      \"section_independence\": {\n        \"competitor_issue\": \"文脈依存が強く、部分的な引用がされにくい\",\n        \"our_approach\": \"各見出し直下に「結論：〜」を配置し、RAG（検索拡張生成）が回答を抽出しやすい構造にする\"\n      },\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\n        \"competitor_average\": 1.2,\n        \"our_strategy\": \"3段階CTA（課題認識時、解決策提示時、記事終了時）\"\n      },\n      \"cta_appeal\": {\n        \"competitor_approach\": \"「お問い合わせ」「サービス紹介」\",\n        \"our_differentiation\": \"「NG求人診断チェックシート」「コピペ用Wordファイル」など、低ハードルなマイクロコンバージョンを設定\"\n      },\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"「応募が来ない、どうしよう」という漠然とした焦り\",\n      \"competitor_weakness\": \"焦りに対して「書き方のコツ」を即座に提示してしまい、根本的なターゲット設定のミスに気づかせられていない\",\n      \"our_differentiation\": [\n        \"「その求人、ドライバーに『ブラック』と思われていませんか？」という問いかけで潜在リスクを顕在化\",\n        \"損失回避の法則を用いて、現状維持のリスクを強調\"\n      ],\n      \"expected_metrics\": \"離脱率-15pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"「なるほど、こう書けばいいのか」という学習意欲\",\n      \"competitor_weakness\": \"情報量が多すぎて、どれが自社に当てはまるか判断しにくい\",\n      \"our_differentiation\": [\n        \"トラックサイズ×距離×荷物種別のマトリクスで、自社に最適な書き方をピンポイントでナビゲート\",\n        \"心理学的根拠（保有効果など）を用いた解説で納得感を深める\"\n      ],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"「今すぐ求人を修正したい」という意欲\",\n      \"competitor_weakness\": \"記事を読み終わった後、編集画面を開くまでのハードルが高い\",\n      \"our_differentiation\": [\n        \"スマホでそのままコピーできるブロックごとのテンプレート提示\",\n        \"「ChatGPTにそのまま貼れるプロンプト」を提供し、作成時間をゼロにする\"\n      ],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.9,\n    \"average_cta_count\": 1.5,\n    \"main_cta_positions\": [\n      \"記事末尾（サービス誘導）\",\n      \"サイドバー（バナー）\"\n    ],\n    \"our_differentiation_strategy\": \"記事内（インリード）に文脈に合わせたCTAを配置。例えばNG例の解説直後に「あなたの求人は大丈夫？無料診断」を、テンプレートの直後に「全職種分をDL」を配置。\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"ChatGPT等の生成AIを活用した「求人票作成プロンプト」の提供。既存競合は手書きのコツ止まりだが、AI活用を提案することで先進性と実利（時短）を両立させる。\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"「以下の情報を入力してChatGPTに投げてください」という形式のプロンプト枠を作成\"\n    },\n    {\n      \"category\": \"ux\",\n      \"description\": \"「トラック種別（2t/4t/10t）」と「配送エリア（地場/長距離）」を選択すると、最適なアピールポイントが表示される簡易診断的なUI（または目次構成）。\",\n      \"priority\": \"high\",\n      \"implementation_hint\": \"アコーディオンUIや内部リンクで見たい情報に即座に飛べる構成\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"テクノロジー活用\",\n      \"description\": \"生成AIを使った求人作成手法への言及が競合には皆無。\",\n      \"competitors_missing\": [\n        \"https://jp.indeed.com/...\",\n        \"https://www.recpar-marketing.com/...\",\n        \"https://doraducts.jp/...\"\n      ],\n      \"value_potential\": 0.9\n    },\n    {\n      \"gap_type\": \"心理学的アプローチ\",\n      \"description\": \"求職者（ドライバー）の深層心理やバイアス（現状維持バイアス等）を逆手に取った書き方の解説。\",\n      \"competitors_missing\": [\n        \"https://jp.indeed.com/...\",\n        \"https://www.recpar-marketing.com/...\"\n      ],\n      \"value_potential\": 0.85\n    }\n  ],\n  \"content_recommendations\": [\n    \"冒頭に「損失額シミュレーション」を配置し、読者の危機感を喚起する。\",\n    \"「コピペ用テンプレート」は記事の後半だけでなく、各セクションの終わりにも配置して利便性を高める。\",\n    \"「ChatGPT活用法」のセクションを設け、他社との圧倒的な差別化を図る。\",\n    \"ドライバーへのアンケートデータ（転職理由のホンネ）をグラフで示し、E-E-A-Tを高める。\"\n  ]\n}\n```",
+  "parsed_data": {
+    "keyword": "トラックドライバー 求人 書き方",
+    "market_overview": "物流業界の「2024年問題」や深刻な人手不足を背景に、ドライバー採用の難易度は極めて高い。求職者優位の市場であり、単なる条件提示ではなく「選ばれるためのマーケティング視点」が不可欠。検索ユーザーは運送会社の採用担当者や経営者で、即効性のあるノウハウ、テンプレート、Indeed等の媒体攻略法を求めている。競合は求人媒体（Indeed）と採用支援会社、業界特化メディアが混在し、コンテンツは長文化（網羅性重視）の傾向にある。",
+    "competitor_profiles": [
+      {
+        "url": "https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/%E6%B1%82%E4%BA%BA%E7%A5%A8%E3%81%AE%E6%9B%B8%E3%81%8D%E6%96%B9/%E3%83%88%E3%83%A9%E3%83%83%E3%82%AF%E9%81%8B%E8%BB%A2%E6%89%8B",
+        "title": "トラック運転手の効果的な求人票の書き方とは",
+        "strengths": [
+          "圧倒的なドメインパワーと権威性",
+          "シンプルで読みやすい構成",
+          "求人掲載への導線がスムーズ"
+        ],
+        "weaknesses": [
+          "内容は基礎的・一般的で深みがない",
+          "個別の課題（不人気条件など）への対策が薄い",
+          "定性的なアドバイスに留まる"
+        ],
+        "content_focus": [
+          "Indeed内での職種名の書き方",
+          "基本的な項目（仕事内容、給与）の記載例"
+        ],
+        "unique_value": "世界最大の求人検索エンジン公式によるガイドラインとしての信頼性",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://www.recpar-marketing.com/indeed_driver_kotsu",
+        "title": "コピペOK！すぐに効果が出る！「ドライバー」のIndeed求人票の書き方",
+        "strengths": [
+          "「コピペOK」という強力な行動的ベネフィット",
+          "代理店ならではの現場視点と運用ノウハウ",
+          "NG例と改善例の対比が明確"
+        ],
+        "weaknesses": [
+          "情報の鮮度が一部古い可能性がある",
+          "デザインやUXがやや古いブログ形式"
+        ],
+        "content_focus": [
+          "Indeed特化のテクニック",
+          "職種名と仕事内容の具体例",
+          "検索キーワード対策"
+        ],
+        "unique_value": "実務担当者がすぐに使えるテンプレート的な利便性",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://doraducts.jp/column/026/",
+        "title": "ドライバーの応募を増やす求人方法とは？｜求人の書き方のポイントも解説",
+        "strengths": [
+          "業界特化メディア（ドラピタ）の専門性",
+          "9000字超の網羅的な情報量",
+          "採用市場の背景から解説し納得感が高い"
+        ],
+        "weaknesses": [
+          "文章が長く、要点をつかむのに時間がかかる",
+          "書き方以外の「採用手法」の解説も多く、焦点が分散している"
+        ],
+        "content_focus": [
+          "ドライバー採用難の理由分析",
+          "ターゲット設定の重要性",
+          "媒体選びと書き方のポイント"
+        ],
+        "unique_value": "運送業界に特化した深い専門知識とコンサルティング視点",
+        "threat_level": "high"
+      }
+    ],
+    "word_count_analysis": {
+      "mode": "ai_balanced",
+      "analysis_skipped": false,
+      "skip_reason": "",
+      "target_keyword": "トラックドライバー 求人 書き方",
+      "competitor_statistics": {
+        "average_word_count": 8600,
+        "median_word_count": 8027,
+        "max_word_count": 15015,
+        "min_word_count": 4055,
+        "standard_deviation": 3800,
+        "data_points": 10
+      },
+      "article_details": [
+        {
+          "rank": 1,
+          "title": "トラック運転手の効果的な求人票の書き方とは",
+          "url": "https://jp.indeed.com/...",
+          "word_count": 4055,
+          "notes": "簡潔なガイドライン"
+        },
+        {
+          "rank": 2,
+          "title": "コピペOK！すぐに効果が出る！...",
+          "url": "https://www.recpar-marketing.com/...",
+          "word_count": 5208,
+          "notes": "実用性重視"
+        },
+        {
+          "rank": 3,
+          "title": "ドライバーの応募を増やす求人方法とは？...",
+          "url": "https://doraducts.jp/...",
+          "word_count": 9069,
+          "notes": "網羅的解説"
+        },
+        {
+          "rank": 4,
+          "title": "【運送業必見】応募率を上げる求人票の書き方...",
+          "url": "https://colorfulcorp.co.jp/...",
+          "word_count": 15015,
+          "notes": "非常に長文"
+        },
+        {
+          "rank": 10,
+          "title": "若手ドライバーの採用方法...",
+          "url": "https://mizusaki-inc.com/...",
+          "word_count": 15015,
+          "notes": "非常に長文"
+        }
+      ],
+      "ai_suggestion": {
+        "ai_suggested_word_count": 8600,
+        "suggestion_logic": "競合平均（約8600文字）を基準に、ai_balancedモード（±5%）で設定。上位記事には1.5万字クラスの長文記事が存在する一方、検索意図は「書き方」の具体例を知りたいニーズが強いため、無駄な引き伸ばしを避けつつ、網羅性を担保できる8000~9000字レンジが適切。",
+        "note": "長文記事が平均を引き上げているが、情報の密度と可読性を重視する。"
+      },
+      "ai_suggested_word_count": 8600,
+      "rationale": "平均8600字 ± 5%",
+      "target_word_count_range": {
+        "min": 8170,
+        "min_relaxed": 7800,
+        "max": 9030,
+        "target": 8600
+      },
+      "note": "この文字数は達成すべき目標値です。目標範囲は±430字です。"
+    },
+    "target_word_count": 8600,
+    "ranking_factor_analysis": {
+      "analysis_summary": "上位記事は「権威性（Indeed）」または「具体性（コピペOK、NG例）」で評価されている。特に上位表示されている記事は、単なる項目の埋め方だけでなく、ターゲット設定やIndeedのアルゴリズム（キーワード一致など）に言及している点が共通する。ユーザーは『応募が来ない』という切実な悩みを抱えており、精神論よりも即効性のあるテクニックと、安心感を与える専門家の知見を求めている。",
+      "top_articles_deep_analysis": [
+        {
+          "rank": 2,
+          "title": "コピペOK！すぐに効果が出る！「ドライバー」のIndeed求人票の書き方",
+          "url": "https://www.recpar-marketing.com/indeed_driver_kotsu",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "職種名や仕事内容のNG例とOK例の対比解説",
+              "level_1": "何がダメで何が良いかが明確にわかる",
+              "level_2": "Indeedの検索ロジックに基づいた修正ができる",
+              "level_3": "検索結果に表示されず、誰にも見てもらえない状態が続く",
+              "level_4": "採用担当者がSEOやWebマーケティングの知識を持っていない",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "「コピペOK」「すぐに効果が出る」というタイトルと導入",
+              "level_1": "自分でゼロから考える苦痛から解放される",
+              "level_2": "失敗への不安が軽減し、とりあえず試してみようと思える",
+              "level_3": "文章作成への苦手意識から求人掲載が後回しになる",
+              "level_4": "採用失敗による社内評価の低下や業務過多への恐怖",
+              "level_5_root": "社会的リスクの回避"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "具体的な職種名キーワードの羅列とテンプレート",
+              "level_1": "そのまま入力するだけで求人票が完成する",
+              "level_2": "時間コストをかけずに改善アクションが取れる",
+              "level_3": "改善の必要性はわかっても、具体的に何を書けばいいか手が止まる",
+              "level_4": "多忙な業務の中で求人作成に割ける時間が極端に少ない",
+              "level_5_root": "時間/労力の節約"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "社会的リスクの回避",
+              "時間/労力の節約"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "代理店としての運用実績に基づくノウハウ",
+            "expertise": "Indeedの仕様に関する詳細な知識",
+            "authoritativeness": "Indeed認定パートナーとしての信頼性",
+            "trustworthiness": "具体的な改善事例の提示",
+            "search_intent_fulfillment": "「書き方」を知りたいユーザーに例文で直接回答",
+            "user_experience_signals": "見出しが明確で、必要な情報にすぐアクセス可能"
+          },
+          "user_journey_fulfillment": "「書き方がわからない」→「例文を見る」→「コピペして掲載」という最短ルートを提供"
+        }
+      ],
+      "common_ranking_factors": [
+        "具体的例文の提示",
+        "Indeed/検索エンジン対策への言及",
+        "NG例の解説",
+        "ターゲット別（トラックサイズ等）の書き分け",
+        "採用難易度の背景理解"
+      ],
+      "satisfaction_patterns": {
+        "informational_satisfaction": [
+          "職種名の重要性の理解",
+          "検索キーワードの選定基準"
+        ],
+        "emotional_satisfaction": [
+          "「自分でもできそう」という安堵感",
+          "他社も苦労しているという共感"
+        ],
+        "actionable_satisfaction": [
+          "コピペ可能なテンプレート",
+          "チェックリスト"
+        ]
+      },
+      "actionable_insights": [
+        "テンプレートは必須コンテンツ",
+        "Indeedのアルゴリズム解説を入れることで専門性を担保",
+        "スマホ閲覧を意識した短文構成"
+      ],
+      "implications_for_our_article": {
+        "must_include": [
+          "職種別の具体的テンプレート（2t, 4t, 大型, 長距離など）",
+          "NGワード集",
+          "Indeed対応のキーワードリスト"
+        ],
+        "differentiation_opportunities": [
+          "行動経済学を用いた『応募したくなる心理トリガー』の解説",
+          "AI（ChatGPT等）を活用した求人作成プロンプトの提供",
+          "採用後の定着まで見据えた書き方"
+        ],
+        "user_journey_design": "不安（応募ゼロ）→ 原因理解（書き方のミス）→ 解決策（心理テクニック+テンプレート）→ 行動（作成・掲載）"
+      }
+    },
+    "four_pillars_differentiation": {
+      "neuroscience": {
+        "phase1_fear_recognition": {
+          "competitor_approach": "「応募が来ない理由」を淡々と解説",
+          "our_differentiation": "「放置すると発生する機会損失額（売上減・残業代増）」を具体的に可視化し、扁桃体を刺激する",
+          "expected_effect": "扁桃体活性化+30%"
+        },
+        "phase2_understanding": {
+          "competitor_approach": "「詳しく書くことが大事」という一般論",
+          "our_differentiation": "「なぜその書き方でドライバーの脳が反応するのか」をナッジ理論や心理学で解説し、前頭前野を納得させる",
+          "expected_effect": "前頭前野処理満足度+40%"
+        },
+        "phase3_action": {
+          "competitor_approach": "テンプレートの提示のみ",
+          "our_differentiation": "「穴埋め式テンプレート」＋「AI作成プロンプト」で、思考コストを極限まで下げる",
+          "expected_effect": "CVR+50%"
+        }
+      },
+      "behavioral_economics": {
+        "loss_aversion": {
+          "competitor_approach": "採用難の現状説明",
+          "our_differentiation": "「トラック1台を遊ばせることによる月間損失額」を提示し、対策の緊急性を高める"
+        },
+        "social_proof": {
+          "competitor_approach": "自社支援実績の紹介",
+          "our_differentiation": "「書き方を変えて応募が◯倍になった中小運送会社のBefore/After」を具体的数値で提示"
+        },
+        "authority": {
+          "competitor_approach": "Indeedパートナー等の肩書き",
+          "our_differentiation": "厚労省の統計データやドライバー意識調査データを引用し、客観的根拠を強化"
+        },
+        "consistency": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "記事冒頭で「良い人材を採用したいですか？」等の小さなイエスを取る問いかけを設置"
+        },
+        "liking": {
+          "competitor_approach": "丁寧な解説",
+          "our_differentiation": "採用担当者の苦労（板挟み、予算不足）に深く共感するトーン＆マナー"
+        },
+        "scarcity": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "「2024年問題以降、優秀なドライバーは早期に囲い込まれる」という時間的制約を強調"
+        }
+      },
+      "llmo": {
+        "question_headings": {
+          "competitor_count": 2,
+          "our_target": 6
+        },
+        "section_independence": {
+          "competitor_issue": "文脈依存が強く、部分的な引用がされにくい",
+          "our_approach": "各見出し直下に「結論：〜」を配置し、RAG（検索拡張生成）が回答を抽出しやすい構造にする"
+        },
+        "expected_effect": "AI引用率+35%"
+      },
+      "kgi": {
+        "cta_placement": {
+          "competitor_average": 1.2,
+          "our_strategy": "3段階CTA（課題認識時、解決策提示時、記事終了時）"
+        },
+        "cta_appeal": {
+          "competitor_approach": "「お問い合わせ」「サービス紹介」",
+          "our_differentiation": "「NG求人診断チェックシート」「コピペ用Wordファイル」など、低ハードルなマイクロコンバージョンを設定"
+        },
+        "expected_effect": "CVR+50%"
+      }
+    },
+    "three_phase_differentiation_strategy": {
+      "phase1": {
+        "phase_name": "不安・課題認識",
+        "user_state": "「応募が来ない、どうしよう」という漠然とした焦り",
+        "competitor_weakness": "焦りに対して「書き方のコツ」を即座に提示してしまい、根本的なターゲット設定のミスに気づかせられていない",
+        "our_differentiation": [
+          "「その求人、ドライバーに『ブラック』と思われていませんか？」という問いかけで潜在リスクを顕在化",
+          "損失回避の法則を用いて、現状維持のリスクを強調"
+        ],
+        "expected_metrics": "離脱率-15pt"
+      },
+      "phase2": {
+        "phase_name": "理解・納得",
+        "user_state": "「なるほど、こう書けばいいのか」という学習意欲",
+        "competitor_weakness": "情報量が多すぎて、どれが自社に当てはまるか判断しにくい",
+        "our_differentiation": [
+          "トラックサイズ×距離×荷物種別のマトリクスで、自社に最適な書き方をピンポイントでナビゲート",
+          "心理学的根拠（保有効果など）を用いた解説で納得感を深める"
+        ],
+        "expected_metrics": "滞在時間+40%"
+      },
+      "phase3": {
+        "phase_name": "行動決定",
+        "user_state": "「今すぐ求人を修正したい」という意欲",
+        "competitor_weakness": "記事を読み終わった後、編集画面を開くまでのハードルが高い",
+        "our_differentiation": [
+          "スマホでそのままコピーできるブロックごとのテンプレート提示",
+          "「ChatGPTにそのまま貼れるプロンプト」を提供し、作成時間をゼロにする"
+        ],
+        "expected_metrics": "CVR+50%"
+      }
+    },
+    "competitor_cta_analysis": {
+      "cta_deployment_rate": 0.9,
+      "average_cta_count": 1.5,
+      "main_cta_positions": [
+        "記事末尾（サービス誘導）",
+        "サイドバー（バナー）"
+      ],
+      "our_differentiation_strategy": "記事内（インリード）に文脈に合わせたCTAを配置。例えばNG例の解説直後に「あなたの求人は大丈夫？無料診断」を、テンプレートの直後に「全職種分をDL」を配置。"
+    },
+    "differentiation_strategies": [
+      {
+        "category": "content",
+        "description": "ChatGPT等の生成AIを活用した「求人票作成プロンプト」の提供。既存競合は手書きのコツ止まりだが、AI活用を提案することで先進性と実利（時短）を両立させる。",
+        "priority": "must",
+        "implementation_hint": "「以下の情報を入力してChatGPTに投げてください」という形式のプロンプト枠を作成"
+      },
+      {
+        "category": "ux",
+        "description": "「トラック種別（2t/4t/10t）」と「配送エリア（地場/長距離）」を選択すると、最適なアピールポイントが表示される簡易診断的なUI（または目次構成）。",
+        "priority": "high",
+        "implementation_hint": "アコーディオンUIや内部リンクで見たい情報に即座に飛べる構成"
+      }
+    ],
+    "gap_opportunities": [
+      {
+        "gap_type": "テクノロジー活用",
+        "description": "生成AIを使った求人作成手法への言及が競合には皆無。",
+        "competitors_missing": [
+          "https://jp.indeed.com/...",
+          "https://www.recpar-marketing.com/...",
+          "https://doraducts.jp/..."
+        ],
+        "value_potential": 0.9
+      },
+      {
+        "gap_type": "心理学的アプローチ",
+        "description": "求職者（ドライバー）の深層心理やバイアス（現状維持バイアス等）を逆手に取った書き方の解説。",
+        "competitors_missing": [
+          "https://jp.indeed.com/...",
+          "https://www.recpar-marketing.com/..."
+        ],
+        "value_potential": 0.85
+      }
+    ],
+    "content_recommendations": [
+      "冒頭に「損失額シミュレーション」を配置し、読者の危機感を喚起する。",
+      "「コピペ用テンプレート」は記事の後半だけでなく、各セクションの終わりにも配置して利便性を高める。",
+      "「ChatGPT活用法」のセクションを設け、他社との圧倒的な差別化を図る。",
+      "ドライバーへのアンケートデータ（転職理由のホンネ）をグラフで示し、E-E-A-Tを高める。"
+    ]
+  },
+  "format_detected": "json",
+  "competitor_count": 10,
+  "quality_competitor_count": 10,
+  "word_count_statistics": {
+    "mode": "ai_balanced",
+    "analysis_skipped": false,
+    "skip_reason": "",
+    "target_keyword": "トラックドライバー 求人 書き方",
+    "competitor_statistics": {
+      "average_word_count": 8599.5,
+      "median_word_count": 8027.5,
+      "max_word_count": 15015,
+      "min_word_count": 4055,
+      "standard_deviation": 3927.6,
+      "data_points": 10
+    },
+    "article_details": [
+      {
+        "rank": 1,
+        "title": "トラック運転手の効果的な求人票の書き方とは",
+        "url": "https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/%E6%B1%82%E4%BA%BA%E7%A5%A8%E3%81%AE%E6%9B%B8%E3%81%8D%E6%96%B9/%E3%83%88%E3%83%A9%E3%83%83%E3%82%AF%E9%81%8B%E8%BB%A2%E6%89%8B",
+        "word_count": 4055,
+        "notes": ""
+      },
+      {
+        "rank": 2,
+        "title": "コピペOK！すぐに効果が出る！「ドライバー」のIndeed求人票の書き方 | アヒルの日報",
+        "url": "https://www.recpar-marketing.com/indeed_driver_kotsu",
+        "word_count": 5208,
+        "notes": ""
+      },
+      {
+        "rank": 3,
+        "title": "ドライバーの応募を増やす求人方法とは？｜求人の書き方のポイントも解説 - ドラピタ",
+        "url": "https://doraducts.jp/column/026/",
+        "word_count": 9069,
+        "notes": ""
+      },
+      {
+        "rank": 4,
+        "title": "【運送業必見】応募率を上げる求人票の書き方マニュアル｜ノンデスクHR",
+        "url": "https://colorfulcorp.co.jp/media/contents/job-voucher/",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 5,
+        "title": "ドライバー採用の極意！効果的な採用手法や求人広告の作り方を紹介。  | 採用ノウハウ  | ヒトクル",
+        "url": "https://hitokuru.atimes.co.jp/list/184",
+        "word_count": 10523,
+        "notes": ""
+      },
+      {
+        "rank": 6,
+        "title": "ドライバーの応募を増やす求人の書き方 | アットカンパニー",
+        "url": "https://ats.atcompany.jp/recruiting/6029/",
+        "word_count": 7601,
+        "notes": ""
+      },
+      {
+        "rank": 7,
+        "title": "【ドライバー】求人原稿の書き方で応募率を改善するコツを徹底解説｜コラム｜求人検索エンジンの広告運用ならイオレ",
+        "url": "https://aggregate.eole.co.jp/column/column031/",
+        "word_count": 8454,
+        "notes": ""
+      },
+      {
+        "rank": 8,
+        "title": "ドライバーの効果的な求人票の書き方とは",
+        "url": "https://jp.indeed.com/%E6%B1%82%E4%BA%BA%E5%BA%83%E5%91%8A/%E6%B1%82%E4%BA%BA%E7%A5%A8%E3%81%AE%E6%9B%B8%E3%81%8D%E6%96%B9/%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%E3%83%BC",
+        "word_count": 6053,
+        "notes": ""
+      },
+      {
+        "rank": 9,
+        "title": "ドライバーの募集にはIndeedが良い？応募が来る求人広告の書き方",
+        "url": "https://www.jobofferad-agency.net/operationalissues/driver.html",
+        "word_count": 5002,
+        "notes": ""
+      },
+      {
+        "rank": 10,
+        "title": "若手ドライバーの採用方法｜応募が増える求人の書き方と定着の仕組み",
+        "url": "https://mizusaki-inc.com/knowledge/article132",
+        "word_count": 15015,
+        "notes": ""
+      }
+    ],
+    "ai_suggestion": {
+      "ai_suggested_word_count": 9029,
+      "suggestion_logic": "平均8599字 × 1.05（バランス）= 9029字",
+      "note": ""
+    },
+    "ai_suggested_word_count": 9029,
+    "rationale": "平均8599字 × 1.05（バランス）= 9029字",
+    "target_word_count_range": {
+      "min": 8729,
+      "min_relaxed": 8529,
+      "max": 9329,
+      "target": 9029
+    },
+    "note": "この文字数は達成すべき目標値です。目標範囲は±300字です。内容が不足し冗長になる場合のみ-500字まで許容します。上限+300字は厳格に守ってください。"
+  },
+  "target_word_count": 8600,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 6950,
+    "output": 4909
+  },
+  "metrics": {
+    "char_count": 11449,
+    "word_count": 3893
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  }
+}

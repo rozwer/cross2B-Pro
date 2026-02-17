@@ -1,0 +1,65 @@
+{
+  "step": "step3_5",
+  "keyword": "ドライバー 採用",
+  "emotional_analysis": {
+    "primary_emotion": "",
+    "secondary_emotions": [],
+    "pain_points": [],
+    "desires": []
+  },
+  "human_touch_patterns": [],
+  "experience_episodes": [],
+  "emotional_hooks": [],
+  "phase_emotional_map": {
+    "phase1": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase2": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase3": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    }
+  },
+  "behavioral_economics_hooks": {
+    "loss_aversion_hook": "",
+    "social_proof_hook": "",
+    "authority_hook": "",
+    "scarcity_hook": ""
+  },
+  "placement_instructions": [],
+  "raw_output": "```json\n{\n  \"emotional_analysis\": {\n    \"primary_emotion\": \"焦燥感\",\n    \"secondary_emotions\": [\"不安\", \"期待\"],\n    \"pain_points\": [\n      \"求人広告費をかけても応募が来ない\",\n      \"採用してもすぐに辞めてしまう\",\n      \"若手ドライバーが集まらない\"\n    ],\n    \"desires\": [\n      \"優秀なドライバーを確保したい\",\n      \"安定的な人員体制を構築したい\",\n      \"業績を向上させたい\"\n    ]\n  },\n  \"phase_aligned_elements\": {\n    \"phase1_anxiety\": {\n      \"target_brain\": \"扁桃体（危険検知）\",\n      \"emotional_goal\": \"「このままでは危険」という認識\",\n      \"human_touch\": {\n        \"experience\": \"繁忙期に、ドライバー不足で顧客からの依頼を断らざるを得ない状況を想像してください。積み込みを待つトラック、謝罪する営業担当、そして損失が積み重なる帳簿…\",\n        \"emotion_hook\": \"「ドライバー不足が、御社の未来を蝕んでいるかもしれません…」\",\n        \"empathy\": \"「せっかく獲得した顧客からの信頼を、ドライバー不足で失うのではないかと悩んでいませんか？」\",\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"8-12%\",\n        \"cta_type\": \"early_hook\",\n        \"message_tone\": \"問題意識の確認（例：「まずは、ドライバー不足による年間損失額を試算してみませんか？」）」\n      }\n    },\n    \"phase2_understanding\": {\n      \"target_brain\": \"前頭前野（論理的思考）\",\n      \"emotional_goal\": \"「なるほど、これが解決策か」という納得\",\n      \"human_touch\": {\n        \"experience\": \"中小運送会社A社では、AIマッチング導入後、応募数が3倍に増加、採用コストは40%削減されました。専門家B氏も「中小企業こそ、最新テクノロジーを活用すべき」と提唱しています。\",\n        \"emotion_hook\": \"「諦めるのはまだ早い。中小企業でも、戦略次第で優秀なドライバーを採用できるのです。」\",\n        \"empathy\": \"「実は、多くの運送会社様が同じようにドライバー採用で苦戦されています。しかし、成功している企業も確実に存在します。」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"35-45%\",\n        \"cta_type\": \"mid_engagement\",\n        \"message_tone\": \"具体的なアクション提案（例：「AIマッチング導入事例集を無料でダウンロードする」）」\n      }\n    },\n    \"phase3_action\": {\n      \"target_brain\": \"線条体（報酬系）\",\n      \"emotional_goal\": \"「今行動すれば報酬が得られる」という期待\",\n      \"human_touch\": {\n        \"experience\": \"もし、御社が優秀なドライバーを確保できたら…顧客からの信頼は高まり、新規案件も獲得できるでしょう。社員一同が笑顔で働ける、そんな未来が待っています。\",\n        \"emotion_hook\": \"「さあ、未来への扉を開きましょう。今すぐ、ドライバー採用戦略を見直しませんか？」\",\n        \"empathy\": \"「あなたも、A社のように、ドライバー採用の成功を手にすることができます！」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"75-85%\",\n        \"cta_type\": \"final_conversion\",\n        \"message_tone\": \"即行動を促す（例：「30分無料相談に申し込む」「今なら初期費用無料！限定キャンペーン実施中」）」\n      }\n    }\n  },\n  \"experience_episodes\": [\n    {\n      \"phase\": \"phase1\",\n      \"scenario\": \"問題に直面した状況\",\n      \"narrative\": \"ある日、急な欠員が出て、ベテランドライバーに無理を言って長距離配送を依頼。疲労困憊の彼は、ついに退職を決意。会社の将来に暗雲が立ち込めた。\",\n      \"lesson\": \"「このままでは、大切な人材を失い続け、事業の継続すら危うくなる」\"\n    },\n    {\n      \"phase\": \"phase2\",\n      \"scenario\": \"解決策を発見した状況\",\n      \"narrative\": \"藁にもすがる思いで参加したセミナーで、AIを活用した採用戦略を知る。「これだ！」直感的にそう感じ、すぐに情報収集を開始した。\",\n      \"lesson\": \"「AIを活用すれば、中小企業でも大手企業に負けない採用活動ができるかもしれない」\"\n    },\n    {\n      \"phase\": \"phase3\",\n      \"scenario\": \"行動して成功した状況\",\n      \"narrative\": \"AIマッチングを導入後、応募者が殺到。面接では、求職者の個性や強みを深く理解でき、最適な人材を採用できた。社員の定着率も向上し、業績も右肩上がりだ。\",\n      \"lesson\": \"「あの時、一歩踏み出して本当に良かった。おかげで、会社の未来は明るくなった」\"\n    }\n  ],\n  \"behavioral_economics_hooks\": {\n    \"loss_aversion\": \"損失回避：「優秀な人材を失う前に」「今行動しないと、競合他社に先を越されます」\",\n    \"social_proof\": \"社会的証明：「多くの運送会社がAI採用を導入」「90%の企業が効果を実感しています」\",\n    \"authority\": \"権威性：「採用コンサルタントも推奨」「〇〇大学教授も注目」\",\n    \"scarcity\": \"希少性：「今だけ特別価格」「残り5社限定」\",\n    \"consistency\": \"一貫性：「ドライバーの幸せを願うなら」「安全運転を第一に考えるなら」\",\n    \"liking\": \"好意：「中小企業の気持ちがわかる」「現場を知り尽くした」\"\n  }\n}\n```",
+  "parsed_data": null,
+  "metadata": {
+    "generated_at": "2026-02-04T10:53:44.017863",
+    "model": "gemini-2.0-flash",
+    "model_config": {
+      "platform": "gemini",
+      "model": "gemini-2.0-flash"
+    },
+    "input_files": [
+      "step0",
+      "step1",
+      "step3a",
+      "step3b",
+      "step3c",
+      "step1_5"
+    ]
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  },
+  "token_usage": {
+    "input": 16634,
+    "output": 1365
+  },
+  "output_path": "storage/dev-tenant-001/a87b2257-2fbf-4635-b21b-7f0779261103/step3_5/output.json",
+  "output_digest": "2cdad955c19c362b"
+}

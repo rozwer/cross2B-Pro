@@ -1,0 +1,353 @@
+{
+  "step": "step5",
+  "keyword": "ドライバー採用難しい",
+  "search_queries": [
+    "厚生労働省 職業別有効求人倍率 自動車運転の職業 推移 2024",
+    "全日本トラック協会 経営分析報告書 最新",
+    "国土交通省 トラック運送業 人材確保 対策 事例集",
+    "トラックドライバー 意識調査 転職理由 アンケート 結果",
+    "物流業界 採用単価 平均 データ"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://wwwtb.mlit.go.jp/kinki/content/000308341.pdf",
+      "title": "自動車運送事業の2024年問題について 資料11",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://driver-roudou-jikan.mhlw.go.jp/truck/work",
+      "title": "統計からみるトラック運転者の仕事",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.rengo-soken.or.jp/dio/dio387-1.pdf",
+      "title": "「2024年問題」とは",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jsite.mhlw.go.jp/fukushima-roudoukyoku/content/contents/002000508.pdf",
+      "title": "雇用失業情勢等（令和6年9月）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://xn--pckua2a7gp15o89zb.com/journal/news/543/",
+      "title": "【2024年問題】配送・物流・交通関連職の求人数・求人検索数 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jta.or.jp/member/keiei/keiei_bunseki.html",
+      "title": "経営分析報告書について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jta.or.jp/member/keiei/keieibunseki_r04.html",
+      "title": "経営分析報告書 令和4年度決算版について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jta.or.jp/member/keiei/keieibunseki_r05.html",
+      "title": "経営分析報告書 令和5年度決算版について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://aotokyo.or.jp/archives/news/%E7%B5%8C%E5%96%B6%E5%88%86%E6%9E%90%E5%A0%B1%E5%91%8A%E6%9B%B8-%E4%BB%A4%E5%92%8C%EF%BC%94%E5%B9%B4%E5%BA%A6%E6%B1%BA%E7%AE%97%E7%89%88%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%EF%BD%9C%E5%85%A8%E6%97%A5",
+      "title": "経営分析報告書 令和4年度決算版について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/jidosha_tk4_000105.html",
+      "title": "トラック運送業における人材確保のためのパンフレット・好事例 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/content/001337696.pdf",
+      "title": "取り組み事例集",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.kta.jp/kta/info/20200630pamphlet/",
+      "title": "国土交通作成「トラック運送業における人材確保のため ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/report/press/content/001337811.pdf",
+      "title": "トラック運送業における人材確保のためのパンフレット・好事例 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.truck.or.jp/publics/index/1/detail=1/b_id=1/r_id=1479/",
+      "title": "国土交通省作成「トラック運送業における人材確保のため ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.job-terminal.com/article/info/driver/jobchange-questionnaire",
+      "title": "トラックドライバーの転職事情！ 転職回数や転職理由を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.xmile.co.jp/news/release154",
+      "title": "ドライバー不足6割超の一方、2割が退職理由を「把握できてい ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000009.000074654.html",
+      "title": "ドライバーはどんな時に「転職したい」と思うのか。年齢ごとに ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://fullload.bestcarweb.jp/column/362445",
+      "title": "トラックドライバーになった志望動機ってナニ？ 運転手2000 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.driver-staff.com/column_2607/",
+      "title": "トラックドライバーが「転職しようと思った理由」に関する調査 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.sbbit.jp/article/cont1/37572",
+      "title": "「採用単価は他業種の2倍」まるで雇えないトラックドライバーの ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://web.toroo.jp/column/14345",
+      "title": "ドライバー採用単価は高い？平均相場と費用を抑える5つの ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://stock-sun.com/column/mid-career-recruitment-costs/",
+      "title": "中途採用にかかる費用の相場は？業種別・企業規模別に内訳 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://doraducts.jp/column/003/",
+      "title": "ドライバーの採用単価の相場は？高い理由と採用コストを ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www1.logistics.or.jp/wp-content/uploads/2025/04/cost_report_20250428.pdf",
+      "title": "2024 年度 物流コスト調査報告書【概要版】",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 24,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

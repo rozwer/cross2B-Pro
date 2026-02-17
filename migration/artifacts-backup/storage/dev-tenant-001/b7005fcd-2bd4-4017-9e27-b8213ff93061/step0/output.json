@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "自動車整備士採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"自動車整備士採用難しい\",\n  \"search_intent\": \"自動車整備士の人手不足が深刻化している背景・原因（低賃金、重労働、若者離れなど）をデータ等で理解したい、およびその激戦区の中でどのようにすれば人材を確保できるかという具体的な採用戦略や解決策を求めている。\",\n  \"difficulty\": \"medium\",\n  \"suggested_topics\": [\n        \"整備士不足の構造的な原因と市場データ分析\",\n        \"採用難を克服するための求人票の書き方と差別化戦略\",\n        \"外国人整備士（特定技能）の採用方法とメリット・デメリット\",\n        \"未経験者採用と社内育成・資格取得支援制度の導入\",\n        \"若手整備士が定着する職場環境と待遇改善の事例\"\n  ],\n  \"target_audience\": \"自動車ディーラーの採用担当者、民間自動車整備工場の経営者、ガソリンスタンドやカー用品店の店長・人事担当者\"\n}\n```",
+  "search_intent": "自動車整備士の人手不足が深刻化している背景・原因（低賃金、重労働、若者離れなど）をデータ等で理解したい、およびその激戦区の中でどのようにすれば人材を確保できるかという具体的な採用戦略や解決策を求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "自動車ディーラーの採用担当者、民間自動車整備工場の経営者、ガソリンスタンドやカー用品店の店長・人事担当者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 111,
+    "output": 235
+  },
+  "metrics": {
+    "char_count": 475,
+    "word_count": 282
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

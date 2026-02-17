@@ -1,0 +1,15 @@
+{
+  "step": "step1_5",
+  "related_keywords_analyzed": 0,
+  "related_competitor_data": [],
+  "metadata": {
+    "fetched_at": "2026-02-04T10:50:15.465103",
+    "source": "skipped",
+    "total_keywords_processed": 0,
+    "total_articles_fetched": 0
+  },
+  "skipped": true,
+  "skip_reason": "no_related_keywords",
+  "output_path": "storage/dev-tenant-001/a87b2257-2fbf-4635-b21b-7f0779261103/step1_5/output.json",
+  "output_digest": "c3f676c3cd22436a"
+}

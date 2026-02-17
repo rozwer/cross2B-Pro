@@ -1,0 +1,4152 @@
+{
+  "step": "step3b",
+  "keyword": "トラックドライバー 求人 書き方",
+  "cooccurrence_analysis": "```json\n{\n  \"primary_keyword\": \"トラックドライバー 求人 書き方\",\n  \"total_articles_analyzed\": 10,\n  \"cooccurrence_keywords\": [\n    {\n      \"keyword\": \"採用\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.95,\n      \"frequency\": 85,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"応募\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.95,\n      \"frequency\": 78,\n      \"article_coverage\": 10,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"求職者\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.9,\n      \"frequency\": 62,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"仕事内容\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.9,\n      \"frequency\": 58,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"運送\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 55,\n      \"article_coverage\": 10,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"Indeed\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 50,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"給与\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.85,\n      \"frequency\": 48,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"未経験\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 45,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"職種名\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 42,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"検索\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 40,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"掲載\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 38,\n      \"article_coverage\": 9,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"休日\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 36,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"待遇\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.75,\n      \"frequency\": 35,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"会社\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 34,\n      \"article_coverage\": 10,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"アピール\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 32,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"具体的\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 30,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"consistency\"\n    },\n    {\n      \"keyword\": \"ターゲット\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 28,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ポイント\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 28,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"不足\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 27,\n      \"article_coverage\": 8,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"資格\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 26,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"福利厚生\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 25,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"効果的\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.7,\n      \"frequency\": 24,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"大型\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 23,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"中型\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 23,\n      \"article_coverage\": 7,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"時間\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 22,\n      \"article_coverage\": 9,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"環境\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.65,\n      \"frequency\": 21,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"2024年問題\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.8,\n      \"frequency\": 20,\n      \"article_coverage\": 6,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"写真\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 19,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"差別化\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 18,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"改善\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 18,\n      \"article_coverage\": 6,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"無料\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 17,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"free\"\n    },\n    {\n      \"keyword\": \"成功\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 16,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"事例\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 16,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"コツ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 15,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"配送\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 15,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"業界\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 15,\n      \"article_coverage\": 9,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"条件\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.6,\n      \"frequency\": 14,\n      \"article_coverage\": 8,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"雰囲気\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 14,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"簡単\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 13,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"ペルソナ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 13,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"理由\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 12,\n      \"article_coverage\": 7,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"コスト\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 12,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"研修\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 11,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"実績\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.55,\n      \"frequency\": 11,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"若手\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"高齢化\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 10,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"残業\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 10,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"手当\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 9,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"不安\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 9,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"解決\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 9,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"イメージ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 8,\n      \"article_coverage\": 6,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"平均\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 8,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"SEO\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"上位\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.5,\n      \"frequency\": 8,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"クリック\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"制度\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"安心\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"労働\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 6,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"課題\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 5,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"獲得\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"活用\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 7,\n      \"article_coverage\": 5,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"専門\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 6,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"魅力\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 6,\n      \"article_coverage\": 5,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"確保\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 6,\n      \"article_coverage\": 4,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"閲覧\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 6,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"見直し\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.45,\n      \"frequency\": 6,\n      \"article_coverage\": 4,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"相談\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 5,\n      \"article_coverage\": 4,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"ダウンロード\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 5,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"free\"\n    },\n    {\n      \"keyword\": \"代行\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 5,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"比較\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 5,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"テンプレート\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"コピペ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2,\n      \"phase\": 3,\n      \"behavioral_trigger\": \"ease\"\n    },\n    {\n      \"keyword\": \"キャッチコピー\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ミスマッチ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"定着\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"離職\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"スマホ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"動画\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"視覚的\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"即戦力\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"心理的安全性\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"ATS\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"Googleしごと検索\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"求人ボックス\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"スタンバイ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ハローワーク\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 2,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"有効求人倍率\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"social_proof\"\n    },\n    {\n      \"keyword\": \"働き方改革\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.35,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"authority\"\n    },\n    {\n      \"keyword\": \"ドラピタ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"ドラEVER\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"採用係長\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"エアワーク\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"エンゲージ\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 3,\n      \"behavioral_trigger\": null\n    },\n    {\n      \"keyword\": \"人間関係\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"liking\"\n    },\n    {\n      \"keyword\": \"長時間労働\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"低賃金\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"3K\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"ドライバー不足\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 2,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"物流危機\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 1,\n      \"behavioral_trigger\": \"loss_aversion\"\n    },\n    {\n      \"keyword\": \"EC\",\n      \"category\": \"cooccurrence\",\n      \"importance\": 0.3,\n      \"frequency\": 3,\n      \"article_coverage\": 1,\n      \"phase\": 1,\n      \"behavioral_trigger\": null\n    }\n  ],\n  \"lsi_keywords\": [\n    {\n      \"keyword\": \"物流業界\",\n      \"category\": \"lsi\",\n      \"importance\": 0.8,\n      \"frequency\": 25,\n      \"article_coverage\": 9\n    },\n    {\n      \"keyword\": \"運送会社\",\n      \"category\": \"lsi\",\n      \"importance\": 0.8,\n      \"frequency\": 20,\n      \"article_coverage\": 8\n    },\n    {\n      \"keyword\": \"大型免許\",\n      \"category\": \"lsi\",\n      \"importance\": 0.7,\n      \"frequency\": 15,\n      \"article_coverage\": 6\n    },\n    {\n      \"keyword\": \"中型免許\",\n      \"category\": \"lsi\",\n      \"importance\": 0.7,\n      \"frequency\": 12,\n      \"article_coverage\": 6\n    },\n    {\n      \"keyword\": \"フォークリフト\",\n      \"category\": \"lsi\",\n      \"importance\": 0.6,\n      \"frequency\": 10,\n      \"article_coverage\": 5\n    },\n    {\n      \"keyword\": \"ルート配送\",\n      \"category\": \"lsi\",\n      \"importance\": 0.6,\n      \"frequency\": 8,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"長距離\",\n      \"category\": \"lsi\",\n      \"importance\": 0.6,\n      \"frequency\": 8,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"地場\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"手積み\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"手降ろし\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"カゴ台車\",\n      \"category\": \"lsi\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"パレット\",\n      \"category\": \"lsi\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"4tトラック\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"10tトラック\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"準中型免許\",\n      \"category\": \"lsi\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"社会保険完備\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"賞与\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"昇給\",\n      \"category\": \"lsi\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"退職金制度\",\n      \"category\": \"lsi\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"マイカー通勤\",\n      \"category\": \"lsi\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 3\n    }\n  ],\n  \"related_keywords\": [\n    {\n      \"keyword\": \"採用サイト\",\n      \"category\": \"related\",\n      \"importance\": 0.6,\n      \"frequency\": 8,\n      \"article_coverage\": 4\n    },\n    {\n      \"keyword\": \"オウンドメディア\",\n      \"category\": \"related\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"採用マーケティング\",\n      \"category\": \"related\",\n      \"importance\": 0.5,\n      \"frequency\": 5,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"採用ブランディング\",\n      \"category\": \"related\",\n      \"importance\": 0.5,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"求人検索エンジン\",\n      \"category\": \"related\",\n      \"importance\": 0.5,\n      \"frequency\": 6,\n      \"article_coverage\": 3\n    },\n    {\n      \"keyword\": \"人材紹介\",\n      \"category\": \"related\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"派遣\",\n      \"category\": \"related\",\n      \"importance\": 0.4,\n      \"frequency\": 4,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"スカウト\",\n      \"category\": \"related\",\n      \"importance\": 0.4,\n      \"frequency\": 3,\n      \"article_coverage\": 2\n    },\n    {\n      \"keyword\": \"リファラル採用\",\n      \"category\": \"related\",\n      \"importance\": 0.4,\n      \"frequency\": 3,\n      \"article_coverage\": 1\n    },\n    {\n      \"keyword\": \"アルゴリズム\",\n      \"category\": \"related\",\n      \"importance\": 0.4,\n      \"frequency\": 3,\n      \"article_coverage\": 2\n    }\n  ],\n  \"long_tail_variations\": [\n    \"トラックドライバー 求人 書き方 例文\",\n    \"ドライバー 求人 応募が来ない\",\n    \"運送業 求人 キャッチコピー\",\n    \"トラック運転手 募集 文言\",\n    \"Indeed ドライバー 求人 コツ\",\n    \"ドライバー採用 2024年問題\",\n    \"トラックドライバー 未経験 求人 書き方\",\n    \"運送会社 採用サイト 作り方\",\n    \"ドライバー 求人 ペルソナ設定\",\n    \"トラック運転手 求人 テンプレート\"\n  ],\n  \"keyword_categorization\": {\n    \"essential\": [\n      {\n        \"keyword\": \"採用\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"応募\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"求職者\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"仕事内容\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"運送\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"給与\",\n        \"article_coverage\": 10\n      },\n      {\n        \"keyword\": \"未経験\",\n        \"article_coverage\": 9\n      },\n      {\n        \"keyword\": \"検索\",\n        \"article_coverage\": 9\n      },\n      {\n        \"keyword\": \"休日\",\n        \"article_coverage\": 9\n      },\n      {\n        \"keyword\": \"待遇\",\n        \"article_coverage\": 9\n      },\n      {\n        \"keyword\": \"Indeed\",\n        \"article_coverage\": 8\n      },\n      {\n        \"keyword\": \"職種名\",\n        \"article_coverage\": 8\n      }\n    ],\n    \"standard\": [\n      {\n        \"keyword\": \"2024年問題\",\n        \"article_coverage\": 6\n      },\n      {\n        \"keyword\": \"大型\",\n        \"article_coverage\": 7\n      },\n      {\n        \"keyword\": \"中型\",\n        \"article_coverage\": 7\n      },\n      {\n        \"keyword\": \"写真\",\n        \"article_coverage\": 6\n      },\n      {\n        \"keyword\": \"コツ\",\n        \"article_coverage\": 6\n      },\n      {\n        \"keyword\": \"差別化\",\n        \"article_coverage\": 5\n      },\n      {\n        \"keyword\": \"無料\",\n        \"article_coverage\": 5\n      },\n      {\n        \"keyword\": \"成功\",\n        \"article_coverage\": 5\n      },\n      {\n        \"keyword\": \"事例\",\n        \"article_coverage\": 5\n      }\n    ],\n    \"unique\": [\n      {\n        \"keyword\": \"ペルソナ\",\n        \"article_coverage\": 3\n      },\n      {\n        \"keyword\": \"心理的安全性\",\n        \"article_coverage\": 1\n      },\n      {\n        \"keyword\": \"動画\",\n        \"article_coverage\": 2\n      },\n      {\n        \"keyword\": \"コピペ\",\n        \"article_coverage\": 2\n      },\n      {\n        \"keyword\": \"ATS\",\n        \"article_coverage\": 2\n      },\n      {\n        \"keyword\": \"ドラピタ\",\n        \"article_coverage\": 2\n      }\n    ]\n  },\n  \"three_phase_distribution\": {\n    \"phase1_keywords\": [\n      {\n        \"keyword\": \"人手不足\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"2024年問題\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"応募が来ない\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"離職率\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"高齢化\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"コスト\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"課題\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"ミスマッチ\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"有効求人倍率\",\n        \"phase\": 1\n      },\n      {\n        \"keyword\": \"3K\",\n        \"phase\": 1\n      }\n    ],\n    \"phase2_keywords\": [\n      {\n        \"keyword\": \"書き方\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"職種名\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"仕事内容\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"具体的\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"差別化\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"ターゲット\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"ペルソナ\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"検索キーワード\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"アピール\",\n        \"phase\": 2\n      },\n      {\n        \"keyword\": \"福利厚生\",\n        \"phase\": 2\n      }\n    ],\n    \"phase3_keywords\": [\n      {\n        \"keyword\": \"今すぐ\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"無料\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"簡単\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"掲載\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"問い合わせ\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"ダウンロード\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"実績\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"導入\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"相談\",\n        \"phase\": 3\n      },\n      {\n        \"keyword\": \"コピペOK\",\n        \"phase\": 3\n      }\n    ]\n  },\n  \"llmo_optimized_keywords\": {\n    \"question_format\": [\n      \"求人票の書き方とは\",\n      \"応募を増やす方法\",\n      \"Indeedの効果的な書き方\",\n      \"ドライバー採用のコツ\",\n      \"求人が来ない理由\"\n    ],\n    \"voice_search\": [\n      \"トラックドライバーの求人はどう書けばいいですか\",\n      \"なぜドライバーの応募が来ないのでしょうか\",\n      \"効果的な求人票の例文はありますか\",\n      \"2024年問題で採用はどう変わりますか\"\n    ]\n  },\n  \"behavioral_economics_triggers\": {\n    \"loss_aversion\": [\n      \"不足\",\n      \"離職\",\n      \"コストの無駄\",\n      \"機会損失\",\n      \"2024年問題\",\n      \"倒産リスク\"\n    ],\n    \"social_proof\": [\n      \"導入実績\",\n      \"成功事例\",\n      \"応募率アップ\",\n      \"他社\",\n      \"平均賃金\",\n      \"有効求人倍率\"\n    ],\n    \"authority\": [\n      \"厚生労働省\",\n      \"専門家\",\n      \"プロ\",\n      \"認定パートナー\",\n      \"ハローワーク\"\n    ],\n    \"consistency\": [\n      \"まずは\",\n      \"次に\",\n      \"具体的に\",\n      \"ステップ\",\n      \"手順\"\n    ],\n    \"liking\": [\n      \"お困り\",\n      \"安心\",\n      \"サポート\",\n      \"雰囲気\",\n      \"心理的安全性\"\n    ],\n    \"scarcity\": [\n      \"今だけ\",\n      \"限定\",\n      \"急募\",\n      \"採用枠\"\n    ]\n  },\n  \"cta_keywords\": {\n    \"urgency\": [\n      \"今すぐ\",\n      \"即日\",\n      \"お急ぎ\"\n    ],\n    \"ease\": [\n      \"簡単\",\n      \"コピペOK\",\n      \"3分で\",\n      \"代行\"\n    ],\n    \"free\": [\n      \"無料\",\n      \"0円\",\n      \"資料請求\"\n    ],\n    \"expertise\": [\n      \"プロに相談\",\n      \"実績多数\",\n      \"ノウハウ\"\n    ]\n  },\n  \"keyword_clusters\": [\n    {\n      \"theme\": \"求人票の構成要素\",\n      \"keywords\": [\n        {\n          \"keyword\": \"職種名\"\n        },\n        {\n          \"keyword\": \"仕事内容\"\n        },\n        {\n          \"keyword\": \"給与\"\n        },\n        {\n          \"keyword\": \"休日\"\n        },\n        {\n          \"keyword\": \"福利厚生\"\n        }\n      ],\n      \"relevance_to_main\": 1.0,\n      \"density_score\": 0.9\n    },\n    {\n      \"theme\": \"ターゲット・条件\",\n      \"keywords\": [\n        {\n          \"keyword\": \"未経験\"\n        },\n        {\n          \"keyword\": \"大型\"\n        },\n        {\n          \"keyword\": \"中型\"\n        },\n        {\n          \"keyword\": \"資格\"\n        },\n        {\n          \"keyword\": \"若手\"\n        },\n        {\n          \"keyword\": \"女性\"\n        }\n      ],\n      \"relevance_to_main\": 0.9,\n      \"density_score\": 0.8\n    },\n    {\n      \"theme\": \"媒体・プラットフォーム\",\n      \"keywords\": [\n        {\n          \"keyword\": \"Indeed\"\n        },\n        {\n          \"keyword\": \"求人ボックス\"\n        },\n        {\n          \"keyword\": \"スタンバイ\"\n        },\n        {\n          \"keyword\": \"Googleしごと検索\"\n        },\n        {\n          \"keyword\": \"ハローワーク\"\n        }\n      ],\n      \"relevance_to_main\": 0.8,\n      \"density_score\": 0.7\n    },\n    {\n      \"theme\": \"業界課題・背景\",\n      \"keywords\": [\n        {\n          \"keyword\": \"2024年問題\"\n        },\n        {\n          \"keyword\": \"人手不足\"\n        },\n        {\n          \"keyword\": \"高齢化\"\n        },\n        {\n          \"keyword\": \"有効求人倍率\"\n        },\n        {\n          \"keyword\": \"働き方改革\"\n        }\n      ],\n      \"relevance_to_main\": 0.7,\n      \"density_score\": 0.6\n    }\n  ],\n  \"competitor_keyword_gaps\": [\n    {\n      \"keyword\": \"心理的安全性\",\n      \"coverage_rate\": 0.1,\n      \"differentiation_score\": 0.9\n    },\n    {\n      \"keyword\": \"動画\",\n      \"coverage_rate\": 0.2,\n      \"differentiation_score\": 0.8\n    },\n    {\n      \"keyword\": \"ペルソナ\",\n      \"coverage_rate\": 0.3,\n      \"differentiation_score\": 0.7\n    },\n    {\n      \"keyword\": \"ATS\",\n      \"coverage_rate\": 0.2,\n      \"differentiation_score\": 0.7\n    },\n    {\n      \"keyword\": \"スマホ最適化\",\n      \"coverage_rate\": 0.3,\n      \"differentiation_score\": 0.6\n    }\n  ],\n  \"recommendations\": [\n    \"Phase1で『2024年問題』と『コストの無駄（損失回避）』を強く結びつけ、従来の求人票の限界を指摘する。\",\n    \"Phase2では競合が弱い『心理的安全性』や『動画活用』を差別化ポイントとして提案し、具体的な書き方（Standard KW）と組み合わせる。\",\n    \"Phase3で『コピペOK』『無料テンプレート』などのEase（容易性）トリガーを用いて、即座のアクション（資料DLや問い合わせ）に誘導する。\"\n  ]\n}\n```",
+  "parsed_data": {
+    "primary_keyword": "トラックドライバー 求人 書き方",
+    "total_articles_analyzed": 10,
+    "cooccurrence_keywords": [
+      {
+        "keyword": "採用",
+        "category": "cooccurrence",
+        "importance": 0.95,
+        "frequency": 85,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "応募",
+        "category": "cooccurrence",
+        "importance": 0.95,
+        "frequency": 78,
+        "article_coverage": 10,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "求職者",
+        "category": "cooccurrence",
+        "importance": 0.9,
+        "frequency": 62,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "仕事内容",
+        "category": "cooccurrence",
+        "importance": 0.9,
+        "frequency": 58,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "運送",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 55,
+        "article_coverage": 10,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "Indeed",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 50,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "給与",
+        "category": "cooccurrence",
+        "importance": 0.85,
+        "frequency": 48,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "未経験",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 45,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "職種名",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 42,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "検索",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 40,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "掲載",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 38,
+        "article_coverage": 9,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "休日",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 36,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "待遇",
+        "category": "cooccurrence",
+        "importance": 0.75,
+        "frequency": 35,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "会社",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 34,
+        "article_coverage": 10,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "アピール",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 32,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "具体的",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 30,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": "consistency"
+      },
+      {
+        "keyword": "ターゲット",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 28,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ポイント",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 28,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "不足",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 27,
+        "article_coverage": 8,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "資格",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 26,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "福利厚生",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 25,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "効果的",
+        "category": "cooccurrence",
+        "importance": 0.7,
+        "frequency": 24,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "大型",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 23,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "中型",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 23,
+        "article_coverage": 7,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "時間",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 22,
+        "article_coverage": 9,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "環境",
+        "category": "cooccurrence",
+        "importance": 0.65,
+        "frequency": 21,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "2024年問題",
+        "category": "cooccurrence",
+        "importance": 0.8,
+        "frequency": 20,
+        "article_coverage": 6,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "写真",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 19,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "差別化",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 18,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "改善",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 18,
+        "article_coverage": 6,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "無料",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 17,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": "free"
+      },
+      {
+        "keyword": "成功",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 16,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "事例",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 16,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "コツ",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 15,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "配送",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 15,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "業界",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 15,
+        "article_coverage": 9,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "条件",
+        "category": "cooccurrence",
+        "importance": 0.6,
+        "frequency": 14,
+        "article_coverage": 8,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "雰囲気",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 14,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "簡単",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 13,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "ペルソナ",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 13,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "理由",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 12,
+        "article_coverage": 7,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "コスト",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 12,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "研修",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 11,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "実績",
+        "category": "cooccurrence",
+        "importance": 0.55,
+        "frequency": 11,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "若手",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "高齢化",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 10,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "残業",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 10,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "手当",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 9,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "不安",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 9,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "解決",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 9,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "イメージ",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 8,
+        "article_coverage": 6,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "平均",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 8,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "SEO",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "上位",
+        "category": "cooccurrence",
+        "importance": 0.5,
+        "frequency": 8,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "クリック",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "制度",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "安心",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "労働",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 6,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "課題",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 5,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "獲得",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "活用",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 7,
+        "article_coverage": 5,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "専門",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 6,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "魅力",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 6,
+        "article_coverage": 5,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "確保",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 6,
+        "article_coverage": 4,
+        "phase": 1,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "閲覧",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 6,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "見直し",
+        "category": "cooccurrence",
+        "importance": 0.45,
+        "frequency": 6,
+        "article_coverage": 4,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "相談",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 5,
+        "article_coverage": 4,
+        "phase": 3,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "ダウンロード",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 5,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "free"
+      },
+      {
+        "keyword": "代行",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 5,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "比較",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 5,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "テンプレート",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "コピペ",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2,
+        "phase": 3,
+        "behavioral_trigger": "ease"
+      },
+      {
+        "keyword": "キャッチコピー",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ミスマッチ",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "定着",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "離職",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "スマホ",
+        "category": "cooccurrence",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "動画",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "視覚的",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "即戦力",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "心理的安全性",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 2,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "ATS",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "Googleしごと検索",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "求人ボックス",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "スタンバイ",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ハローワーク",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 2,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "有効求人倍率",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "social_proof"
+      },
+      {
+        "keyword": "働き方改革",
+        "category": "cooccurrence",
+        "importance": 0.35,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "authority"
+      },
+      {
+        "keyword": "ドラピタ",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "ドラEVER",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "採用係長",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "エアワーク",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "エンゲージ",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 3,
+        "behavioral_trigger": null
+      },
+      {
+        "keyword": "人間関係",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "liking"
+      },
+      {
+        "keyword": "長時間労働",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "低賃金",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "3K",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "ドライバー不足",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 2,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "物流危機",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 1,
+        "behavioral_trigger": "loss_aversion"
+      },
+      {
+        "keyword": "EC",
+        "category": "cooccurrence",
+        "importance": 0.3,
+        "frequency": 3,
+        "article_coverage": 1,
+        "phase": 1,
+        "behavioral_trigger": null
+      }
+    ],
+    "lsi_keywords": [
+      {
+        "keyword": "物流業界",
+        "category": "lsi",
+        "importance": 0.8,
+        "frequency": 25,
+        "article_coverage": 9
+      },
+      {
+        "keyword": "運送会社",
+        "category": "lsi",
+        "importance": 0.8,
+        "frequency": 20,
+        "article_coverage": 8
+      },
+      {
+        "keyword": "大型免許",
+        "category": "lsi",
+        "importance": 0.7,
+        "frequency": 15,
+        "article_coverage": 6
+      },
+      {
+        "keyword": "中型免許",
+        "category": "lsi",
+        "importance": 0.7,
+        "frequency": 12,
+        "article_coverage": 6
+      },
+      {
+        "keyword": "フォークリフト",
+        "category": "lsi",
+        "importance": 0.6,
+        "frequency": 10,
+        "article_coverage": 5
+      },
+      {
+        "keyword": "ルート配送",
+        "category": "lsi",
+        "importance": 0.6,
+        "frequency": 8,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "長距離",
+        "category": "lsi",
+        "importance": 0.6,
+        "frequency": 8,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "地場",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "手積み",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "手降ろし",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "カゴ台車",
+        "category": "lsi",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "パレット",
+        "category": "lsi",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "4tトラック",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "10tトラック",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "準中型免許",
+        "category": "lsi",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "社会保険完備",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "賞与",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "昇給",
+        "category": "lsi",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "退職金制度",
+        "category": "lsi",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "マイカー通勤",
+        "category": "lsi",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 3
+      }
+    ],
+    "related_keywords": [
+      {
+        "keyword": "採用サイト",
+        "category": "related",
+        "importance": 0.6,
+        "frequency": 8,
+        "article_coverage": 4
+      },
+      {
+        "keyword": "オウンドメディア",
+        "category": "related",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "採用マーケティング",
+        "category": "related",
+        "importance": 0.5,
+        "frequency": 5,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "採用ブランディング",
+        "category": "related",
+        "importance": 0.5,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "求人検索エンジン",
+        "category": "related",
+        "importance": 0.5,
+        "frequency": 6,
+        "article_coverage": 3
+      },
+      {
+        "keyword": "人材紹介",
+        "category": "related",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "派遣",
+        "category": "related",
+        "importance": 0.4,
+        "frequency": 4,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "スカウト",
+        "category": "related",
+        "importance": 0.4,
+        "frequency": 3,
+        "article_coverage": 2
+      },
+      {
+        "keyword": "リファラル採用",
+        "category": "related",
+        "importance": 0.4,
+        "frequency": 3,
+        "article_coverage": 1
+      },
+      {
+        "keyword": "アルゴリズム",
+        "category": "related",
+        "importance": 0.4,
+        "frequency": 3,
+        "article_coverage": 2
+      }
+    ],
+    "long_tail_variations": [
+      "トラックドライバー 求人 書き方 例文",
+      "ドライバー 求人 応募が来ない",
+      "運送業 求人 キャッチコピー",
+      "トラック運転手 募集 文言",
+      "Indeed ドライバー 求人 コツ",
+      "ドライバー採用 2024年問題",
+      "トラックドライバー 未経験 求人 書き方",
+      "運送会社 採用サイト 作り方",
+      "ドライバー 求人 ペルソナ設定",
+      "トラック運転手 求人 テンプレート"
+    ],
+    "keyword_categorization": {
+      "essential": [
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "仕事内容",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "運送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "Indeed",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "未経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "検索",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "掲載",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "休日",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "会社",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "アピール",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "具体的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "ターゲット",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "効果的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "大型",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "中型",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "時間",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "差別化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "改善",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "コツ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "配送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 10
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "条件",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "研修",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "実績",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "手当",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "不安",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "制度",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "獲得",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "活用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "専門",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        },
+        {
+          "keyword": "魅力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 7
+        },
+        {
+          "keyword": "代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 9
+        },
+        {
+          "keyword": "フォークリフト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 8
+        }
+      ],
+      "standard": [
+        {
+          "keyword": "職種名",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "福利厚生",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "写真",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "無料",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "事例",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "雰囲気",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "簡単",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "若手",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "残業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "解決",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "平均",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "安心",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "閲覧",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "見直し",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "相談",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "比較",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "定着",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "スマホ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "即戦力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "求人ボックス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "ハローワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "有効求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "長時間労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "大型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        },
+        {
+          "keyword": "ルート配送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 6
+        },
+        {
+          "keyword": "手積み",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "賞与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "昇給",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 5
+        },
+        {
+          "keyword": "採用サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 4
+        }
+      ],
+      "unique": [
+        {
+          "keyword": "2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "ペルソナ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "SEO",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "上位",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "クリック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "ダウンロード",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "テンプレート",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "コピペ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "キャッチコピー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "離職",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "動画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "視覚的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "心理的安全性",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "ATS",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "Googleしごと検索",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "スタンバイ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "働き方改革",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "ドラピタ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "ドラEVER",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "採用係長",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "エアワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "エンゲージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人間関係",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "低賃金",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "3K",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "ドライバー不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "物流危機",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "EC",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "物流業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "運送会社",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "長距離",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "地場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "手降ろし",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "カゴ台車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "パレット",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "4tトラック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "10tトラック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "準中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "社会保険完備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "退職金制度",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "マイカー通勤",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "オウンドメディア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "採用マーケティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用ブランディング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "求人検索エンジン",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "人材紹介",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "派遣",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 3
+        },
+        {
+          "keyword": "スカウト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 2
+        },
+        {
+          "keyword": "リファラル採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "アルゴリズム",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 1
+        },
+        {
+          "keyword": "トラックドライバー 求人 書き方 例文",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー 求人 応募が来ない",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送業 求人 キャッチコピー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラック運転手 募集 文言",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "Indeed ドライバー 求人 コツ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー採用 2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラックドライバー 未経験 求人 書き方",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送会社 採用サイト 作り方",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー 求人 ペルソナ設定",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラック運転手 求人 テンプレート",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": null,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ]
+    },
+    "three_phase_distribution": {
+      "phase1_keywords": [
+        {
+          "keyword": "2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "不安",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "課題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ミスマッチ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "離職",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー採用 2024年問題",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 1,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase2_keywords": [
+        {
+          "keyword": "採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "応募",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求職者",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "仕事内容",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "Indeed",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "給与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "未経験",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "職種名",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "検索",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "掲載",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "休日",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "待遇",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "会社",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "アピール",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "具体的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ターゲット",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ポイント",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "資格",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "福利厚生",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "効果的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "大型",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "中型",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "時間",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "環境",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "写真",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "差別化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "改善",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "事例",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "コツ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "配送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "条件",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "雰囲気",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ペルソナ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "理由",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "コスト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "研修",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "若手",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "高齢化",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "残業",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "手当",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "解決",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "イメージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "平均",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "SEO",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "上位",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "クリック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "制度",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "安心",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "獲得",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "活用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "専門",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "魅力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "確保",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "閲覧",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "見直し",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ダウンロード",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "代行",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "比較",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "テンプレート",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "コピペ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "キャッチコピー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "定着",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "スマホ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "動画",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "視覚的",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "即戦力",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "心理的安全性",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ATS",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "Googleしごと検索",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人ボックス",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "スタンバイ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ハローワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "有効求人倍率",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "働き方改革",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドラピタ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドラEVER",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用係長",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "エアワーク",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "エンゲージ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人間関係",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "長時間労働",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "低賃金",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "3K",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー不足",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "物流危機",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "EC",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "物流業界",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送会社",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "大型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "フォークリフト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ルート配送",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "長距離",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "地場",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "手積み",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "手降ろし",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "カゴ台車",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "パレット",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "4tトラック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "10tトラック",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "準中型免許",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "社会保険完備",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "賞与",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "昇給",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "退職金制度",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "マイカー通勤",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用サイト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "オウンドメディア",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用マーケティング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "採用ブランディング",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "求人検索エンジン",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "人材紹介",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "派遣",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "スカウト",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "リファラル採用",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "アルゴリズム",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラックドライバー 求人 書き方 例文",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー 求人 応募が来ない",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送業 求人 キャッチコピー",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラック運転手 募集 文言",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "Indeed ドライバー 求人 コツ",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラックドライバー 未経験 求人 書き方",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "運送会社 採用サイト 作り方",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "ドライバー 求人 ペルソナ設定",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "トラック運転手 求人 テンプレート",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 2,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ],
+      "phase3_keywords": [
+        {
+          "keyword": "無料",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "成功",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "簡単",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "実績",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        },
+        {
+          "keyword": "相談",
+          "category": "cooccurrence",
+          "importance": 0.5,
+          "frequency": 0,
+          "context": "",
+          "phase": 3,
+          "behavioral_trigger": null,
+          "article_coverage": 0
+        }
+      ]
+    },
+    "llmo_optimized_keywords": {
+      "question_format": [
+        "比較"
+      ],
+      "voice_search": []
+    },
+    "behavioral_economics_triggers": {
+      "loss_aversion": [
+        "コスト"
+      ],
+      "social_proof": [
+        "会社",
+        "条件",
+        "実績",
+        "求人ボックス",
+        "有効求人倍率",
+        "人間関係",
+        "運送会社",
+        "社会保険完備",
+        "求人検索エンジン",
+        "人材紹介",
+        "トラックドライバー 求人 書き方 例文",
+        "ドライバー 求人 応募が来ない",
+        "運送業 求人 キャッチコピー",
+        "Indeed ドライバー 求人 コツ",
+        "トラックドライバー 未経験 求人 書き方",
+        "運送会社 採用サイト 作り方",
+        "ドライバー 求人 ペルソナ設定",
+        "トラック運転手 求人 テンプレート"
+      ],
+      "authority": [
+        "資格"
+      ],
+      "consistency": [],
+      "liking": [],
+      "scarcity": []
+    },
+    "cta_keywords": {
+      "urgency": [],
+      "ease": [
+        "簡単",
+        "クリック"
+      ],
+      "free": [
+        "無料"
+      ],
+      "expertise": [
+        "未経験",
+        "実績",
+        "トラックドライバー 未経験 求人 書き方"
+      ]
+    },
+    "keyword_clusters": [
+      {
+        "theme": "求人票の構成要素",
+        "keywords": [
+          {
+            "keyword": "職種名"
+          },
+          {
+            "keyword": "仕事内容"
+          },
+          {
+            "keyword": "給与"
+          },
+          {
+            "keyword": "休日"
+          },
+          {
+            "keyword": "福利厚生"
+          }
+        ],
+        "relevance_to_main": 1.0,
+        "density_score": 0.9
+      },
+      {
+        "theme": "ターゲット・条件",
+        "keywords": [
+          {
+            "keyword": "未経験"
+          },
+          {
+            "keyword": "大型"
+          },
+          {
+            "keyword": "中型"
+          },
+          {
+            "keyword": "資格"
+          },
+          {
+            "keyword": "若手"
+          },
+          {
+            "keyword": "女性"
+          }
+        ],
+        "relevance_to_main": 0.9,
+        "density_score": 0.8
+      },
+      {
+        "theme": "媒体・プラットフォーム",
+        "keywords": [
+          {
+            "keyword": "Indeed"
+          },
+          {
+            "keyword": "求人ボックス"
+          },
+          {
+            "keyword": "スタンバイ"
+          },
+          {
+            "keyword": "Googleしごと検索"
+          },
+          {
+            "keyword": "ハローワーク"
+          }
+        ],
+        "relevance_to_main": 0.8,
+        "density_score": 0.7
+      },
+      {
+        "theme": "業界課題・背景",
+        "keywords": [
+          {
+            "keyword": "2024年問題"
+          },
+          {
+            "keyword": "人手不足"
+          },
+          {
+            "keyword": "高齢化"
+          },
+          {
+            "keyword": "有効求人倍率"
+          },
+          {
+            "keyword": "働き方改革"
+          }
+        ],
+        "relevance_to_main": 0.7,
+        "density_score": 0.6
+      }
+    ],
+    "competitor_keyword_gaps": [],
+    "recommendations": [
+      "Phase1で『2024年問題』と『コストの無駄（損失回避）』を強く結びつけ、従来の求人票の限界を指摘する。",
+      "Phase2では競合が弱い『心理的安全性』や『動画活用』を差別化ポイントとして提案し、具体的な書き方（Standard KW）と組み合わせる。",
+      "Phase3で『コピペOK』『無料テンプレート』などのEase（容易性）トリガーを用いて、即座のアクション（資料DLや問い合わせ）に誘導する。"
+    ],
+    "keyword_density_analysis": {
+      "main_keyword_density": 0.0,
+      "cooccurrence_densities": {}
+    }
+  },
+  "format_detected": "json",
+  "competitor_count": 10,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 8680,
+    "output": 11686
+  },
+  "metrics": {
+    "char_count": 32539,
+    "word_count": 2893
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": [
+      "insufficient_keyword_count",
+      "no_llmo_elements"
+    ],
+    "warnings": [
+      "lsi_count: 20 (target: 30)",
+      "related_count: 10 (target: 50)"
+    ]
+  },
+  "extraction_summary": {
+    "cooccurrence": 100,
+    "lsi": 20,
+    "related": 10,
+    "phase1": 6,
+    "phase2": 129,
+    "phase3": 5,
+    "question_format": 1,
+    "voice_search": 0,
+    "loss_aversion": 1,
+    "social_proof": 18,
+    "authority": 1,
+    "essential": 42,
+    "standard": 36,
+    "unique": 62,
+    "cta_total": 6,
+    "gaps": 0
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "step": "step5",
+  "keyword": "自動車整備士採用難しい",
+  "search_queries": [
+    "国土交通省 自動車整備要員の実態調査結果 最新",
+    "厚生労働省 職業別有効求人倍率 自動車整備士 推移",
+    "日本自動車整備振興会連合会 自動車整備白書 統計データ",
+    "自動車整備士 人手不足 将来予測 レポート",
+    "特定技能 自動車整備分野 受入状況 統計"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://www.jaspa.or.jp/Portals/0/resources/jaspahp/member/data/pdf/R06jittaityousa.pdf",
+      "title": "令和 6年度 自動車特定整備業実態調査結果の概要について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://bsrweb.jp/article/902053?srsltid=AfmBOoopcCVstNRUr79bd6OXXWBI31BVXQG76sc7ikcR9u6qEqeIgH6t",
+      "title": "令和6年度「自動車特定整備業実態調査結果」の概要を発表",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/content/001745226.pdf",
+      "title": "自動車整備事業場に従事する整備要員数と自動車整備士数",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jaspa.or.jp/member/data/whitepaper.html",
+      "title": "自動車特定整備業実態調査",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/content/001732866.pdf",
+      "title": "自動車整備士等の働きやすい・働きがいのある 職場づくりに ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://shigoto.mhlw.go.jp/User/Occupation/Detail/197",
+      "title": "自動車整備士 - 職業詳細 | 職業情報提供サイト（job tag）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://news.yahoo.co.jp/articles/448ebe0646915ff31071274c84e1a0550c0b1929",
+      "title": "自動車整備工、求人倍率5倍超え 人手不足深刻、安全懸念も",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.kyoto-np.co.jp/articles/-/1588316",
+      "title": "自動車整備工、求人倍率5倍超え",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://seibishi.me/blog/mechanic-husoku/",
+      "title": "自動車整備士は不足している？理由と現状について解説！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://news.at-s.com/article/1834878",
+      "title": "自動車整備工、求人倍率5倍超え 人手不足深刻、安全懸念も",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jaspa.or.jp/association/publication/book_thaku.html",
+      "title": "自動車整備白書（令和6年度版）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jaspa.or.jp/Portals/0/resources/jaspahp/member/data/pdf/R06jittaityousa.pdf",
+      "title": "令和 6年度 自動車特定整備業実態調査結果の概要について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.netdenjd.com/archives/604131",
+      "title": "連載「日整連『自動車整備白書』2024年版を読む」（1）売上高 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/koku/content/001729973.pdf",
+      "title": "自動車整備分野における人材確保に係る取組",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.aba-j.or.jp/info/industry/15046/",
+      "title": "日刊自連載「自動車整備の現在地 日整連の白書から」（上）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://carworkassist.com/column/69465.html",
+      "title": "【整備士の新しい常識】整備士不足のリアルと、近年の動向を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.nri.com/jp/media/column/scs_blog/20250530.html",
+      "title": "自動車整備業界における整備士不足問題",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.works-i.com/research/project/turningpoint/essential/detail005.html",
+      "title": "不足する自動車整備士、業務切り出しと生産性の可視化で働き ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://seibishi.me/blog/mechanic-genjou/",
+      "title": "自動車整備士の現状は？需要や将来性についても解説！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/jidosha/jidosha_SSW.html",
+      "title": "自動車整備分野における「特定技能」の受入れ",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://jsite.mhlw.go.jp/hokkaido-roudoukyoku/content/contents/002332498.pdf",
+      "title": "自動車整備分野における外国人材の受入",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jaspa.or.jp/mechanic/specific-skill/",
+      "title": "特定技能評価試験 Specified skills evaluation test",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mlit.go.jp/common/001294865.pdf",
+      "title": "自動車整備分野における外国人材の受入れ",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 23,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

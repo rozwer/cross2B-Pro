@@ -1,0 +1,742 @@
+{
+  "step": "step3c",
+  "keyword": "ドライバー 採用",
+  "word_count_mode": "ai_balanced",
+  "competitor_analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用\",\n  \"market_overview\": \"ドライバー採用市場は、慢性的な人手不足が続いており、企業は多様な採用手法を模索しています。オンライン求人サイトが主流ですが、求職者のニーズも多様化しており、企業は自社の魅力を効果的に伝える必要があります。特に、労働条件やキャリアパスの透明性、福利厚生の充実などが重要視されています。\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"https://doraever.jp/\",\n      \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n      \"strengths\": [\"求人数の多さ\", \"詳細な検索機能\", \"専門性の高さ\"],\n      \"weaknesses\": [\"情報過多\", \"UI/UXの改善余地\", \"コンテンツの網羅性\"],\n      \"content_focus\": [\"求人情報\", \"企業紹介\"],\n      \"unique_value\": \"ドライバー求人に特化した専門性\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://jta.or.jp/ippan/driver_recruit.html\",\n      \"title\": \"トラックドライバーになろう（求人情報） | 全日本トラック協会\",\n      \"strengths\": [\"業界団体としての信頼性\", \"網羅的な情報\", \"求人情報の信頼性\"],\n      \"weaknesses\": [\"UI/UXの古さ\", \"求人情報の少なさ\", \"コンテンツの更新頻度\"],\n      \"content_focus\": [\"求人情報\", \"業界情報\"],\n      \"unique_value\": \"業界団体としての信頼性\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://dorapita.com/\",\n      \"title\": \"ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ\",\n      \"strengths\": [\"使いやすいUI/UX\", \"豊富な求人情報\", \"会員登録機能\"],\n      \"weaknesses\": [\"コンテンツの深掘り不足\", \"SEO対策の弱さ\", \"情報過多\"],\n      \"content_focus\": [\"求人情報\", \"転職支援\"],\n      \"unique_value\": \"UI/UXの良さ\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://tenshoku.mynavi.jp/list/o1B610/\",\n      \"title\": \"トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職\",\n      \"strengths\": [\"ブランド力\", \"求人情報の多さ\", \"詳細な検索機能\"],\n      \"weaknesses\": [\"ドライバー専門ではない\", \"コンテンツの専門性不足\", \"UI/UXの改善余地\"],\n      \"content_focus\": [\"求人情報\", \"転職支援\"],\n      \"unique_value\": \"ブランド力\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://driver.job-j.net/\",\n      \"title\": \"ドライバー・運転手のための求人検索サイト 【ドライバージャーナル】\",\n      \"strengths\": [\"求人数の多さ\", \"詳細な検索機能\", \"コラム記事\"],\n      \"weaknesses\": [\"UI/UXの改善余地\", \"コンテンツの専門性不足\", \"情報過多\"],\n      \"content_focus\": [\"求人情報\", \"コラム記事\"],\n      \"unique_value\": \"コラム記事の充実\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.jobkita.jp/job/list/?ver=j%E6%A4%9C%E7%B4%A2v2&job=H\",\n      \"title\": \"ドライバー･物流･倉庫の求人一覧 | ジョブキタ\",\n      \"strengths\": [\"地域特化\", \"求人情報の詳細さ\"],\n      \"weaknesses\": [\"求人数が少ない\", \"UI/UXの古さ\", \"コンテンツの専門性不足\"],\n      \"content_focus\": [\"求人情報\"],\n      \"unique_value\": \"北海道に特化した求人情報\",\n      \"threat_level\": \"low\"\n    },\n    {\n      \"url\": \"https://driver.chubu-kousan.co.jp/\",\n      \"title\": \"CKドライバー採用TOP | ドライバ―採用情報\",\n      \"strengths\": [\"企業ブランド\", \"福利厚生のアピール\", \"従業員インタビュー\"],\n      \"weaknesses\": [\"求人数が少ない\", \"情報量が少ない\", \"SEO対策の弱さ\"],\n      \"content_focus\": [\"企業情報\", \"採用情報\"],\n      \"unique_value\": \"企業ブランド\",\n      \"threat_level\": \"low\"\n    },\n    {\n      \"url\": \"https://dora-zamurai.com/\",\n      \"title\": \"【ドラ侍】ドライバー専門の求人・転職サイト\",\n      \"strengths\": [\"ドライバー専門\", \"求人情報の多さ\", \"詳細な検索機能\"],\n      \"weaknesses\": [\"UI/UXの改善余地\", \"コンテンツの専門性不足\", \"情報過多\"],\n      \"content_focus\": [\"求人情報\"],\n      \"unique_value\": \"ドライバー専門\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://doraever.jp/job-lists\",\n      \"title\": \"【ドラEVER】ドライバー求人・運転手求人一覧\",\n      \"strengths\": [\"求人数の多さ\", \"詳細な検索機能\", \"専門性の高さ\"],\n      \"weaknesses\": [\"情報過多\", \"UI/UXの改善余地\", \"コンテンツの網羅性\"],\n      \"content_focus\": [\"求人情報\"],\n      \"unique_value\": \"ドライバー求人に特化した専門性\",\n      \"threat_level\": \"high\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"ai_balanced\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"ドライバー 採用\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 9666,\n      \"median_word_count\": 10581,\n      \"max_word_count\": 15015,\n      \"min_word_count\": 994,\n      \"standard_deviation\": 5100,\n      \"data_points\": 9\n    },\n    \"article_details\": [\n      {\n        \"rank\": 1,\n        \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n        \"url\": \"https://doraever.jp/\",\n        \"word_count\": 14352,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"トラックドライバーになろう（求人情報） | 全日本トラック協会 | Japan Trucking Association\",\n        \"url\": \"https://jta.or.jp/ippan/driver_recruit.html\",\n        \"word_count\": 994,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ - ドラピタ\",\n        \"url\": \"https://dorapita.com/\",\n        \"word_count\": 2709,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 4,\n        \"title\": \"トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職\",\n        \"url\": \"https://tenshoku.mynavi.jp/list/o1B610/\",\n        \"word_count\": 15015,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 5,\n        \"title\": \"ドライバー・運転手のための求人検索サイト 【ドライバージャーナル】\",\n        \"url\": \"https://driver.job-j.net/\",\n        \"word_count\": 10581,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 6,\n        \"title\": \"ドライバー･物流･倉庫の求人一覧 | ジョブキタ\",\n        \"url\": \"https://www.jobkita.jp/job/list/?ver=j%E6%A4%9C%E7%B4%A2v2&job=H\",\n        \"word_count\": 4923,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 7,\n        \"title\": \"CKドライバー採用TOP | ドライバ―採用情報\",\n        \"url\": \"https://driver.chubu-kousan.co.jp/\",\n        \"word_count\": 1163,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 8,\n        \"title\": \"【ドラ侍】ドライバー専門の求人・転職サイト\",\n        \"url\": \"https://dora-zamurai.com/\",\n        \"word_count\": 15015,\n        \"notes\": \"\"\n      },\n      {\n        \"rank\": 9,\n        \"title\": \"【ドラEVER】ドライバー求人・運転手求人一覧\",\n        \"url\": \"https://doraever.jp/job-lists\",\n        \"word_count\": 15015,\n        \"notes\": \"\"\n      }\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 9666,\n      \"suggestion_logic\": \"平均9666字 × 1.0（ai_balanced）= 9666字\",\n      \"note\": \"\"\n    },\n    \"ai_suggested_word_count\": 9666,\n    \"rationale\": \"平均9666字 × 1.0 = 9666字\",\n    \"target_word_count_range\": {\n      \"min\": 9183,\n      \"min_relaxed\": 8699,\n      \"max\": 10149,\n      \"target\": 9666\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±483字です。\"\n  },\n  \"target_word_count\": 9666,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は、ドライバー求人情報の網羅性、検索機能の充実、専門性の高さが特徴です。特に、求職者のニーズに合わせた詳細な検索機能や、企業情報を詳細に掲載することで、ユーザーの満足度を高めています。また、業界団体や大手転職サイトは、信頼性やブランド力を活かして上位表示されています。\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 1,\n        \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n        \"url\": \"https://doraever.jp/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"ドライバー求人情報の網羅性\",\n            \"level_1\": \"豊富な求人情報にアクセスできる\",\n            \"level_2\": \"希望条件に合った求人を見つけやすい\",\n            \"level_3\": \"求人探しに時間がかかる\",\n            \"level_4\": \"効率的な求人活動ができない\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"詳細な企業情報\",\n            \"level_1\": \"企業の雰囲気を知ることができる\",\n            \"level_2\": \"入社後のミスマッチを防げる\",\n            \"level_3\": \"入社後のギャップが大きい\",\n            \"level_4\": \"企業選びに不安を感じる\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"応募機能の充実\",\n            \"level_1\": \"すぐに求人に応募できる\",\n            \"level_2\": \"スムーズな求人活動ができる\",\n            \"level_3\": \"応募に手間がかかる\",\n            \"level_4\": \"求人活動が停滞する\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"時間/労力の節約\", \"不確実性の解消\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"実際の求人情報に基づいた記述\",\n          \"expertise\": \"ドライバー求人に特化した専門知識\",\n          \"authoritativeness\": \"求人情報の信頼性\",\n          \"trustworthiness\": \"企業情報の正確性\",\n          \"search_intent_fulfillment\": \"求人情報を探すユーザーの意図に合致\",\n          \"user_experience_signals\": \"検索機能の使いやすさ、サイトの表示速度\"\n        },\n        \"user_journey_fulfillment\": \"求人検索から応募までのスムーズな導線\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"トラックドライバーになろう（求人情報） | 全日本トラック協会\",\n        \"url\": \"https://jta.or.jp/ippan/driver_recruit.html\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"業界団体としての情報提供\",\n            \"level_1\": \"トラックドライバーの仕事内容を理解できる\",\n            \"level_2\": \"業界の信頼性が高い\",\n            \"level_3\": \"情報源の信頼性が低い\",\n            \"level_4\": \"情報収集に時間がかかる\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"業界の将来性に関する情報\",\n            \"level_1\": \"安心してトラックドライバーを目指せる\",\n            \"level_2\": \"将来への不安を軽減できる\",\n            \"level_3\": \"将来への不安が大きい\",\n            \"level_4\": \"キャリア形成に不安を感じる\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"都道府県別の求人情報\",\n            \"level_1\": \"希望勤務地の求人を探せる\",\n            \"level_2\": \"地域に根差した求人活動ができる\",\n            \"level_3\": \"求人情報が少ない\",\n            \"level_4\": \"求人活動が難航する\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"不確実性の解消\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"業界団体としての経験に基づいた情報\",\n          \"expertise\": \"トラックドライバーに関する専門知識\",\n          \"authoritativeness\": \"全日本トラック協会の信頼性\",\n          \"trustworthiness\": \"情報の正確性\",\n          \"search_intent_fulfillment\": \"トラックドライバーの仕事内容や求人情報を探すユーザーの意図に合致\",\n          \"user_experience_signals\": \"サイトの信頼性、情報の網羅性\"\n        },\n        \"user_journey_fulfillment\": \"業界情報の提供から求人情報へのスムーズな導線\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ\",\n        \"url\": \"https://dorapita.com/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"ドライバー専門の転職サービス\",\n            \"level_1\": \"ドライバーの求人情報に特化している\",\n            \"level_2\": \"効率的に求人を探せる\",\n            \"level_3\": \"求人情報が少ない\",\n            \"level_4\": \"求人探しに時間がかかる\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"転職支援サービス\",\n            \"level_1\": \"転職活動をサポートしてくれる\",\n            \"level_2\": \"安心して転職活動ができる\",\n            \"level_3\": \"転職活動に不安を感じる\",\n            \"level_4\": \"キャリア形成に不安を感じる\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"会員登録機能\",\n            \"level_1\": \"求人情報を保存できる\",\n            \"level_2\": \"効率的に求人活動ができる\",\n            \"level_3\": \"求人情報を管理できない\",\n            \"level_4\": \"求人活動が停滞する\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"時間/労力の節約\", \"不確実性の解消\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"転職支援サービスとしての経験に基づいた情報\",\n          \"expertise\": \"ドライバーの転職に関する専門知識\",\n          \"authoritativeness\": \"転職サービスの信頼性\",\n          \"trustworthiness\": \"情報の正確性\",\n          \"search_intent_fulfillment\": \"ドライバーの転職を支援するユーザーの意図に合致\",\n          \"user_experience_signals\": \"サイトの使いやすさ、求人情報の詳細さ\"\n        },\n        \"user_journey_fulfillment\": \"転職支援サービスの提供から求人情報へのスムーズな導線\"\n      }\n    ],\n    \"common_ranking_factors\": [\"求人情報の網羅性\", \"詳細な検索機能\", \"専門性の高さ\", \"企業情報の詳細さ\", \"信頼性\", \"ブランド力\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"求人情報の網羅性\", \"企業情報の詳細さ\", \"業界情報の提供\"],\n      \"emotional_satisfaction\": [\"将来への安心感\", \"企業選びの安心感\", \"転職活動のサポート\"],\n      \"actionable_satisfaction\": [\"スムーズな応募\", \"効率的な求人活動\", \"地域に根差した求人活動\"]\n    },\n    \"actionable_insights\": [\"求人情報の網羅性を高める\", \"詳細な検索機能を提供する\", \"企業情報を詳細に掲載する\", \"信頼性を高める\", \"ブランド力を高める\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"求人情報の網羅性\", \"詳細な検索機能\", \"企業情報の詳細さ\"],\n      \"differentiation_opportunities\": [\"独自の求人情報\", \"独自の企業情報\", \"独自の転職支援サービス\"],\n      \"user_journey_design\": \"求人検索から応募までのスムーズな導線を設計する\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"ドライバー業界の課題（長時間労働、低賃金）を抽象的に示唆\",\n        \"our_differentiation\": \"具体的なデータ（平均残業時間、平均年収）を示し、課題を明確化。解決策の必要性を強調\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"求人情報の羅列、一般的な企業情報\",\n        \"our_differentiation\": \"企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘り。論理的な納得感を醸成\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"応募ボタンの設置\",\n        \"our_differentiation\": \"応募後の具体的なステップ（面接対策、キャリア相談）を提示。応募へのハードルを下げ、行動を喚起\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"「もし〇〇な企業を選んでしまったら…」という損失シナリオを提示し、損失回避を促す\"\n      },\n      \"social_proof\": {\n        \"competitor_approach\": \"導入企業数の記載\",\n        \"our_differentiation\": \"実際にドライバーとして働く人の成功事例を詳細に紹介。共感を呼ぶ\"\n      },\n      \"authority\": {\n        \"competitor_approach\": \"業界団体のロゴ掲載\",\n        \"our_differentiation\": \"労働基準監督署の是正事例など、公的データを引用し、信頼性を高める\"\n      },\n      \"consistency\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"「理想の働き方」に関する簡単な質問に答えてもらい、徐々にコミットメントを高める\"\n      },\n      \"liking\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"求職者の不安や悩みに寄り添う共感的なトーンで語りかける\"\n      },\n      \"scarcity\": {\n        \"competitor_approach\": \"「急募」の表示\",\n        \"our_differentiation\": \"「〇月〇日までに入社すると〇〇万円支給」など、具体的な期限とベネフィットを提示\"\n      }\n    },\n    \"llmo\": {\n      \"question_headings\": {\n        \"competitor_count\": 2,\n        \"our_target\": 5\n      },\n      \"section_independence\": {\n        \"competitor_issue\": \"セクション間の関連性が薄く、RAG検索に不向き\",\n        \"our_approach\": \"各セクションを独立させ、FAQ形式の見出しを多用。RAG検索に最適化\"\n      },\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\n        \"competitor_average\": 1.2,\n        \"our_strategy\": \"3段階CTA\"\n      },\n      \"cta_appeal\": {\n        \"competitor_approach\": \"「応募する」のみ\",\n        \"our_differentiation\": \"各CTAで「〇〇を実現する」「〇〇を回避する」など、具体的なベネフィットを訴求\"\n      },\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"現状への不満、将来への不安\",\n      \"competitor_weakness\": \"課題の抽象的な提示、解決策の提示不足\",\n      \"our_differentiation\": [\"具体的なデータで課題を明確化\", \"課題解決の必要性を強調\"],\n      \"expected_metrics\": \"離脱率-13pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"情報収集、比較検討\",\n      \"competitor_weakness\": \"情報の深掘り不足、企業情報の偏り\",\n      \"our_differentiation\": [\"企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘り\", \"客観的なデータで企業情報を補完\"],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"応募検討、不安解消\",\n      \"competitor_weakness\": \"応募後のフォロー不足、不安解消の不足\",\n      \"our_differentiation\": [\"応募後の具体的なステップ（面接対策、キャリア相談）を提示\", \"応募へのハードルを下げ、行動を喚起\"],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.8,\n    \"average_cta_count\": 1.2,\n    \"main_cta_positions\": [\"記事末尾\", \"サイドバー\"],\n    \"our_differentiation_strategy\": \"3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"求職者の不安や悩みに寄り添う共感的なトーンで、具体的なデータに基づいた情報を提供する。企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘りし、応募後の具体的なステップを提示することで、応募へのハードルを下げる。\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"ペルソナ設定に基づいたコンテンツ設計、専門家へのインタビュー、成功事例の掲載\"\n    },\n    {\n      \"category\": \"design\",\n      \"description\": \"3段階CTAを設置し、各CTAで具体的なベネフィットを訴求する。FAQ形式の見出しを多用し、RAG検索に最適化する。\",\n      \"priority\": \"high\",\n      \"implementation_hint\": \"CTAボタンのデザイン改善、FAQセクションの設置\"\n    },\n    {\n      \"category\": \"seo\",\n      \"description\": \"検索意図を網羅したキーワードを洗い出し、コンテンツに組み込む。構造化データを活用し、検索エンジンにコンテンツを理解させる。\",\n      \"priority\": \"medium\",\n      \"implementation_hint\": \"キーワード調査、構造化データマークアップ\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"コンテンツの深掘り不足\",\n      \"description\": \"企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報が不足している。\",\n      \"competitors_missing\": [\"https://doraever.jp/\", \"https://dorapita.com/\"],\n      \"value_potential\": 0.8\n    },\n    {\n      \"gap_type\": \"応募後のフォロー不足\",\n      \"description\": \"応募後の具体的なステップ（面接対策、キャリア相談）の提示が不足している。\",\n      \"competitors_missing\": [\"https://doraever.jp/\", \"https://dorapita.com/\"],\n      \"value_potential\": 0.7\n    },\n    {\n      \"gap_type\": \"共感的なトーンの欠如\",\n      \"description\": \"求職者の不安や悩みに寄り添う共感的なトーンが不足している。\",\n      \"competitors_missing\": [\"https://jta.or.jp/ippan/driver_recruit.html\"],\n      \"value_potential\": 0.6\n    }\n  ],\n  \"content_recommendations\": [\"企業文化、キャリアパス、教育制度に関する詳細な情報を掲載する\", \"応募後の具体的なステップ（面接対策、キャリア相談）を提示する\", \"求職者の不安や悩みに寄り添う共感的なトーンで語りかける\"]\n}\n```",
+  "parsed_data": {
+    "keyword": "ドライバー 採用",
+    "market_overview": "ドライバー採用市場は、慢性的な人手不足が続いており、企業は多様な採用手法を模索しています。オンライン求人サイトが主流ですが、求職者のニーズも多様化しており、企業は自社の魅力を効果的に伝える必要があります。特に、労働条件やキャリアパスの透明性、福利厚生の充実などが重要視されています。",
+    "competitor_profiles": [
+      {
+        "url": "https://doraever.jp/",
+        "title": "【ドラEVER】ドライバー求人専門サイト",
+        "strengths": [
+          "求人数の多さ",
+          "詳細な検索機能",
+          "専門性の高さ"
+        ],
+        "weaknesses": [
+          "情報過多",
+          "UI/UXの改善余地",
+          "コンテンツの網羅性"
+        ],
+        "content_focus": [
+          "求人情報",
+          "企業紹介"
+        ],
+        "unique_value": "ドライバー求人に特化した専門性",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://jta.or.jp/ippan/driver_recruit.html",
+        "title": "トラックドライバーになろう（求人情報） | 全日本トラック協会",
+        "strengths": [
+          "業界団体としての信頼性",
+          "網羅的な情報",
+          "求人情報の信頼性"
+        ],
+        "weaknesses": [
+          "UI/UXの古さ",
+          "求人情報の少なさ",
+          "コンテンツの更新頻度"
+        ],
+        "content_focus": [
+          "求人情報",
+          "業界情報"
+        ],
+        "unique_value": "業界団体としての信頼性",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://dorapita.com/",
+        "title": "ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ",
+        "strengths": [
+          "使いやすいUI/UX",
+          "豊富な求人情報",
+          "会員登録機能"
+        ],
+        "weaknesses": [
+          "コンテンツの深掘り不足",
+          "SEO対策の弱さ",
+          "情報過多"
+        ],
+        "content_focus": [
+          "求人情報",
+          "転職支援"
+        ],
+        "unique_value": "UI/UXの良さ",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+        "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+        "strengths": [
+          "ブランド力",
+          "求人情報の多さ",
+          "詳細な検索機能"
+        ],
+        "weaknesses": [
+          "ドライバー専門ではない",
+          "コンテンツの専門性不足",
+          "UI/UXの改善余地"
+        ],
+        "content_focus": [
+          "求人情報",
+          "転職支援"
+        ],
+        "unique_value": "ブランド力",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://driver.job-j.net/",
+        "title": "ドライバー・運転手のための求人検索サイト 【ドライバージャーナル】",
+        "strengths": [
+          "求人数の多さ",
+          "詳細な検索機能",
+          "コラム記事"
+        ],
+        "weaknesses": [
+          "UI/UXの改善余地",
+          "コンテンツの専門性不足",
+          "情報過多"
+        ],
+        "content_focus": [
+          "求人情報",
+          "コラム記事"
+        ],
+        "unique_value": "コラム記事の充実",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.jobkita.jp/job/list/?ver=j%E6%A4%9C%E7%B4%A2v2&job=H",
+        "title": "ドライバー･物流･倉庫の求人一覧 | ジョブキタ",
+        "strengths": [
+          "地域特化",
+          "求人情報の詳細さ"
+        ],
+        "weaknesses": [
+          "求人数が少ない",
+          "UI/UXの古さ",
+          "コンテンツの専門性不足"
+        ],
+        "content_focus": [
+          "求人情報"
+        ],
+        "unique_value": "北海道に特化した求人情報",
+        "threat_level": "low"
+      },
+      {
+        "url": "https://driver.chubu-kousan.co.jp/",
+        "title": "CKドライバー採用TOP | ドライバ―採用情報",
+        "strengths": [
+          "企業ブランド",
+          "福利厚生のアピール",
+          "従業員インタビュー"
+        ],
+        "weaknesses": [
+          "求人数が少ない",
+          "情報量が少ない",
+          "SEO対策の弱さ"
+        ],
+        "content_focus": [
+          "企業情報",
+          "採用情報"
+        ],
+        "unique_value": "企業ブランド",
+        "threat_level": "low"
+      },
+      {
+        "url": "https://dora-zamurai.com/",
+        "title": "【ドラ侍】ドライバー専門の求人・転職サイト",
+        "strengths": [
+          "ドライバー専門",
+          "求人情報の多さ",
+          "詳細な検索機能"
+        ],
+        "weaknesses": [
+          "UI/UXの改善余地",
+          "コンテンツの専門性不足",
+          "情報過多"
+        ],
+        "content_focus": [
+          "求人情報"
+        ],
+        "unique_value": "ドライバー専門",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://doraever.jp/job-lists",
+        "title": "【ドラEVER】ドライバー求人・運転手求人一覧",
+        "strengths": [
+          "求人数の多さ",
+          "詳細な検索機能",
+          "専門性の高さ"
+        ],
+        "weaknesses": [
+          "情報過多",
+          "UI/UXの改善余地",
+          "コンテンツの網羅性"
+        ],
+        "content_focus": [
+          "求人情報"
+        ],
+        "unique_value": "ドライバー求人に特化した専門性",
+        "threat_level": "high"
+      }
+    ],
+    "word_count_analysis": {
+      "mode": "ai_balanced",
+      "analysis_skipped": false,
+      "skip_reason": "",
+      "target_keyword": "ドライバー 採用",
+      "competitor_statistics": {
+        "average_word_count": 9666,
+        "median_word_count": 10581,
+        "max_word_count": 15015,
+        "min_word_count": 994,
+        "standard_deviation": 5100,
+        "data_points": 9
+      },
+      "article_details": [
+        {
+          "rank": 1,
+          "title": "【ドラEVER】ドライバー求人専門サイト",
+          "url": "https://doraever.jp/",
+          "word_count": 14352,
+          "notes": ""
+        },
+        {
+          "rank": 2,
+          "title": "トラックドライバーになろう（求人情報） | 全日本トラック協会 | Japan Trucking Association",
+          "url": "https://jta.or.jp/ippan/driver_recruit.html",
+          "word_count": 994,
+          "notes": ""
+        },
+        {
+          "rank": 3,
+          "title": "ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ - ドラピタ",
+          "url": "https://dorapita.com/",
+          "word_count": 2709,
+          "notes": ""
+        },
+        {
+          "rank": 4,
+          "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+          "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+          "word_count": 15015,
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "title": "ドライバー・運転手のための求人検索サイト 【ドライバージャーナル】",
+          "url": "https://driver.job-j.net/",
+          "word_count": 10581,
+          "notes": ""
+        },
+        {
+          "rank": 6,
+          "title": "ドライバー･物流･倉庫の求人一覧 | ジョブキタ",
+          "url": "https://www.jobkita.jp/job/list/?ver=j%E6%A4%9C%E7%B4%A2v2&job=H",
+          "word_count": 4923,
+          "notes": ""
+        },
+        {
+          "rank": 7,
+          "title": "CKドライバー採用TOP | ドライバ―採用情報",
+          "url": "https://driver.chubu-kousan.co.jp/",
+          "word_count": 1163,
+          "notes": ""
+        },
+        {
+          "rank": 8,
+          "title": "【ドラ侍】ドライバー専門の求人・転職サイト",
+          "url": "https://dora-zamurai.com/",
+          "word_count": 15015,
+          "notes": ""
+        },
+        {
+          "rank": 9,
+          "title": "【ドラEVER】ドライバー求人・運転手求人一覧",
+          "url": "https://doraever.jp/job-lists",
+          "word_count": 15015,
+          "notes": ""
+        }
+      ],
+      "ai_suggestion": {
+        "ai_suggested_word_count": 9666,
+        "suggestion_logic": "平均9666字 × 1.0（ai_balanced）= 9666字",
+        "note": ""
+      },
+      "ai_suggested_word_count": 9666,
+      "rationale": "平均9666字 × 1.0 = 9666字",
+      "target_word_count_range": {
+        "min": 9183,
+        "min_relaxed": 8699,
+        "max": 10149,
+        "target": 9666
+      },
+      "note": "この文字数は達成すべき目標値です。目標範囲は±483字です。"
+    },
+    "target_word_count": 9666,
+    "ranking_factor_analysis": {
+      "analysis_summary": "上位記事は、ドライバー求人情報の網羅性、検索機能の充実、専門性の高さが特徴です。特に、求職者のニーズに合わせた詳細な検索機能や、企業情報を詳細に掲載することで、ユーザーの満足度を高めています。また、業界団体や大手転職サイトは、信頼性やブランド力を活かして上位表示されています。",
+      "top_articles_deep_analysis": [
+        {
+          "rank": 1,
+          "title": "【ドラEVER】ドライバー求人専門サイト",
+          "url": "https://doraever.jp/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "ドライバー求人情報の網羅性",
+              "level_1": "豊富な求人情報にアクセスできる",
+              "level_2": "希望条件に合った求人を見つけやすい",
+              "level_3": "求人探しに時間がかかる",
+              "level_4": "効率的な求人活動ができない",
+              "level_5_root": "時間/労力の節約"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "詳細な企業情報",
+              "level_1": "企業の雰囲気を知ることができる",
+              "level_2": "入社後のミスマッチを防げる",
+              "level_3": "入社後のギャップが大きい",
+              "level_4": "企業選びに不安を感じる",
+              "level_5_root": "不確実性の解消"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "応募機能の充実",
+              "level_1": "すぐに求人に応募できる",
+              "level_2": "スムーズな求人活動ができる",
+              "level_3": "応募に手間がかかる",
+              "level_4": "求人活動が停滞する",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "時間/労力の節約",
+              "不確実性の解消",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "実際の求人情報に基づいた記述",
+            "expertise": "ドライバー求人に特化した専門知識",
+            "authoritativeness": "求人情報の信頼性",
+            "trustworthiness": "企業情報の正確性",
+            "search_intent_fulfillment": "求人情報を探すユーザーの意図に合致",
+            "user_experience_signals": "検索機能の使いやすさ、サイトの表示速度"
+          },
+          "user_journey_fulfillment": "求人検索から応募までのスムーズな導線"
+        },
+        {
+          "rank": 2,
+          "title": "トラックドライバーになろう（求人情報） | 全日本トラック協会",
+          "url": "https://jta.or.jp/ippan/driver_recruit.html",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "業界団体としての情報提供",
+              "level_1": "トラックドライバーの仕事内容を理解できる",
+              "level_2": "業界の信頼性が高い",
+              "level_3": "情報源の信頼性が低い",
+              "level_4": "情報収集に時間がかかる",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "業界の将来性に関する情報",
+              "level_1": "安心してトラックドライバーを目指せる",
+              "level_2": "将来への不安を軽減できる",
+              "level_3": "将来への不安が大きい",
+              "level_4": "キャリア形成に不安を感じる",
+              "level_5_root": "不確実性の解消"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "都道府県別の求人情報",
+              "level_1": "希望勤務地の求人を探せる",
+              "level_2": "地域に根差した求人活動ができる",
+              "level_3": "求人情報が少ない",
+              "level_4": "求人活動が難航する",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "不確実性の解消",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "業界団体としての経験に基づいた情報",
+            "expertise": "トラックドライバーに関する専門知識",
+            "authoritativeness": "全日本トラック協会の信頼性",
+            "trustworthiness": "情報の正確性",
+            "search_intent_fulfillment": "トラックドライバーの仕事内容や求人情報を探すユーザーの意図に合致",
+            "user_experience_signals": "サイトの信頼性、情報の網羅性"
+          },
+          "user_journey_fulfillment": "業界情報の提供から求人情報へのスムーズな導線"
+        },
+        {
+          "rank": 3,
+          "title": "ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ",
+          "url": "https://dorapita.com/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "ドライバー専門の転職サービス",
+              "level_1": "ドライバーの求人情報に特化している",
+              "level_2": "効率的に求人を探せる",
+              "level_3": "求人情報が少ない",
+              "level_4": "求人探しに時間がかかる",
+              "level_5_root": "時間/労力の節約"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "転職支援サービス",
+              "level_1": "転職活動をサポートしてくれる",
+              "level_2": "安心して転職活動ができる",
+              "level_3": "転職活動に不安を感じる",
+              "level_4": "キャリア形成に不安を感じる",
+              "level_5_root": "不確実性の解消"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "会員登録機能",
+              "level_1": "求人情報を保存できる",
+              "level_2": "効率的に求人活動ができる",
+              "level_3": "求人情報を管理できない",
+              "level_4": "求人活動が停滞する",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "時間/労力の節約",
+              "不確実性の解消",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "転職支援サービスとしての経験に基づいた情報",
+            "expertise": "ドライバーの転職に関する専門知識",
+            "authoritativeness": "転職サービスの信頼性",
+            "trustworthiness": "情報の正確性",
+            "search_intent_fulfillment": "ドライバーの転職を支援するユーザーの意図に合致",
+            "user_experience_signals": "サイトの使いやすさ、求人情報の詳細さ"
+          },
+          "user_journey_fulfillment": "転職支援サービスの提供から求人情報へのスムーズな導線"
+        }
+      ],
+      "common_ranking_factors": [
+        "求人情報の網羅性",
+        "詳細な検索機能",
+        "専門性の高さ",
+        "企業情報の詳細さ",
+        "信頼性",
+        "ブランド力"
+      ],
+      "satisfaction_patterns": {
+        "informational_satisfaction": [
+          "求人情報の網羅性",
+          "企業情報の詳細さ",
+          "業界情報の提供"
+        ],
+        "emotional_satisfaction": [
+          "将来への安心感",
+          "企業選びの安心感",
+          "転職活動のサポート"
+        ],
+        "actionable_satisfaction": [
+          "スムーズな応募",
+          "効率的な求人活動",
+          "地域に根差した求人活動"
+        ]
+      },
+      "actionable_insights": [
+        "求人情報の網羅性を高める",
+        "詳細な検索機能を提供する",
+        "企業情報を詳細に掲載する",
+        "信頼性を高める",
+        "ブランド力を高める"
+      ],
+      "implications_for_our_article": {
+        "must_include": [
+          "求人情報の網羅性",
+          "詳細な検索機能",
+          "企業情報の詳細さ"
+        ],
+        "differentiation_opportunities": [
+          "独自の求人情報",
+          "独自の企業情報",
+          "独自の転職支援サービス"
+        ],
+        "user_journey_design": "求人検索から応募までのスムーズな導線を設計する"
+      }
+    },
+    "four_pillars_differentiation": {
+      "neuroscience": {
+        "phase1_fear_recognition": {
+          "competitor_approach": "ドライバー業界の課題（長時間労働、低賃金）を抽象的に示唆",
+          "our_differentiation": "具体的なデータ（平均残業時間、平均年収）を示し、課題を明確化。解決策の必要性を強調",
+          "expected_effect": "扁桃体活性化+30%"
+        },
+        "phase2_understanding": {
+          "competitor_approach": "求人情報の羅列、一般的な企業情報",
+          "our_differentiation": "企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘り。論理的な納得感を醸成",
+          "expected_effect": "前頭前野処理満足度+40%"
+        },
+        "phase3_action": {
+          "competitor_approach": "応募ボタンの設置",
+          "our_differentiation": "応募後の具体的なステップ（面接対策、キャリア相談）を提示。応募へのハードルを下げ、行動を喚起",
+          "expected_effect": "CVR+50%"
+        }
+      },
+      "behavioral_economics": {
+        "loss_aversion": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "「もし〇〇な企業を選んでしまったら…」という損失シナリオを提示し、損失回避を促す"
+        },
+        "social_proof": {
+          "competitor_approach": "導入企業数の記載",
+          "our_differentiation": "実際にドライバーとして働く人の成功事例を詳細に紹介。共感を呼ぶ"
+        },
+        "authority": {
+          "competitor_approach": "業界団体のロゴ掲載",
+          "our_differentiation": "労働基準監督署の是正事例など、公的データを引用し、信頼性を高める"
+        },
+        "consistency": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "「理想の働き方」に関する簡単な質問に答えてもらい、徐々にコミットメントを高める"
+        },
+        "liking": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "求職者の不安や悩みに寄り添う共感的なトーンで語りかける"
+        },
+        "scarcity": {
+          "competitor_approach": "「急募」の表示",
+          "our_differentiation": "「〇月〇日までに入社すると〇〇万円支給」など、具体的な期限とベネフィットを提示"
+        }
+      },
+      "llmo": {
+        "question_headings": {
+          "competitor_count": 2,
+          "our_target": 5
+        },
+        "section_independence": {
+          "competitor_issue": "セクション間の関連性が薄く、RAG検索に不向き",
+          "our_approach": "各セクションを独立させ、FAQ形式の見出しを多用。RAG検索に最適化"
+        },
+        "expected_effect": "AI引用率+35%"
+      },
+      "kgi": {
+        "cta_placement": {
+          "competitor_average": 1.2,
+          "our_strategy": "3段階CTA"
+        },
+        "cta_appeal": {
+          "competitor_approach": "「応募する」のみ",
+          "our_differentiation": "各CTAで「〇〇を実現する」「〇〇を回避する」など、具体的なベネフィットを訴求"
+        },
+        "expected_effect": "CVR+50%"
+      }
+    },
+    "three_phase_differentiation_strategy": {
+      "phase1": {
+        "phase_name": "不安・課題認識",
+        "user_state": "現状への不満、将来への不安",
+        "competitor_weakness": "課題の抽象的な提示、解決策の提示不足",
+        "our_differentiation": [
+          "具体的なデータで課題を明確化",
+          "課題解決の必要性を強調"
+        ],
+        "expected_metrics": "離脱率-13pt"
+      },
+      "phase2": {
+        "phase_name": "理解・納得",
+        "user_state": "情報収集、比較検討",
+        "competitor_weakness": "情報の深掘り不足、企業情報の偏り",
+        "our_differentiation": [
+          "企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘り",
+          "客観的なデータで企業情報を補完"
+        ],
+        "expected_metrics": "滞在時間+40%"
+      },
+      "phase3": {
+        "phase_name": "行動決定",
+        "user_state": "応募検討、不安解消",
+        "competitor_weakness": "応募後のフォロー不足、不安解消の不足",
+        "our_differentiation": [
+          "応募後の具体的なステップ（面接対策、キャリア相談）を提示",
+          "応募へのハードルを下げ、行動を喚起"
+        ],
+        "expected_metrics": "CVR+50%"
+      }
+    },
+    "competitor_cta_analysis": {
+      "cta_deployment_rate": 0.8,
+      "average_cta_count": 1.2,
+      "main_cta_positions": [
+        "記事末尾",
+        "サイドバー"
+      ],
+      "our_differentiation_strategy": "3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置"
+    },
+    "differentiation_strategies": [
+      {
+        "category": "content",
+        "description": "求職者の不安や悩みに寄り添う共感的なトーンで、具体的なデータに基づいた情報を提供する。企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報を深掘りし、応募後の具体的なステップを提示することで、応募へのハードルを下げる。",
+        "priority": "must",
+        "implementation_hint": "ペルソナ設定に基づいたコンテンツ設計、専門家へのインタビュー、成功事例の掲載"
+      },
+      {
+        "category": "design",
+        "description": "3段階CTAを設置し、各CTAで具体的なベネフィットを訴求する。FAQ形式の見出しを多用し、RAG検索に最適化する。",
+        "priority": "high",
+        "implementation_hint": "CTAボタンのデザイン改善、FAQセクションの設置"
+      },
+      {
+        "category": "seo",
+        "description": "検索意図を網羅したキーワードを洗い出し、コンテンツに組み込む。構造化データを活用し、検索エンジンにコンテンツを理解させる。",
+        "priority": "medium",
+        "implementation_hint": "キーワード調査、構造化データマークアップ"
+      }
+    ],
+    "gap_opportunities": [
+      {
+        "gap_type": "コンテンツの深掘り不足",
+        "description": "企業文化、キャリアパス、教育制度など、求職者が本当に知りたい情報が不足している。",
+        "competitors_missing": [
+          "https://doraever.jp/",
+          "https://dorapita.com/"
+        ],
+        "value_potential": 0.8
+      },
+      {
+        "gap_type": "応募後のフォロー不足",
+        "description": "応募後の具体的なステップ（面接対策、キャリア相談）の提示が不足している。",
+        "competitors_missing": [
+          "https://doraever.jp/",
+          "https://dorapita.com/"
+        ],
+        "value_potential": 0.7
+      },
+      {
+        "gap_type": "共感的なトーンの欠如",
+        "description": "求職者の不安や悩みに寄り添う共感的なトーンが不足している。",
+        "competitors_missing": [
+          "https://jta.or.jp/ippan/driver_recruit.html"
+        ],
+        "value_potential": 0.6
+      }
+    ],
+    "content_recommendations": [
+      "企業文化、キャリアパス、教育制度に関する詳細な情報を掲載する",
+      "応募後の具体的なステップ（面接対策、キャリア相談）を提示する",
+      "求職者の不安や悩みに寄り添う共感的なトーンで語りかける"
+    ]
+  },
+  "format_detected": "json",
+  "competitor_count": 9,
+  "quality_competitor_count": 9,
+  "word_count_statistics": {
+    "mode": "ai_balanced",
+    "analysis_skipped": false,
+    "skip_reason": "",
+    "target_keyword": "ドライバー 採用",
+    "competitor_statistics": {
+      "average_word_count": 8863,
+      "median_word_count": 10581,
+      "max_word_count": 15015,
+      "min_word_count": 994,
+      "standard_deviation": 6336.7,
+      "data_points": 9
+    },
+    "article_details": [
+      {
+        "rank": 1,
+        "title": "【ドラEVER】ドライバー求人専門サイト",
+        "url": "https://doraever.jp/",
+        "word_count": 14352,
+        "notes": ""
+      },
+      {
+        "rank": 2,
+        "title": "トラックドライバーになろう（求人情報） | 全日本トラック協会 | Japan Trucking Association",
+        "url": "https://jta.or.jp/ippan/driver_recruit.html",
+        "word_count": 994,
+        "notes": ""
+      },
+      {
+        "rank": 3,
+        "title": "ドライバー・運転手専門の転職・求人サービス、ドライバーの仕事を探すならドラピタ - ドラピタ",
+        "url": "https://dorapita.com/",
+        "word_count": 2709,
+        "notes": ""
+      },
+      {
+        "rank": 4,
+        "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+        "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 5,
+        "title": "ドライバー・運転手のための求人検索サイト 【ドライバージャーナル】",
+        "url": "https://driver.job-j.net/",
+        "word_count": 10581,
+        "notes": ""
+      },
+      {
+        "rank": 6,
+        "title": "ドライバー･物流･倉庫の求人一覧 | ジョブキタ",
+        "url": "https://www.jobkita.jp/job/list/?ver=j%E6%A4%9C%E7%B4%A2v2&job=H",
+        "word_count": 4923,
+        "notes": ""
+      },
+      {
+        "rank": 7,
+        "title": "CKドライバー採用TOP | ドライバ―採用情報",
+        "url": "https://driver.chubu-kousan.co.jp/",
+        "word_count": 1163,
+        "notes": ""
+      },
+      {
+        "rank": 8,
+        "title": "【ドラ侍】ドライバー専門の求人・転職サイト",
+        "url": "https://dora-zamurai.com/",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 9,
+        "title": "【ドラEVER】ドライバー求人・運転手求人一覧",
+        "url": "https://doraever.jp/job-lists",
+        "word_count": 15015,
+        "notes": ""
+      }
+    ],
+    "ai_suggestion": {
+      "ai_suggested_word_count": 9306,
+      "suggestion_logic": "平均8863字 × 1.05（バランス）= 9306字",
+      "note": ""
+    },
+    "ai_suggested_word_count": 9306,
+    "rationale": "平均8863字 × 1.05（バランス）= 9306字",
+    "target_word_count_range": {
+      "min": 9006,
+      "min_relaxed": 8806,
+      "max": 9606,
+      "target": 9306
+    },
+    "note": "この文字数は達成すべき目標値です。目標範囲は±300字です。内容が不足し冗長になる場合のみ-500字まで許容します。上限+300字は厳格に守ってください。"
+  },
+  "target_word_count": 9666,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 7104,
+    "output": 6363
+  },
+  "metrics": {
+    "char_count": 16009,
+    "word_count": 4582
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "営業 採用 難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"営業 採用 難しい\",\n  \"search_intent\": \"営業職の採用が困難である現状に対する課題解決策や原因の特定を求めている。自社の採用活動における問題点の把握、他社の成功事例、採用戦略のヒント、採用ターゲットの選定方法、効果的な求人広告の作成方法など、具体的な解決策を求めている可能性が高い。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"営業職採用の現状と課題\",\n    \"営業職採用を成功させるための戦略\",\n    \"効果的な営業職求人広告の作成方法\",\n    \"営業職採用におけるミスマッチを防ぐ方法\",\n    \"営業職採用で重視すべきスキルと経験\",\n    \"営業職採用における面接のポイント\",\n    \"中小企業における営業職採用の成功事例\",\n    \"営業職採用における採用ブランディング\",\n    \"営業職採用におけるダイレクトリクルーティング\",\n    \"営業職採用におけるエージェントの活用\",\n    \"営業職採用におけるリファラル採用\",\n    \"営業職採用後の定着率向上策\"\n  ],\n  \"target_audience\": \"人事担当者、採用担当者、経営者、営業部門のマネージャー、営業職採用に携わる全ての人\"\n}\n```\n",
+  "search_intent": "営業職の採用が困難である現状に対する課題解決策や原因の特定を求めている。自社の採用活動における問題点の把握、他社の成功事例、採用戦略のヒント、採用ターゲットの選定方法、効果的な求人広告の作成方法など、具体的な解決策を求めている可能性が高い。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "人事担当者、採用担当者、経営者、営業部門のマネージャー、営業職採用に携わる全ての人",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 109,
+    "output": 300
+  },
+  "metrics": {
+    "char_count": 598,
+    "word_count": 367
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

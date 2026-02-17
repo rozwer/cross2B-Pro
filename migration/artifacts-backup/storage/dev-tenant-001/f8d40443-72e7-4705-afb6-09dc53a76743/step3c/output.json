@@ -1,0 +1,652 @@
+{
+  "step": "step3c",
+  "keyword": "ドライバー 採用",
+  "word_count_mode": "ai_balanced",
+  "competitor_analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用\",\n  \"market_overview\": \"ドライバー採用市場は慢性的な人手不足が続いており、企業は様々な採用手法を模索しています。求人サイト、人材紹介、自社採用サイトなど、多様なチャネルが存在し、各社が独自の強みを打ち出しています。今後はAI技術を活用したマッチングや、働き方改革による労働環境改善が重要な要素となるでしょう。\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"https://doraever.jp/\",\n      \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n      \"strengths\": [\"求人情報の網羅性\", \"ドライバー専門\", \"豊富な検索機能\"],\n      \"weaknesses\": [\"情報過多\", \"コンテンツの深掘り不足\", \"UI/UX改善の余地\"],\n      \"content_focus\": [\"求人情報\", \"エリア別検索\", \"職種別検索\"],\n      \"unique_value\": \"ドライバー求人に特化した専門性\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://tenshoku.mynavi.jp/list/o1B610/\",\n      \"title\": \"トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職\",\n      \"strengths\": [\"大手転職サイトの信頼性\", \"幅広い求人情報\", \"詳細な企業情報\"],\n      \"weaknesses\": [\"ドライバー求人に特化していない\", \"求人情報の質にばらつき\", \"検索性の課題\"],\n      \"content_focus\": [\"求人情報\", \"転職ノウハウ\", \"企業情報\"],\n      \"unique_value\": \"大手転職サイトのブランド力と幅広い求人情報\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://www.toyotayusou.co.jp/recruit/\",\n      \"title\": \"採用情報｜トヨタ輸送株式会社\",\n      \"strengths\": [\"大手企業の安定性\", \"充実した福利厚生\", \"キャリアパスの明確さ\"],\n      \"weaknesses\": [\"求人情報の少なさ\", \"企業の魅力の発信不足\", \"応募ハードルの高さ\"],\n      \"content_focus\": [\"企業情報\", \"採用情報\", \"社員インタビュー\"],\n      \"unique_value\": \"トヨタグループのブランド力と安定性\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://xn--pckua2a7gp15o89zb.com/%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%E3%83%BC%E3%81%AE%E4%BB%95%E4%BA%8B-%E5%AE%AE%E5%9F%8E%E7%9C%8C\",\n      \"title\": \"ドライバーの仕事・求人 - 宮城県｜求人ボックス\",\n      \"strengths\": [\"求人情報の網羅性\", \"地域密着型\", \"検索性の高さ\"],\n      \"weaknesses\": [\"情報過多\", \"コンテンツの質にばらつき\", \"UI/UX改善の余地\"],\n      \"content_focus\": [\"求人情報\", \"地域別検索\", \"職種別検索\"],\n      \"unique_value\": \"地域に特化した求人情報\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://doraever.jp/search-area/osaka\",\n      \"title\": \"【ドラEVER】大阪府-ドライバー求人・運転手求人一覧\",\n      \"strengths\": [\"求人情報の網羅性\", \"ドライバー専門\", \"地域別検索\"],\n      \"weaknesses\": [\"情報過多\", \"コンテンツの深掘り不足\", \"UI/UX改善の余地\"],\n      \"content_focus\": [\"求人情報\", \"エリア別検索\", \"職種別検索\"],\n      \"unique_value\": \"ドライバー求人に特化した専門性と地域性\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.baitoru.com/chushikoku/jlist/ehime/matsuyamashi/driver/shain/\",\n      \"title\": \"松山市のドライバー・運転手の正社員・契約社員の求人・募集情報｜【バイトルNEXT】で転職・就職のための仕事探し\",\n      \"strengths\": [\"地域密着型\", \"正社員・契約社員に特化\", \"検索性の高さ\"],\n      \"weaknesses\": [\"ドライバー求人に特化していない\", \"求人情報の質にばらつき\", \"情報過多\"],\n      \"content_focus\": [\"求人情報\", \"地域別検索\", \"雇用形態別検索\"],\n      \"unique_value\": \"地域に根ざした正社員・契約社員の求人情報\",\n      \"threat_level\": \"low\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"ai_balanced\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"ドライバー 採用\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 11380,\n      \"median_word_count\": 15015,\n      \"max_word_count\": 15015,\n      \"min_word_count\": 768,\n      \"standard_deviation\": 5756,\n      \"data_points\": 6\n    },\n    \"article_details\": [\n      {\n        \"rank\": 1,\n        \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n        \"url\": \"https://doraever.jp/\",\n        \"word_count\": 14352,\n        \"notes\": \"求人情報一覧のため文字数が多い\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職\",\n        \"url\": \"https://tenshoku.mynavi.jp/list/o1B610/\",\n        \"word_count\": 15015,\n        \"notes\": \"求人情報一覧のため文字数が多い\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"採用情報｜トヨタ輸送株式会社\",\n        \"url\": \"https://www.toyotayusou.co.jp/recruit/\",\n        \"word_count\": 768,\n        \"notes\": \"企業採用ページのため文字数が少ない\"\n      },\n      {\n        \"rank\": 4,\n        \"title\": \"ドライバーの仕事・求人 - 宮城県｜求人ボックス\",\n        \"url\": \"https://xn--pckua2a7gp15o89zb.com/%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%E3%83%BC%E3%81%AE%E4%BB%95%E4%BA%8B-%E5%AE%AE%E5%9F%8E%E7%9C%8C\",\n        \"url\": null,\n        \"word_count\": 9880,\n        \"notes\": \"求人情報一覧のため文字数が多い\"\n      },\n      {\n        \"rank\": 5,\n        \"title\": \"【ドラEVER】大阪府-ドライバー求人・運転手求人一覧\",\n        \"url\": \"https://doraever.jp/search-area/osaka\",\n        \"word_count\": 15015,\n        \"notes\": \"求人情報一覧のため文字数が多い\"\n      },\n      {\n        \"rank\": 6,\n        \"title\": \"松山市のドライバー・運転手の正社員・契約社員の求人・募集情報｜【バイトルNEXT】で転職・就職のための仕事探し\",\n        \"url\": \"https://www.baitoru.com/chushikoku/jlist/ehime/matsuyamashi/driver/shain/\",\n        \"word_count\": 15015,\n        \"notes\": \"求人情報一覧のため文字数が多い\"\n      }\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 11949,\n      \"suggestion_logic\": \"平均11380字 × 1.05（ai_balanced）= 11949字\",\n      \"note\": \"求人情報一覧を除外し、コンテンツ記事に絞ると平均文字数は大きく変動する可能性あり\"\n    },\n    \"ai_suggested_word_count\": 11949,\n    \"rationale\": \"平均11380字 × 1.05 = 11949字\",\n    \"target_word_count_range\": {\n      \"min\": 11352,\n      \"min_relaxed\": 11000,\n      \"max\": 12546,\n      \"target\": 11949\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±597字です。\"\n  },\n  \"target_word_count\": 11949,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は、ドライバー求人情報の網羅性、検索機能の充実、大手転職サイトの信頼性などが特徴です。ユーザーは、求人情報の詳細さ、企業の安定性、キャリアパスの明確さを求めています。\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 1,\n        \"title\": \"【ドラEVER】ドライバー求人専門サイト\",\n        \"url\": \"https://doraever.jp/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"ドライバー専門の求人情報\",\n            \"level_1\": \"豊富な求人情報にアクセスできる\",\n            \"level_2\": \"自分に合った仕事を見つけやすい\",\n            \"level_3\": \"希望条件に合わない求人を探す手間が省ける\",\n            \"level_4\": \"求人探しの時間と労力を削減したい\",\n            \"level_5_root\": \"時間/労力の節約\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"ドライバー専門の求人情報\",\n            \"level_1\": \"自分に合った仕事が見つかるかもしれない\",\n            \"level_2\": \"将来への希望が持てる\",\n            \"level_3\": \"仕事が見つからない不安が軽減される\",\n            \"level_4\": \"将来への漠然とした不安を解消したい\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"豊富な検索機能\",\n            \"level_1\": \"希望条件で求人を絞り込める\",\n            \"level_2\": \"応募しやすい求人を見つけられる\",\n            \"level_3\": \"応募方法がわからず諦めることがない\",\n            \"level_4\": \"スムーズに応募して早く仕事を見つけたい\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"時間/労力の節約\", \"不確実性の解消\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"求人情報の詳細な記述\",\n          \"expertise\": \"ドライバー求人に特化\",\n          \"authoritativeness\": \"多くの求人情報を掲載\",\n          \"trustworthiness\": \"企業情報の詳細な記述\",\n          \"search_intent_fulfillment\": \"ドライバー求人を探すユーザーの意図に合致\",\n          \"user_experience_signals\": \"検索機能の充実\"\n        },\n        \"user_journey_fulfillment\": \"求人検索から応募までのスムーズな導線\"\n      },\n      {\n        \"rank\": 2,\n        \"title\": \"トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職\",\n        \"url\": \"https://tenshoku.mynavi.jp/list/o1B610/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"大手転職サイトの情報網羅性\",\n            \"level_1\": \"幅広い求人情報にアクセスできる\",\n            \"level_2\": \"様々な企業を比較検討できる\",\n            \"level_3\": \"情報不足で判断を誤るリスクを減らせる\",\n            \"level_4\": \"客観的な情報に基づいて企業を選びたい\",\n            \"level_5_root\": \"意思決定の正当化\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"大手転職サイトの信頼性\",\n            \"level_1\": \"安心して求人を探せる\",\n            \"level_2\": \"騙される心配がない\",\n            \"level_3\": \"怪しい企業に応募してしまうリスクを減らせる\",\n            \"level_4\": \"安全な企業で働きたい\",\n            \"level_5_root\": \"社会的リスクの回避\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"転職ノウハウコンテンツ\",\n            \"level_1\": \"転職活動の進め方がわかる\",\n            \"level_2\": \"効果的な転職活動ができる\",\n            \"level_3\": \"転職活動で失敗するリスクを減らせる\",\n            \"level_4\": \"スムーズに転職を成功させたい\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"意思決定の正当化\", \"社会的リスクの回避\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"転職ノウハウコンテンツの充実\",\n          \"expertise\": \"転職市場に関する知識\",\n          \"authoritativeness\": \"大手転職サイトのブランド力\",\n          \"trustworthiness\": \"情報の正確性\",\n          \"search_intent_fulfillment\": \"転職を検討するユーザーの意図に合致\",\n          \"user_experience_signals\": \"検索機能の充実\"\n        },\n        \"user_journey_fulfillment\": \"求人検索から応募、転職成功までのサポート\"\n      },\n      {\n        \"rank\": 3,\n        \"title\": \"採用情報｜トヨタ輸送株式会社\",\n        \"url\": \"https://www.toyotayusou.co.jp/recruit/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"大手企業の安定性\",\n            \"level_1\": \"安心して働ける企業だとわかる\",\n            \"level_2\": \"将来設計がしやすい\",\n            \"level_3\": \"倒産リスクを心配する必要がない\",\n            \"level_4\": \"安定した企業で長く働きたい\",\n            \"level_5_root\": \"不確実性の解消\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"充実した福利厚生\",\n            \"level_1\": \"生活の質が向上する\",\n            \"level_2\": \"安心して仕事に集中できる\",\n            \"level_3\": \"福利厚生が不十分な企業で働く不安を解消できる\",\n            \"level_4\": \"充実した福利厚生を受けたい\",\n            \"level_5_root\": \"社会的リスクの回避\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"キャリアパスの明確さ\",\n            \"level_1\": \"将来の目標が立てやすい\",\n            \"level_2\": \"モチベーションを維持しやすい\",\n            \"level_3\": \"キャリアアップできない不安を解消できる\",\n            \"level_4\": \"明確なキャリアパスを描きたい\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"不確実性の解消\", \"社会的リスクの回避\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"社員インタビューによるリアルな情報\",\n          \"expertise\": \"輸送業界に関する知識\",\n          \"authoritativeness\": \"トヨタグループのブランド力\",\n          \"trustworthiness\": \"企業情報の正確性\",\n          \"search_intent_fulfillment\": \"企業の安定性や福利厚生を重視するユーザーの意図に合致\",\n          \"user_experience_signals\": \"見やすいサイト構成\"\n        },\n        \"user_journey_fulfillment\": \"企業理解から応募までのスムーズな導線\"\n      }\n    ],\n    \"common_ranking_factors\": [\"求人情報の網羅性\", \"検索機能の充実\", \"大手転職サイトの信頼性\", \"企業の安定性\", \"充実した福利厚生\", \"キャリアパスの明確さ\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"求人情報の詳細さ\", \"企業の安定性\", \"キャリアパスの明確さ\"],\n      \"emotional_satisfaction\": [\"安心して働ける企業\", \"将来への希望が持てる\", \"生活の質の向上\"],\n      \"actionable_satisfaction\": [\"応募しやすい求人\", \"転職活動の進め方\", \"将来の目標設定\"]\n    },\n    \"actionable_insights\": [\"求人情報の詳細な記述\", \"企業の魅力を効果的に伝える\", \"応募しやすい導線設計\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"求人情報の網羅性\", \"企業の安定性\", \"キャリアパスの明確さ\", \"応募しやすい導線設計\"],\n      \"differentiation_opportunities\": [\"ドライバーのリアルな声\", \"AIを活用した求人マッチング\", \"働き方改革による労働環境改善\"],\n      \"user_journey_design\": \"求人検索から応募、入社後のキャリア形成までをサポートする\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"長時間労働、低賃金などのネガティブ情報を曖昧に表現\",\n        \"our_differentiation\": \"業界の課題をデータで示し、具体的な解決策を提示\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"求人情報の羅列、企業の表面的な情報のみ\",\n        \"our_differentiation\": \"ドライバーの1日の流れ、キャリアパス、成功事例などを詳細に解説\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"応募ボタンのみ、応募後のフォローがない\",\n        \"our_differentiation\": \"AIを活用した最適な求人マッチング、応募書類の自動作成、面接対策など\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\n        \"competitor_approach\": \"言及なし\",\n        \"our_differentiation\": \"ドライバー不足による経済損失を具体的に提示。例えば、「ドライバー不足により年間〇〇億円の損失が発生」と明示する。\"\n      },\n      \"social_proof\": {\n        \"competitor_approach\": \"事例が少ない、または抽象的\",\n        \"our_differentiation\": \"現役ドライバーのインタビュー動画を多数掲載。成功事例やキャリアアップ事例を具体的に紹介する。\"\n      },\n      \"authority\": {\n        \"competitor_approach\": \"言及なし\",\n        \"our_differentiation\": \"国土交通省などの公的データを引用し、業界の現状や将来展望を客観的に示す。\"\n      },\n      \"consistency\": {\n        \"competitor_approach\": \"単発の求人情報のみ\",\n        \"our_differentiation\": \"適性診断から求人紹介、応募、面接対策、入社後のキャリアアップまで、一貫したサポートを提供する。\"\n      },\n      \"liking\": {\n        \"competitor_approach\": \"事務的な文章\",\n        \"our_differentiation\": \"ドライバーの苦労や喜びを理解する共感的なトーンで語りかける。親しみやすいキャラクターを起用する。\"\n      },\n      \"scarcity\": {\n        \"competitor_approach\": \"言及なし\",\n        \"our_differentiation\": \"「〇〇社限定！今だけの高待遇求人」など、期間限定の求人情報を掲載し、応募を促す。\"\n      }\n    },\n    \"llmo\": {\n      \"question_headings\": {\n        \"competitor_count\": 2,\n        \"our_target\": 5\n      },\n      \"section_independence\": {\n        \"competitor_issue\": \"セクション間の関連性が低い\",\n        \"our_approach\": \"各セクションを独立させ、RAG検索に最適化。質問形式の見出しを多用し、AIが回答しやすい構成にする。\"\n      },\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\n        \"competitor_average\": 1.2,\n        \"our_strategy\": \"3段階CTA\"\n      },\n      \"cta_appeal\": {\n        \"competitor_approach\": \"抽象的な表現（「応募する」など）\",\n        \"our_differentiation\": \"「〇〇社の高待遇求人に応募する」「AIが最適な求人を紹介」など、具体的なベネフィットを訴求する。\"\n      },\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"ドライバー不足の現状、長時間労働、低賃金などの課題に不安を感じている\",\n      \"competitor_weakness\": \"課題を曖昧に表現、解決策の提示がない\",\n      \"our_differentiation\": [\"業界の課題をデータで示し、具体的な解決策を提示\", \"ドライバーのリアルな声を届ける\"],\n      \"expected_metrics\": \"離脱率-13pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"ドライバーの仕事内容、キャリアパス、企業の情報を詳しく知りたい\",\n      \"competitor_weakness\": \"求人情報の羅列、企業の表面的な情報のみ\",\n      \"our_differentiation\": [\"ドライバーの1日の流れ、キャリアパス、成功事例などを詳細に解説\", \"企業の社風や福利厚生を詳しく紹介\"],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"自分に合った求人を見つけて応募したい\",\n      \"competitor_weakness\": \"応募ボタンのみ、応募後のフォローがない\",\n      \"our_differentiation\": [\"AIを活用した最適な求人マッチング\", \"応募書類の自動作成、面接対策など\", \"応募後のキャリアアップサポート\"],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.8,\n    \"average_cta_count\": 1.2,\n    \"main_cta_positions\": [\"記事末尾\", \"サイドバー\"],\n    \"our_differentiation_strategy\": \"3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"ドライバーのリアルな声（インタビュー動画、アンケート結果など）を積極的に掲載し、共感を呼ぶコンテンツを制作する。\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"現役ドライバーへのインタビューを実施し、動画コンテンツを作成する。\"\n    },\n    {\n      \"category\": \"content\",\n      \"description\": \"AIを活用した求人マッチングシステムを導入し、ユーザーのスキルや希望に最適な求人を紹介する。\",\n      \"priority\": \"high\",\n      \"implementation_hint\": \"AI開発企業と連携し、求人マッチングシステムを開発する。\"\n    },\n    {\n      \"category\": \"content\",\n      \"description\": \"働き方改革による労働環境改善に関する情報を積極的に発信し、企業選びの基準を提供する。\",\n      \"priority\": \"medium\",\n      \"implementation_hint\": \"長時間労働の是正、有給取得の推奨、ハラスメント対策など、具体的な取り組みを紹介する。\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"コンテンツの深掘り不足\",\n      \"description\": \"競合サイトは求人情報の羅列に終始しており、ドライバーのキャリアパスや成功事例などの深掘りしたコンテンツが不足している。\",\n      \"competitors_missing\": [\"https://doraever.jp/\", \"https://tenshoku.mynavi.jp/list/o1B610/\"],\n      \"value_potential\": 0.8\n    },\n    {\n      \"gap_type\": \"AIを活用したマッチングの欠如\",\n      \"description\": \"競合サイトはAIを活用した求人マッチングシステムを導入していないため、ユーザーは自分に最適な求人を見つけにくい。\",\n      \"competitors_missing\": [\"https://doraever.jp/\", \"https://tenshoku.mynavi.jp/list/o1B610/\", \"https://www.toyotayusou.co.jp/recruit/\"],\n      \"value_potential\": 0.7\n    },\n    {\n      \"gap_type\": \"働き方改革に関する情報不足\",\n      \"description\": \"競合サイトは働き方改革による労働環境改善に関する情報を十分に提供していないため、求職者は企業選びの判断基準を持てない。\",\n      \"competitors_missing\": [\"https://doraever.jp/\", \"https://tenshoku.mynavi.jp/list/o1B610/\"],\n      \"value_potential\": 0.6\n    }\n  ],\n  \"content_recommendations\": [\n    \"ドライバーのキャリアパスを具体的に示すコンテンツ\",\n    \"AIを活用した求人マッチングシステム\",\n    \"働き方改革による労働環境改善に関する情報発信\"\n  ]\n}\n```",
+  "parsed_data": {
+    "keyword": "ドライバー 採用",
+    "market_overview": "ドライバー採用市場は慢性的な人手不足が続いており、企業は様々な採用手法を模索しています。求人サイト、人材紹介、自社採用サイトなど、多様なチャネルが存在し、各社が独自の強みを打ち出しています。今後はAI技術を活用したマッチングや、働き方改革による労働環境改善が重要な要素となるでしょう。",
+    "competitor_profiles": [
+      {
+        "url": "https://doraever.jp/",
+        "title": "【ドラEVER】ドライバー求人専門サイト",
+        "strengths": [
+          "求人情報の網羅性",
+          "ドライバー専門",
+          "豊富な検索機能"
+        ],
+        "weaknesses": [
+          "情報過多",
+          "コンテンツの深掘り不足",
+          "UI/UX改善の余地"
+        ],
+        "content_focus": [
+          "求人情報",
+          "エリア別検索",
+          "職種別検索"
+        ],
+        "unique_value": "ドライバー求人に特化した専門性",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+        "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+        "strengths": [
+          "大手転職サイトの信頼性",
+          "幅広い求人情報",
+          "詳細な企業情報"
+        ],
+        "weaknesses": [
+          "ドライバー求人に特化していない",
+          "求人情報の質にばらつき",
+          "検索性の課題"
+        ],
+        "content_focus": [
+          "求人情報",
+          "転職ノウハウ",
+          "企業情報"
+        ],
+        "unique_value": "大手転職サイトのブランド力と幅広い求人情報",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://www.toyotayusou.co.jp/recruit/",
+        "title": "採用情報｜トヨタ輸送株式会社",
+        "strengths": [
+          "大手企業の安定性",
+          "充実した福利厚生",
+          "キャリアパスの明確さ"
+        ],
+        "weaknesses": [
+          "求人情報の少なさ",
+          "企業の魅力の発信不足",
+          "応募ハードルの高さ"
+        ],
+        "content_focus": [
+          "企業情報",
+          "採用情報",
+          "社員インタビュー"
+        ],
+        "unique_value": "トヨタグループのブランド力と安定性",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://xn--pckua2a7gp15o89zb.com/%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%E3%83%BC%E3%81%AE%E4%BB%95%E4%BA%8B-%E5%AE%AE%E5%9F%8E%E7%9C%8C",
+        "title": "ドライバーの仕事・求人 - 宮城県｜求人ボックス",
+        "strengths": [
+          "求人情報の網羅性",
+          "地域密着型",
+          "検索性の高さ"
+        ],
+        "weaknesses": [
+          "情報過多",
+          "コンテンツの質にばらつき",
+          "UI/UX改善の余地"
+        ],
+        "content_focus": [
+          "求人情報",
+          "地域別検索",
+          "職種別検索"
+        ],
+        "unique_value": "地域に特化した求人情報",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://doraever.jp/search-area/osaka",
+        "title": "【ドラEVER】大阪府-ドライバー求人・運転手求人一覧",
+        "strengths": [
+          "求人情報の網羅性",
+          "ドライバー専門",
+          "地域別検索"
+        ],
+        "weaknesses": [
+          "情報過多",
+          "コンテンツの深掘り不足",
+          "UI/UX改善の余地"
+        ],
+        "content_focus": [
+          "求人情報",
+          "エリア別検索",
+          "職種別検索"
+        ],
+        "unique_value": "ドライバー求人に特化した専門性と地域性",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.baitoru.com/chushikoku/jlist/ehime/matsuyamashi/driver/shain/",
+        "title": "松山市のドライバー・運転手の正社員・契約社員の求人・募集情報｜【バイトルNEXT】で転職・就職のための仕事探し",
+        "strengths": [
+          "地域密着型",
+          "正社員・契約社員に特化",
+          "検索性の高さ"
+        ],
+        "weaknesses": [
+          "ドライバー求人に特化していない",
+          "求人情報の質にばらつき",
+          "情報過多"
+        ],
+        "content_focus": [
+          "求人情報",
+          "地域別検索",
+          "雇用形態別検索"
+        ],
+        "unique_value": "地域に根ざした正社員・契約社員の求人情報",
+        "threat_level": "low"
+      }
+    ],
+    "word_count_analysis": {
+      "mode": "ai_balanced",
+      "analysis_skipped": false,
+      "skip_reason": "",
+      "target_keyword": "ドライバー 採用",
+      "competitor_statistics": {
+        "average_word_count": 11380,
+        "median_word_count": 15015,
+        "max_word_count": 15015,
+        "min_word_count": 768,
+        "standard_deviation": 5756,
+        "data_points": 6
+      },
+      "article_details": [
+        {
+          "rank": 1,
+          "title": "【ドラEVER】ドライバー求人専門サイト",
+          "url": "https://doraever.jp/",
+          "word_count": 14352,
+          "notes": "求人情報一覧のため文字数が多い"
+        },
+        {
+          "rank": 2,
+          "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+          "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+          "word_count": 15015,
+          "notes": "求人情報一覧のため文字数が多い"
+        },
+        {
+          "rank": 3,
+          "title": "採用情報｜トヨタ輸送株式会社",
+          "url": "https://www.toyotayusou.co.jp/recruit/",
+          "word_count": 768,
+          "notes": "企業採用ページのため文字数が少ない"
+        },
+        {
+          "rank": 4,
+          "title": "ドライバーの仕事・求人 - 宮城県｜求人ボックス",
+          "url": null,
+          "word_count": 9880,
+          "notes": "求人情報一覧のため文字数が多い"
+        },
+        {
+          "rank": 5,
+          "title": "【ドラEVER】大阪府-ドライバー求人・運転手求人一覧",
+          "url": "https://doraever.jp/search-area/osaka",
+          "word_count": 15015,
+          "notes": "求人情報一覧のため文字数が多い"
+        },
+        {
+          "rank": 6,
+          "title": "松山市のドライバー・運転手の正社員・契約社員の求人・募集情報｜【バイトルNEXT】で転職・就職のための仕事探し",
+          "url": "https://www.baitoru.com/chushikoku/jlist/ehime/matsuyamashi/driver/shain/",
+          "word_count": 15015,
+          "notes": "求人情報一覧のため文字数が多い"
+        }
+      ],
+      "ai_suggestion": {
+        "ai_suggested_word_count": 11949,
+        "suggestion_logic": "平均11380字 × 1.05（ai_balanced）= 11949字",
+        "note": "求人情報一覧を除外し、コンテンツ記事に絞ると平均文字数は大きく変動する可能性あり"
+      },
+      "ai_suggested_word_count": 11949,
+      "rationale": "平均11380字 × 1.05 = 11949字",
+      "target_word_count_range": {
+        "min": 11352,
+        "min_relaxed": 11000,
+        "max": 12546,
+        "target": 11949
+      },
+      "note": "この文字数は達成すべき目標値です。目標範囲は±597字です。"
+    },
+    "target_word_count": 11949,
+    "ranking_factor_analysis": {
+      "analysis_summary": "上位記事は、ドライバー求人情報の網羅性、検索機能の充実、大手転職サイトの信頼性などが特徴です。ユーザーは、求人情報の詳細さ、企業の安定性、キャリアパスの明確さを求めています。",
+      "top_articles_deep_analysis": [
+        {
+          "rank": 1,
+          "title": "【ドラEVER】ドライバー求人専門サイト",
+          "url": "https://doraever.jp/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "ドライバー専門の求人情報",
+              "level_1": "豊富な求人情報にアクセスできる",
+              "level_2": "自分に合った仕事を見つけやすい",
+              "level_3": "希望条件に合わない求人を探す手間が省ける",
+              "level_4": "求人探しの時間と労力を削減したい",
+              "level_5_root": "時間/労力の節約"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "ドライバー専門の求人情報",
+              "level_1": "自分に合った仕事が見つかるかもしれない",
+              "level_2": "将来への希望が持てる",
+              "level_3": "仕事が見つからない不安が軽減される",
+              "level_4": "将来への漠然とした不安を解消したい",
+              "level_5_root": "不確実性の解消"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "豊富な検索機能",
+              "level_1": "希望条件で求人を絞り込める",
+              "level_2": "応募しやすい求人を見つけられる",
+              "level_3": "応募方法がわからず諦めることがない",
+              "level_4": "スムーズに応募して早く仕事を見つけたい",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "時間/労力の節約",
+              "不確実性の解消",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "求人情報の詳細な記述",
+            "expertise": "ドライバー求人に特化",
+            "authoritativeness": "多くの求人情報を掲載",
+            "trustworthiness": "企業情報の詳細な記述",
+            "search_intent_fulfillment": "ドライバー求人を探すユーザーの意図に合致",
+            "user_experience_signals": "検索機能の充実"
+          },
+          "user_journey_fulfillment": "求人検索から応募までのスムーズな導線"
+        },
+        {
+          "rank": 2,
+          "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+          "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "大手転職サイトの情報網羅性",
+              "level_1": "幅広い求人情報にアクセスできる",
+              "level_2": "様々な企業を比較検討できる",
+              "level_3": "情報不足で判断を誤るリスクを減らせる",
+              "level_4": "客観的な情報に基づいて企業を選びたい",
+              "level_5_root": "意思決定の正当化"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "大手転職サイトの信頼性",
+              "level_1": "安心して求人を探せる",
+              "level_2": "騙される心配がない",
+              "level_3": "怪しい企業に応募してしまうリスクを減らせる",
+              "level_4": "安全な企業で働きたい",
+              "level_5_root": "社会的リスクの回避"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "転職ノウハウコンテンツ",
+              "level_1": "転職活動の進め方がわかる",
+              "level_2": "効果的な転職活動ができる",
+              "level_3": "転職活動で失敗するリスクを減らせる",
+              "level_4": "スムーズに転職を成功させたい",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "意思決定の正当化",
+              "社会的リスクの回避",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "転職ノウハウコンテンツの充実",
+            "expertise": "転職市場に関する知識",
+            "authoritativeness": "大手転職サイトのブランド力",
+            "trustworthiness": "情報の正確性",
+            "search_intent_fulfillment": "転職を検討するユーザーの意図に合致",
+            "user_experience_signals": "検索機能の充実"
+          },
+          "user_journey_fulfillment": "求人検索から応募、転職成功までのサポート"
+        },
+        {
+          "rank": 3,
+          "title": "採用情報｜トヨタ輸送株式会社",
+          "url": "https://www.toyotayusou.co.jp/recruit/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "大手企業の安定性",
+              "level_1": "安心して働ける企業だとわかる",
+              "level_2": "将来設計がしやすい",
+              "level_3": "倒産リスクを心配する必要がない",
+              "level_4": "安定した企業で長く働きたい",
+              "level_5_root": "不確実性の解消"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "充実した福利厚生",
+              "level_1": "生活の質が向上する",
+              "level_2": "安心して仕事に集中できる",
+              "level_3": "福利厚生が不十分な企業で働く不安を解消できる",
+              "level_4": "充実した福利厚生を受けたい",
+              "level_5_root": "社会的リスクの回避"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "キャリアパスの明確さ",
+              "level_1": "将来の目標が立てやすい",
+              "level_2": "モチベーションを維持しやすい",
+              "level_3": "キャリアアップできない不安を解消できる",
+              "level_4": "明確なキャリアパスを描きたい",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "不確実性の解消",
+              "社会的リスクの回避",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "社員インタビューによるリアルな情報",
+            "expertise": "輸送業界に関する知識",
+            "authoritativeness": "トヨタグループのブランド力",
+            "trustworthiness": "企業情報の正確性",
+            "search_intent_fulfillment": "企業の安定性や福利厚生を重視するユーザーの意図に合致",
+            "user_experience_signals": "見やすいサイト構成"
+          },
+          "user_journey_fulfillment": "企業理解から応募までのスムーズな導線"
+        }
+      ],
+      "common_ranking_factors": [
+        "求人情報の網羅性",
+        "検索機能の充実",
+        "大手転職サイトの信頼性",
+        "企業の安定性",
+        "充実した福利厚生",
+        "キャリアパスの明確さ"
+      ],
+      "satisfaction_patterns": {
+        "informational_satisfaction": [
+          "求人情報の詳細さ",
+          "企業の安定性",
+          "キャリアパスの明確さ"
+        ],
+        "emotional_satisfaction": [
+          "安心して働ける企業",
+          "将来への希望が持てる",
+          "生活の質の向上"
+        ],
+        "actionable_satisfaction": [
+          "応募しやすい求人",
+          "転職活動の進め方",
+          "将来の目標設定"
+        ]
+      },
+      "actionable_insights": [
+        "求人情報の詳細な記述",
+        "企業の魅力を効果的に伝える",
+        "応募しやすい導線設計"
+      ],
+      "implications_for_our_article": {
+        "must_include": [
+          "求人情報の網羅性",
+          "企業の安定性",
+          "キャリアパスの明確さ",
+          "応募しやすい導線設計"
+        ],
+        "differentiation_opportunities": [
+          "ドライバーのリアルな声",
+          "AIを活用した求人マッチング",
+          "働き方改革による労働環境改善"
+        ],
+        "user_journey_design": "求人検索から応募、入社後のキャリア形成までをサポートする"
+      }
+    },
+    "four_pillars_differentiation": {
+      "neuroscience": {
+        "phase1_fear_recognition": {
+          "competitor_approach": "長時間労働、低賃金などのネガティブ情報を曖昧に表現",
+          "our_differentiation": "業界の課題をデータで示し、具体的な解決策を提示",
+          "expected_effect": "扁桃体活性化+30%"
+        },
+        "phase2_understanding": {
+          "competitor_approach": "求人情報の羅列、企業の表面的な情報のみ",
+          "our_differentiation": "ドライバーの1日の流れ、キャリアパス、成功事例などを詳細に解説",
+          "expected_effect": "前頭前野処理満足度+40%"
+        },
+        "phase3_action": {
+          "competitor_approach": "応募ボタンのみ、応募後のフォローがない",
+          "our_differentiation": "AIを活用した最適な求人マッチング、応募書類の自動作成、面接対策など",
+          "expected_effect": "CVR+50%"
+        }
+      },
+      "behavioral_economics": {
+        "loss_aversion": {
+          "competitor_approach": "言及なし",
+          "our_differentiation": "ドライバー不足による経済損失を具体的に提示。例えば、「ドライバー不足により年間〇〇億円の損失が発生」と明示する。"
+        },
+        "social_proof": {
+          "competitor_approach": "事例が少ない、または抽象的",
+          "our_differentiation": "現役ドライバーのインタビュー動画を多数掲載。成功事例やキャリアアップ事例を具体的に紹介する。"
+        },
+        "authority": {
+          "competitor_approach": "言及なし",
+          "our_differentiation": "国土交通省などの公的データを引用し、業界の現状や将来展望を客観的に示す。"
+        },
+        "consistency": {
+          "competitor_approach": "単発の求人情報のみ",
+          "our_differentiation": "適性診断から求人紹介、応募、面接対策、入社後のキャリアアップまで、一貫したサポートを提供する。"
+        },
+        "liking": {
+          "competitor_approach": "事務的な文章",
+          "our_differentiation": "ドライバーの苦労や喜びを理解する共感的なトーンで語りかける。親しみやすいキャラクターを起用する。"
+        },
+        "scarcity": {
+          "competitor_approach": "言及なし",
+          "our_differentiation": "「〇〇社限定！今だけの高待遇求人」など、期間限定の求人情報を掲載し、応募を促す。"
+        }
+      },
+      "llmo": {
+        "question_headings": {
+          "competitor_count": 2,
+          "our_target": 5
+        },
+        "section_independence": {
+          "competitor_issue": "セクション間の関連性が低い",
+          "our_approach": "各セクションを独立させ、RAG検索に最適化。質問形式の見出しを多用し、AIが回答しやすい構成にする。"
+        },
+        "expected_effect": "AI引用率+35%"
+      },
+      "kgi": {
+        "cta_placement": {
+          "competitor_average": 1.2,
+          "our_strategy": "3段階CTA"
+        },
+        "cta_appeal": {
+          "competitor_approach": "抽象的な表現（「応募する」など）",
+          "our_differentiation": "「〇〇社の高待遇求人に応募する」「AIが最適な求人を紹介」など、具体的なベネフィットを訴求する。"
+        },
+        "expected_effect": "CVR+50%"
+      }
+    },
+    "three_phase_differentiation_strategy": {
+      "phase1": {
+        "phase_name": "不安・課題認識",
+        "user_state": "ドライバー不足の現状、長時間労働、低賃金などの課題に不安を感じている",
+        "competitor_weakness": "課題を曖昧に表現、解決策の提示がない",
+        "our_differentiation": [
+          "業界の課題をデータで示し、具体的な解決策を提示",
+          "ドライバーのリアルな声を届ける"
+        ],
+        "expected_metrics": "離脱率-13pt"
+      },
+      "phase2": {
+        "phase_name": "理解・納得",
+        "user_state": "ドライバーの仕事内容、キャリアパス、企業の情報を詳しく知りたい",
+        "competitor_weakness": "求人情報の羅列、企業の表面的な情報のみ",
+        "our_differentiation": [
+          "ドライバーの1日の流れ、キャリアパス、成功事例などを詳細に解説",
+          "企業の社風や福利厚生を詳しく紹介"
+        ],
+        "expected_metrics": "滞在時間+40%"
+      },
+      "phase3": {
+        "phase_name": "行動決定",
+        "user_state": "自分に合った求人を見つけて応募したい",
+        "competitor_weakness": "応募ボタンのみ、応募後のフォローがない",
+        "our_differentiation": [
+          "AIを活用した最適な求人マッチング",
+          "応募書類の自動作成、面接対策など",
+          "応募後のキャリアアップサポート"
+        ],
+        "expected_metrics": "CVR+50%"
+      }
+    },
+    "competitor_cta_analysis": {
+      "cta_deployment_rate": 0.8,
+      "average_cta_count": 1.2,
+      "main_cta_positions": [
+        "記事末尾",
+        "サイドバー"
+      ],
+      "our_differentiation_strategy": "3段階CTA（Early/Mid/Final）で競合の3倍のCTA機会を設置"
+    },
+    "differentiation_strategies": [
+      {
+        "category": "content",
+        "description": "ドライバーのリアルな声（インタビュー動画、アンケート結果など）を積極的に掲載し、共感を呼ぶコンテンツを制作する。",
+        "priority": "must",
+        "implementation_hint": "現役ドライバーへのインタビューを実施し、動画コンテンツを作成する。"
+      },
+      {
+        "category": "content",
+        "description": "AIを活用した求人マッチングシステムを導入し、ユーザーのスキルや希望に最適な求人を紹介する。",
+        "priority": "high",
+        "implementation_hint": "AI開発企業と連携し、求人マッチングシステムを開発する。"
+      },
+      {
+        "category": "content",
+        "description": "働き方改革による労働環境改善に関する情報を積極的に発信し、企業選びの基準を提供する。",
+        "priority": "medium",
+        "implementation_hint": "長時間労働の是正、有給取得の推奨、ハラスメント対策など、具体的な取り組みを紹介する。"
+      }
+    ],
+    "gap_opportunities": [
+      {
+        "gap_type": "コンテンツの深掘り不足",
+        "description": "競合サイトは求人情報の羅列に終始しており、ドライバーのキャリアパスや成功事例などの深掘りしたコンテンツが不足している。",
+        "competitors_missing": [
+          "https://doraever.jp/",
+          "https://tenshoku.mynavi.jp/list/o1B610/"
+        ],
+        "value_potential": 0.8
+      },
+      {
+        "gap_type": "AIを活用したマッチングの欠如",
+        "description": "競合サイトはAIを活用した求人マッチングシステムを導入していないため、ユーザーは自分に最適な求人を見つけにくい。",
+        "competitors_missing": [
+          "https://doraever.jp/",
+          "https://tenshoku.mynavi.jp/list/o1B610/",
+          "https://www.toyotayusou.co.jp/recruit/"
+        ],
+        "value_potential": 0.7
+      },
+      {
+        "gap_type": "働き方改革に関する情報不足",
+        "description": "競合サイトは働き方改革による労働環境改善に関する情報を十分に提供していないため、求職者は企業選びの判断基準を持てない。",
+        "competitors_missing": [
+          "https://doraever.jp/",
+          "https://tenshoku.mynavi.jp/list/o1B610/"
+        ],
+        "value_potential": 0.6
+      }
+    ],
+    "content_recommendations": [
+      "ドライバーのキャリアパスを具体的に示すコンテンツ",
+      "AIを活用した求人マッチングシステム",
+      "働き方改革による労働環境改善に関する情報発信"
+    ]
+  },
+  "format_detected": "json",
+  "competitor_count": 7,
+  "quality_competitor_count": 6,
+  "word_count_statistics": {
+    "mode": "ai_balanced",
+    "analysis_skipped": false,
+    "skip_reason": "",
+    "target_keyword": "ドライバー 採用",
+    "competitor_statistics": {
+      "average_word_count": 11674.2,
+      "median_word_count": 14683.5,
+      "max_word_count": 15015,
+      "min_word_count": 768,
+      "standard_deviation": 5706.4,
+      "data_points": 6
+    },
+    "article_details": [
+      {
+        "rank": 1,
+        "title": "【ドラEVER】ドライバー求人専門サイト",
+        "url": "https://doraever.jp/",
+        "word_count": 14352,
+        "notes": ""
+      },
+      {
+        "rank": 2,
+        "title": "トラック運転手・運送ドライバー（中距離・長距離）の転職・求人・中途採用情報 | マイナビ転職",
+        "url": "https://tenshoku.mynavi.jp/list/o1B610/",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 3,
+        "title": "採用情報｜トヨタ輸送株式会社",
+        "url": "https://www.toyotayusou.co.jp/recruit/",
+        "word_count": 768,
+        "notes": ""
+      },
+      {
+        "rank": 4,
+        "title": "ドライバーの仕事・求人 - 宮城県｜求人ボックス",
+        "url": "https://xn--pckua2a7gp15o89zb.com/%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%E3%83%BC%E3%81%AE%E4%BB%95%E4%BA%8B-%E5%AE%AE%E5%9F%8E%E7%9C%8C",
+        "word_count": 9880,
+        "notes": ""
+      },
+      {
+        "rank": 5,
+        "title": "【ドラEVER】大阪府-ドライバー求人・運転手求人一覧",
+        "url": "https://doraever.jp/search-area/osaka",
+        "word_count": 15015,
+        "notes": ""
+      },
+      {
+        "rank": 6,
+        "title": "松山市のドライバー・運転手の正社員・契約社員の求人・募集情報｜【バイトルNEXT】で転職・就職のための仕事探し",
+        "url": "https://www.baitoru.com/chushikoku/jlist/ehime/matsuyamashi/driver/shain/",
+        "word_count": 15015,
+        "notes": ""
+      }
+    ],
+    "ai_suggestion": {
+      "ai_suggested_word_count": 12257,
+      "suggestion_logic": "平均11674字 × 1.05（バランス）= 12257字",
+      "note": ""
+    },
+    "ai_suggested_word_count": 12257,
+    "rationale": "平均11674字 × 1.05（バランス）= 12257字",
+    "target_word_count_range": {
+      "min": 11957,
+      "min_relaxed": 11757,
+      "max": 12557,
+      "target": 12257
+    },
+    "note": "この文字数は達成すべき目標値です。目標範囲は±300字です。内容が不足し冗長になる場合のみ-500字まで許容します。上限+300字は厳格に守ってください。"
+  },
+  "target_word_count": 11949,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 6099,
+    "output": 6212
+  },
+  "metrics": {
+    "char_count": 15309,
+    "word_count": 4655
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  }
+}

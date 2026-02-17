@@ -1,0 +1,45 @@
+{
+  "step": "step3a",
+  "keyword": "営業 採用 難しい",
+  "query_analysis": "```json\n{\n  \"query_type\": \"informational\",\n  \"user_intent\": \"営業職の採用が難しい理由や背景、解決策に関する情報を求めている。具体的なノウハウや事例、採用戦略に関する知識を得たいと考えている。\",\n  \"related_queries\": [\n    \"営業 採用 苦戦\",\n    \"営業 採用 コツ\",\n    \"営業 採用 ターゲット\",\n    \"営業 採用 要件\",\n    \"営業 採用 ペルソナ\",\n    \"営業 採用 母集団形成\",\n    \"営業 採用 ミスマッチ\",\n    \"営業 採用 定着\",\n    \"営業 採用 成功事例\",\n    \"営業 採用 課題\"\n  ],\n  \"content_format_suggestion\": \"ブログ記事、事例紹介、ホワイトペーパー、チェックリスト、セミナー告知、採用戦略ガイド\"\n}\n```",
+  "parsed_data": {
+    "query_type": "informational",
+    "user_intent": "営業職の採用が難しい理由や背景、解決策に関する情報を求めている。具体的なノウハウや事例、採用戦略に関する知識を得たいと考えている。",
+    "related_queries": [
+      "営業 採用 苦戦",
+      "営業 採用 コツ",
+      "営業 採用 ターゲット",
+      "営業 採用 要件",
+      "営業 採用 ペルソナ",
+      "営業 採用 母集団形成",
+      "営業 採用 ミスマッチ",
+      "営業 採用 定着",
+      "営業 採用 成功事例",
+      "営業 採用 課題"
+    ],
+    "content_format_suggestion": "ブログ記事、事例紹介、ホワイトペーパー、チェックリスト、セミナー告知、採用戦略ガイド"
+  },
+  "format_detected": "json",
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 443,
+    "output": 198
+  },
+  "metrics": {
+    "char_count": 410,
+    "word_count": 182
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": [
+      "missing_core_question",
+      "missing_behavioral_economics",
+      "missing_three_phase"
+    ]
+  },
+  "is_v2": false
+}

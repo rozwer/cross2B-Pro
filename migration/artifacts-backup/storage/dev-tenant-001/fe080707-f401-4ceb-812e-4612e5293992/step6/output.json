@@ -1,0 +1,69 @@
+{
+  "step": "step6",
+  "keyword": "トラックドライバー 求人 書き方",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 2616,
+    "output": 3663
+  },
+  "warnings": [
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'section_id': 'S01', 'heading': '導入：なぜ、あなたの会社のトラックドライバー求人は「スルー」されるのか？', 'word_count_target': 1200, 'psychological_phase': 'phase1_anxiety', 'sources_used': ['ref1', 'ref2'], 'key_points': ['【衝撃的事実】自動車運転の職業の有効求人倍率は「2.89倍」<sup id=\"ref1\">[1]</sup>。全職業平均の約2倍という「超売り手市場」の現実を突きつける。', '【問題提起】多くの運送会社が「給与」や「待遇」のせいにしているが、真の原因は自社の魅力を求職者の言葉に翻訳できていない「書き方」のミスにある。', '【損失回避】このまま従来の求人票を出し続けても、採用コストが無駄になるだけでなく、2024年問題への対応遅れとみなされ、既存ドライバーの離職すら招くリスクがある。', '【記事の約束】本記事では、応募ゼロの状態から「欲しい人材」からの応募を獲得するための、心理学に基づいた書き方と具体的なテンプレートを公開する。'], 'subheadings': [{'heading': '毎朝管理画面を見て「応募ゼロ」に落胆する日々からの脱却', 'word_count_target': 600}, {'heading': '「条件は悪くないはずなのに」なぜ選ばれないのか？', 'word_count_target': 600}]}, {'section_id': 'S02', 'heading': 'なぜあなたの求人には応募が来ないのか？「選ばれない」3つの原因', 'word_count_target': 2000, 'psychological_phase': 'phase2_understanding', 'sources_used': ['ref3', 'ref4'], 'key_points': ['【原因1：翻訳ミス】「アットホーム」は経営者にとっては「仲が良い」だが、求職者（特に経験者）には「人間関係が濃すぎて面倒」「残業代が出ない」というネガティブな翻訳をされがちである。', '【原因2：ターゲット不在】「誰でも歓迎」というスタンスは、求職者に「自分じゃなくてもいいんだ」と思わせる。ターゲットを絞ることで逆に反応率が上がる心理効果（カクテルパーティー効果）を解説。', '【原因3：信頼欠如】2024年問題（働き方改革）について触れていない求人は、「法令遵守意識が低い」と判断され、選択肢から外される現状。求職者の6割以上が企業のコンプライアンス姿勢を重視しているデータ<sup id=\"ref3\">[3]</sup>を提示。'], 'subheadings': [{'heading': '「アットホーム」は逆効果？求職者が見ているのは「生活の安心」', 'word_count_target': 700}, {'heading': '「誰でも歓迎」が「誰も来ない」を招く理由（ターゲット設定の重要性）', 'word_count_target': 600}, {'heading': '2024年問題への言及がない＝ブラック企業の懸念', 'word_count_target': 700}]}, {'section_id': 'S03', 'heading': '【ターゲット別】心に刺さるキャッチコピーと書き方の鉄則', 'word_count_target': 2500, 'psychological_phase': 'phase2_understanding', 'sources_used': ['ref5'], 'key_points': ['【経験者向け】綺麗な言葉よりも「手積み手降ろしの有無」「固定ルートかフリーか」「待機時間の扱い」「1日の走行距離」など、現場の苦労を理解しているからこそ書ける詳細スペックが信頼を生む。', '【未経験者向け】最大の不安は「事故」と「収入減」。これを払拭する「横乗り研修期間（2週間〜1ヶ月など具体的に）」や「研修中の給与保証」をアピールする。未経験者が定着する企業の共通点を紹介。', '【女性・若手向け】「力仕事」のイメージを払拭する「カゴ台車・パレット輸送」の強調や、トイレ・休憩室の設備、育休取得実績など「働きやすさ」の翻訳術。', '【差別化】「稼ぎたい」層には最高月収例を、「休みたい」層には「土日休み・夕方帰宅」を。自社の強みに合わせてターゲットを明確化する書き分けテクニック。'], 'subheadings': [{'heading': '経験者狙いなら「具体的なルート・車種・手積み有無」で勝負', 'word_count_target': 800}, {'heading': '未経験者狙いなら「研修制度・同乗期間・給与保証」を強調', 'word_count_target': 800}, {'heading': '若手・女性ドライバーに響く「働きやすさ」の翻訳術', 'word_count_target': 900}]}, {'section_id': 'S04', 'heading': 'そのまま使える！トラックドライバー求人テンプレート【Before/After付】', 'word_count_target': 2000, 'psychological_phase': 'phase2_understanding', 'sources_used': ['ref6'], 'key_points': ['【Before/After】「やる気のある方歓迎！」（Before）→「社長も元ドライバー。無理な運行は絶対に組ませません」（After）のように、経営者の顔が見える言葉への変換事例を紹介。', '【テンプレート】忙しい担当者がすぐに使えるよう、必須項目（給与、時間、休日）に加え、1日のスケジュール例や、使用するトラックの装備（バックモニター、ドラレコ、エアサス等）も盛り込んだ穴埋め式テンプレート。', '【法対応】残業規制を「稼げなくなる」というネガティブ要素ではなく、「健康的に長く働ける環境への転換」「基本給のベースアップ実績」としてアピールする具体的な言い回し。法改正対応企業の応募数が平均1.5倍になった事例<sup id=\"ref6\">[6]</sup>を紹介。'], 'subheadings': [{'heading': '改善事例：漠然とした募集要項を「生活が見える」内容へ', 'word_count_target': 600}, {'heading': '【コピペOK】職種別テンプレート（長距離・地場・ルート配送）', 'word_count_target': 800}, {'heading': '2024年問題（残業規制）をポジティブに伝える表現テクニック', 'word_count_target': 600}]}, {'section_id': 'S05', 'heading': 'Indeed・Googleしごと検索で上位表示させるSEO対策とNGワード', 'word_count_target': 1000, 'psychological_phase': 'phase2_understanding', 'sources_used': ['ref7'], 'key_points': ['【SEO対策】職種名はシンプルに。「4tトラックドライバー」など具体的なキーワードを入れる。「夢を運ぶ仕事」などのポエム的な職種名は検索エンジンに認識されず、機会損失となる。', '【リスク管理】職業安定法や男女雇用機会均等法に抵触する表現（性別限定、年齢制限の不適切な記載など）や、求職者が「ブラック」と認定する危険なフレーズ集。', '【画像選定】ピカピカのトラックの写真も良いが、実際に働いているスタッフの表情や、休憩所の様子など「職場の空気感」が伝わる写真の方が、クリック率が約30%高い傾向<sup id=\"ref7\">[7]</sup>がある。'], 'subheadings': [{'heading': '検索される「職種名」の正解ルールとキーワード選定', 'word_count_target': 300}, {'heading': '絶対に書いてはいけないNGワードと法的注意点', 'word_count_target': 300}, {'heading': '写真は「トラック」より「人」？クリック率を上げる画像の選び方', 'word_count_target': 400}]}, {'section_id': 'S06', 'heading': 'まとめ：選ばれる求人は「正直」で「具体的」である', 'word_count_target': 800, 'psychological_phase': 'phase3_action', 'sources_used': [], 'key_points': ['求人票は単なる条件の羅列ではなく、企業から求職者への「ラブレター」であり「契約の提案」である。', '美辞麗句を並べるのではなく、大変なことも含めて正直に伝え、それに対するケア（研修、設備、給与）を具体的に示すことが、最強の差別化になる。', '今すぐテンプレートを使って、自社の求人を「翻訳」し直すアクションを促す。'], 'subheadings': []}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 751
+  },
+  "source_citations": {},
+  "original_outline_hash": "eb36ba87761c907b",
+  "metrics": {
+    "word_count": 2012,
+    "char_count": 3984,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 1261,
+    "word_increase": 751
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 370.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-3-pro-preview",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "llmo_weak: 見出し構造が不十分（H2が3未満）"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 1.0,
+      "behavioral_economics": 0.75,
+      "llmo": 0.0,
+      "kgi": 0.33
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}

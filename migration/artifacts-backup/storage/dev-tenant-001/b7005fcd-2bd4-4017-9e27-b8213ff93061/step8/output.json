@@ -1,0 +1,493 @@
+{
+  "step": "step8",
+  "keyword": "自動車整備士採用難しい",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 0,
+    "output": 0
+  },
+  "warnings": [],
+  "claims": [
+    {
+      "claim_id": "C1",
+      "text": "厚生労働省のデータ（令和4年度）によると、自動車整備士の有効求人倍率は4.55倍を記録しました。",
+      "source_section": "1. なぜ、ハローワークの求人票は無視されるのか？",
+      "claim_type": "statistic",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C2",
+      "text": "全職種の平均倍率が約1.3倍程度である。",
+      "source_section": "1. なぜ、ハローワークの求人票は無視されるのか？",
+      "claim_type": "statistic",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C3",
+      "text": "日本自動車整備振興会連合会（JASPA）の「自動車整備白書」によると、整備士の平均年齢は46.7歳と年々上昇しています。",
+      "source_section": "1. なぜ、ハローワークの求人票は無視されるのか？",
+      "claim_type": "statistic",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C4",
+      "text": "団塊ジュニア世代が50代に突入し、今後10年で大量の引退者が出る「2030年問題」が目前に迫っています。",
+      "source_section": "1. なぜ、ハローワークの求人票は無視されるのか？",
+      "claim_type": "fact",
+      "verification_category": "timeline_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C5",
+      "text": "整備士養成学校の入学者数も減少傾向にあります。",
+      "source_section": "1. なぜ、ハローワークの求人票は無視されるのか？",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C6",
+      "text": "若手が辞める最大の理由は、実は給与よりも「人間関係」や「将来への不安」です。",
+      "source_section": "2. 「給与競争」から降りよう。",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C7",
+      "text": "「人材開発支援助成金」などを活用すれば、講習費用や訓練中の賃金の一部が助成されます。",
+      "source_section": "3. ターゲットを変えれば道は開ける。",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C8",
+      "text": "出入国在留管理庁のデータによると、自動車整備分野の特定技能外国人は急増しています。",
+      "source_section": "3. ターゲットを変えれば道は開ける。",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C9",
+      "text": "国土交通省も（女性整備士の）活躍促進を進めています。",
+      "source_section": "3. ターゲットを変えれば道は開ける。",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    }
+  ],
+  "verification_results": [
+    {
+      "claim_id": "C1",
+      "status": "verified",
+      "confidence": 0.95,
+      "evidence": "厚生労働省「職業安定業務統計」および日本自動車整備振興会連合会（JASPA）の資料において、令和4年度（2022年度）の自動車整備士の有効求人倍率は4.55倍であることが確認できます。",
+      "source": "厚生労働省「一般職業紹介状況」、日本自動車整備振興会連合会「自動車整備白書」",
+      "recommendation": "正確なデータです。そのまま使用可能です。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C2",
+      "status": "verified",
+      "confidence": 0.95,
+      "evidence": "厚生労働省の発表によると、令和4年度の全職種の平均有効求人倍率は1.31倍でした。「約1.3倍」という表現は適切です。",
+      "source": "厚生労働省「令和4年度 一般職業紹介状況」",
+      "recommendation": "正確なデータです。そのまま使用可能です。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C3",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "日本自動車整備振興会連合会（JASPA）発行の「自動車整備白書 令和5年度版」において、整備要員の平均年齢は46.7歳と報告されており、前年の46.4歳から上昇しています。",
+      "source": "日本自動車整備振興会連合会「自動車整備白書 令和5年度版」",
+      "recommendation": "正確なデータです。最新の白書（令和5年度版）の数値を引用していると思われます。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C4",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "団塊ジュニア世代（1971-1974年生まれ）は2024年時点で50-53歳となり、50代に突入しています。労働力人口の減少に伴う「2030年問題」は一般的な社会課題として認識されており、論理的に整合します。",
+      "source": "総務省統計局 人口推計",
+      "recommendation": "事実関係および文脈の使用において問題ありません。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C5",
+      "status": "verified",
+      "confidence": 0.95,
+      "evidence": "国土交通省およびJASPAのデータによると、自動車整備専門学校等の入学者数は2003年の約1万2千人をピークに減少傾向にあり、近年は6千人前後で推移しています。",
+      "source": "国土交通省「自動車整備士の現状と課題」",
+      "recommendation": "正確な傾向を示しています。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C6",
+      "status": "contradicted",
+      "confidence": 0.85,
+      "evidence": "JASPA「自動車整備白書（令和5年度版）」の調査では、整備士不足の理由や離職理由として「賃金が安い」が最も高い割合（約4割以上）を占めており、「労働時間の長さ/休日の少なさ」が続きます。「人間関係」も要因の一つですが、統計上「給与よりも人間関係が最大の理由」と断定するのはデータと矛盾する可能性があります。",
+      "source": "日本自動車整備振興会連合会「自動車整備白書」",
+      "recommendation": "「給与」は依然として最大の離職理由の一つです。「給与だけでなく、人間関係や将来への不安も大きな要因となっている」といった表現への修正を検討してください。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C7",
+      "status": "verified",
+      "confidence": 0.95,
+      "evidence": "厚生労働省の「人材開発支援助成金（特定訓練コースなど）」は、職務に関連した訓練を実施する事業主に対し、訓練経費や訓練期間中の賃金の一部を助成する制度であり、記述は正確です。",
+      "source": "厚生労働省「人材開発支援助成金」公式サイト",
+      "recommendation": "制度内容は正確です。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C8",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "出入国在留管理庁の統計によると、特定技能1号の在留外国人数において「自動車整備」分野は制度開始以降、増加傾向にあります。",
+      "source": "出入国在留管理庁「特定技能在留外国人数の公表」",
+      "recommendation": "現状のトレンドと合致しています。",
+      "verification_method": "source_check",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C9",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "国土交通省は「女性自動車整備士の活躍促進」を掲げ、ポータルサイトの開設やPR活動を行っています。",
+      "source": "国土交通省「自動車整備要員の確保・育成」関連資料",
+      "recommendation": "政策の方向性と合致しています。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    }
+  ],
+  "faq_items": [
+    {
+      "question": "自動車整備士の採用倍率は、他の職種と比べてどのくらい高いですか？",
+      "answer": "全職種平均の3倍以上の難易度です。令和4年度の全職種平均有効求人倍率が1.31倍であるのに対し、自動車整備士は4.55倍という極めて高い数値を記録しています。一般的な求人手法だけでは採用が困難な状況です。",
+      "related_claims": [
+        "C1",
+        "C2"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのくらい",
+      "answer_length": 102,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「3倍以上」という具体的な数値で結論を提示し、注意を喚起",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "平均値との比較（アンカリング）で希少性を強調",
+        "llmo_optimized": true,
+        "llmo_details": "「どのくらい」に対する明確な数値回答、独立した文脈",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "なぜ整備士がすぐに辞めてしまうのですか？一番の理由は何ですか？",
+      "answer": "最大の理由は「賃金の安さ」です。統計によると、離職や人材不足の原因として約4割以上が賃金を挙げており、人間関係よりも待遇面が大きな要因です。定着率を上げるには、まず給与体系の見直しが最も効果的です。",
+      "related_claims": [
+        "C6"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "なぜ",
+      "answer_length": 99,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「人間関係」という思い込みをデータで覆すAha Moment",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「4割以上」という社会的証明を用いた説得",
+        "llmo_optimized": true,
+        "llmo_details": "「なぜ」「何」に対する直接的な回答、140文字以内で完結",
+        "kgi_integrated": true,
+        "kgi_details": "賃金見直し・評価制度のコンサルティングページへ誘導"
+      }
+    },
+    {
+      "question": "現場の整備士の平均年齢は、今どのくらいですか？",
+      "answer": "平均年齢は46.7歳まで上昇しています。団塊ジュニア世代が50代に突入しており、若手が入ってこないため高齢化が進行中です。このままでは数年後にベテランが一斉に退職し、事業継続が困難になるリスクがあります。",
+      "related_claims": [
+        "C3",
+        "C4"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのくらい",
+      "answer_length": 102,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「46.7歳」という具体的数値から将来リスクを連想させる",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "損失回避性（事業継続リスク）を刺激",
+        "llmo_optimized": true,
+        "llmo_details": "現状の数値と将来予測をセットで回答",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "新卒の整備士を採用するのは、昔と比べてどれくらい難しいですか？",
+      "answer": "難易度は約2倍に上がっています。自動車整備専門学校の入学者数は、2003年の約1万2千人をピークに、近年は6千人前後まで半減しました。新卒採用だけに頼らず、中途採用や未経験者育成へのシフトが必要です。",
+      "related_claims": [
+        "C5"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 100,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「半減」という強い言葉で危機感を醸成",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "過去との対比で現状の困難さを可視化",
+        "llmo_optimized": true,
+        "llmo_details": "数値の推移を簡潔に説明し、対策を提示",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "外国人の整備士を採用するには、どのような方法がありますか？",
+      "answer": "「特定技能1号」の活用が一般的です。自動車整備分野での在留外国人数は増加傾向にあり、即戦力として期待できます。制度の活用には登録支援機関のサポートを受けるか、自社で支援体制を整える必要があります。",
+      "related_claims": [
+        "C8"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 98,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "解決策（特定技能）を即座に提示",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「増加傾向」というトレンド提示で安心感（バンドワゴン効果）",
+        "llmo_optimized": true,
+        "llmo_details": "制度名と具体的なアクションを提示",
+        "kgi_integrated": true,
+        "kgi_details": "外国人材紹介・支援サービスのLPへ誘導"
+      }
+    },
+    {
+      "question": "採用や育成のコストを抑えるために、使える助成金はありますか？",
+      "answer": "はい、「人材開発支援助成金」などが活用できます。職務に関連した訓練を行う場合、訓練経費や期間中の賃金の一部が助成されます。コストを抑えつつ未経験者を育成する企業が増えています。",
+      "related_claims": [
+        "C7"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 88,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「はい」と断定し、具体的な制度名を提示",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "金銭的メリット（助成）を提示し行動を促進",
+        "llmo_optimized": true,
+        "llmo_details": "質問に対するYes/Noと理由が明確",
+        "kgi_integrated": true,
+        "kgi_details": "助成金活用サポートの問い合わせへ誘導"
+      }
+    },
+    {
+      "question": "女性の整備士を採用している会社は増えていますか？",
+      "answer": "はい、国も後押ししており増加の兆しがあります。国土交通省がポータルサイトを開設するなど、女性整備士の活躍を推進しています。女性用設備の整備や柔軟な働き方を導入することで、採用の母集団を広げることが可能です。",
+      "related_claims": [
+        "C9"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 103,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "国の動きを提示し、信頼性を担保",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「採用母集団の拡大」というメリット提示",
+        "llmo_optimized": true,
+        "llmo_details": "現状のトレンドと具体的な対策を記述",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "整備士不足は、いつまで続くのでしょうか？",
+      "answer": "少なくとも2030年以降も深刻化する見込みです。労働人口の減少に加え、団塊ジュニア世代の高齢化が進む「2030年問題」が控えています。短期的な募集だけでなく、長期的な採用戦略への転換が不可欠です。",
+      "related_claims": [
+        "C4"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "いつ",
+      "answer_length": 98,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "未来の予測を断定的に伝え、行動変容を促す",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "将来の不確実性を減らし、計画立案を動機づけ",
+        "llmo_optimized": true,
+        "llmo_details": "「いつまで」に対する回答と理由をセットで提示",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "給料以外で、整備士が辞める理由には何がありますか？",
+      "answer": "「労働時間の長さ」や「休日の少なさ」が大きな要因です。賃金に次いで多い離職理由となっており、ワークライフバランスの欠如が人材流出を招いています。週休2日制の導入や残業削減が定着率向上の鍵です。",
+      "related_claims": [
+        "C6"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "何",
+      "answer_length": 96,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "具体的な要因（時間・休日）を特定",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "具体的な改善策（週休2日）を提示し意思決定を簡素化",
+        "llmo_optimized": true,
+        "llmo_details": "独立した回答として成立する構成",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "整備士の有効求人倍率4.55倍というのは、どれくらい深刻なのですか？",
+      "answer": "「求職者1人に対して4社以上が争奪戦をしている」状態です。選ばれる側から選ぶ側へと立場が逆転しており、従来の「待ちの採用」では応募すら来ません。こちらからアプローチする攻めの採用が必要です。",
+      "related_claims": [
+        "C1"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": null,
+      "answer_length": 95,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "比喩（争奪戦）を用いて状況をイメージさせる",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "現状維持バイアスを打破する強い表現",
+        "llmo_optimized": true,
+        "llmo_details": "数値の意味を平易な言葉で解説",
+        "kgi_integrated": true,
+        "kgi_details": "ダイレクトリクルーティングサービスの資料請求へ誘導"
+      }
+    }
+  ],
+  "summary": {
+    "verified_count": 8,
+    "unverified_count": 0,
+    "contradicted_count": 1,
+    "partially_verified_count": 0,
+    "total_claims": 9,
+    "verification_rate": 0.8888888888888888,
+    "data_anchors_verified": 0,
+    "urls_checked": 8,
+    "urls_valid": 8
+  },
+  "has_contradictions": true,
+  "critical_issues": [
+    "High-confidence contradictions detected"
+  ],
+  "recommend_rejection": true,
+  "model": "gemini-3-pro-preview",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "verification_categories": {
+    "numeric_data": {
+      "claims_checked": 3,
+      "verified": 3,
+      "issues": []
+    },
+    "source_accuracy": {
+      "claims_checked": 3,
+      "verified": 3,
+      "issues": []
+    },
+    "timeline_consistency": {
+      "claims_checked": 1,
+      "verified": 1,
+      "issues": []
+    },
+    "logical_consistency": {
+      "claims_checked": 2,
+      "verified": 1,
+      "issues": [
+        "[C6] 若手が辞める最大の理由は、実は給与よりも「人間関係」や「将来への不安」です。...: contradicted"
+      ]
+    }
+  },
+  "faq_llmo_optimization": {
+    "question_format_count": 5,
+    "voice_search_friendly": true,
+    "structured_data_ready": false,
+    "natural_language_score": 0.25,
+    "average_answer_length": 98
+  },
+  "faq_summary": {
+    "faq_count": 10,
+    "voice_search_optimized_count": 10,
+    "four_pillars_compliance_rate": 0.4,
+    "cta_integrated_count": 4,
+    "internal_link_count": 10
+  },
+  "rejection_analysis": {
+    "should_reject": true,
+    "severity": "critical",
+    "reasons": [
+      "1 high-confidence contradictions detected"
+    ],
+    "human_review_required": true,
+    "auto_correction_prohibited": true,
+    "suggested_actions": [
+      "人間レビューで事実確認を行ってください",
+      "データソースの再検証が必要です"
+    ]
+  },
+  "faq_section_markdown": "## よくある質問（FAQ）\n\n### Q1. 自動車整備士の採用倍率は、他の職種と比べてどのくらい高いですか？\n\n**A.** 全職種平均の3倍以上の難易度です。令和4年度の全職種平均有効求人倍率が1.31倍であるのに対し、自動車整備士は4.55倍という極めて高い数値を記録しています。一般的な求人手法だけでは採用が困難な状況です。\n\n### Q2. なぜ整備士がすぐに辞めてしまうのですか？一番の理由は何ですか？\n\n**A.** 最大の理由は「賃金の安さ」です。統計によると、離職や人材不足の原因として約4割以上が賃金を挙げており、人間関係よりも待遇面が大きな要因です。定着率を上げるには、まず給与体系の見直しが最も効果的です。\n\n### Q3. 現場の整備士の平均年齢は、今どのくらいですか？\n\n**A.** 平均年齢は46.7歳まで上昇しています。団塊ジュニア世代が50代に突入しており、若手が入ってこないため高齢化が進行中です。このままでは数年後にベテランが一斉に退職し、事業継続が困難になるリスクがあります。\n\n### Q4. 新卒の整備士を採用するのは、昔と比べてどれくらい難しいですか？\n\n**A.** 難易度は約2倍に上がっています。自動車整備専門学校の入学者数は、2003年の約1万2千人をピークに、近年は6千人前後まで半減しました。新卒採用だけに頼らず、中途採用や未経験者育成へのシフトが必要です。\n\n### Q5. 外国人の整備士を採用するには、どのような方法がありますか？\n\n**A.** 「特定技能1号」の活用が一般的です。自動車整備分野での在留外国人数は増加傾向にあり、即戦力として期待できます。制度の活用には登録支援機関のサポートを受けるか、自社で支援体制を整える必要があります。\n\n### Q6. 採用や育成のコストを抑えるために、使える助成金はありますか？\n\n**A.** はい、「人材開発支援助成金」などが活用できます。職務に関連した訓練を行う場合、訓練経費や期間中の賃金の一部が助成されます。コストを抑えつつ未経験者を育成する企業が増えています。\n\n### Q7. 女性の整備士を採用している会社は増えていますか？\n\n**A.** はい、国も後押ししており増加の兆しがあります。国土交通省がポータルサイトを開設するなど、女性整備士の活躍を推進しています。女性用設備の整備や柔軟な働き方を導入することで、採用の母集団を広げることが可能です。\n\n### Q8. 整備士不足は、いつまで続くのでしょうか？\n\n**A.** 少なくとも2030年以降も深刻化する見込みです。労働人口の減少に加え、団塊ジュニア世代の高齢化が進む「2030年問題」が控えています。短期的な募集だけでなく、長期的な採用戦略への転換が不可欠です。\n\n### Q9. 給料以外で、整備士が辞める理由には何がありますか？\n\n**A.** 「労働時間の長さ」や「休日の少なさ」が大きな要因です。賃金に次いで多い離職理由となっており、ワークライフバランスの欠如が人材流出を招いています。週休2日制の導入や残業削減が定着率向上の鍵です。\n\n### Q10. 整備士の有効求人倍率4.55倍というのは、どれくらい深刻なのですか？\n\n**A.** 「求職者1人に対して4社以上が争奪戦をしている」状態です。選ばれる側から選ぶ側へと立場が逆転しており、従来の「待ちの採用」では応募すら来ません。こちらからアプローチする攻めの採用が必要です。\n",
+  "references_verified": true
+}

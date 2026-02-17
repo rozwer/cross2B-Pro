@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "従業員 募集 こない",
+  "analysis": "```json\n{\n  \"keyword\": \"従業員 募集 こない\",\n  \"search_intent\": \"従業員の募集をかけているが応募が来ない状況を打開したい。原因を知りたい、または具体的な対策を知りたいと考えている。\",\n  \"difficulty\": \"medium\",\n  \"suggested_topics\": [\n    \"求人広告の効果測定と改善\",\n    \"採用ターゲットの見直し\",\n    \"魅力的な求人情報の書き方\",\n    \"採用チャネルの多様化\",\n    \"企業の魅力の発信（ブランディング）\",\n    \"採用プロセスの見直し（応募しやすい環境作り）\",\n    \"競合他社の採用活動分析\",\n    \"採用代行サービスの活用\",\n    \"人材紹介サービスの活用\",\n    \"採用コストの最適化\",\n    \"労働条件・給与の見直し\",\n    \"採用担当者のスキルアップ\",\n    \"従業員からの紹介制度の導入\",\n    \"採用管理システムの導入\",\n    \"中小企業向け採用戦略\",\n    \"地方企業向け採用戦略\"\n  ],\n  \"target_audience\": \"中小企業の経営者、人事担当者、採用担当者\"\n}\n```",
+  "search_intent": "従業員の募集をかけているが応募が来ない状況を打開したい。原因を知りたい、または具体的な対策を知りたいと考えている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "中小企業の経営者、人事担当者、採用担当者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 110,
+    "output": 260
+  },
+  "metrics": {
+    "char_count": 541,
+    "word_count": 279
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

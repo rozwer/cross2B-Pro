@@ -1,0 +1,43 @@
+{
+  "step": "step4",
+  "keyword": "ドライバー 採用",
+  "article_title": "",
+  "meta_description": "",
+  "outline": "[{'section_id': 'S01', 'heading': 'なぜ中小企業はドライバー採用に苦戦するのか？', 'phase': 1, 'word_count_target': 1200, 'purpose': 'ドライバー不足の現状を伝え、中小企業が抱える特有の課題を明確にする。', 'key_points': ['ドライバー不足の深刻な現状を示す統計データ', '中小企業が大手企業に比べて不利な点', '高齢化によるドライバーの減少', '採用コストの負担', '定着率の低さ'], 'subheadings': [{'heading': 'ドライバー不足の現状：深刻なデータで見る', 'word_count_target': 400, 'content_type': 'data'}, {'heading': '中小企業が抱えるドライバー採用の壁', 'word_count_target': 400, 'content_type': 'explanation'}, {'heading': 'ドライバー不足がもたらす事業への影響', 'word_count_target': 400, 'content_type': 'explanation'}], 'required_elements': ['ドライバー不足に関する最新の統計データ', '中小企業経営者の焦燥感を煽る共感表現'], 'cta_placement': None}, {'section_id': 'S02', 'heading': 'ドライバー採用を成功させるための第一歩とは？', 'phase': 1, 'word_count_target': 800, 'purpose': 'Early CTA配置セクション。自社の魅力を明確にすることの重要性を説き、課題解決への期待感を高める。', 'key_points': ['自社の強み・魅力を洗い出すことの重要性', '求職者が重視するポイント（給与、待遇、福利厚生、キャリアパス）', '採用ターゲットの明確化', '体験エピソード（山田さんの退職と社長の苦労）'], 'subheadings': [{'heading': '求職者が本当に求めているものとは？', 'word_count_target': 400, 'content_type': 'explanation'}, {'heading': '自社の魅力を再発見する方法', 'word_count_target': 400, 'content_type': 'explanation'}], 'required_elements': ['中小企業ならではの魅力の具体例', 'ペルソナ設定の重要性'], 'cta_placement': 'early'}, {'section_id': 'S03', 'heading': '中小企業向けドライバー採用戦略7選とは？', 'phase': 2, 'word_count_target': 1500, 'purpose': '具体的な採用戦略を提示し、読者の課題解決を支援する。', 'key_points': ['採用戦略1：求人広告の見直し（ターゲットに合わせた表現、写真の活用）', '採用戦略2：SNSの活用（情報発信、企業文化のPR）', '採用戦略3：紹介制度の導入（従業員のモチベーション向上）', '採用戦略4：合同説明会への参加（中小企業の認知度向上）', '採用戦略5：採用代行サービスの活用（プロのノウハウ）', '採用戦略6：インターンシップ制度の導入（若手人材の育成）', '採用戦略7：地方の人材に目を向ける（Uターン、Iターン）'], 'subheadings': [{'heading': '戦略１：求人広告を魅力的に改善するには？', 'word_count_target': 300, 'content_type': 'explanation'}, {'heading': '戦略２：SNSで会社の魅力を発信するコツ', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': '戦略３：紹介制度で採用を活性化させる方法', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': '戦略４：合同説明会で自社をアピールするには？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': '戦略５：採用代行サービスの上手な選び方', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': '戦略６：インターンシップで未来の戦力を育てる', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': '戦略７：地方在住者採用のメリット・デメリット', 'word_count_target': 200, 'content_type': 'explanation'}], 'required_elements': ['各戦略の具体的な手順', '成功事例（数値データ含む）'], 'cta_placement': None}]",
+  "sections": [],
+  "key_differentiators": [],
+  "metrics": {
+    "word_count": 891,
+    "char_count": 2321,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3",
+      "no_conclusion_section"
+    ],
+    "warnings": [],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 252.0
+    }
+  },
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 3093,
+    "output": 1666
+  },
+  "title_metadata": null,
+  "three_phase_structure": null,
+  "four_pillars_per_section": [],
+  "cta_placements": null,
+  "word_count_tracking": null
+}

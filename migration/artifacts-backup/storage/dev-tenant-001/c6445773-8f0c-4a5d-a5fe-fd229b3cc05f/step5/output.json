@@ -1,0 +1,353 @@
+{
+  "step": "step5",
+  "keyword": "従業員 募集 こない",
+  "search_queries": [
+    "有効求人倍率 推移",
+    "新規求人数 統計",
+    "求職者の転職理由 アンケート",
+    "採用担当者 課題 調査",
+    "中小企業 採用戦略 事例"
+  ],
+  "sources": [],
+  "invalid_sources": [
+    {
+      "url": "https://www.jil.go.jp/kokunai/statistics/timeseries/html/g0301.html",
+      "title": "図1 完全失業率、有効求人倍率",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_66201.html",
+      "title": "一般職業紹介状況(令和7年10月分)について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.r-agent.com/guide/start/32493/",
+      "title": "「有効求人倍率」とは？正社員の推移や注目の職種を紹介",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.saiyo-doda.jp/guide/kihon/effective-job-opening-ratio",
+      "title": "有効求人倍率とは？定義や計算方法、最新の動向をわかり ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://topics.type.jp/womantype-all/market-trends/",
+      "title": "【2026年1月最新】有効求人倍率の推移を職種別に紹介！ ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_66201.html",
+      "title": "一般職業紹介状況(令和7年10月分)について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.e-stat.go.jp/stat-search/files?page=1&layout=dataset&toukei=00450222&tstat=000001020327&query=%E6%96%B0%E8%A6%8F%E6%B1%82%E4%BA%BA%E6%95%B0",
+      "title": "統計データを探す",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.jil.go.jp/kokunai/statistics/shuyo/0211.html",
+      "title": "職業紹介-都道府県別新規求人倍率：主要労働統計指標",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/toukei/list/114-1_yougo.html",
+      "title": "一般職業紹介状況(職業安定業務統計)：集計結果(用語の解説)",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_69302.html",
+      "title": "一般職業紹介状況(令和7年12月分及び令和7年分)について",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://doda.jp/guide/reason/",
+      "title": "転職理由ランキング【最新版】 みんなの本音を調査！",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.r-agent.com/data/survey/reason/",
+      "title": "年代別転職理由の本音 | RECRUIT AGENT",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://career-research.mynavi.jp/reserch/20250312_92959/",
+      "title": "転職動向調査2025年版（2024年実績）",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://mid-tenshoku.com/enquete/report-12/",
+      "title": "第12回アンケート集計結果「「転職理由」について」",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.manpowergroup.jp/news/20251014.html",
+      "title": "アンケート調査：転職経験者の約7割が「2回以上」の転職を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://directsourcing-lab.com/blog/recruiting_knowledge/recruitment_assignment/",
+      "title": "企業が直面する採用課題とは？課題の調査・分析方法と優秀な ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://uloqo.net/blog/recruitment-assignment/",
+      "title": "採用課題とは？調査分析方法、採用ターゲットに応じたポイント ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://prtimes.jp/main/html/rd/p/000000172.000055762.html",
+      "title": "75％の担当者が「求人票」の制作に課題。優位性訴求や魅力を ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://saponet.mynavi.jp/column/detail/ty_saiyo_t01_hiring-challenges_250725.html",
+      "title": "採用の課題9つ｜母集団形成・選考・内定/定着の実践ガイド ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.mhlw.go.jp/stf/newpage_38019.html",
+      "title": "地域で活躍する中小企業の採用と定着 成功事例集",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://en-gage.net/engage-contents/knowledge/article/?id=how-to-success-recruite-smaller-companies",
+      "title": "あの中小企業は、どうやって採用したの？成功事例を紹介",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://www.wantedly.com/hiringeek/recruit/smb_hard/",
+      "title": "中小企業の採用戦略9選｜苦戦する理由や成功事例も紹介",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://service.onecareer.jp/blog/smallbusiness_recruitment",
+      "title": "中小企業の採用の成功事例4選！苦戦の理由や採用戦略 ...",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    },
+    {
+      "url": "https://corp.miidas.jp/assessment/17675/",
+      "title": "中小企業の採用成功術｜失敗の原因と対策を解説",
+      "source_type": "other",
+      "excerpt": "",
+      "credibility_score": 0.5,
+      "verified": false,
+      "phase_alignment": "phase2_understanding",
+      "freshness_score": 0.5,
+      "data_points": [],
+      "publication_date": null
+    }
+  ],
+  "failed_queries": [],
+  "collection_stats": {
+    "total_collected": 24,
+    "total_verified": 0,
+    "failed_queries": 0,
+    "phase1_count": 0,
+    "phase2_count": 0,
+    "phase3_count": 0
+  },
+  "phase_specific_data": {
+    "phase1_anxiety": {
+      "description": "不安喚起：問題の深刻さ、リスク、損失",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "introduction",
+        "H2-1",
+        "H2-2"
+      ]
+    },
+    "phase2_understanding": {
+      "description": "理解納得：解決策、方法、効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-3",
+        "H2-4",
+        "H2-5",
+        "H2-6",
+        "H2-7",
+        "H2-8",
+        "H2-9",
+        "H2-10"
+      ]
+    },
+    "phase3_action": {
+      "description": "行動決定：成功事例、導入実績、費用対効果",
+      "source_urls": [],
+      "total_count": 0,
+      "key_data_summary": [],
+      "usage_sections": [
+        "H2-11",
+        "H2-12",
+        "conclusion"
+      ]
+    }
+  },
+  "knowledge_gaps_filled": [],
+  "section_source_mapping": []
+}

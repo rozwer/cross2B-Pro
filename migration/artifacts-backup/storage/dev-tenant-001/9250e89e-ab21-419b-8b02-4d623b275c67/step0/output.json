@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー採用難しい\",\n  \"search_intent\": \"ドライバーの採用が困難な状況を打開するための情報収集。原因の特定、具体的な対策、成功事例、役立つサービスなどを求めている。採用担当者、経営者、人事担当者が、現状を改善するためのヒントを得たいと考えている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"ドライバー不足の原因と対策\",\n    \"効果的なドライバー採用戦略\",\n    \"ドライバー定着率向上のための施策\",\n    \"ドライバーの労働環境改善\",\n    \"ドライバー採用に役立つ求人媒体・サービス比較\",\n    \"ドライバー採用成功事例\",\n    \"ドライバーの年齢層と採用戦略\",\n    \"女性ドライバー採用のポイント\",\n    \"外国人ドライバー採用の注意点\",\n    \"自動運転技術の導入とドライバーの役割変化\"\n  ],\n  \"target_audience\": \"運輸・物流業界の経営者、人事担当者、採用担当者\"\n}\n```",
+  "search_intent": "ドライバーの採用が困難な状況を打開するための情報収集。原因の特定、具体的な対策、成功事例、役立つサービスなどを求めている。採用担当者、経営者、人事担当者が、現状を改善するためのヒントを得たいと考えている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運輸・物流業界の経営者、人事担当者、採用担当者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 106,
+    "output": 229
+  },
+  "metrics": {
+    "char_count": 495,
+    "word_count": 283
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

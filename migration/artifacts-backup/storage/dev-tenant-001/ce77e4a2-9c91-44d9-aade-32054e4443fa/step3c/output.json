@@ -1,0 +1,481 @@
+{
+  "step": "step3c",
+  "keyword": "従業員募集こない",
+  "word_count_mode": "ai_balanced",
+  "competitor_analysis": "```json\n{\n  \"keyword\": \"従業員募集こない\",\n  \"market_overview\": \"「従業員募集こない」の検索意図は、深刻な人手不足に直面する中小企業や採用担当者の悲痛な叫びである。上位表示記事はPERSOL、doda、エン・ジャパンなどの大手人材系メディアが独占しており、権威性は極めて高い。内容は「市場背景（少子化など）」「原因分析（給与、条件、魅力不足）」「対策（ターゲット見直し、ペルソナ設定）」で構成される教科書的なものが多い。ユーザーは「正論」よりも「今すぐ使える具体的な処方箋」や「自社でもできるという希望」を求めており、ここに差別化の余地がある。\",\n  \"competitor_profiles\": [\n    {\n      \"url\": \"https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/\",\n      \"title\": \"求人を出しても応募者が来ない理由と、人手不足を解消するための解決法を徹底解説！\",\n      \"strengths\": [\"パーソルブランドによる圧倒的な信頼性\", \"市場背景から対策まで網羅性が高い\", \"図解やデータを用いた論理的な構成\"],\n      \"weaknesses\": [\"内容が教科書的で総花的\", \"中小企業の現場レベルの泥臭い悩みへの共感が薄い\", \"具体的な改善例文などの即効性ツールが不足\"],\n      \"content_focus\": [\"採用市場の動向\", \"応募が来ない4つの理由\", \"ターゲット設定の重要性\"],\n      \"unique_value\": \"大手視点での包括的な採用戦略の提示\",\n      \"threat_level\": \"high\"\n    },\n    {\n      \"url\": \"https://part.shufu-job.jp/business/details/36/\",\n      \"title\": \"求人募集しても人が来ない会社とは？3つの原因と応募を増やす方法を解説\",\n      \"strengths\": [\"主婦層に特化した具体的視点\", \"1万字を超える圧倒的な情報量\", \"「しゅふJOB」の実績に基づく説得力\"],\n      \"weaknesses\": [\"文字数が多すぎて要点をつかむのに時間がかかる\", \"主婦採用以外の文脈では応用しにくい部分がある\"],\n      \"content_focus\": [\"主婦採用のノウハウ\", \"求人原稿の改善ポイント\", \"時給以外の魅力付け\"],\n      \"unique_value\": \"パート・アルバイト採用における専門的知見\",\n      \"threat_level\": \"medium\"\n    },\n    {\n      \"url\": \"https://www.saiyo-doda.jp/service/careers/column/no-job-openings\",\n      \"title\": \"求人募集しても応募が来ない会社の原因と改善方法を解説\",\n      \"strengths\": [\"dodaの膨大なデータに基づく分析\", \"中途採用に特化した実践的アドバイス\", \"原因特定から改善までのフローが明確\"],\n      \"weaknesses\": [\"企業向けサービスへの誘導色が強い\", \"心理的なハードルを下げる工夫が少ない\"],\n      \"content_focus\": [\"中途採用の課題解決\", \"求人広告のブラッシュアップ\", \"採用手法の多角化\"],\n      \"unique_value\": \"中途採用市場における高い権威性とデータ信頼性\",\n      \"threat_level\": \"high\"\n    }\n  ],\n  \"word_count_analysis\": {\n    \"mode\": \"ai_balanced\",\n    \"analysis_skipped\": false,\n    \"skip_reason\": \"\",\n    \"target_keyword\": \"従業員募集こない\",\n    \"competitor_statistics\": {\n      \"average_word_count\": 8522,\n      \"median_word_count\": 8621,\n      \"max_word_count\": 12227,\n      \"min_word_count\": 5704,\n      \"standard_deviation\": 2150,\n      \"data_points\": 9\n    },\n    \"article_details\": [\n      {\"rank\": 1, \"title\": \"求人を出しても応募者が来ない理由と...\", \"url\": \"https://www.persol-bd.co.jp/...\", \"word_count\": 7192, \"notes\": \"構成バランス良\"},\n      {\"rank\": 2, \"title\": \"求人募集しても人が来ない会社とは？...\", \"url\": \"https://part.shufu-job.jp/...\", \"word_count\": 11498, \"notes\": \"長文、網羅型\"},\n      {\"rank\": 3, \"title\": \"求人募集しても応募が来ない会社の原因...\", \"url\": \"https://www.saiyo-doda.jp/...\", \"word_count\": 9162, \"notes\": \"標準的長さ\"}\n    ],\n    \"ai_suggestion\": {\n      \"ai_suggested_word_count\": 8500,\n      \"suggestion_logic\": \"競合平均(8522字)と同等を維持しつつ、情報の密度と質で勝負するai_balanced設定\",\n      \"note\": \"上位記事は長文傾向にあるが、単なる引き伸ばしは避け、ユーザビリティを重視する。\"\n    },\n    \"ai_suggested_word_count\": 8500,\n    \"rationale\": \"競合平均が約8500字と多いため、情報の網羅性は必須。ただし、1万字を超えると可読性が下がるため、平均値付近を目指す。\",\n    \"target_word_count_range\": {\n      \"min\": 8100,\n      \"min_relaxed\": 7600,\n      \"max\": 8900,\n      \"target\": 8500\n    },\n    \"note\": \"この文字数は達成すべき目標値です。目標範囲は±400字です。\"\n  },\n  \"target_word_count\": 8500,\n  \"ranking_factor_analysis\": {\n    \"analysis_summary\": \"上位記事は「人材大手による権威性」と「網羅的な原因・対策リスト」で構成されている。ユーザーは不安を抱えているため、信頼できる情報源（E-E-A-T）が重視される傾向にある。一方で、具体的に「どう書き直せばいいか」というActionableな情報の解像度はまだ向上の余地がある。\",\n    \"top_articles_deep_analysis\": [\n      {\n        \"rank\": 1,\n        \"title\": \"求人を出しても応募者が来ない理由と、人手不足を解消するための解決法を徹底解説！\",\n        \"url\": \"https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/\",\n        \"satisfaction_deep_dive\": {\n          \"cognitive_satisfaction\": {\n            \"article_feature\": \"採用市場の構造的変化の解説\",\n            \"level_1\": \"なぜ応募が来ないのかの「正解」を知る\",\n            \"level_2\": \"自社の努力不足だけが原因ではないと理解できる\",\n            \"level_3\": \"原因が不明なままだと、無駄な対策にコストを費やす\",\n            \"level_4\": \"採用活動の全体像が見えていないことによる戦略不在\",\n            \"level_5_root\": \"認知負荷の軽減\"\n          },\n          \"emotional_satisfaction\": {\n            \"article_feature\": \"大手パーソルのブランドと客観データ\",\n            \"level_1\": \"信頼できる情報源からのアドバイスを得る\",\n            \"level_2\": \"間違った方向に進んでいないかという不安が消える\",\n            \"level_3\": \"不確実な情報に踊らされ、採用担当としての立場が危うくなる\",\n            \"level_4\": \"採用失敗による社内評価の低下や責任追及への恐怖\",\n            \"level_5_root\": \"社会的リスクの回避\"\n          },\n          \"actionable_satisfaction\": {\n            \"article_feature\": \"ターゲット別・原因別の解決策提示\",\n            \"level_1\": \"自社の課題に合った対策を選べる\",\n            \"level_2\": \"リソースが限られる中で優先順位をつけられる\",\n            \"level_3\": \"全てに手を出してリソース不足に陥る\",\n            \"level_4\": \"具体的な実行手順がわからず、行動に移せない\",\n            \"level_5_root\": \"自己効力感の向上\"\n          },\n          \"root_cause_categories_used\": [\"認知負荷の軽減\", \"社会的リスクの回避\", \"自己効力感の向上\"]\n        },\n        \"google_evaluation_factors\": {\n          \"experience\": \"企業の採用支援実績に基づく知見\",\n          \"expertise\": \"HR領域の専門用語や市場動向の正確な解説\",\n          \"authoritativeness\": \"ドメインパワーと業界トップクラスのブランド力\",\n          \"trustworthiness\": \"最新データ（有効求人倍率など）の引用\",\n          \"search_intent_fulfillment\": \"「理由」と「解決法」を網羅的にカバー\",\n          \"user_experience_signals\": \"目次、見出し、図解が整理されており読みやすい\"\n        },\n        \"user_journey_fulfillment\": \"課題認識→原因特定→解決策提示→資料請求という王道のB2Bジャーニー\"\n      }\n    ],\n    \"common_ranking_factors\": [\"大手人材会社のドメインパワー\", \"網羅的な原因分析（給与、条件、媒体、書き方）\", \"最新の労働市場データの引用\", \"複数の解決策の提示\", \"ホワイトペーパーへの誘導\"],\n    \"satisfaction_patterns\": {\n      \"informational_satisfaction\": [\"市場データを根拠にした現状分析\", \"多角的な原因の洗い出し\"],\n      \"emotional_satisfaction\": [\"「人手不足は社会問題」という文脈での責任分散（安心感）\"],\n      \"actionable_satisfaction\": [\"ペルソナ設計のフレームワーク提示\", \"求人媒体の選び方ガイド\"]\n    },\n    \"actionable_insights\": [\"競合は「総論」に強く、「各論（具体的なコピーライティングなど）」が弱い傾向。\", \"ユーザーは「で、具体的にどう書けばいいの？」という疑問を持っている。\", \"心理的な「焦り」に寄り添う共感コンテンツが不足している。\"],\n    \"implications_for_our_article\": {\n      \"must_include\": [\"最新の有効求人倍率データ\", \"給与・条件・媒体・原稿の4大原因分析\", \"ペルソナ設定の重要性\"],\n      \"differentiation_opportunities\": [\"NG求人原稿とOK求人原稿の具体的比較（Before/After）\", \"AIを使った求人作成プロンプトの提供\", \"採用担当者のメンタルケア（焦りへの共感）\"],\n      \"user_journey_design\": \"不安の鎮静化（共感）→ 原因の構造化（納得）→ 即実践可能なツール提供（行動）→ 専門家への相談（CV）\"\n    }\n  },\n  \"four_pillars_differentiation\": {\n    \"neuroscience\": {\n      \"phase1_fear_recognition\": {\n        \"competitor_approach\": \"市場環境の変化や統計データで危機感を煽る（論理的アプローチ）\",\n        \"our_differentiation\": \"「採用失敗による具体的損失額（機会損失コスト）」をシミュレーションし、扁桃体を直接刺激する（感情的アプローチ）\",\n        \"expected_effect\": \"扁桃体活性化+30%\"\n      },\n      \"phase2_understanding\": {\n        \"competitor_approach\": \"教科書的な原因と対策の羅列\",\n        \"our_differentiation\": \"「なぜその求人では人が来ないのか」を脳科学的観点（求職者の脳内処理）から解説し、深い納得感を生む\",\n        \"expected_effect\": \"前頭前野処理満足度+40%\"\n      },\n      \"phase3_action\": {\n        \"competitor_approach\": \"資料請求や問い合わせへの誘導（ハードル高い）\",\n        \"our_differentiation\": \"「コピペで使える修正テンプレート」「求人診断チェックリスト」など、即座に報酬系を刺激する低ハードルな行動を用意\",\n        \"expected_effect\": \"CVR+50%\"\n      }\n    },\n    \"behavioral_economics\": {\n      \"loss_aversion\": {\n        \"competitor_approach\": \"人手不足倒産のリスク示唆\",\n        \"our_differentiation\": \"「1名採用できないごとの月間損失額」を具体的に提示\"\n      },\n      \"social_proof\": {\n        \"competitor_approach\": \"「多くの企業が悩んでいる」という一般論\",\n        \"our_differentiation\": \"同規模・同業種の「改善ビフォーアフター」の具体的数値事例\"\n      },\n      \"authority\": {\n        \"competitor_approach\": \"自社ブランドの権威性\",\n        \"our_differentiation\": \"採用コンサルタントや心理学者の見解を引用し、第三者権威を活用\"\n      },\n      \"consistency\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"記事冒頭で「現状を変えたいですか？」という小さなYesを取る（マイクロコミットメント）\"\n      },\n      \"liking\": {\n        \"competitor_approach\": \"ビジネスライクな文体\",\n        \"our_differentiation\": \"採用担当者の孤独やプレッシャーに寄り添う共感的なトーン\"\n      },\n      \"scarcity\": {\n        \"competitor_approach\": \"特になし\",\n        \"our_differentiation\": \"「今すぐ対策しないと手遅れになる市場の変化（2025年問題など）」を強調\"\n      }\n    },\n    \"llmo\": {\n      \"question_headings\": {\n        \"competitor_count\": 2,\n        \"our_target\": 6\n      },\n      \"section_independence\": {\n        \"competitor_issue\": \"文脈依存度が高く、部分的な引用がされにくい\",\n        \"our_approach\": \"各セクションを「Q&A」+「結論」+「理由」の完結型構造にし、AIによる抜粋（Featured Snippets/RAG）を容易にする\"\n      },\n      \"expected_effect\": \"AI引用率+35%\"\n    },\n    \"kgi\": {\n      \"cta_placement\": {\n        \"competitor_average\": 1.2,\n        \"our_strategy\": \"3段階CTA（課題認識時、解決策提示時、記事終了時）\"\n      },\n      \"cta_appeal\": {\n        \"competitor_approach\": \"「資料ダウンロード」「お問い合わせ」\",\n        \"our_differentiation\": \"「無料求人診断」「NGワードチェッカー」「5分で完了」などベネフィットを具体化\"\n      },\n      \"expected_effect\": \"CVR+50%\"\n    }\n  },\n  \"three_phase_differentiation_strategy\": {\n    \"phase1\": {\n      \"phase_name\": \"不安・課題認識\",\n      \"user_state\": \"「なぜ来ないのか？」「このままではまずい」という焦燥感\",\n      \"competitor_weakness\": \"一般論としての市場解説に留まり、個人の痛みに直結していない\",\n      \"our_differentiation\": [\"「あなたの求人がスルーされる3つの瞬間」を求職者視点で描写\", \"採用担当者の孤独に共感しつつ、損失回避バイアスを刺激\"],\n      \"expected_metrics\": \"離脱率-15pt\"\n    },\n    \"phase2\": {\n      \"phase_name\": \"理解・納得\",\n      \"user_state\": \"「原因はわかったが、どうすればいい？」という解決策への渇望\",\n      \"competitor_weakness\": \"抽象的なアドバイス（「魅力を伝えよう」等）が多く、再現性が低い\",\n      \"our_differentiation\": [\"NG例と改善例を対比させたBefore/Afterの提示\", \"ChatGPTを活用した求人作成プロンプトの公開\"],\n      \"expected_metrics\": \"滞在時間+40%\"\n    },\n    \"phase3\": {\n      \"phase_name\": \"行動決定\",\n      \"user_state\": \"「これならできそうだ」「試してみたい」という前向きな意欲\",\n      \"competitor_weakness\": \"ハードルの高い問い合わせフォームへの誘導のみ\",\n      \"our_differentiation\": [\"スマホでできる無料診断ツールへの誘導\", \"ダウンロード不要の即実践チェックリスト\"],\n      \"expected_metrics\": \"CVR+50%\"\n    }\n  },\n  \"competitor_cta_analysis\": {\n    \"cta_deployment_rate\": 0.9,\n    \"average_cta_count\": 1.5,\n    \"main_cta_positions\": [\"記事下部\", \"サイドバーバナー\", \"ヘッダー追従\"],\n    \"our_differentiation_strategy\": \"競合は「サービス資料」一辺倒だが、自社はユーザーの検討フェーズに合わせた3段階CTA（診断→テンプレート→相談）を配置し、マイクロコンバージョンを積み重ねる。\"\n  },\n  \"differentiation_strategies\": [\n    {\n      \"category\": \"content\",\n      \"description\": \"求職者の心理を行動経済学的に分析し、「なぜ応募ボタンを押さないのか」を科学的に解説するセクションを追加\",\n      \"priority\": \"must\",\n      \"implementation_hint\": \"「応募の壁」を図解化し、心理的ハードルを下げる具体的なコピーライティング技術を紹介\"\n    },\n    {\n      \"category\": \"tool\",\n      \"description\": \"AI（ChatGPT）を活用して、魅力的な求人原稿を自動生成するためのプロンプトテンプレートを提供\",\n      \"priority\": \"should\",\n      \"implementation_hint\": \"コピペ可能なプロンプト枠を記事内に設置\"\n    },\n    {\n      \"category\": \"ux\",\n      \"description\": \"記事の冒頭に「求人健康診断」のような簡易チェックリストを置き、ユーザーの状態をセルフチェックさせる\",\n      \"priority\": \"high\",\n      \"implementation_hint\": \"「はい/いいえ」で答えられる5つの質問\"\n    }\n  ],\n  \"gap_opportunities\": [\n    {\n      \"gap_type\": \"具体性の欠如\",\n      \"description\": \"競合は「ターゲットを明確に」と言うが、具体的なペルソナ設定シートや項目を提供していない\",\n      \"competitors_missing\": [\"https://www.persol-bd.co.jp/...\", \"https://www.saiyo-doda.jp/...\"],\n      \"value_potential\": 0.9\n    },\n    {\n      \"gap_type\": \"テクノロジー活用\",\n      \"description\": \"生成AIを活用した求人作成ノウハウに触れている競合が皆無\",\n      \"competitors_missing\": [\"ALL\"],\n      \"value_potential\": 0.95\n    }\n  ],\n  \"content_recommendations\": [\n    \"「求人原稿のBefore/After」を具体的な職種（営業、事務、飲食など）で提示し、視覚的に改善効果を示す。\",\n    \"「AI×採用」のセクションを設け、ChatGPTを使った求人作成プロンプトを公開することで、先進性と実用性をアピールする。\",\n    \"記事の中盤に「無料求人診断」のCTAを設置し、読み手の課題意識が高まったタイミングでアクションを促す。\",\n    \"採用担当者のメンタルヘルス（孤独感の解消）に寄り添うコラム的な要素を入れ、感情的なつながり（ラポール）を形成する。\"\n  ]\n}\n```",
+  "parsed_data": {
+    "keyword": "従業員募集こない",
+    "market_overview": "「従業員募集こない」の検索意図は、深刻な人手不足に直面する中小企業や採用担当者の悲痛な叫びである。上位表示記事はPERSOL、doda、エン・ジャパンなどの大手人材系メディアが独占しており、権威性は極めて高い。内容は「市場背景（少子化など）」「原因分析（給与、条件、魅力不足）」「対策（ターゲット見直し、ペルソナ設定）」で構成される教科書的なものが多い。ユーザーは「正論」よりも「今すぐ使える具体的な処方箋」や「自社でもできるという希望」を求めており、ここに差別化の余地がある。",
+    "competitor_profiles": [
+      {
+        "url": "https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/",
+        "title": "求人を出しても応募者が来ない理由と、人手不足を解消するための解決法を徹底解説！",
+        "strengths": [
+          "パーソルブランドによる圧倒的な信頼性",
+          "市場背景から対策まで網羅性が高い",
+          "図解やデータを用いた論理的な構成"
+        ],
+        "weaknesses": [
+          "内容が教科書的で総花的",
+          "中小企業の現場レベルの泥臭い悩みへの共感が薄い",
+          "具体的な改善例文などの即効性ツールが不足"
+        ],
+        "content_focus": [
+          "採用市場の動向",
+          "応募が来ない4つの理由",
+          "ターゲット設定の重要性"
+        ],
+        "unique_value": "大手視点での包括的な採用戦略の提示",
+        "threat_level": "high"
+      },
+      {
+        "url": "https://part.shufu-job.jp/business/details/36/",
+        "title": "求人募集しても人が来ない会社とは？3つの原因と応募を増やす方法を解説",
+        "strengths": [
+          "主婦層に特化した具体的視点",
+          "1万字を超える圧倒的な情報量",
+          "「しゅふJOB」の実績に基づく説得力"
+        ],
+        "weaknesses": [
+          "文字数が多すぎて要点をつかむのに時間がかかる",
+          "主婦採用以外の文脈では応用しにくい部分がある"
+        ],
+        "content_focus": [
+          "主婦採用のノウハウ",
+          "求人原稿の改善ポイント",
+          "時給以外の魅力付け"
+        ],
+        "unique_value": "パート・アルバイト採用における専門的知見",
+        "threat_level": "medium"
+      },
+      {
+        "url": "https://www.saiyo-doda.jp/service/careers/column/no-job-openings",
+        "title": "求人募集しても応募が来ない会社の原因と改善方法を解説",
+        "strengths": [
+          "dodaの膨大なデータに基づく分析",
+          "中途採用に特化した実践的アドバイス",
+          "原因特定から改善までのフローが明確"
+        ],
+        "weaknesses": [
+          "企業向けサービスへの誘導色が強い",
+          "心理的なハードルを下げる工夫が少ない"
+        ],
+        "content_focus": [
+          "中途採用の課題解決",
+          "求人広告のブラッシュアップ",
+          "採用手法の多角化"
+        ],
+        "unique_value": "中途採用市場における高い権威性とデータ信頼性",
+        "threat_level": "high"
+      }
+    ],
+    "word_count_analysis": {
+      "mode": "ai_balanced",
+      "analysis_skipped": false,
+      "skip_reason": "",
+      "target_keyword": "従業員募集こない",
+      "competitor_statistics": {
+        "average_word_count": 8522,
+        "median_word_count": 8621,
+        "max_word_count": 12227,
+        "min_word_count": 5704,
+        "standard_deviation": 2150,
+        "data_points": 9
+      },
+      "article_details": [
+        {
+          "rank": 1,
+          "title": "求人を出しても応募者が来ない理由と...",
+          "url": "https://www.persol-bd.co.jp/...",
+          "word_count": 7192,
+          "notes": "構成バランス良"
+        },
+        {
+          "rank": 2,
+          "title": "求人募集しても人が来ない会社とは？...",
+          "url": "https://part.shufu-job.jp/...",
+          "word_count": 11498,
+          "notes": "長文、網羅型"
+        },
+        {
+          "rank": 3,
+          "title": "求人募集しても応募が来ない会社の原因...",
+          "url": "https://www.saiyo-doda.jp/...",
+          "word_count": 9162,
+          "notes": "標準的長さ"
+        }
+      ],
+      "ai_suggestion": {
+        "ai_suggested_word_count": 8500,
+        "suggestion_logic": "競合平均(8522字)と同等を維持しつつ、情報の密度と質で勝負するai_balanced設定",
+        "note": "上位記事は長文傾向にあるが、単なる引き伸ばしは避け、ユーザビリティを重視する。"
+      },
+      "ai_suggested_word_count": 8500,
+      "rationale": "競合平均が約8500字と多いため、情報の網羅性は必須。ただし、1万字を超えると可読性が下がるため、平均値付近を目指す。",
+      "target_word_count_range": {
+        "min": 8100,
+        "min_relaxed": 7600,
+        "max": 8900,
+        "target": 8500
+      },
+      "note": "この文字数は達成すべき目標値です。目標範囲は±400字です。"
+    },
+    "target_word_count": 8500,
+    "ranking_factor_analysis": {
+      "analysis_summary": "上位記事は「人材大手による権威性」と「網羅的な原因・対策リスト」で構成されている。ユーザーは不安を抱えているため、信頼できる情報源（E-E-A-T）が重視される傾向にある。一方で、具体的に「どう書き直せばいいか」というActionableな情報の解像度はまだ向上の余地がある。",
+      "top_articles_deep_analysis": [
+        {
+          "rank": 1,
+          "title": "求人を出しても応募者が来ない理由と、人手不足を解消するための解決法を徹底解説！",
+          "url": "https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/",
+          "satisfaction_deep_dive": {
+            "cognitive_satisfaction": {
+              "article_feature": "採用市場の構造的変化の解説",
+              "level_1": "なぜ応募が来ないのかの「正解」を知る",
+              "level_2": "自社の努力不足だけが原因ではないと理解できる",
+              "level_3": "原因が不明なままだと、無駄な対策にコストを費やす",
+              "level_4": "採用活動の全体像が見えていないことによる戦略不在",
+              "level_5_root": "認知負荷の軽減"
+            },
+            "emotional_satisfaction": {
+              "article_feature": "大手パーソルのブランドと客観データ",
+              "level_1": "信頼できる情報源からのアドバイスを得る",
+              "level_2": "間違った方向に進んでいないかという不安が消える",
+              "level_3": "不確実な情報に踊らされ、採用担当としての立場が危うくなる",
+              "level_4": "採用失敗による社内評価の低下や責任追及への恐怖",
+              "level_5_root": "社会的リスクの回避"
+            },
+            "actionable_satisfaction": {
+              "article_feature": "ターゲット別・原因別の解決策提示",
+              "level_1": "自社の課題に合った対策を選べる",
+              "level_2": "リソースが限られる中で優先順位をつけられる",
+              "level_3": "全てに手を出してリソース不足に陥る",
+              "level_4": "具体的な実行手順がわからず、行動に移せない",
+              "level_5_root": "自己効力感の向上"
+            },
+            "root_cause_categories_used": [
+              "認知負荷の軽減",
+              "社会的リスクの回避",
+              "自己効力感の向上"
+            ]
+          },
+          "google_evaluation_factors": {
+            "experience": "企業の採用支援実績に基づく知見",
+            "expertise": "HR領域の専門用語や市場動向の正確な解説",
+            "authoritativeness": "ドメインパワーと業界トップクラスのブランド力",
+            "trustworthiness": "最新データ（有効求人倍率など）の引用",
+            "search_intent_fulfillment": "「理由」と「解決法」を網羅的にカバー",
+            "user_experience_signals": "目次、見出し、図解が整理されており読みやすい"
+          },
+          "user_journey_fulfillment": "課題認識→原因特定→解決策提示→資料請求という王道のB2Bジャーニー"
+        }
+      ],
+      "common_ranking_factors": [
+        "大手人材会社のドメインパワー",
+        "網羅的な原因分析（給与、条件、媒体、書き方）",
+        "最新の労働市場データの引用",
+        "複数の解決策の提示",
+        "ホワイトペーパーへの誘導"
+      ],
+      "satisfaction_patterns": {
+        "informational_satisfaction": [
+          "市場データを根拠にした現状分析",
+          "多角的な原因の洗い出し"
+        ],
+        "emotional_satisfaction": [
+          "「人手不足は社会問題」という文脈での責任分散（安心感）"
+        ],
+        "actionable_satisfaction": [
+          "ペルソナ設計のフレームワーク提示",
+          "求人媒体の選び方ガイド"
+        ]
+      },
+      "actionable_insights": [
+        "競合は「総論」に強く、「各論（具体的なコピーライティングなど）」が弱い傾向。",
+        "ユーザーは「で、具体的にどう書けばいいの？」という疑問を持っている。",
+        "心理的な「焦り」に寄り添う共感コンテンツが不足している。"
+      ],
+      "implications_for_our_article": {
+        "must_include": [
+          "最新の有効求人倍率データ",
+          "給与・条件・媒体・原稿の4大原因分析",
+          "ペルソナ設定の重要性"
+        ],
+        "differentiation_opportunities": [
+          "NG求人原稿とOK求人原稿の具体的比較（Before/After）",
+          "AIを使った求人作成プロンプトの提供",
+          "採用担当者のメンタルケア（焦りへの共感）"
+        ],
+        "user_journey_design": "不安の鎮静化（共感）→ 原因の構造化（納得）→ 即実践可能なツール提供（行動）→ 専門家への相談（CV）"
+      }
+    },
+    "four_pillars_differentiation": {
+      "neuroscience": {
+        "phase1_fear_recognition": {
+          "competitor_approach": "市場環境の変化や統計データで危機感を煽る（論理的アプローチ）",
+          "our_differentiation": "「採用失敗による具体的損失額（機会損失コスト）」をシミュレーションし、扁桃体を直接刺激する（感情的アプローチ）",
+          "expected_effect": "扁桃体活性化+30%"
+        },
+        "phase2_understanding": {
+          "competitor_approach": "教科書的な原因と対策の羅列",
+          "our_differentiation": "「なぜその求人では人が来ないのか」を脳科学的観点（求職者の脳内処理）から解説し、深い納得感を生む",
+          "expected_effect": "前頭前野処理満足度+40%"
+        },
+        "phase3_action": {
+          "competitor_approach": "資料請求や問い合わせへの誘導（ハードル高い）",
+          "our_differentiation": "「コピペで使える修正テンプレート」「求人診断チェックリスト」など、即座に報酬系を刺激する低ハードルな行動を用意",
+          "expected_effect": "CVR+50%"
+        }
+      },
+      "behavioral_economics": {
+        "loss_aversion": {
+          "competitor_approach": "人手不足倒産のリスク示唆",
+          "our_differentiation": "「1名採用できないごとの月間損失額」を具体的に提示"
+        },
+        "social_proof": {
+          "competitor_approach": "「多くの企業が悩んでいる」という一般論",
+          "our_differentiation": "同規模・同業種の「改善ビフォーアフター」の具体的数値事例"
+        },
+        "authority": {
+          "competitor_approach": "自社ブランドの権威性",
+          "our_differentiation": "採用コンサルタントや心理学者の見解を引用し、第三者権威を活用"
+        },
+        "consistency": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "記事冒頭で「現状を変えたいですか？」という小さなYesを取る（マイクロコミットメント）"
+        },
+        "liking": {
+          "competitor_approach": "ビジネスライクな文体",
+          "our_differentiation": "採用担当者の孤独やプレッシャーに寄り添う共感的なトーン"
+        },
+        "scarcity": {
+          "competitor_approach": "特になし",
+          "our_differentiation": "「今すぐ対策しないと手遅れになる市場の変化（2025年問題など）」を強調"
+        }
+      },
+      "llmo": {
+        "question_headings": {
+          "competitor_count": 2,
+          "our_target": 6
+        },
+        "section_independence": {
+          "competitor_issue": "文脈依存度が高く、部分的な引用がされにくい",
+          "our_approach": "各セクションを「Q&A」+「結論」+「理由」の完結型構造にし、AIによる抜粋（Featured Snippets/RAG）を容易にする"
+        },
+        "expected_effect": "AI引用率+35%"
+      },
+      "kgi": {
+        "cta_placement": {
+          "competitor_average": 1.2,
+          "our_strategy": "3段階CTA（課題認識時、解決策提示時、記事終了時）"
+        },
+        "cta_appeal": {
+          "competitor_approach": "「資料ダウンロード」「お問い合わせ」",
+          "our_differentiation": "「無料求人診断」「NGワードチェッカー」「5分で完了」などベネフィットを具体化"
+        },
+        "expected_effect": "CVR+50%"
+      }
+    },
+    "three_phase_differentiation_strategy": {
+      "phase1": {
+        "phase_name": "不安・課題認識",
+        "user_state": "「なぜ来ないのか？」「このままではまずい」という焦燥感",
+        "competitor_weakness": "一般論としての市場解説に留まり、個人の痛みに直結していない",
+        "our_differentiation": [
+          "「あなたの求人がスルーされる3つの瞬間」を求職者視点で描写",
+          "採用担当者の孤独に共感しつつ、損失回避バイアスを刺激"
+        ],
+        "expected_metrics": "離脱率-15pt"
+      },
+      "phase2": {
+        "phase_name": "理解・納得",
+        "user_state": "「原因はわかったが、どうすればいい？」という解決策への渇望",
+        "competitor_weakness": "抽象的なアドバイス（「魅力を伝えよう」等）が多く、再現性が低い",
+        "our_differentiation": [
+          "NG例と改善例を対比させたBefore/Afterの提示",
+          "ChatGPTを活用した求人作成プロンプトの公開"
+        ],
+        "expected_metrics": "滞在時間+40%"
+      },
+      "phase3": {
+        "phase_name": "行動決定",
+        "user_state": "「これならできそうだ」「試してみたい」という前向きな意欲",
+        "competitor_weakness": "ハードルの高い問い合わせフォームへの誘導のみ",
+        "our_differentiation": [
+          "スマホでできる無料診断ツールへの誘導",
+          "ダウンロード不要の即実践チェックリスト"
+        ],
+        "expected_metrics": "CVR+50%"
+      }
+    },
+    "competitor_cta_analysis": {
+      "cta_deployment_rate": 0.9,
+      "average_cta_count": 1.5,
+      "main_cta_positions": [
+        "記事下部",
+        "サイドバーバナー",
+        "ヘッダー追従"
+      ],
+      "our_differentiation_strategy": "競合は「サービス資料」一辺倒だが、自社はユーザーの検討フェーズに合わせた3段階CTA（診断→テンプレート→相談）を配置し、マイクロコンバージョンを積み重ねる。"
+    },
+    "differentiation_strategies": [
+      {
+        "category": "content",
+        "description": "求職者の心理を行動経済学的に分析し、「なぜ応募ボタンを押さないのか」を科学的に解説するセクションを追加",
+        "priority": "must",
+        "implementation_hint": "「応募の壁」を図解化し、心理的ハードルを下げる具体的なコピーライティング技術を紹介"
+      },
+      {
+        "category": "tool",
+        "description": "AI（ChatGPT）を活用して、魅力的な求人原稿を自動生成するためのプロンプトテンプレートを提供",
+        "priority": "should",
+        "implementation_hint": "コピペ可能なプロンプト枠を記事内に設置"
+      },
+      {
+        "category": "ux",
+        "description": "記事の冒頭に「求人健康診断」のような簡易チェックリストを置き、ユーザーの状態をセルフチェックさせる",
+        "priority": "high",
+        "implementation_hint": "「はい/いいえ」で答えられる5つの質問"
+      }
+    ],
+    "gap_opportunities": [
+      {
+        "gap_type": "具体性の欠如",
+        "description": "競合は「ターゲットを明確に」と言うが、具体的なペルソナ設定シートや項目を提供していない",
+        "competitors_missing": [
+          "https://www.persol-bd.co.jp/...",
+          "https://www.saiyo-doda.jp/..."
+        ],
+        "value_potential": 0.9
+      },
+      {
+        "gap_type": "テクノロジー活用",
+        "description": "生成AIを活用した求人作成ノウハウに触れている競合が皆無",
+        "competitors_missing": [
+          "ALL"
+        ],
+        "value_potential": 0.95
+      }
+    ],
+    "content_recommendations": [
+      "「求人原稿のBefore/After」を具体的な職種（営業、事務、飲食など）で提示し、視覚的に改善効果を示す。",
+      "「AI×採用」のセクションを設け、ChatGPTを使った求人作成プロンプトを公開することで、先進性と実用性をアピールする。",
+      "記事の中盤に「無料求人診断」のCTAを設置し、読み手の課題意識が高まったタイミングでアクションを促す。",
+      "採用担当者のメンタルヘルス（孤独感の解消）に寄り添うコラム的な要素を入れ、感情的なつながり（ラポール）を形成する。"
+    ]
+  },
+  "format_detected": "json",
+  "competitor_count": 9,
+  "quality_competitor_count": 9,
+  "word_count_statistics": {
+    "mode": "ai_balanced",
+    "analysis_skipped": false,
+    "skip_reason": "",
+    "target_keyword": "従業員募集こない",
+    "competitor_statistics": {
+      "average_word_count": 8522,
+      "median_word_count": 8621,
+      "max_word_count": 12227,
+      "min_word_count": 5704,
+      "standard_deviation": 2273.4,
+      "data_points": 9
+    },
+    "article_details": [
+      {
+        "rank": 1,
+        "title": "求人を出しても応募者が来ない理由と、人手不足を解消するための解決法を徹底解説！",
+        "url": "https://www.persol-bd.co.jp/service/hrsolution/s-hr/column/job-offer-shortage/",
+        "word_count": 7192,
+        "notes": ""
+      },
+      {
+        "rank": 2,
+        "title": "求人募集しても人が来ない会社とは？3つの原因と応募を増やす方法を解説 - 【公式】しゅふＪＯＢ求人掲載・掲載料のご案内｜主婦/主夫採用・求人料金",
+        "url": "https://part.shufu-job.jp/business/details/36/",
+        "word_count": 11498,
+        "notes": ""
+      },
+      {
+        "rank": 3,
+        "title": "求人募集しても応募が来ない会社の原因と改善方法を解説｜doda(デューダ)中途採用をお考えの法人様へ",
+        "url": "https://www.saiyo-doda.jp/service/careers/column/no-job-openings",
+        "word_count": 9162,
+        "notes": ""
+      },
+      {
+        "rank": 4,
+        "title": "求人を出しても応募者がまったく来ない会社がチェックすべき5つのこと | アイビー社会保険労務士法人",
+        "url": "https://ivy-srh.or.jp/archives/2788",
+        "word_count": 6493,
+        "notes": ""
+      },
+      {
+        "rank": 5,
+        "title": "求人募集で応募が来ない原因は？求職者が重視する点と対策方法7選 | トラコム株式会社 Indeed代理店",
+        "url": "https://www.tracom.co.jp/tralog/oubo-improvement/",
+        "word_count": 9269,
+        "notes": ""
+      },
+      {
+        "rank": 6,
+        "title": "人手不足倒産⁉中小企業に求人が来ない理由とすぐにしたい対策とは | 株式会社エフアンドエム",
+        "url": "https://www.fmclub.jp/blog/saiyou/10",
+        "word_count": 5704,
+        "notes": ""
+      },
+      {
+        "rank": 7,
+        "title": "求人募集で応募が来ない原因とその対策方法とは？求人広告を見直そう",
+        "url": "https://www.neo-career.co.jp/humanresource/knowhow/b-contents-middlecareer-obokonaigenin-181114/",
+        "word_count": 8621,
+        "notes": ""
+      },
+      {
+        "rank": 8,
+        "title": "求人を募集しても応募が来ない理由と5つの対策方法 | エン株式会社",
+        "url": "https://saiyo.employment.en-japan.com/blog/companies-that-do-not-receive-applications",
+        "word_count": 6532,
+        "notes": ""
+      },
+      {
+        "rank": 9,
+        "title": "従業員募集に応募が来ない理由は3つだけ！中小企業が0円からできる改善策【2025年版】",
+        "url": "https://crosslink.jp.net/kyujinnavi/blog/no-job-applicants/",
+        "word_count": 12227,
+        "notes": ""
+      }
+    ],
+    "ai_suggestion": {
+      "ai_suggested_word_count": 8948,
+      "suggestion_logic": "平均8522字 × 1.05（バランス）= 8948字",
+      "note": ""
+    },
+    "ai_suggested_word_count": 8948,
+    "rationale": "平均8522字 × 1.05（バランス）= 8948字",
+    "target_word_count_range": {
+      "min": 8648,
+      "min_relaxed": 8448,
+      "max": 9248,
+      "target": 8948
+    },
+    "note": "この文字数は達成すべき目標値です。目標範囲は±300字です。内容が不足し冗長になる場合のみ-500字まで許容します。上限+300字は厳格に守ってください。"
+  },
+  "target_word_count": 8500,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 6585,
+    "output": 4577
+  },
+  "metrics": {
+    "char_count": 10660,
+    "word_count": 3799
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  }
+}

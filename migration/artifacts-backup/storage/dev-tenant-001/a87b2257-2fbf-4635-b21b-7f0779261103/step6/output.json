@@ -1,0 +1,70 @@
+{
+  "step": "step6",
+  "keyword": "ドライバー 採用",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 3942,
+    "output": 3746
+  },
+  "warnings": [
+    "enhanced_shorter_than_original",
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'section_id': 'S01', 'heading': 'なぜ今、ドライバー採用がこんなにも難しいのか？中小運送会社の苦悩', 'word_count_target': 1200, 'psychological_phase': 'phase1_anxiety', 'sources_used': [], 'key_points': ['運送業界のドライバー不足の深刻な現状をデータで示す（有効求人倍率、年齢構成など）', '中小運送会社が抱える特有の課題（採用コスト、ブランド力不足、待遇面など）を明確にする', 'ドライバー不足が事業に与える具体的な影響（機会損失、顧客満足度の低下、残業増加など）を説明する', '他業界の人手不足と比較して、運送業界の特殊性（時間外労働、長時間運転、体力的な負担）を強調する'], 'subheadings': [{'heading': '【データで見る】深刻化するドライバー不足の実態：有効求人倍率は〇〇倍', 'word_count_target': 400}, {'heading': '中小運送会社がドライバー採用で直面する3つの壁：コスト、ブランド、待遇', 'word_count_target': 400}, {'heading': 'ドライバー不足がもたらす事業への深刻な影響：機会損失、顧客からのクレーム増加', 'word_count_target': 400}]}, {'section_id': 'S02', 'heading': 'ドライバー採用を成功させるための第一歩とは？自社の現状把握と戦略立案', 'word_count_target': 800, 'psychological_phase': 'phase1_anxiety', 'sources_used': [], 'key_points': ['自社のドライバー採用の現状（応募数、採用率、定着率）を正しく把握することの重要性', '採用戦略を立てる上での基本的な考え方（ターゲット設定、KPI設定、PDCAサイクル）', '成功への期待感を持たせる（成功事例の紹介、具体的な数値目標の提示）', '採用活動におけるKPI設定の重要性（応募数、面接実施数、採用数、採用単価、定着率）'], 'subheadings': [{'heading': '自社のドライバー採用の現状を正しく把握する：応募数、採用率、定着率を分析', 'word_count_target': 400}, {'heading': '採用戦略を立てる上での3つのポイント：ターゲット設定、KPI設定、PDCAサイクル', 'word_count_target': 400}]}, {'section_id': 'S03', 'heading': '中小運送会社が実践すべきドライバー採用戦略5選：ターゲット設定から定着支援まで', 'word_count_target': 2500, 'psychological_phase': 'phase2_understanding', 'sources_used': [], 'key_points': ['ターゲットとなるドライバー像を明確にする（年齢、経験、スキル、希望条件）', '効果的な求人媒体の選び方（求人サイト、ハローワーク、SNS、紹介制度）', '魅力的な求人情報の作成方法（仕事内容、給与、福利厚生、キャリアパス）', '採用活動の効率化（応募者管理システム、面接マニュアル、採用基準）', '採用後のフォローアップ（研修制度、メンター制度、評価制度）'], 'subheadings': [{'heading': 'ステップ1：ターゲットとなるドライバー像を明確にする：年齢、経験、スキル、希望条件', 'word_count_target': 500}, {'heading': 'ステップ2：自社に最適な求人媒体を選ぶ：求人サイト、ハローワーク、SNS、紹介制度を比較', 'word_count_target': 500}, {'heading': 'ステップ3：応募者を惹きつける求人情報を作成する：仕事内容、給与、福利厚生、キャリアパスを具体的に', 'word_count_target': 500}, {'heading': 'ステップ4：採用活動を効率化するためのツール活用：応募者管理システム、面接マニュアル', 'word_count_target': 500}, {'heading': 'ステップ5：採用後のフォローアップで定着率を向上させる：研修制度、メンター制度、評価制度', 'word_count_target': 500}]}, {'section_id': 'S04', 'heading': '採用コストを削減するための5つの秘策：無料媒体活用からRPO導入まで', 'word_count_target': 2000, 'psychological_phase': 'phase2_understanding', 'sources_used': [], 'key_points': ['無料の求人媒体の活用（ハローワーク、Indeed、SNS）', 'リファラル採用の導入（社員紹介制度のメリット・デメリット）', '採用イベントへの参加（合同説明会、企業見学会）', '採用代行サービス（RPO）の利用（費用対効果の検証）', '採用プロセスの見直し（書類選考の基準、面接の質問内容）'], 'subheadings': [{'heading': '秘策1：無料で使える求人媒体を徹底活用する：ハローワーク、Indeed、SNS', 'word_count_target': 400}, {'heading': '秘策2：社員紹介制度（リファラル採用）を導入する：メリット・デメリットを解説', 'word_count_target': 400}, {'heading': '秘策3：地域密着型の採用イベントに積極的に参加する：合同説明会、企業見学会', 'word_count_target': 400}, {'heading': '秘策4：採用代行サービス（RPO）を賢く利用する：費用対効果を事前に検証', 'word_count_target': 400}, {'heading': '秘策5：採用プロセス全体を見直して無駄を省く：書類選考の基準、面接の質問内容を改善', 'word_count_target': 400}]}, {'section_id': 'S05', 'heading': 'ドライバーの定着率を向上させるための秘訣：働きがいのある環境づくり', 'word_count_target': 1000, 'psychological_phase': 'phase2_understanding', 'sources_used': [], 'key_points': ['働きやすい環境づくり（労働時間、休憩時間、安全対策）', 'キャリアパスの提示（昇給、昇格、資格取得支援）', 'コミュニケーションの活性化（定期的な面談、チームワークの促進）', '公平な評価制度の見直し（成果主義、能力主義）', '福利厚生の充実（社会保険、有給休暇、慶弔休暇）'], 'subheadings': [{'heading': '秘訣1：ドライバーが働きやすい環境を整備する：労働時間、休憩時間、安全対策', 'word_count_target': 200}, {'heading': '秘訣2：明確なキャリアパスを提示する：昇給、昇格、資格取得支援', 'word_count_target': 200}, {'heading': '秘訣3：ドライバーとのコミュニケーションを活性化する：定期的な面談、チームワークの促進', 'word_count_target': 200}, {'heading': '秘訣4：公平な評価制度を導入する：成果主義、能力主義', 'word_count_target': 200}, {'heading': '秘訣5：福利厚生を充実させる：社会保険、有給休暇、慶弔休暇', 'word_count_target': 200}]}, {'section_id': 'S06', 'heading': '若手ドライバーを惹きつけるための求人戦略：SNS活用と企業文化の醸成', 'word_count_target': 1300, 'psychological_phase': 'phase3_action', 'sources_used': [], 'key_points': ['SNSを活用した情報発信（企業の魅力、社員の紹介、イベントの告知）', '若者が共感できる企業文化の醸成（風通しの良さ、挑戦する機会、社会貢献）', '最新技術の導入（運行管理システム、ドライブレコーダー、AIによる配車システム）', '充実した教育制度（OJT、外部研修、資格取得支援）', '柔軟な働き方の提供（短時間勤務、フレックスタイム制、リモートワーク）'], 'subheadings': [{'heading': '戦略1：SNSを活用して企業の魅力を発信する：社員インタビュー、イベントレポート', 'word_count_target': 260}, {'heading': '戦略2：若者が共感できる企業文化を醸成する：風通しの良さ、挑戦する機会、社会貢献', 'word_count_target': 260}, {'heading': '戦略3：最新技術を導入して業務効率化をアピールする：運行管理システム、AI配車', 'word_count_target': 260}, {'heading': '戦略4：充実した教育制度で成長をサポートする：OJT、外部研修、資格取得支援', 'word_count_target': 260}, {'heading': '戦略5：柔軟な働き方を提供してワークライフバランスを重視する：短時間勤務、フレックス', 'word_count_target': 260}]}, {'section_id': 'S07', 'heading': 'ドライバー採用でよくある質問（FAQ）', 'word_count_target': 2000, 'psychological_phase': 'phase3_action', 'sources_used': [], 'key_points': ['採用基準、給与、勤務時間、福利厚生、キャリアパス、必要な資格、未経験者の採用、女性ドライバーの採用、休日、車両の種類、研修制度'], 'subheadings': []}, {'section_id': 'S08', 'heading': 'まとめ｜中小運送会社がドライバー採用を成功させるために', 'word_count_target': 500, 'psychological_phase': 'phase3_action', 'sources_used': [], 'key_points': ['ドライバー採用の重要性を再強調', '中小運送会社が抱える課題を簡潔にまとめる', '具体的な解決策の提示（本記事の要約）', '成功事例の紹介（再度言及）', '読者へのメッセージ（行動を促す）'], 'subheadings': []}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 280
+  },
+  "source_citations": {},
+  "original_outline_hash": "319d4c69efb9ada5",
+  "metrics": {
+    "word_count": 2207,
+    "char_count": 4780,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 1927,
+    "word_increase": 280
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 478.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "llmo_weak: 見出し構造が不十分（H2が3未満）"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 0.33,
+      "behavioral_economics": 0.5,
+      "llmo": 0.0,
+      "kgi": 0.67
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "step": "step6",
+  "keyword": "トラックドライバー 求人 書き方",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 2583,
+    "output": 3592
+  },
+  "warnings": [
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'section_id': 'S01', 'heading': '導入：なぜ、あなたの会社の求人には応募が来ないのか？', 'word_count_target': 1000, 'psychological_phase': 'phase1_anxiety', 'sources_used': ['S1', 'S2'], 'key_points': ['トラックドライバーの有効求人倍率は全職業平均の約2倍〜3倍で推移しており、待っているだけでは採用できない。', '「アットホーム」などの曖昧な表現が、逆にブラック企業の隠れ蓑として警戒されている現状。', '求職者はスマホで「3つの数字（手取り・休日・労働時間）」だけを見て3秒で判断している。'], 'subheadings': [{'heading': '有効求人倍率2.89倍の衝撃：選ばれる側になった運送会社', 'word_count_target': 400}, {'heading': 'その求人票、「ブラック企業フラグ」が立っていませんか？', 'word_count_target': 300}, {'heading': 'この記事で得られるもの：反応率を劇的に変える「書き方の技術」', 'word_count_target': 300}]}, {'section_id': 'S02', 'heading': '第1章：応募ゼロを脱却する「ターゲット設定」と「心理分析」', 'word_count_target': 1500, 'psychological_phase': 'phase2_understanding', 'sources_used': ['S3'], 'key_points': ['中小運送会社が大手と同じ土俵（高給与・新車）で戦っても勝てない理由。', 'ドライバー求職者が真に求めているのは「人間関係のストレスフリー」や「融通の利くシフト」である場合が多い。', 'ターゲットを絞ることで、逆に反応率が上がる「ペルソナマーケティング」の応用。'], 'subheadings': [{'heading': '大手には勝てない？中小運送会社が戦うべき「独自の土俵」', 'word_count_target': 500}, {'heading': 'ドライバー求職者が最初に見る「3つの数字」と「1つの写真」', 'word_count_target': 500}, {'heading': '「誰でもいい」は誰にも刺さらない：ペルソナ設定の重要性', 'word_count_target': 500}]}, {'section_id': 'S03', 'heading': '第2章：【実例比較】反応率が劇的に変わる！求人票の書き方ビフォーアフター', 'word_count_target': 2000, 'psychological_phase': 'phase2_understanding', 'sources_used': ['S4'], 'key_points': ['悪い例と良い例を比較し、具体的な修正ポイントを解説。', 'キャッチコピーは「自分事」化させる。仕事内容は「1日の流れ」で不安を払拭。', '給与は「月給30万円〜」だけでなく、手当の内訳を公開することで信頼を得る。'], 'subheadings': [{'heading': 'キャッチコピー：ありきたりな「やる気のある方」を「家族との時間を大切にしたい方」へ', 'word_count_target': 600}, {'heading': '仕事内容：不安を完全に払拭する「リアルな1日の流れ」の書き方', 'word_count_target': 700}, {'heading': '給与・待遇：怪しまれないための「正直な内訳」公開テクニック', 'word_count_target': 700}]}, {'section_id': 'S04', 'heading': '第3章：2024年問題に対応！法的に安全で魅力的なアピール方法', 'word_count_target': 1500, 'psychological_phase': 'phase2_understanding', 'sources_used': ['S5', 'S6'], 'key_points': ['「稼げます（長時間労働）」のアピールはコンプライアンス違反のリスクを示唆し、応募者を遠ざける。', '労働時間短縮を「プライベートの充実」「無理のない運行」としてポジティブに変換する。', '未経験者採用における「研修期間」や「免許取得支援」の具体的な記載方法。'], 'subheadings': [{'heading': '「稼げる＝長時間労働」は時代遅れ：労働時間短縮をポジティブに伝える技術', 'word_count_target': 500}, {'heading': '絶対に書いてはいけないNGワードと法令違反リスク：最低賃金と性差別', 'word_count_target': 500}, {'heading': '未経験者をターゲットにする場合の必須記載事項：研修と支援制度', 'word_count_target': 500}]}, {'section_id': 'S05', 'heading': '第4章：応募ボタンを押させる「ひと工夫」：Indeed・スマホ対策', 'word_count_target': 1000, 'psychological_phase': 'phase2_understanding', 'sources_used': ['S7'], 'key_points': ['求職者の8割以上がスマホで閲覧しているため、視認性の高いレイアウト（箇条書き・空行）が必須。', '写真は「ピカピカのトラック」より「休憩室の談笑」や「社長の顔」が信頼を生む。', 'IndeedSEOを意識したキーワード選定（車種、エリア、積み荷の種類）。'], 'subheadings': [{'heading': 'スマホユーザーが見やすいレイアウトと改行のコツ：3秒で離脱させない', 'word_count_target': 300}, {'heading': 'トラックの車体写真よりも効果的な「信頼される写真」の選び方', 'word_count_target': 300}, {'heading': 'Indeed（インディード）で上位表示させるキーワード選定の極意', 'word_count_target': 400}]}, {'section_id': 'S06', 'heading': '第5章：【コピペOK】ターゲット別・トラックドライバー求人テンプレート', 'word_count_target': 1500, 'psychological_phase': 'phase2_understanding', 'sources_used': [], 'key_points': ['ターゲット別の具体的な求人原稿テンプレートを提供。', '「ガッツリ稼ぎたい経験者」「プライベート重視」「シニア・女性」それぞれの刺さるポイント。', '自社の条件に合わせて数字を入れ替えるだけで使用可能にする。'], 'subheadings': [{'heading': 'テンプレートA：ガッツリ稼ぎたい経験者向け（長距離・大型）', 'word_count_target': 500}, {'heading': 'テンプレートB：プライベート重視・未経験者向け（地場・ルート配送）', 'word_count_target': 500}, {'heading': 'テンプレートC：シニア・女性ドライバー向け（カゴ台車・負担少）', 'word_count_target': 500}]}, {'section_id': 'S07', 'heading': 'よくある質問（FAQ）', 'word_count_target': 2000, 'psychological_phase': 'phase3_action', 'sources_used': [], 'key_points': ['採用コスト、媒体選び、面接率向上など、実務的な疑問に回答。', '最低10問を設定し、網羅性を高める。'], 'subheadings': []}, {'section_id': 'S08', 'heading': 'まとめ：正直で具体的な情報開示こそが、最強の採用戦略である', 'word_count_target': 500, 'psychological_phase': 'phase3_action', 'sources_used': ['S8'], 'key_points': ['小手先のテクニックよりも「自社のありのまま」を魅力的に伝えることが重要。', '求人票の改善は、今すぐ無料でできる最大の採用対策。', 'まずはテンプレートを使って、1つでも多くの情報を具体化することから始める。'], 'subheadings': []}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 409
+  },
+  "source_citations": {},
+  "original_outline_hash": "c79c0d7143db6877",
+  "metrics": {
+    "word_count": 1626,
+    "char_count": 3838,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 1217,
+    "word_increase": 409
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 428.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-3-pro-preview",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "llmo_weak: 見出し構造が不十分（H2が3未満）"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 0.67,
+      "behavioral_economics": 0.25,
+      "llmo": 0.0,
+      "kgi": 0.33
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}

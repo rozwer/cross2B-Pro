@@ -1,0 +1,182 @@
+{
+  "step": "step3_5",
+  "keyword": "ドライバー 採用",
+  "emotional_analysis": {
+    "primary_emotion": "焦り",
+    "secondary_emotions": [
+      "不安",
+      "期待"
+    ],
+    "pain_points": [
+      "ドライバー不足による業務逼迫",
+      "採用コストの増加",
+      "採用難易度の上昇"
+    ],
+    "desires": [
+      "ドライバー不足の解消",
+      "優秀な人材の確保",
+      "事業の安定・成長"
+    ]
+  },
+  "human_touch_patterns": [],
+  "experience_episodes": [
+    {
+      "scenario": "問題に直面した状況",
+      "narrative": "ある日、急なドライバーの退職。残されたメンバーで業務を回すも、配送遅延が頻発。顧客からのクレームが相次ぎ、社長は頭を抱えた。（78文字）",
+      "lesson": "「このままでは、会社の信用を失ってしまう。早急にドライバーを確保しなければ。」という気づき"
+    },
+    {
+      "scenario": "解決策を発見した状況",
+      "narrative": "藁にもすがる思いで、ドライバー採用に関するセミナーに参加。そこで、求人広告の見直しや、採用後の定着支援の重要性を学んだ。（72文字）",
+      "lesson": "「これなら、うちの会社でもドライバー不足を解消できるかもしれない。」という確信"
+    },
+    {
+      "scenario": "行動して成功した状況",
+      "narrative": "セミナーで学んだことを実践。求人広告を刷新し、福利厚生を充実させた結果、応募者が殺到。無事にドライバーを確保し、業績も回復した。（77文字）",
+      "lesson": "「あの時、セミナーに参加して本当に良かった。行動しなければ、何も変わらなかった。」という実感"
+    }
+  ],
+  "emotional_hooks": [],
+  "phase_emotional_map": {
+    "phase1": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase2": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    },
+    "phase3": {
+      "dominant_emotion": "",
+      "empathy_statements": [],
+      "experience_episodes": []
+    }
+  },
+  "behavioral_economics_hooks": {
+    "loss_aversion_hook": "",
+    "social_proof_hook": "",
+    "authority_hook": "",
+    "scarcity_hook": ""
+  },
+  "placement_instructions": [],
+  "raw_output": "```json\n{\n  \"emotional_analysis\": {\n    \"primary_emotion\": \"焦り\",\n    \"secondary_emotions\": [\"不安\", \"期待\"],\n    \"pain_points\": [\"ドライバー不足による業務逼迫\", \"採用コストの増加\", \"採用難易度の上昇\"],\n    \"desires\": [\"ドライバー不足の解消\", \"優秀な人材の確保\", \"事業の安定・成長\"]\n  },\n  \"phase_aligned_elements\": {\n    \"phase1_anxiety\": {\n      \"target_brain\": \"扁桃体（危険検知）\",\n      \"emotional_goal\": \"「このままでは危険」という認識\",\n      \"human_touch\": {\n        \"experience\": \"朝礼で今日も欠員を告げる声が響き、残されたメンバーの疲労困憊の顔が目に焼き付く。このままでは、得意先からの信頼も失いかねない。\",\n        \"emotion_hook\": \"「人手不足で、現場が回らなくなっていませんか？」\",\n        \"empathy\": \"「急増する配送依頼に対応できず、毎日残業続きで、社員の疲弊が限界に達していませんか？」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"8-12%\",\n        \"cta_type\": \"early_hook\",\n        \"message_tone\": \"問題意識の確認（例：「まずはドライバー採用の現状を把握しませんか？」」\"\n      }\n    },\n    \"phase2_understanding\": {\n      \"target_brain\": \"前頭前野（論理的思考）\",\n      \"emotional_goal\": \"「なるほど、これが解決策か」という納得\",\n      \"human_touch\": {\n        \"experience\": \"運送業界専門コンサルタントA氏「ドライバー採用成功の鍵は、求職者の不安を解消し、企業の魅力を明確に伝えることです。」実際に、労働条件の改善と採用ブランディングを行ったB社では、応募数が3倍に増加しました。\",\n        \"emotion_hook\": \"「ドライバー採用の成功には、明確な戦略と情報開示が不可欠です。」\",\n        \"empathy\": \"「実は、多くの運送会社様が同じようにドライバー不足に悩んでいます。解決策は必ずあります。」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"35-45%\",\n        \"cta_type\": \"mid_engagement\",\n        \"message_tone\": \"具体的なアクション提案（例：「ドライバー採用を成功させるためのノウハウ資料を無料でダウンロード」）\"\n      }\n    },\n    \"phase3_action\": {\n      \"target_brain\": \"線条体（報酬系）\",\n      \"emotional_goal\": \"「今行動すれば報酬が得られる」という期待\",\n      \"human_touch\": {\n        \"experience\": \"新たな採用戦略によって、優秀なドライバーが集まり、配送効率が向上。残業時間が減り、社員の笑顔が増えたC社。「あの時、思い切って行動して本当に良かった。」\",\n        \"emotion_hook\": \"「今すぐドライバー採用戦略を見直し、事業の安定と成長を実現しましょう！」\",\n        \"empathy\": \"「あなたも、ドライバー不足から解放され、社員が安心して働ける環境を手に入れることができます！」\"\n      },\n      \"cta_alignment\": {\n        \"position_percent\": \"75-85%\",\n        \"cta_type\": \"final_conversion\",\n        \"message_tone\": \"即行動を促す（例：「今すぐ無料相談に申し込む」「【限定特典】採用成功事例集をプレゼント」）\"\n      }\n    }\n  },\n  \"experience_episodes\": [\n    {\n      \"phase\": \"phase1\",\n      \"scenario\": \"問題に直面した状況\",\n      \"narrative\": \"ある日、急なドライバーの退職。残されたメンバーで業務を回すも、配送遅延が頻発。顧客からのクレームが相次ぎ、社長は頭を抱えた。（78文字）\",\n      \"lesson\": \"「このままでは、会社の信用を失ってしまう。早急にドライバーを確保しなければ。」という気づき\"\n    },\n    {\n      \"phase\": \"phase2\",\n      \"scenario\": \"解決策を発見した状況\",\n      \"narrative\": \"藁にもすがる思いで、ドライバー採用に関するセミナーに参加。そこで、求人広告の見直しや、採用後の定着支援の重要性を学んだ。（72文字）\",\n      \"lesson\": \"「これなら、うちの会社でもドライバー不足を解消できるかもしれない。」という確信\"\n    },\n    {\n      \"phase\": \"phase3\",\n      \"scenario\": \"行動して成功した状況\",\n      \"narrative\": \"セミナーで学んだことを実践。求人広告を刷新し、福利厚生を充実させた結果、応募者が殺到。無事にドライバーを確保し、業績も回復した。（77文字）\",\n      \"lesson\": \"「あの時、セミナーに参加して本当に良かった。行動しなければ、何も変わらなかった。」という実感\"\n    }\n  ],\n  \"behavioral_economics_hooks\": {\n    \"loss_aversion\": \"損失回避：「優秀な人材を競合に奪われる前に」「今行動しないと、繁忙期を乗り切れません」\",\n    \"social_proof\": \"社会的証明：「多くの運送会社が導入」「90%が効果を実感しています」\",\n    \"authority\": \"権威性：「採用コンサルタントも推奨」「国土交通省も推進」\",\n    \"scarcity\": \"希少性：「今回の募集は限定3名」「今週中に応募された方限定」\",\n    \"consistency\": \"一貫性：「ドライバーの定着率を上げたいと思った方へ」「従業員満足度No.1を目指すなら」\",\n    \"liking\": \"好意：「ドライバーの気持ち、よく分かります」「同じ悩みを抱える企業様をサポートします」\"\n  }\n}\n```",
+  "parsed_data": {
+    "emotional_analysis": {
+      "primary_emotion": "焦り",
+      "secondary_emotions": [
+        "不安",
+        "期待"
+      ],
+      "pain_points": [
+        "ドライバー不足による業務逼迫",
+        "採用コストの増加",
+        "採用難易度の上昇"
+      ],
+      "desires": [
+        "ドライバー不足の解消",
+        "優秀な人材の確保",
+        "事業の安定・成長"
+      ]
+    },
+    "phase_aligned_elements": {
+      "phase1_anxiety": {
+        "target_brain": "扁桃体（危険検知）",
+        "emotional_goal": "「このままでは危険」という認識",
+        "human_touch": {
+          "experience": "朝礼で今日も欠員を告げる声が響き、残されたメンバーの疲労困憊の顔が目に焼き付く。このままでは、得意先からの信頼も失いかねない。",
+          "emotion_hook": "「人手不足で、現場が回らなくなっていませんか？」",
+          "empathy": "「急増する配送依頼に対応できず、毎日残業続きで、社員の疲弊が限界に達していませんか？」"
+        },
+        "cta_alignment": {
+          "position_percent": "8-12%",
+          "cta_type": "early_hook",
+          "message_tone": "問題意識の確認（例：「まずはドライバー採用の現状を把握しませんか？」」"
+        }
+      },
+      "phase2_understanding": {
+        "target_brain": "前頭前野（論理的思考）",
+        "emotional_goal": "「なるほど、これが解決策か」という納得",
+        "human_touch": {
+          "experience": "運送業界専門コンサルタントA氏「ドライバー採用成功の鍵は、求職者の不安を解消し、企業の魅力を明確に伝えることです。」実際に、労働条件の改善と採用ブランディングを行ったB社では、応募数が3倍に増加しました。",
+          "emotion_hook": "「ドライバー採用の成功には、明確な戦略と情報開示が不可欠です。」",
+          "empathy": "「実は、多くの運送会社様が同じようにドライバー不足に悩んでいます。解決策は必ずあります。」"
+        },
+        "cta_alignment": {
+          "position_percent": "35-45%",
+          "cta_type": "mid_engagement",
+          "message_tone": "具体的なアクション提案（例：「ドライバー採用を成功させるためのノウハウ資料を無料でダウンロード」）"
+        }
+      },
+      "phase3_action": {
+        "target_brain": "線条体（報酬系）",
+        "emotional_goal": "「今行動すれば報酬が得られる」という期待",
+        "human_touch": {
+          "experience": "新たな採用戦略によって、優秀なドライバーが集まり、配送効率が向上。残業時間が減り、社員の笑顔が増えたC社。「あの時、思い切って行動して本当に良かった。」",
+          "emotion_hook": "「今すぐドライバー採用戦略を見直し、事業の安定と成長を実現しましょう！」",
+          "empathy": "「あなたも、ドライバー不足から解放され、社員が安心して働ける環境を手に入れることができます！」"
+        },
+        "cta_alignment": {
+          "position_percent": "75-85%",
+          "cta_type": "final_conversion",
+          "message_tone": "即行動を促す（例：「今すぐ無料相談に申し込む」「【限定特典】採用成功事例集をプレゼント」）"
+        }
+      }
+    },
+    "experience_episodes": [
+      {
+        "phase": "phase1",
+        "scenario": "問題に直面した状況",
+        "narrative": "ある日、急なドライバーの退職。残されたメンバーで業務を回すも、配送遅延が頻発。顧客からのクレームが相次ぎ、社長は頭を抱えた。（78文字）",
+        "lesson": "「このままでは、会社の信用を失ってしまう。早急にドライバーを確保しなければ。」という気づき"
+      },
+      {
+        "phase": "phase2",
+        "scenario": "解決策を発見した状況",
+        "narrative": "藁にもすがる思いで、ドライバー採用に関するセミナーに参加。そこで、求人広告の見直しや、採用後の定着支援の重要性を学んだ。（72文字）",
+        "lesson": "「これなら、うちの会社でもドライバー不足を解消できるかもしれない。」という確信"
+      },
+      {
+        "phase": "phase3",
+        "scenario": "行動して成功した状況",
+        "narrative": "セミナーで学んだことを実践。求人広告を刷新し、福利厚生を充実させた結果、応募者が殺到。無事にドライバーを確保し、業績も回復した。（77文字）",
+        "lesson": "「あの時、セミナーに参加して本当に良かった。行動しなければ、何も変わらなかった。」という実感"
+      }
+    ],
+    "behavioral_economics_hooks": {
+      "loss_aversion": "損失回避：「優秀な人材を競合に奪われる前に」「今行動しないと、繁忙期を乗り切れません」",
+      "social_proof": "社会的証明：「多くの運送会社が導入」「90%が効果を実感しています」",
+      "authority": "権威性：「採用コンサルタントも推奨」「国土交通省も推進」",
+      "scarcity": "希少性：「今回の募集は限定3名」「今週中に応募された方限定」",
+      "consistency": "一貫性：「ドライバーの定着率を上げたいと思った方へ」「従業員満足度No.1を目指すなら」",
+      "liking": "好意：「ドライバーの気持ち、よく分かります」「同じ悩みを抱える企業様をサポートします」"
+    }
+  },
+  "metadata": {
+    "generated_at": "2026-02-04T10:40:04.272830",
+    "model": "gemini-2.0-flash",
+    "model_config": {
+      "platform": "gemini",
+      "model": "gemini-2.0-flash"
+    },
+    "input_files": [
+      "step0",
+      "step1",
+      "step3a",
+      "step3b",
+      "step3c",
+      "step1_5"
+    ]
+  },
+  "quality": {
+    "attempts": 1,
+    "issues": []
+  },
+  "token_usage": {
+    "input": 18460,
+    "output": 1346
+  },
+  "output_path": "storage/dev-tenant-001/894a1783-f00d-431b-89fc-f3ed0984cc1a/step3_5/output.json",
+  "output_digest": "8cd20a4cd8102767"
+}

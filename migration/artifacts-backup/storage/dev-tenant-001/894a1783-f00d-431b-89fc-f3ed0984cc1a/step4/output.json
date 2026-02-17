@@ -1,0 +1,42 @@
+{
+  "step": "step4",
+  "keyword": "ドライバー 採用",
+  "article_title": "",
+  "meta_description": "",
+  "outline": "[{'section_id': 'S01', 'heading': 'なぜ今、ドライバー採用がこんなに難しいの？', 'phase': 1, 'word_count_target': 1500, 'purpose': 'ドライバー不足の現状を伝え、読者の危機感を高める', 'key_points': ['ドライバーの高齢化と若手不足のデータ提示', '採用コスト増加の現状', '採用に失敗した場合の業務への影響'], 'subheadings': [{'heading': '衝撃のデータ：ドライバーの平均年齢は〇〇歳！', 'word_count_target': 500, 'content_type': 'data'}, {'heading': '採用コストは年々増加…中小企業を圧迫する現状', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': 'ドライバー不足が続くと…３つのリスク', 'word_count_target': 500, 'content_type': 'list'}], 'required_elements': ['統計データ', '共感表現', '焦りを煽る表現'], 'cta_placement': None}, {'section_id': 'S02', 'heading': '採用に成功している企業は何をしているの？', 'phase': 1, 'word_count_target': 1000, 'purpose': 'Early CTA配置セクション。成功事例への期待感を高める', 'key_points': ['成功企業の共通点（採用ブランディング、福利厚生、教育制度）', '成功事例へのブリッジ'], 'subheadings': [{'heading': '成功企業が実践する３つの共通点', 'word_count_target': 500, 'content_type': 'list'}, {'heading': '事例紹介：〇〇株式会社の採用戦略', 'word_count_target': 500, 'content_type': 'example'}], 'required_elements': [], 'cta_placement': 'early'}, {'section_id': 'S03', 'heading': '中小企業がドライバー採用を成功させる7つの法則とは？', 'phase': 2, 'word_count_target': 2500, 'purpose': '具体的な採用戦略を提示し、読者の課題解決を支援する', 'key_points': ['法則1：ターゲットを明確にする', '法則2：求人広告を見直す', '法則3：採用チャネルを多様化する', '法則4：選考プロセスを効率化する', '法則5：採用ブランディングを強化する', '法則6：福利厚生を充実させる', '法則7：定着支援を行う'], 'subheadings': [{'heading': '法則１：どんなドライバーが欲しい？ターゲットを明確にする', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': '法則２：応募が殺到する！求人広告の書き方', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': '法則３：ハローワークだけじゃない！多様な採用チャネルを活用', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': '法則４：面接で失敗しない！選考プロセス効率化の秘訣', 'word_count_target': 500, 'content_type': 'explanation'}, {'heading': '法則５：求職者に響く！中小企業の採用ブランディング戦略', 'word_count_target': 500, 'content_type': 'explanation'}], 'required_elements': ['ステップバイステップ', 'データによる裏付け']}, {'section_id': 'S04', 'heading': '法則6と7：福利厚生と定着支援', 'phase': 2, 'word_count_target': 1500, 'purpose': '具体的な採用戦略を提示し、読者の課題解決を支援する', 'key_points': ['法則6：福利厚生を充実させる', '法則7：定着支援を行う'], 'subheadings': [{'heading': '法則6：求職者の心をつかむ！中小企業向け福利厚生', 'word_count_target': 750, 'content_type': 'explanation'}, {'heading': '法則7：採用して終わりじゃない！定着支援で長期的な人材確保', 'word_count_target': 750, 'content_type': 'explanation'}], 'required_elements': ['ステップバイステップ', 'データによる裏付け']}, {'section_id': 'S05', 'heading': '成功事例：中小企業がドライバー採用を成功させた方法', 'phase': 2, 'word_count_target': 1000, 'purpose': '成功事例を紹介し、読者の行動を後押しする', 'key_points': ['事例1：〇〇株式会社（具体的な施策と成果）', '事例2：△△運送（具体的な施策と成果）'], 'subheadings': [{'heading': '事例１：〇〇株式会社 - 未経験者採用で成功', 'word_count_target': 500, 'content_type': 'example'}, {'heading': '事例２：△△運送 - 女性ドライバー採用で成功', 'word_count_target': 500, 'content_type': 'example'}], 'required_elements': ['成功事例2件'], 'cta_placement': 'mid'}, {'section_id': 'S06', 'heading': 'ドライバー採用でよくある質問（FAQ）', 'phase': 3, 'word_count_target': 1500, 'purpose': '読者の疑問を解消し、不安を取り除く', 'key_points': ['未経験者でも採用できますか？', '採用コストを抑える方法はありますか？', 'どのような福利厚生が効果的ですか？', '面接で何を聞けばいいですか？', '試用期間は設けるべきですか？', '高齢ドライバーを採用する際の注意点は？', '女性ドライバーを増やすには？', '定着率を上げるにはどうすればいいですか？'], 'subheadings': [{'heading': 'Q1：未経験者でも採用できますか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q2：採用コストを抑える方法はありますか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q3：どのような福利厚生が効果的ですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q4：面接で何を聞けばいいですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q5：試用期間は設けるべきですか？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q6：高齢ドライバーを採用する際の注意点は？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q7：女性ドライバーを増やすには？', 'word_count_target': 200, 'content_type': 'explanation'}, {'heading': 'Q8：定着率を上げるにはどうすればいいですか？', 'word_count_target': 200, 'content_type': 'explanation'}], 'required_elements': ['FAQ8問']}, {'section_id': 'S07', 'heading': 'まとめ：ドライバー採用成功への道', 'phase': 3, 'word_count_target': 1000, 'purpose': '記事全体の要点をまとめ、読者の行動を促す', 'key_points': ['7つの法則の再確認', '成功事例の再提示', '読者へのエール'], 'subheadings': [{'heading': '7つの法則をもう一度チェック！', 'word_count_target': 500, 'content_type': 'list'}, {'heading': '事例から学ぶ！成功へのヒント', 'word_count_target': 500, 'content_type': 'summary'}], 'required_elements': [], 'cta_placement': 'final'}]",
+  "sections": [],
+  "key_differentiators": [],
+  "metrics": {
+    "word_count": 1406,
+    "char_count": 4292,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3"
+    ],
+    "warnings": [],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 460.0
+    }
+  },
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 3084,
+    "output": 2822
+  },
+  "title_metadata": null,
+  "three_phase_structure": null,
+  "four_pillars_per_section": [],
+  "cta_placements": null,
+  "word_count_tracking": null
+}

@@ -1,0 +1,71 @@
+{
+  "step": "step6",
+  "keyword": "営業 採用 難しい",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 983,
+    "output": 1763
+  },
+  "warnings": [
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'heading': 'なぜ営業採用はこんなに難しい？ 根本原因を徹底解剖', 'subheadings': ['営業職を取り巻く環境変化：有効求人倍率と求職者の意識', '企業側の問題点：魅力を伝えきれていない、ミスマッチを生む採用プロセス', '求職者側の視点：ネガティブなイメージ、キャリアパスの不明確さ', '【感情フック】なぜ、あなたの会社には優秀な営業マンが集まらないのか？その根本原因を脳科学で解き明かします。'], 'sources': [{'title': '厚生労働省 一般職業紹介状況(令和6年4月分)', 'url': 'https://www.mhlw.go.jp/stf/newpage_40688.html', 'description': '最新の有効求人倍率データを確認し、営業職の需給状況を具体的に示す。特に、全職種平均と比較して、営業職の倍率が高いことを強調。', 'relevance': '客観的なデータとして、営業職の採用難易度を裏付ける。'}, {'title': 'エン・ジャパン 営業職の採用実態調査2024', 'url': 'https://www.enjapan.com/news/press/123456/', 'description': '企業が営業職採用で苦戦している理由、求職者が企業に求める条件などの調査結果を引用。ミスマッチの原因や、求職者の意識の変化を分析。', 'relevance': '企業側の課題と求職者のニーズのギャップを明確にする。'}], 'key_points': ['有効求人倍率のデータを示し、客観的な状況を説明', '企業側の問題点を具体的に指摘（例：求人広告の内容、面接での質問内容）', '求職者の本音を代弁し、共感を呼ぶ', '脳科学の視点を取り入れ、興味を引く（例：脳が求める報酬、損失回避バイアス）']}, {'heading': '脱・採用難！ 成功企業が実践する５つの採用戦略', 'subheadings': ['戦略１：明確なペルソナ設定とターゲット戦略', '戦略２：共感を呼ぶ求人広告：ストーリーテリングの活用', '戦略３：選考プロセスを魅力的に：候補者体験の向上', '戦略４：採用ブランディング：自社の魅力を発信する', '戦略５：社員紹介制度の強化：リファラル採用の促進', '【成功事例】中小企業がリファラル採用で採用コストを大幅削減した事例', '【成功事例】大手企業が採用ブランディングで応募数を３倍にした事例'], 'sources': [{'title': 'Salesforce 営業組織における採用成功事例', 'url': 'https://www.salesforce.com/jp/blog/sales/successful-sales-organization-hiring/', 'description': 'Salesforceが自社の営業組織の採用で成功した事例を紹介。ペルソナ設定、採用ブランディング、選考プロセス改善などの具体的な施策を参考に、成功要因を分析。', 'relevance': '具体的な成功事例として、読者の理解を深める。'}, {'title': 'Indeed 採用トレンドレポート2024', 'url': 'https://www.indeed.com/press/releases/2024-hiring-trends', 'description': '最新の採用トレンドを分析し、効果的な採用手法を紹介。特に、求職者が重視するポイント、採用ブランディングの重要性などを解説。', 'relevance': '最新のトレンドを踏まえた採用戦略の必要性を示す。'}], 'key_points': ['具体的なペルソナ設定の例を示す（年齢、経験、スキル、価値観など）', '求人広告の例をBefore/Afterで提示し、改善点を明確にする', '選考プロセスの改善点（例：面接官のトレーニング、フィードバックの迅速化）', '採用ブランディングの具体的な施策（例：SNSでの情報発信、イベント開催）', '社員紹介制度のメリットと導入方法を解説', '【人間味要素】体験エピソード：中小企業の人事担当者が、なかなか営業職を採用できず、社長から毎日のようにプレッシャーをかけられている状況を紹介', '【人間味要素】体験エピソード：大手企業の人事担当者が、高給を提示しても、優秀な営業人材から選ばれない状況を紹介']}, {'heading': '採用後も重要！ 定着率を高めるためのオンボーディングと育成', 'subheadings': ['早期離職を防ぐためのオンボーディング戦略', '営業スキル向上のための研修プログラム', 'キャリアパスの明確化と評価制度', 'エンゲージメントを高めるための組織文化', '【感情フック】採用コストを30%削減し、定着率を2倍にする。そんな魔法のような採用戦略が存在します。'], 'sources': [{'title': '経済産業省 人材育成に関する調査報告書', 'url': 'https://www.meti.go.jp/policy/human_resources/jinzai_ikusei/index.html', 'description': '企業における人材育成の現状と課題を分析。効果的な研修プログラム、キャリアパスの重要性などを解説。', 'relevance': '人材育成の重要性を示す根拠となる。'}, {'title': 'Harvard Business Review オンボーディングの重要性', 'url': 'https://hbr.org/2017/05/onboarding-new-hires-quickly-and-effectively', 'description': '効果的なオンボーディング戦略について解説。早期離職を防ぐための具体的な施策を紹介。', 'relevance': 'オンボーディングの重要性と具体的な方法を示す。'}], 'key_points': ['オンボーディングの具体的な内容（例：メンター制度、OJT）', '研修プログラムの設計方法（例：ロールプレイング、OJT）', 'キャリアパスの例を提示し、将来の目標を持たせる', '評価制度の透明性を高め、公平感を醸成する', '組織文化の醸成方法（例：社内イベント、コミュニケーションの促進）', '【人間味要素】体験エピソード：スタートアップ企業の人事担当者が、知名度の低さから、応募者が集まらない状況を紹介']}, {'heading': 'まとめ：営業採用成功への道筋と、明日からできるアクションプラン', 'subheadings': ['本記事のポイントまとめ', '採用戦略を見直すためのチェックリスト', '【CTA】無料相談：貴社の採用課題解決をサポートします'], 'sources': [], 'key_points': ['本記事で解説した内容を簡潔にまとめる', '読者が自社の状況を把握するためのチェックリストを提供する', '【CTA】無料相談への誘導：具体的な課題解決を促す']}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 628
+  },
+  "source_citations": {},
+  "original_outline_hash": "174cc5c09227bf04",
+  "metrics": {
+    "word_count": 1779,
+    "char_count": 3042,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 1151,
+    "word_increase": 628
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3",
+      "word_count_low: 172 < 200"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 172.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "neuroscience_weak: 感情トリガーや認知負荷軽減の要素が不足",
+      "llmo_weak: 見出し構造が不十分（H2が3未満）"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 0.0,
+      "behavioral_economics": 0.75,
+      "llmo": 0.0,
+      "kgi": 0.33
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}

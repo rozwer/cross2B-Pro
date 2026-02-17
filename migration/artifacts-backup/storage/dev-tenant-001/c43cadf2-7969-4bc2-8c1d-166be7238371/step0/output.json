@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用 難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用 難しい\",\n  \"search_intent\": \"ドライバーの採用がうまくいかない現状を打開するための情報収集。採用難易度が高い原因の特定、具体的な課題解決策、採用成功事例、採用戦略のヒントなどを求めている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"ドライバー不足の現状と背景\",\n    \"ドライバー採用における課題（給与、労働時間、待遇、イメージなど）\",\n    \"効果的なドライバー採用戦略（求人広告、採用イベント、紹介制度など）\",\n    \"ドライバーの定着率向上施策（福利厚生、キャリアパス、労働環境改善など）\",\n    \"採用ターゲットの明確化とアプローチ方法\",\n    \"競合他社の採用状況と差別化戦略\",\n    \"採用コストの最適化\",\n    \"採用代行サービスの活用\",\n    \"最新の採用トレンド（ダイレクトリクルーティング、リファラル採用など）\",\n    \"ドライバーの働き方改革と採用への影響\"\n  ],\n  \"target_audience\": \"運送会社の人事担当者、採用担当者、経営者\"\n}\n```",
+  "search_intent": "ドライバーの採用がうまくいかない現状を打開するための情報収集。採用難易度が高い原因の特定、具体的な課題解決策、採用成功事例、採用戦略のヒントなどを求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運送会社の人事担当者、採用担当者、経営者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 108,
+    "output": 266
+  },
+  "metrics": {
+    "char_count": 541,
+    "word_count": 315
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

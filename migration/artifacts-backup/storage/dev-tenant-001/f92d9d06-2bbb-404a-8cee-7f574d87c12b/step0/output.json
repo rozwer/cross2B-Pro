@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー採用難しい\",\n  \"search_intent\": \"ドライバーの採用が困難な状況を打開するための情報収集。具体的な課題の特定、解決策の探索、採用戦略のヒント、成功事例の調査など、採用活動全般における悩みを解決したいと考えている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"ドライバー採用 課題\",\n    \"ドライバー採用 対策\",\n    \"ドライバー採用 ターゲット層\",\n    \"ドライバー採用 求人広告\",\n    \"ドライバー採用 定着率\",\n    \"ドライバー不足 原因\",\n    \"ドライバー採用 競合他社\",\n    \"ドライバー採用 オンライン採用\",\n    \"ドライバー採用 説明会\",\n    \"ドライバー採用 エージェント\"\n  ],\n  \"target_audience\": \"運送会社の採用担当者、人事担当者、経営者。特に、ドライバーの採用に苦戦している企業。\"\n}\n```",
+  "search_intent": "ドライバーの採用が困難な状況を打開するための情報収集。具体的な課題の特定、解決策の探索、採用戦略のヒント、成功事例の調査など、採用活動全般における悩みを解決したいと考えている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運送会社の採用担当者、人事担当者、経営者。特に、ドライバーの採用に苦戦している企業。",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 106,
+    "output": 213
+  },
+  "metrics": {
+    "char_count": 470,
+    "word_count": 248
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

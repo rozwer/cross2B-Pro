@@ -1,0 +1,113 @@
+{
+  "step": "step0",
+  "keyword": "トラックドライバー 求人 書き方",
+  "analysis": "工程0「キーワード選定・分析」の専門家として、「トラックドライバー 求人 書き方」について分析を行いました。\n出力結果は以下の通りです。\n\n```json\n{\n  \"keyword\": \"トラックドライバー 求人 書き方\",\n  \"search_intent\": \"運送会社の採用担当者が、深刻なドライバー不足の中で応募数を増やすための具体的な求人票の作成方法や例文を求めている。特に、競合他社との差別化ポイントや、2024年問題などの法規制に対応しつつ魅力を伝える表現、未経験者や若手などターゲット別の訴求方法を知りたいという意図がある。\",\n  \"target_audience\": \"中小〜中堅運送会社の経営者または採用担当者。慢性的なドライバー不足に悩み、Indeedやハローワーク等に求人を出しているが反応が薄い、あるいはミスマッチに苦慮している層。\",\n  \"four_pillars_evaluation\": {\n    \"neuroscience\": {\n      \"phase\": 2,\n      \"brain_activation\": \"前頭前野\",\n      \"score\": 85,\n      \"rationale\": \"「書き方」という具体的なノウハウ（How-to）を求めているため、論理的な構成と具体的な例文による「理解と納得」を促すPhase 2が最も重要。ただし、採用難への焦り（扁桃体）を前提とし、安心感を与える構成が必要。\"\n    },\n    \"behavioral_economics\": {\n      \"applicable_principles\": [\n        \"社会的証明\",\n        \"損失回避\",\n        \"権威性\"\n      ],\n      \"score\": 80,\n      \"rationale\": \"他社の成功事例（社会的証明）や、不適切な書き方による法リスク・機会損失（損失回避）の訴求が強力に作用する。また、労働法規への適合などの専門性（権威性）も信頼獲得に寄与する。\"\n    },\n    \"llmo\": {\n      \"citation_potential\": \"high\",\n      \"score\": 90,\n      \"rationale\": \"「良い例・悪い例」「項目別テンプレート」など、構造化された情報はAIによる引用・回答生成に極めて適しており、参照元として選ばれやすい。\"\n    },\n    \"kgi\": {\n      \"expected_cvr\": 3.5,\n      \"score\": 75,\n      \"rationale\": \"課題が明確（応募が来ない）であり、解決策（求人媒体出稿、採用代行、採用サイト作成ツール等）へのニーズが高いため、適切なCTAを配置すればコンバージョンに繋がりやすい。\"\n    }\n  },\n  \"article_strategy\": {\n    \"type\": \"how_to\",\n    \"strategy\": \"standard\",\n    \"background\": {\n      \"why_now\": \"物流2024年問題による労働時間規制強化とドライバー不足の深刻化により、従来の「条件羅列型」求人では採用が困難になっているため。\",\n      \"target_pain\": \"求人を出しても応募が来ない、面接に来ても条件が合わない、若手が入らない、魅力的なPR文が書けない。\",\n      \"key_message\": \"「条件の羅列」から「求職者の生活と未来の提示」へシフトすることで、応募の質と量は劇的に改善する。\",\n      \"urgency\": \"high\"\n    }\n  },\n  \"recommended_angles\": [\n    {\n      \"angle\": \"ペルソナ別訴求の具体化\",\n      \"expected_effect\": \"「ガッツリ稼ぎたい層」と「プライベート重視層」で書き方を分けることで、ミスマッチを減らし応募率を高める。\",\n      \"differentiation\": \"単なる汎用テンプレートではなく、ターゲット心理に踏み込んだ「刺さるフレーズ」を具体的に提案する。\"\n    },\n    {\n      \"angle\": \"2024年問題・コンプライアンス対応\",\n      \"expected_effect\": \"労働時間や残業規制への対応状況を明記することで、ホワイト企業であることをアピールし、求職者の安心感を醸成する。\",\n      \"differentiation\": \"法令知識を絡めた信頼性の高い解説により、競合記事よりも「信頼できる情報源」としての地位を確立する。\"\n    },\n    {\n      \"angle\": \"スマホ・検索エンジン最適化（Indeed等）\",\n      \"expected_effect\": \"スマホでの閲覧や求人検索エンジンのアルゴリズムを意識したキーワード選定・構成により、露出と閲覧数を最大化する。\",\n      \"differentiation\": \"文章の内容だけでなく、検索されやすい技術的なテクニック（SEO/MEO的視点）を付加する。\"\n    }\n  ],\n  \"content_type_suggestion\": \"具体的なBefore/After例文やテンプレートを豊富に盛り込んだ実践的なハウツー記事\",\n  \"difficulty_score\": 6,\n  \"industry_category\": \"logistics\"\n}\n```",
+  "search_intent": "運送会社の採用担当者が、深刻なドライバー不足の中で応募数を増やすための具体的な求人票の作成方法や例文を求めている。特に、競合他社との差別化ポイントや、2024年問題などの法規制に対応しつつ魅力を伝える表現、未経験者や若手などターゲット別の訴求方法を知りたいという意図がある。",
+  "difficulty_score": 6,
+  "recommended_angles": [
+    {
+      "angle": "ペルソナ別訴求の具体化",
+      "expected_effect": "「ガッツリ稼ぎたい層」と「プライベート重視層」で書き方を分けることで、ミスマッチを減らし応募率を高める。",
+      "differentiation": "単なる汎用テンプレートではなく、ターゲット心理に踏み込んだ「刺さるフレーズ」を具体的に提案する。"
+    },
+    {
+      "angle": "2024年問題・コンプライアンス対応",
+      "expected_effect": "労働時間や残業規制への対応状況を明記することで、ホワイト企業であることをアピールし、求職者の安心感を醸成する。",
+      "differentiation": "法令知識を絡めた信頼性の高い解説により、競合記事よりも「信頼できる情報源」としての地位を確立する。"
+    },
+    {
+      "angle": "スマホ・検索エンジン最適化（Indeed等）",
+      "expected_effect": "スマホでの閲覧や求人検索エンジンのアルゴリズムを意識したキーワード選定・構成により、露出と閲覧数を最大化する。",
+      "differentiation": "文章の内容だけでなく、検索されやすい技術的なテクニック（SEO/MEO的視点）を付加する。"
+    }
+  ],
+  "target_audience": "中小〜中堅運送会社の経営者または採用担当者。慢性的なドライバー不足に悩み、Indeedやハローワーク等に求人を出しているが反応が薄い、あるいはミスマッチに苦慮している層。",
+  "content_type_suggestion": "具体的なBefore/After例文やテンプレートを豊富に盛り込んだ実践的なハウツー記事",
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": 2,
+      "brain_activation": "前頭前野",
+      "score": 85
+    },
+    "behavioral_economics": {
+      "applicable_principles": [
+        "社会的証明",
+        "損失回避",
+        "権威性"
+      ],
+      "score": 80
+    },
+    "llmo": {
+      "citation_potential": "high",
+      "score": 90
+    },
+    "kgi": {
+      "expected_cvr": 3.5,
+      "score": 75
+    }
+  },
+  "article_strategy": {
+    "type": "how_to",
+    "strategy": "standard",
+    "background": {
+      "why_now": "物流2024年問題による労働時間規制強化とドライバー不足の深刻化により、従来の「条件羅列型」求人では採用が困難になっているため。",
+      "target_pain": "求人を出しても応募が来ない、面接に来ても条件が合わない、若手が入らない、魅力的なPR文が書けない。",
+      "key_message": "「条件の羅列」から「求職者の生活と未来の提示」へシフトすることで、応募の質と量は劇的に改善する。",
+      "urgency": "high"
+    }
+  },
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 1862,
+    "output": 1112
+  },
+  "metrics": {
+    "char_count": 2391,
+    "word_count": 1142
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "従業員募集こない",
+  "analysis": "```json\n{\n  \"keyword\": \"従業員募集こない\",\n  \"search_intent\": \"従業員募集をかけているが応募が来ない状況に対する不満、原因究明、解決策の模索。具体的には、募集方法の改善、求人情報の見直し、業界の動向把握、競合他社の状況調査などが考えられる。\",\n  \"difficulty\": \"medium\",\n  \"suggested_topics\": [\n    \"効果的な求人広告の書き方\",\n    \"応募が集まらない原因と対策\",\n    \"採用ターゲットの見直し\",\n    \"採用チャネルの多様化\",\n    \"採用ブランディング\",\n    \"求人情報のSEO対策\",\n    \"競合他社の採用戦略\",\n    \"採用代行(RPO)サービスの利用\",\n    \"人材紹介サービスの利用\",\n    \"エンゲージメントの高い採用活動\",\n    \"自社の魅力の発掘とアピール\",\n    \"採用における最新トレンド\"\n  ],\n  \"target_audience\": \"中小企業経営者、人事担当者、採用担当者、店舗オーナー、採用に課題を感じている個人事業主\"\n}\n```\n",
+  "search_intent": "従業員募集をかけているが応募が来ない状況に対する不満、原因究明、解決策の模索。具体的には、募集方法の改善、求人情報の見直し、業界の動向把握、競合他社の状況調査などが考えられる。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "中小企業経営者、人事担当者、採用担当者、店舗オーナー、採用に課題を感じている個人事業主",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 109,
+    "output": 257
+  },
+  "metrics": {
+    "char_count": 510,
+    "word_count": 272
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

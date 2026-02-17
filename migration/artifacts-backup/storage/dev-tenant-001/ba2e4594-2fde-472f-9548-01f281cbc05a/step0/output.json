@@ -1,0 +1,118 @@
+{
+  "step": "step0",
+  "keyword": "営業 採用 難しい",
+  "analysis": "工程0「キーワード選定・分析」の専門家として、「営業 採用 難しい」というキーワードを分析し、JSON形式で出力します。\n\n```json\n{\n  \"keyword\": \"営業 採用 難しい\",\n  \"search_intent\": \"営業職の採用活動において、応募が集まらない、内定辞退が多い、ミスマッチが起きるといった課題に直面している採用担当者や経営者の情報探索（Informational）。現状の「採用難」の根本原因を知り、具体的な改善策や他社の成功事例、あるいは採用代行などの解決手段（Transactionalへの移行可能性あり）を求めている。\",\n  \"target_audience\": \"中堅・中小企業の経営者、または人事採用担当者。営業リソースの不足が事業成長のボトルネックになっており、従来の求人媒体や手法では効果が出ずに焦りを感じている層。\",\n  \"four_pillars_evaluation\": {\n    \"neuroscience\": {\n      \"phase\": 1,\n      \"brain_activation\": \"扁桃体\",\n      \"score\": 85,\n      \"rationale\": \"「難しい」というネガティブな感情を出発点としており、採用失敗による事業リスク（不安）を感じている状態。扁桃体が活性化しているため、まずは共感と課題の明確化で不安に寄り添い、その後に前頭前野（論理的解決策）へ誘導する構成が極めて有効。\"\n    },\n    \"behavioral_economics\": {\n      \"applicable_principles\": [\n        \"損失回避\",\n        \"社会的証明\",\n        \"希少性\"\n      ],\n      \"score\": 75,\n      \"rationale\": \"「営業マンがいないことによる機会損失（売上減）」を強調する損失回避が最も強力。また、労働人口減少による「人材の希少性」や、成功している他社の事例（社会的証明）を提示することで行動変容を促しやすい。\"\n    },\n    \"llmo\": {\n      \"citation_potential\": \"high\",\n      \"score\": 80,\n      \"rationale\": \"「営業採用が難しい理由」「対策」といった構造化された情報はAIによる引用適性が高い。市場データ（有効求人倍率など）や具体的なメソッドを箇条書きで整理することで、回答ソースとして選ばれやすくなる。\"\n    },\n    \"kgi\": {\n      \"expected_cvr\": 1.5,\n      \"score\": 70,\n      \"rationale\": \"課題が深刻であるため、具体的な解決策（採用代行、コンサルティング、特定ツール）へのニーズは高い。ただし、情報収集段階のユーザーも多いため、ホワイトペーパーDLなどでリード育成を図るのが現実的。\"\n    }\n  },\n  \"article_strategy\": {\n    \"type\": \"comprehensive_guide\",\n    \"strategy\": \"standard\",\n    \"background\": {\n      \"why_now\": \"少子高齢化と求職者の安定志向・ワークライフバランス重視により、営業職の不人気化（採用難）が加速しているため。\",\n      \"target_pain\": \"求人を出しても応募が来ない、面接に来ても質が低い、内定を出しても辞退される、早期離職される。\",\n      \"key_message\": \"「待ち」の採用から「攻め」の採用へ。営業職の不人気要因を理解し、ターゲットに合わせた訴求と手法の転換が必要。\",\n      \"urgency\": \"high\"\n    }\n  },\n  \"recommended_angles\": [\n    {\n      \"angle\": \"市場構造からのアプローチ\",\n      \"expected_effect\": \"営業職の有効求人倍率などのデータを示すことで、自社だけの問題ではないと安心させつつ、市場環境の変化への適応を促す。\",\n      \"differentiation\": \"最新の厚労省データや意識調査を用いた客観的な分析。\"\n    },\n    {\n      \"angle\": \"ペルソナ再設計アプローチ\",\n      \"expected_effect\": \"「経験者・即戦力」に固執しすぎている現状を指摘し、ポテンシャル採用やターゲット緩和による母集団形成の拡大を提案する。\",\n      \"differentiation\": \"未経験者から営業を育成する具体的なロードマップの提示。\"\n    },\n    {\n      \"angle\": \"採用マーケティングアプローチ\",\n      \"expected_effect\": \"営業活動と同じように採用活動を捉え（採用マーケティング）、認知・獲得・定着のプロセス改善を提案する。\",\n      \"differentiation\": \"採用ファネルを用いた具体的なKPI設定例の紹介。\"\n    },\n    {\n      \"angle\": \"選考体験（CX）向上アプローチ\",\n      \"expected_effect\": \"面接官の態度やスピード感など、候補者体験を改善することで内定承諾率を高める手法。\",\n      \"differentiation\": \"候補者に選ばれるための面接官トレーニングやフィードバックの実例。\"\n    }\n  ],\n  \"content_type_suggestion\": \"営業採用の難易度が高い構造的理由を解説し、それを突破するための具体的な5つの施策を網羅したガイド記事\",\n  \"difficulty_score\": 7,\n  \"industry_category\": \"recruitment\"\n}\n```",
+  "search_intent": "営業職の採用活動において、応募が集まらない、内定辞退が多い、ミスマッチが起きるといった課題に直面している採用担当者や経営者の情報探索（Informational）。現状の「採用難」の根本原因を知り、具体的な改善策や他社の成功事例、あるいは採用代行などの解決手段（Transactionalへの移行可能性あり）を求めている。",
+  "difficulty_score": 7,
+  "recommended_angles": [
+    {
+      "angle": "市場構造からのアプローチ",
+      "expected_effect": "営業職の有効求人倍率などのデータを示すことで、自社だけの問題ではないと安心させつつ、市場環境の変化への適応を促す。",
+      "differentiation": "最新の厚労省データや意識調査を用いた客観的な分析。"
+    },
+    {
+      "angle": "ペルソナ再設計アプローチ",
+      "expected_effect": "「経験者・即戦力」に固執しすぎている現状を指摘し、ポテンシャル採用やターゲット緩和による母集団形成の拡大を提案する。",
+      "differentiation": "未経験者から営業を育成する具体的なロードマップの提示。"
+    },
+    {
+      "angle": "採用マーケティングアプローチ",
+      "expected_effect": "営業活動と同じように採用活動を捉え（採用マーケティング）、認知・獲得・定着のプロセス改善を提案する。",
+      "differentiation": "採用ファネルを用いた具体的なKPI設定例の紹介。"
+    },
+    {
+      "angle": "選考体験（CX）向上アプローチ",
+      "expected_effect": "面接官の態度やスピード感など、候補者体験を改善することで内定承諾率を高める手法。",
+      "differentiation": "候補者に選ばれるための面接官トレーニングやフィードバックの実例。"
+    }
+  ],
+  "target_audience": "中堅・中小企業の経営者、または人事採用担当者。営業リソースの不足が事業成長のボトルネックになっており、従来の求人媒体や手法では効果が出ずに焦りを感じている層。",
+  "content_type_suggestion": "営業採用の難易度が高い構造的理由を解説し、それを突破するための具体的な5つの施策を網羅したガイド記事",
+  "four_pillars_evaluation": {
+    "neuroscience": {
+      "phase": 1,
+      "brain_activation": "扁桃体",
+      "score": 85
+    },
+    "behavioral_economics": {
+      "applicable_principles": [
+        "損失回避",
+        "社会的証明",
+        "希少性"
+      ],
+      "score": 75
+    },
+    "llmo": {
+      "citation_potential": "high",
+      "score": 80
+    },
+    "kgi": {
+      "expected_cvr": 1.5,
+      "score": 70
+    }
+  },
+  "article_strategy": {
+    "type": "comprehensive_guide",
+    "strategy": "standard",
+    "background": {
+      "why_now": "少子高齢化と求職者の安定志向・ワークライフバランス重視により、営業職の不人気化（採用難）が加速しているため。",
+      "target_pain": "求人を出しても応募が来ない、面接に来ても質が低い、内定を出しても辞退される、早期離職される。",
+      "key_message": "「待ち」の採用から「攻め」の採用へ。営業職の不人気要因を理解し、ターゲットに合わせた訴求と手法の転換が必要。",
+      "urgency": "high"
+    }
+  },
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 1861,
+    "output": 1174
+  },
+  "metrics": {
+    "char_count": 2571,
+    "word_count": 1237
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

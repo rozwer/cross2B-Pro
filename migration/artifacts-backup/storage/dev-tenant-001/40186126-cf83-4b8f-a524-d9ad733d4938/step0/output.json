@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー採用難しい\",\n  \"search_intent\": \"ドライバーの採用が困難な状況を打開するための情報収集。原因の特定、解決策の探索、採用戦略の見直し、成功事例の調査など、採用活動全般における課題解決を目的としている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"ドライバー不足の原因 (高齢化、労働環境、給与水準など)\",\n    \"効果的なドライバー採用戦略 (求人広告の見直し、採用チャネルの多様化)\",\n    \"ドライバーの定着率向上施策 (福利厚生の充実、労働環境の改善、キャリアパスの提示)\",\n    \"ドライバー採用における競合他社の状況分析\",\n    \"ドライバー採用に成功している企業の事例紹介\",\n    \"採用代行サービスの活用\",\n    \"採用支援ツール/システムの導入\",\n    \"地域別のドライバー採用事情\",\n    \"運送業界のイメージアップ戦略\",\n    \"ドライバーの高齢化対策\",\n    \"女性ドライバーの採用促進\",\n    \"未経験者向けドライバー育成プログラム\",\n    \"外国人ドライバーの採用\",\n    \"ドライバーの健康管理\",\n    \"ドライバーの安全教育\",\n    \"自動運転技術の導入による影響\"\n  ],\n  \"target_audience\": \"運送会社の経営者、人事担当者、採用担当者、物流管理者、ドライバー採用コンサルタント\"\n}\n```",
+  "search_intent": "ドライバーの採用が困難な状況を打開するための情報収集。原因の特定、解決策の探索、採用戦略の見直し、成功事例の調査など、採用活動全般における課題解決を目的としている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "運送会社の経営者、人事担当者、採用担当者、物流管理者、ドライバー採用コンサルタント",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 106,
+    "output": 318
+  },
+  "metrics": {
+    "char_count": 676,
+    "word_count": 402
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "自動車整備士採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"自動車整備士採用難しい\",\n  \"search_intent\": \"自動車整備士の人手不足が深刻化している背景（原因）を理解したい、または現状の採用難を打破するための具体的な解決策（採用手法、ターゲットの見直し、待遇改善など）を求めている。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"自動車整備士不足の構造的な原因（若者離れ、待遇問題）\",\n    \"採用に成功している整備工場の事例・共通点\",\n    \"外国人整備士（特定技能）の採用メリットと手続き\",\n    \"未経験者採用・資格取得支援制度の導入方法\",\n    \"整備士専門の求人媒体と総合媒体の使い分け\",\n    \"給与相場と待遇改善による定着率向上施策\"\n  ],\n  \"target_audience\": \"自動車ディーラー、整備工場、中古車販売店の経営者および人事採用担当者\"\n}\n```",
+  "search_intent": "自動車整備士の人手不足が深刻化している背景（原因）を理解したい、または現状の採用難を打破するための具体的な解決策（採用手法、ターゲットの見直し、待遇改善など）を求めている。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "自動車ディーラー、整備工場、中古車販売店の経営者および人事採用担当者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-3-pro-preview",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "token_usage": {
+    "input": 111,
+    "output": 222
+  },
+  "metrics": {
+    "char_count": 438,
+    "word_count": 254
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

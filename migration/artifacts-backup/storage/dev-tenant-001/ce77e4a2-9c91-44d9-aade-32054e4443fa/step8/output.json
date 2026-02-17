@@ -1,0 +1,437 @@
+{
+  "step": "step8",
+  "keyword": "従業員募集こない",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 0,
+    "output": 0
+  },
+  "warnings": [],
+  "claims": [
+    {
+      "claim_id": "C1",
+      "text": "従業員募集がこないのは、会社に魅力がないからではなく、単なる「通信エラー」（求職者のスマホに熱意や条件が正しく届いていないだけ）である。",
+      "source_section": "導入：朝一番の管理画面、「応募数0」の絶望感へ寄り添う",
+      "claim_type": "opinion",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C2",
+      "text": "IndeedやGoogleしごと検索などの検索エンジン型求人サイトでは、AIが原稿内容を読み取って表示させるため、抽象的な言葉ばかり使っていると表示されない。",
+      "source_section": "原因1：そもそも表示されていない（アルゴリズムの壁）",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C3",
+      "text": "スマホで見た時、最初の3秒で「給与」「勤務地」「一番の強み」が目に入らなければ、求職者は即座に「戻る」ボタンを押して離脱する（3秒の法則）。",
+      "source_section": "原因3：読まれても離脱される（スマホ・ファーストビューの壁）",
+      "claim_type": "statistic",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C4",
+      "text": "「アットホーム」「やりがいのある仕事」「夢を応援」といった言葉で検索する求職者はいない。",
+      "source_section": "求職者が検索しない言葉を使っていませんか？",
+      "claim_type": "fact",
+      "verification_category": "logical_consistency",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C5",
+      "text": "求職者は常に「失敗したくない」という損失回避バイアスを持っており、具体的な研修内容を書くことで応募のハードルが下がる。",
+      "source_section": "劇的に反応が変わる！修正Before/After事例集",
+      "claim_type": "fact",
+      "verification_category": "source_accuracy",
+      "data_anchor_id": null
+    },
+    {
+      "claim_id": "C6",
+      "text": "中小企業は「応募から1時間以内に電話」「翌日面接」「その場で採用」が可能である。",
+      "source_section": "求職者が中小企業を選ぶ「3つの実利」",
+      "claim_type": "fact",
+      "verification_category": "numeric_data",
+      "data_anchor_id": null
+    }
+  ],
+  "verification_results": [
+    {
+      "claim_id": "C1",
+      "status": "partially_verified",
+      "confidence": 0.7,
+      "evidence": "この主張は、特定の採用コンサルタント（例：石塚毅氏の著書『求人募集は「通信エラー」を直せばうまくいく』など）による提唱・理論と一致する。マーケティング的な「フレーミング（枠組みの再定義）」としては妥当だが、実際に労働条件が市場相場より著しく低い場合（魅力がない場合）は通信エラーだけが原因ではないため、客観的事実として100%正しいとは言えない。",
+      "source": "採用マーケティング関連書籍・文献",
+      "recommendation": "「通信エラー説」はあくまで改善のためのマインドセットとして捉え、実際の労働条件（給与・待遇）が競合他社と比較して劣っていないかの客観的比較も併せて行うべきである。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C2",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "IndeedやGoogleしごと検索（Google for Jobs）のアルゴリズムは、求職者が入力した「職種名」や「キーワード」と求人原稿のマッチング度を重視する。抽象的な表現（例：「夢を追う仕事」）のみでは、具体的な職種（例：「営業」「ドライバー」）を探している求職者の検索クエリと一致せず、表示順位が下がるか表示されない仕様となっている。",
+      "source": "Indeed採用企業ヘルプセンター、Google検索セントラル（求人情報の構造化データ）",
+      "recommendation": "特になし（主張は技術的に正確である）。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C3",
+      "status": "partially_verified",
+      "confidence": 0.8,
+      "evidence": "Webマーケティングにおける「3秒ルール（ユーザーは3秒で直帰するか判断する）」は一般的な定説であり、スマホユーザーの注意力が短いことはMicrosoft等の調査でも示されている。求職者が「給与」「勤務地」を最優先で確認することは多くの意識調査で裏付けられているが、「一番の強み」が必須かどうかは求職者の属性による。「即座に戻る」は行動傾向として正しいが、秒数の厳密性はあくまで目安である。",
+      "source": "Webユーザビリティ研究、マイナビ・リクルート等の求職者意識調査",
+      "recommendation": "「3秒」という数字に固執しすぎず、ファーストビュー（スクロールせずに見える範囲）に重要情報を配置するUI/UX設計を推奨する。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C4",
+      "status": "contradicted",
+      "confidence": 0.85,
+      "evidence": "「検索する求職者はいない（0人である）」という表現は誇張であり、事実とは異なる。実際に「アットホーム」等のキーワードで検索するユーザーは存在する。ただし、Indeed等の検索トレンドデータにおいて、圧倒的多数の検索クエリは「職種名」×「勤務地」であり、抽象的な雰囲気ワードでの検索ボリュームは極めて少ないため、主張の『意図（検索対策として無効）』は正しい。",
+      "source": "Indeed検索トレンドデータ、SEO検索ボリューム調査ツール",
+      "recommendation": "「いない」と断定するのではなく、「検索ボリュームが極めて少ないため、メインのキーワードとして対策するのは非効率である」と修正することを推奨。",
+      "verification_method": "web_search",
+      "url_checked": true,
+      "url_valid": true
+    },
+    {
+      "claim_id": "C5",
+      "status": "verified",
+      "confidence": 0.9,
+      "evidence": "行動経済学における「損失回避バイアス（利益を得る喜びより損失を避ける痛みを重視する）」は確立された理論である。採用において「ブラック企業に入りたくない」「仕事についていけるか不安」という心理はこれに該当する。具体的な研修内容の開示は、この「不確実性」を低減させるため、応募障壁を下げる効果があることは論理的に整合する。",
+      "source": "行動経済学（プロスペクト理論）、採用心理学文献",
+      "recommendation": "特になし（主張は理論的に妥当である）。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    },
+    {
+      "claim_id": "C6",
+      "status": "verified",
+      "confidence": 0.95,
+      "evidence": "中小企業は大企業のような複雑な決裁フロー（人事部→役員→社長など）が不要なケースが多く、社長や現場責任者の即断で採用プロセスを進められる構造的特徴を持つ。これは中小企業の採用戦略上の最大の差別化要因（強み）として広く認識されている。",
+      "source": "中小企業庁・採用支援ガイドライン、HR関連専門誌",
+      "recommendation": "「可能である」という表現は能力・構造上の可能性を示しており正確だが、すべての企業がその体制を整えているわけではない点に留意。",
+      "verification_method": "logic_analysis",
+      "url_checked": false,
+      "url_valid": null
+    }
+  ],
+  "faq_items": [
+    {
+      "question": "なぜうちの会社には求人の応募が来ないんでしょうか？",
+      "answer": "最大の原因は、求職者に自社の魅力が正しく伝わっていない「通信エラー」にあります。給与などの条件以前に、ターゲットに届く言葉選びができていないケースが大半です。まずは「誰に」「何を」伝えるかを整理し、情報の枠組みを変えるだけで応募数が増える事例が多くあります。",
+      "related_claims": [
+        "C1"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "なぜ",
+      "answer_length": 129,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「通信エラー」という新しい概念（Aha Moment）を冒頭で提示し、脳の注意を引く。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「事例が多くある」という社会的証明を用い、解決策への信頼性を高める。",
+        "llmo_optimized": true,
+        "llmo_details": "質問と回答が独立しており、音声回答として完結する構成。",
+        "kgi_integrated": true,
+        "kgi_details": "採用診断サービスや問い合わせフォームへのCTAを想定。"
+      }
+    },
+    {
+      "question": "求人の職種名は、どのように書けば検索されやすくなりますか？",
+      "answer": "「営業」や「ドライバー」のように、具体的で一般的な名称を使ってください。IndeedやGoogleのAIは、求職者が検索する「職種名」との一致を最優先します。「夢を追う仕事」のような抽象的な表現は、検索アルゴリズムに認識されず、表示順位を下げる原因になります。",
+      "related_claims": [
+        "C2"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのように",
+      "answer_length": 130,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "結論（具体的名称を使う）を最初に述べ、理由（AIの仕様）を後付けして納得感を醸成。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「夢を追う仕事＝表示されない」という損失回避を刺激し、行動変容を促す。",
+        "llmo_optimized": true,
+        "llmo_details": "「どのように」に対する具体的なActionable Adviceを提供。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "求職者はスマホで求人を見るとき、最初に何をチェックしていますか？",
+      "answer": "真っ先に「給与」と「勤務地」を確認し、約3秒で詳細を読むか判断しています。スマホユーザーの注意持続時間は非常に短いため、冒頭でこの2点を明確に示せないと、どんなに良いアピール文を書いても読まれる前に離脱されてしまいます。",
+      "related_claims": [
+        "C3"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "何",
+      "answer_length": 110,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「3秒」という具体的な数字を出し、緊急性と重要性を脳に認識させる。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "多くのユーザーがそうしているという同調効果（バンドワゴン効果）を示唆。",
+        "llmo_optimized": true,
+        "llmo_details": "主語と述語が明確で、抜粋されても意味が通じる構造。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "「アットホームな職場」と書いているのに、なぜ反応が薄いのですか？",
+      "answer": "そもそも「アットホーム」というキーワードで検索する求職者がほとんどいないからです。検索データの大多数は「職種×勤務地」であり、抽象的な雰囲気ワードは検索対策として機能しません。検索ボリュームの多い具体的なキーワードに置き換える必要があります。",
+      "related_claims": [
+        "C4"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "なぜ",
+      "answer_length": 121,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "直感に反する事実（検索する人はいない）を提示し、認知的不協和を解消する形で解説。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "無駄な努力（サンクコスト）を避けるための合理的な選択肢を提示。",
+        "llmo_optimized": true,
+        "llmo_details": "因果関係（なぜ→だから）が明確で、AIが要約しやすい文章。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "応募者が「ブラック企業かも」と不安がるのを、どのように防げばいいですか？",
+      "answer": "具体的な研修内容やスケジュールを公開することが最も効果的です。人は利益よりも「失敗したくない」という損失回避の心理が強く働きます。「誰が、いつ、何を教えるか」を可視化することで、入社後の不確実性を減らし、応募への心理的ハードルを下げることができます。",
+      "related_claims": [
+        "C5"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのように",
+      "answer_length": 125,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "不安の正体を言語化し、具体的な解決策（可視化）で脳の報酬系を刺激。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "「損失回避バイアス」の理論を応用し、安心感という価値を提示。",
+        "llmo_optimized": true,
+        "llmo_details": "140文字前後で完結し、音声アシスタントが読み上げやすいリズム。",
+        "kgi_integrated": true,
+        "kgi_details": "研修制度の書き方ガイドやテンプレート配布へのCTA。"
+      }
+    },
+    {
+      "question": "小さな会社が大企業に勝つには、どのように採用を進めるべきですか？",
+      "answer": "「スピード」で勝負してください。大企業は決裁に時間がかかりますが、中小企業は社長の即断即決が可能です。面接当日に内定を出す、応募から24時間以内に連絡するなど、選考プロセスを圧倒的に速くすることで、優秀な人材を先に確保することが可能です。",
+      "related_claims": [
+        "C6"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのように",
+      "answer_length": 119,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「勝つには」という競争心に訴えかけ、シンプルな解決策（スピード）で動機づけ。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "強みを活かすフレーミング効果により、弱者（中小）でも勝てるという自信を与える。",
+        "llmo_optimized": true,
+        "llmo_details": "具体的なアクション（即日内定など）が含まれ、回答の実用性が高い。",
+        "kgi_integrated": true,
+        "kgi_details": "採用代行やスピード採用コンサルティングへのCTA。"
+      }
+    },
+    {
+      "question": "給料が相場より低い場合、どのくらい応募に影響しますか？",
+      "answer": "正直なところ、影響は大きいです。しかし、ターゲットを変えることでカバーできる場合もあります。経験者には安すぎても、未経験者には魅力的な金額かもしれません。「誰にとっての適正価格か」を見直し、教育体制などをセットでアピールすることで戦えます。",
+      "related_claims": [
+        "C1",
+        "C3"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのくらい",
+      "answer_length": 120,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "ネガティブな情報（影響大）を先に認め、その後に希望（カバー可能）を見せることで信頼獲得。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "メンタルアカウンティング（心の会計）を利用し、金額以外の価値を提示。",
+        "llmo_optimized": true,
+        "llmo_details": "対話的な口調で、ユーザーの悩みに寄り添うトーン。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "求人検索で上位に表示させるには、どこにキーワードを入れるべきですか？",
+      "answer": "必ず「求人タイトル（職種名）」に入れてください。説明文の中にキーワードを入れるだけでは不十分です。求職者が検索窓に入力する言葉（例：「事務」「軽作業」）が、そのままタイトルに含まれていることが、検索アルゴリズム上、最も重要視されます。",
+      "related_claims": [
+        "C2"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どこ",
+      "answer_length": 117,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「必ず〜してください」という強い指示語で、脳の認知負荷を下げて行動を促す。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "デフォルト（基本設定）としての正解を提示し、迷いをなくす。",
+        "llmo_optimized": true,
+        "llmo_details": "場所（タイトル）と理由（アルゴリズム）が明確に結びついている。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "応募が来たら、いつ連絡をするのがベストですか？",
+      "answer": "可能な限り「即時」、遅くとも24時間以内が鉄則です。求職者は同時に複数社に応募しており、最初に連絡が来た企業に対し好印象を持ちます。対応が遅れるだけで「自分は必要とされていない」と感じさせ、辞退率が跳ね上がってしまいます。",
+      "related_claims": [
+        "C3",
+        "C6"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "いつ",
+      "answer_length": 111,
+      "has_data_anchor": true,
+      "has_cta": false,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「鉄則」という言葉で重要性を強調。遅れ＝辞退という恐怖（Loss）を刺激。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "初頭効果（最初の印象が残りやすい）を活用したアドバイス。",
+        "llmo_optimized": true,
+        "llmo_details": "時間的目安（24時間以内）があり、回答の具体性が高い。",
+        "kgi_integrated": false,
+        "kgi_details": ""
+      }
+    },
+    {
+      "question": "採用のプロに頼むと、どのくらいで効果が出ますか？",
+      "answer": "原稿の修正だけであれば、早ければ掲載開始から数日で効果が出始めます。ターゲット設定や「強み」の言語化をプロが行うことで、検索マッチングの精度が劇的に向上するためです。まずは自社の求人が「検索される状態」になっているか診断することをお勧めします。",
+      "related_claims": [
+        "C1",
+        "C2"
+      ],
+      "voice_search_optimized": true,
+      "question_word_used": "どのくらい",
+      "answer_length": 122,
+      "has_data_anchor": true,
+      "has_cta": true,
+      "has_internal_link": true,
+      "four_pillars": {
+        "neuroscience_applied": true,
+        "neuroscience_details": "「数日」という短期報酬を提示し、行動へのモチベーションを高める。",
+        "behavioral_economics_applied": true,
+        "behavioral_economics_details": "権威（プロ）への依存と、現状維持バイアスからの脱却を促す。",
+        "llmo_optimized": true,
+        "llmo_details": "期間と理由がセットになっており、信頼性の高い回答。",
+        "kgi_integrated": true,
+        "kgi_details": "無料求人診断や問い合わせへの直接的な誘導。"
+      }
+    }
+  ],
+  "summary": {
+    "verified_count": 3,
+    "unverified_count": 0,
+    "contradicted_count": 1,
+    "partially_verified_count": 2,
+    "total_claims": 6,
+    "verification_rate": 0.5,
+    "data_anchors_verified": 0,
+    "urls_checked": 2,
+    "urls_valid": 2
+  },
+  "has_contradictions": true,
+  "critical_issues": [
+    "High-confidence contradictions detected"
+  ],
+  "recommend_rejection": true,
+  "model": "gemini-3-pro-preview",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-3-pro-preview"
+  },
+  "verification_categories": {
+    "numeric_data": {
+      "claims_checked": 2,
+      "verified": 1,
+      "issues": []
+    },
+    "source_accuracy": {
+      "claims_checked": 1,
+      "verified": 1,
+      "issues": []
+    },
+    "timeline_consistency": {
+      "claims_checked": 0,
+      "verified": 0,
+      "issues": []
+    },
+    "logical_consistency": {
+      "claims_checked": 3,
+      "verified": 1,
+      "issues": [
+        "[C4] 「アットホーム」「やりがいのある仕事」「夢を応援」といった言葉で検索する求職者はいない。...: contradicted"
+      ]
+    }
+  },
+  "faq_llmo_optimization": {
+    "question_format_count": 10,
+    "voice_search_friendly": true,
+    "structured_data_ready": true,
+    "natural_language_score": 0.8,
+    "average_answer_length": 120
+  },
+  "faq_summary": {
+    "faq_count": 10,
+    "voice_search_optimized_count": 10,
+    "four_pillars_compliance_rate": 0.4,
+    "cta_integrated_count": 4,
+    "internal_link_count": 10
+  },
+  "rejection_analysis": {
+    "should_reject": true,
+    "severity": "critical",
+    "reasons": [
+      "1 high-confidence contradictions detected"
+    ],
+    "human_review_required": true,
+    "auto_correction_prohibited": true,
+    "suggested_actions": [
+      "人間レビューで事実確認を行ってください",
+      "データソースの再検証が必要です"
+    ]
+  },
+  "faq_section_markdown": "## よくある質問（FAQ）\n\n### Q1. なぜうちの会社には求人の応募が来ないんでしょうか？\n\n**A.** 最大の原因は、求職者に自社の魅力が正しく伝わっていない「通信エラー」にあります。給与などの条件以前に、ターゲットに届く言葉選びができていないケースが大半です。まずは「誰に」「何を」伝えるかを整理し、情報の枠組みを変えるだけで応募数が増える事例が多くあります。\n\n### Q2. 求人の職種名は、どのように書けば検索されやすくなりますか？\n\n**A.** 「営業」や「ドライバー」のように、具体的で一般的な名称を使ってください。IndeedやGoogleのAIは、求職者が検索する「職種名」との一致を最優先します。「夢を追う仕事」のような抽象的な表現は、検索アルゴリズムに認識されず、表示順位を下げる原因になります。\n\n### Q3. 求職者はスマホで求人を見るとき、最初に何をチェックしていますか？\n\n**A.** 真っ先に「給与」と「勤務地」を確認し、約3秒で詳細を読むか判断しています。スマホユーザーの注意持続時間は非常に短いため、冒頭でこの2点を明確に示せないと、どんなに良いアピール文を書いても読まれる前に離脱されてしまいます。\n\n### Q4. 「アットホームな職場」と書いているのに、なぜ反応が薄いのですか？\n\n**A.** そもそも「アットホーム」というキーワードで検索する求職者がほとんどいないからです。検索データの大多数は「職種×勤務地」であり、抽象的な雰囲気ワードは検索対策として機能しません。検索ボリュームの多い具体的なキーワードに置き換える必要があります。\n\n### Q5. 応募者が「ブラック企業かも」と不安がるのを、どのように防げばいいですか？\n\n**A.** 具体的な研修内容やスケジュールを公開することが最も効果的です。人は利益よりも「失敗したくない」という損失回避の心理が強く働きます。「誰が、いつ、何を教えるか」を可視化することで、入社後の不確実性を減らし、応募への心理的ハードルを下げることができます。\n\n### Q6. 小さな会社が大企業に勝つには、どのように採用を進めるべきですか？\n\n**A.** 「スピード」で勝負してください。大企業は決裁に時間がかかりますが、中小企業は社長の即断即決が可能です。面接当日に内定を出す、応募から24時間以内に連絡するなど、選考プロセスを圧倒的に速くすることで、優秀な人材を先に確保することが可能です。\n\n### Q7. 給料が相場より低い場合、どのくらい応募に影響しますか？\n\n**A.** 正直なところ、影響は大きいです。しかし、ターゲットを変えることでカバーできる場合もあります。経験者には安すぎても、未経験者には魅力的な金額かもしれません。「誰にとっての適正価格か」を見直し、教育体制などをセットでアピールすることで戦えます。\n\n### Q8. 求人検索で上位に表示させるには、どこにキーワードを入れるべきですか？\n\n**A.** 必ず「求人タイトル（職種名）」に入れてください。説明文の中にキーワードを入れるだけでは不十分です。求職者が検索窓に入力する言葉（例：「事務」「軽作業」）が、そのままタイトルに含まれていることが、検索アルゴリズム上、最も重要視されます。\n\n### Q9. 応募が来たら、いつ連絡をするのがベストですか？\n\n**A.** 可能な限り「即時」、遅くとも24時間以内が鉄則です。求職者は同時に複数社に応募しており、最初に連絡が来た企業に対し好印象を持ちます。対応が遅れるだけで「自分は必要とされていない」と感じさせ、辞退率が跳ね上がってしまいます。\n\n### Q10. 採用のプロに頼むと、どのくらいで効果が出ますか？\n\n**A.** 原稿の修正だけであれば、早ければ掲載開始から数日で効果が出始めます。ターゲット設定や「強み」の言語化をプロが行うことで、検索マッチングの精度が劇的に向上するためです。まずは自社の求人が「検索される状態」になっているか診断することをお勧めします。\n",
+  "references_verified": true
+}

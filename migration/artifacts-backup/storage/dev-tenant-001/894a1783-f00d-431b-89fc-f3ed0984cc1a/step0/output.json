@@ -1,0 +1,70 @@
+{
+  "step": "step0",
+  "keyword": "ドライバー 採用",
+  "analysis": "```json\n{\n  \"keyword\": \"ドライバー 採用\",\n  \"search_intent\": {\n    \"primary\": \"transactional\",\n    \"secondary\": \"informational\",\n    \"user_journey_stage\": \"consideration\"\n  },\n  \"target_persona\": {\n    \"role\": \"中小規模の運送会社の経営者/採用担当者\",\n    \"pain_points\": [\n      \"ドライバー不足が深刻で、業務が回らない\",\n      \"採用コストが高く、効果的な採用方法が分からない\",\n      \"ドライバーの定着率が悪く、採用を繰り返している\",\n      \"高齢化が進み、若手ドライバーの採用が急務\",\n      \"競合他社との採用競争が激しい\"\n    ],\n    \"desired_outcome\": \"優秀なドライバーを採用し、安定的な事業運営を実現したい\",\n    \"urgency_level\": \"high\"\n  },\n  \"difficulty\": \"medium\",\n  \"difficulty_reason\": \"求人系のキーワードのため、大手求人サイトや採用支援サービスを提供する企業が上位表示を狙っている。ただし、ドライバー採用に特化した情報は少ないため、専門性と独自性で差別化可能。\",\n  \"suggested_topics\": [\n    \"ドライバー採用の最新トレンド\",\n    \"効果的な求人広告の作成方法\",\n    \"ドライバーの定着率向上施策\",\n    \"採用コスト削減のアイデア\",\n    \"ドライバー採用に成功した企業の事例\"\n  ],\n  \"cta_design\": {\n    \"primary_cta_text\": \"ドライバー採用の課題を相談する\",\n    \"cta_url_placeholder\": \"[リンク先URL]\",\n    \"early_cta\": {\n      \"position\": \"800-1000字\",\n      \"appeal\": \"無料・簡単・すぐ\",\n      \"text\": \":::info\\n**【無料】ドライバー採用の課題を相談する**\\nドライバー不足でお困りではありませんか？貴社の状況に合わせて、最適な解決策をご提案します。\\n[今すぐ相談する]\\n:::\"\n    },\n    \"mid_cta\": {\n      \"position\": \"4500字付近\",\n      \"appeal\": \"実績・安心・専門性\",\n      \"text\": \":::info\\n**【3分で完了】ドライバー採用力診断を受ける**\\n貴社のドライバー採用力を無料で診断。改善ポイントが一目で分かります。\\n[無料診断をスタートする]\\n:::\"\n    },\n    \"final_cta\": {\n      \"position\": \"目標文字数の75〜85%地点（まとめ前）\",\n      \"appeal\": \"限定・特典・緊急性\",\n      \"text\": \":::info\\n**【期間限定】ドライバー採用成功事例集をダウンロードする**\\n他社の成功事例から、貴社に合った採用戦略を見つけましょう。今だけ無料プレゼント！\\n[今すぐ資料をダウンロード]\\n:::\"\n    }\n  },\n  \"content_strategy\": {\n    \"target_word_count\": 10000,\n    \"differentiation_hypothesis\": \"ドライバー採用に特化した専門的な情報を提供することで、大手求人サイトや一般的な採用情報サイトとの差別化を図る。独自の成功事例やデータ、具体的なノウハウを盛り込み、読者にとって実践的な価値を提供する。\",\n    \"unique_value_proposition\": \"中小規模の運送会社がドライバー採用を成功させるための、具体的かつ実践的なノウハウと事例を提供する。他では得られない、現場目線の情報と、専門家による個別相談サポートで、採用成功を支援する。\"\n  }\n}\n```",
+  "search_intent": {
+    "primary": "transactional",
+    "secondary": "informational",
+    "user_journey_stage": "consideration"
+  },
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 1334,
+    "output": 804
+  },
+  "metrics": {
+    "char_count": 1804,
+    "word_count": 817
+  },
+  "quality": {
+    "issues": [],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

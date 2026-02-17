@@ -1,0 +1,68 @@
+{
+  "step": "step0",
+  "keyword": "自動車整備士 採用難しい",
+  "analysis": "```json\n{\n  \"keyword\": \"自動車整備士 採用難しい\",\n  \"search_intent\": \"自動車整備士の採用が難しい現状について、その理由や解決策、採用を成功させるためのノウハウを知りたい。採用担当者、経営者、もしくは自動車整備業界への就職を検討している人が情報収集のために検索していると考えられる。\",\n  \"difficulty\": \"high\",\n  \"suggested_topics\": [\n    \"自動車整備士の有効求人倍率\",\n    \"自動車整備士の採用難の理由（給与、労働環境、イメージ、技術革新への対応など）\",\n    \"自動車整備士の採用を成功させるための戦略（待遇改善、魅力的な求人広告、採用チャネルの多様化、インターンシップ制度の導入、未経験者採用と育成）\",\n    \"自動車整備士のキャリアパスと将来性\",\n    \"自動車整備士の働きがい\",\n    \"自動車整備業界の人材育成\",\n    \"自動車整備士の採用に特化した求人サイト・エージェント\",\n    \"自動車整備士の採用における企業の取り組み事例\"\n  ],\n  \"target_audience\": \"自動車整備工場の経営者、人事担当者、採用担当者、自動車整備業界への就職・転職を検討している求職者、自動車整備士の養成機関関係者\"\n}\n```\n",
+  "search_intent": "自動車整備士の採用が難しい現状について、その理由や解決策、採用を成功させるためのノウハウを知りたい。採用担当者、経営者、もしくは自動車整備業界への就職を検討している人が情報収集のために検索していると考えられる。",
+  "difficulty_score": 5,
+  "recommended_angles": [],
+  "target_audience": "自動車整備工場の経営者、人事担当者、採用担当者、自動車整備業界への就職・転職を検討している求職者、自動車整備士の養成機関関係者",
+  "content_type_suggestion": "",
+  "four_pillars_evaluation": null,
+  "article_strategy": null,
+  "word_count_config": {
+    "mode": "ai_balanced",
+    "manual_word_count": null,
+    "tolerance": {
+      "min_tolerance": -300,
+      "max_tolerance": 300
+    }
+  },
+  "cta_specification": {
+    "design_type": "staged",
+    "placements": {
+      "early": {
+        "position": 650,
+        "url": "",
+        "text": ""
+      },
+      "mid": {
+        "position": 2800,
+        "url": "",
+        "text": ""
+      },
+      "final": {
+        "position": "target_word_count - 500",
+        "url": "",
+        "text": ""
+      }
+    }
+  },
+  "search_volume": null,
+  "competition": null,
+  "model": "gemini-2.0-flash",
+  "model_config": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "token_usage": {
+    "input": 110,
+    "output": 300
+  },
+  "metrics": {
+    "char_count": 585,
+    "word_count": 377
+  },
+  "quality": {
+    "issues": [
+      "missing_recommendation"
+    ],
+    "attempts": 1
+  },
+  "parse_result": {
+    "success": true,
+    "format_detected": "json",
+    "fixes_applied": [
+      "code_block_removed"
+    ]
+  }
+}

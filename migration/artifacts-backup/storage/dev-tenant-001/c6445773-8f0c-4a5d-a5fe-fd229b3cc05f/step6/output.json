@@ -1,0 +1,70 @@
+{
+  "step": "step6",
+  "keyword": "従業員 募集 こない",
+  "execution_time_ms": 0,
+  "token_usage": {
+    "input": 910,
+    "output": 1788
+  },
+  "warnings": [
+    "no_h3_increase"
+  ],
+  "enhanced_outline": "[{'heading': 'なぜ従業員募集に応募が来ない？考えられる7つの原因を徹底解剖', 'subheadings': ['原因1：求職者のニーズと求人内容のミスマッチ', '原因2：魅力的な求人情報の欠如（給与・待遇だけではダメ！）', '原因3：採用ターゲットの不明確さ', '原因4：応募のハードルが高い（応募フォームの不備、連絡の遅さ）', '原因5：企業の魅力が伝わっていない（ブランディング不足）', '原因6：採用チャネルの偏り（ハローワークだけでは限界）', '原因7：競合他社との比較で劣っている'], 'sources': [{'title': 'エン・ジャパン採用支援ツール', 'url': 'https://www.enjapan.com/project/saiyo_support/', 'relevance': '求職者のニーズと求人内容のミスマッチ、魅力的な求人情報の欠如の対策として、エン・ジャパンの採用支援ツールを紹介。求人票の改善点やターゲット設定のヒントが得られる。', 'type': 'ツール'}, {'title': '厚生労働省：求人票の記載内容の適正化について', 'url': 'https://jsite.mhlw.go.jp/iwate-roudoukyoku/var/rev0/0118/9216/kyuujinhyou.pdf', 'relevance': '求人票作成の際の注意点や、記載すべき項目について。求職者が重視する情報を網羅的に記載することの重要性。', 'type': '政府機関資料'}], 'key_points': ['各原因を具体的に解説し、自社に当てはまるかをチェックリスト形式で提示', '求職者のニーズの変化（ワークライフバランス、成長機会、企業文化）を説明', 'ペインポイント（応募ゼロの焦燥感、採用コスト増加）に寄り添う', '体験エピソードを交え、共感を呼ぶ']}, {'heading': '【即効性あり】応募数を劇的に増やすための10の対策', 'subheadings': ['対策1：求人情報の見直し（ターゲットに響くキーワード、魅力的な表現）', '対策2：採用ターゲットの再設定（ペルソナ設定、ニーズの深掘り）', '対策3：企業の魅力を最大限にアピール（強み、独自の文化、成長性）', '対策4：応募しやすい環境作り（スマホ対応、簡単応募フォーム、迅速な対応）', '対策5：効果的な採用チャネルの活用（求人サイト、SNS、人材紹介）', '対策6：従業員紹介制度の導入（口コミ効果、エンゲージメント向上）', '対策7：採用広報の強化（ブログ、SNS、イベント）', '対策8：競合他社の分析（強み・弱みを把握し、差別化）', '対策9：採用代行サービスの検討（プロのノウハウを活用）', '対策10：労働条件・給与の見直し（市場相場、従業員の満足度）'], 'sources': [{'title': 'Wantedly', 'url': 'https://www.wantedly.com/', 'relevance': '企業の魅力発信に特化した採用プラットフォーム。ストーリー形式で企業の文化や価値観を伝えることで、共感を呼ぶ応募者を増やす。', 'type': '採用プラットフォーム'}, {'title': 'Indeed', 'url': 'https://jp.indeed.com/', 'relevance': '求人情報の掲載と管理。応募状況の分析機能を用いて、効果的な求人広告の改善に役立てる。', 'type': '求人サイト'}, {'title': 'リファラル採用サービス（MyReferなど）', 'url': 'https://i-myrefer.jp/', 'relevance': '従業員紹介制度を効率的に運用するためのツール。従業員のエンゲージメント向上と、採用コスト削減に貢献。', 'type': '採用支援ツール'}], 'key_points': ['各対策をステップバイステップで解説し、すぐに実行できる具体的な方法を提示', '成功事例を紹介し、効果をイメージさせる', '無料ツールの紹介やテンプレートの提供', '費用対効果を意識したアドバイス']}, {'heading': '中小企業・地方企業が採用を成功させるための秘訣', 'subheadings': ['秘訣1：地域密着型の採用戦略（地元大学との連携、地域イベントへの参加）', '秘訣2：中小企業ならではの魅力を発掘・発信（アットホームな雰囲気、成長機会）', '秘訣3：ITツールを活用した効率的な採用活動（採用管理システム、オンライン面接）', '秘訣4：採用担当者のスキルアップ（採用セミナー、情報交換会）', '秘訣5：長期的な視点での採用活動（インターンシップ、キャリアパスの提示）'], 'sources': [{'title': '中小企業庁：中小企業のための人材確保・定着支援ハンドブック', 'url': 'https://www.chusho.meti.go.jp/pamf/hakusyo/2016/h28/html/b211210.html', 'relevance': '中小企業が人材を確保・定着させるための具体的なノウハウを紹介。採用戦略、職場環境改善、人材育成など、多岐にわたる情報を提供。', 'type': '政府機関資料'}, {'title': '地方創生テレワーク交付金', 'url': 'https://www.kantei.go.jp/jp/singi/tiiki/telework/', 'relevance': '地方企業がテレワーク環境を整備する際に活用できる補助金情報。ITツール導入の費用負担を軽減し、効率的な採用活動を支援。', 'type': '補助金情報'}, {'title': '採用管理システム（HRBrain、HERP Hireなど）', 'url': 'https://www.hrbrain.jp/', 'relevance': '採用プロセスを一元管理し、応募者情報の共有や選考状況の可視化を可能にする。採用業務の効率化と、応募者体験の向上に貢献。', 'type': '採用支援ツール'}], 'key_points': ['中小企業・地方企業が抱える採用課題に特化した解決策を提示', '成功事例（中小企業・地方企業）を紹介', '補助金・助成金情報を紹介', '採用担当者のモチベーションを高めるメッセージ']}, {'heading': '【まとめ】応募ゼロから脱却し、理想の人材獲得へ', 'subheadings': [], 'sources': [], 'key_points': ['記事全体の要約と、読者へのメッセージ', '行動を促すCTA（無料相談、資料請求、セミナー告知）', '未来への希望を抱かせる言葉']}]",
+  "sections": [],
+  "enhancement_summary": {
+    "sections_enhanced": 0,
+    "sections_added": 0,
+    "sources_integrated": 0,
+    "total_word_increase": 680
+  },
+  "source_citations": {},
+  "original_outline_hash": "5b77d5f8ff723ab1",
+  "metrics": {
+    "word_count": 1656,
+    "char_count": 2929,
+    "h2_count": 0,
+    "h3_count": 0,
+    "h4_count": 0,
+    "original_word_count": 976,
+    "word_increase": 680
+  },
+  "quality": {
+    "is_acceptable": false,
+    "issues": [
+      "h2_count_low: 0 < 3",
+      "word_count_low: 179 < 200"
+    ],
+    "warnings": [
+      "no_h3_subsections"
+    ],
+    "scores": {
+      "h2_count": 0.0,
+      "h3_count": 0.0,
+      "word_count": 179.0
+    }
+  },
+  "sources_used": 0,
+  "model": "gemini-2.0-flash",
+  "model_config_data": {
+    "platform": "gemini",
+    "model": "gemini-2.0-flash"
+  },
+  "data_anchor_placements": [],
+  "four_pillars_verification": {
+    "sections_verified": 0,
+    "issues_found": [
+      "llmo_weak: 見出し構造が不十分（H2が3未満）"
+    ],
+    "auto_corrections": [],
+    "pillar_scores": {
+      "neuroscience": 0.33,
+      "behavioral_economics": 0.25,
+      "llmo": 0.0,
+      "kgi": 0.67
+    }
+  },
+  "citation_format": {
+    "style": "inline",
+    "examples": []
+  }
+}
