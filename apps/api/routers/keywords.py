@@ -3,7 +3,6 @@
 This module provides endpoints for generating keyword suggestions using LLM.
 """
 
-import json
 import logging
 import os
 from datetime import datetime
@@ -13,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.llm import GeminiClient, LLMError, sanitize_user_input
+from apps.worker.helpers import OutputParser
 from apps.api.schemas.article_hearing import (
     CompetitionLevel,
     KeywordSuggestion,
@@ -121,24 +121,21 @@ async def generate_keywords_with_llm(
         system_prompt="You are an SEO keyword suggestion expert. Always respond with valid JSON only.",
     )
 
-    # Parse JSON response
-    content = response.content.strip()
+    # Parse JSON response using OutputParser
+    parser = OutputParser()
+    parse_result = parser.parse_json(response.content)
 
-    # Extract JSON from markdown code block if present
-    if "```json" in content:
-        start = content.find("```json") + 7
-        end = content.find("```", start)
-        content = content[start:end].strip()
-    elif "```" in content:
-        start = content.find("```") + 3
-        end = content.find("```", start)
-        content = content[start:end].strip()
+    if not parse_result.success or not isinstance(parse_result.data, dict):
+        logger.error(
+            "Failed to parse LLM response as JSON",
+            extra={"content": response.content[:500], "format": parse_result.format_detected},
+        )
+        raise ValueError(f"LLM returned invalid JSON: format={parse_result.format_detected}")
 
-    try:
-        data = json.loads(content)
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse LLM response as JSON: {e}", extra={"content": content[:500]})
-        raise ValueError(f"LLM returned invalid JSON: {e}") from e
+    if parse_result.fixes_applied:
+        logger.info(f"JSON fixes applied: {parse_result.fixes_applied}")
+
+    data = parse_result.data
 
     keywords_data = data.get("keywords", [])
     suggestions = []

@@ -284,3 +284,236 @@ class TestLooksLikeJson:
         parser = OutputParser()
         assert parser.looks_like_json("{incomplete") is False
         assert parser.looks_like_json("[incomplete") is False
+
+
+class TestRawJsonExtraction:
+    """Tests for raw JSON extraction from mixed text."""
+
+    def test_json_embedded_in_text(self) -> None:
+        """Extract JSON object from surrounding text."""
+        parser = OutputParser()
+        content = 'Here is the result:\n{"key": "value"}\nDone.'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+        assert "code_block_removed" in result.fixes_applied
+
+    def test_json_after_explanation(self) -> None:
+        """Extract JSON after LLM explanation text."""
+        parser = OutputParser()
+        content = (
+            "I've created the integration package based on the analysis.\n\n"
+            '{"integration_package": "test", "section_count": 5}'
+        )
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["integration_package"] == "test"
+
+    def test_json_array_in_text(self) -> None:
+        """Extract JSON array from surrounding text."""
+        parser = OutputParser()
+        content = 'The sources are: [{"title": "Source 1"}] as shown.'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == [{"title": "Source 1"}]
+
+    def test_nested_json_in_text(self) -> None:
+        """Extract nested JSON from text with balanced braces."""
+        parser = OutputParser()
+        content = (
+            "Result:\n"
+            '{"outer": {"inner": [1, 2]}, "key": "value"}\n'
+            "End."
+        )
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["outer"]["inner"] == [1, 2]
+
+    def test_no_json_in_text(self) -> None:
+        """No JSON found in plain text."""
+        parser = OutputParser()
+        content = "This is plain text with no JSON at all."
+        result = parser.parse_json(content)
+
+        assert result.success is False
+
+    def test_false_positive_brace_skipped(self) -> None:
+        """First {foo} is not valid JSON; real JSON comes after."""
+        parser = OutputParser()
+        content = 'Note: {foo} is important. {"actual": "json"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"actual": "json"}
+
+    def test_false_positive_multiple_retries(self) -> None:
+        """Multiple invalid braces before the real JSON."""
+        parser = OutputParser()
+        content = 'See {x} and {y} then {"key": 1}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": 1}
+
+
+class TestCaseInsensitiveCodeBlock:
+    """Tests for case-insensitive code block matching."""
+
+    def test_uppercase_json_block(self) -> None:
+        """Parse ```JSON code block (uppercase)."""
+        parser = OutputParser()
+        content = '```JSON\n{"key": "value"}\n```'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+    def test_mixed_case_json_block(self) -> None:
+        """Parse ```Json code block (mixed case)."""
+        parser = OutputParser()
+        content = '```Json\n{"key": "value"}\n```'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+
+class TestJsCommentRemoval:
+    """Tests for JS comment removal in deterministic fixes."""
+
+    def test_line_comment_removal(self) -> None:
+        """Remove JS line comments from JSON."""
+        parser = OutputParser()
+        content = '{"key": "value" // this is a comment\n}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+        assert "js_comments_removed" in result.fixes_applied
+
+    def test_block_comment_removal(self) -> None:
+        """Remove JS block comments from JSON."""
+        parser = OutputParser()
+        content = '{"key": /* comment */ "value"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+        assert "js_comments_removed" in result.fixes_applied
+
+    def test_url_in_value_not_stripped(self) -> None:
+        """Double slash in URL string values should be preserved."""
+        parser = OutputParser()
+        content = '{"url": "https://example.com"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["url"] == "https://example.com"
+        assert "js_comments_removed" not in result.fixes_applied
+
+    def test_http_url_preserved(self) -> None:
+        """http:// URL in string value must not be stripped."""
+        parser = OutputParser()
+        content = '{"url": "http://example.com/path"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["url"] == "http://example.com/path"
+
+    def test_double_slash_in_string_value(self) -> None:
+        """// inside a string value is not a comment."""
+        parser = OutputParser()
+        content = '{"text": "a // b"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["text"] == "a // b"
+
+    def test_block_comment_in_string_preserved(self) -> None:
+        """/* ... */ inside a string value is not a comment."""
+        parser = OutputParser()
+        content = '{"text": "/* not a comment */"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data["text"] == "/* not a comment */"
+
+
+class TestControlCharRemoval:
+    """Tests for control character removal."""
+
+    def test_bom_removal(self) -> None:
+        """BOM at start is handled by raw JSON extraction."""
+        parser = OutputParser()
+        content = '\ufeff{"key": "value"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+    def test_bom_inside_code_block(self) -> None:
+        """BOM inside code block is removed by control char cleanup."""
+        parser = OutputParser()
+        content = '```json\n\ufeff{"key": "value"}\n```'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+    def test_zero_width_space_removal(self) -> None:
+        """Remove zero-width spaces from JSON."""
+        parser = OutputParser()
+        content = '{"key":\u200b "value"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+    def test_line_separator_removal(self) -> None:
+        """Remove Unicode line/paragraph separators."""
+        parser = OutputParser()
+        content = '{"key":\u2028"value"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+    def test_bidi_mark_removal(self) -> None:
+        """Remove bidi marks."""
+        parser = OutputParser()
+        content = '{"key":\u200e "value"}'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+
+
+class TestCombinedFixes:
+    """Tests for multiple fixes applied together."""
+
+    def test_code_block_with_trailing_comma(self) -> None:
+        """Code block extraction + trailing comma fix."""
+        parser = OutputParser()
+        content = '```json\n{"key": "value",}\n```'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+        assert "code_block_removed" in result.fixes_applied
+        assert "trailing_comma_removed" in result.fixes_applied
+
+    def test_text_embedded_json_with_comments(self) -> None:
+        """Extract JSON from text + remove comments."""
+        parser = OutputParser()
+        content = (
+            "Here is the output:\n"
+            '{"key": "value" // inline comment\n}'
+        )
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
