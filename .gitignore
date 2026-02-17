@@ -41,5 +41,14 @@ package-lock.json
 .claude/
 .claude-code-harness/
 
+# Playwright MCP
+.playwright-mcp/
+
+# Screenshots (local only)
+*.png
+
+# Firebase
+firebase-debug.log
+
 # mise (local overrides)
 .mise.local.toml
