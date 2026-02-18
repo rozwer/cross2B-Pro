@@ -101,10 +101,5 @@ blog.System_prompts/
 # ── Tests ────────────────────────────────────
 tests/
 
-# ── Dev-only scripts ──────────────────────────
-scripts/test_*.py
-scripts/clone_run_for_testing.sh
-scripts/init-claude-structure.sh
-scripts/setup-githooks.sh
-scripts/worktree.sh
-scripts/*.backup
+# ── Scripts (dev-only, delivery copies in 納品用_scripts/) ──
+scripts/
