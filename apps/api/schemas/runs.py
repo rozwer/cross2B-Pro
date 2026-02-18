@@ -54,7 +54,7 @@ class ModelConfig(BaseModel):
 # Default model configuration for cloning runs or when no config is provided
 DEFAULT_MODEL_CONFIG: dict[str, str | dict[str, str]] = {
     "platform": "gemini",
-    "model": "gemini-2.0-flash",
+    "model": "gemini-3-pro-preview",
     "options": {},
 }
 

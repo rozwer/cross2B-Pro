@@ -28,6 +28,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import LLMInterface, get_llm_client
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.llm.exceptions import (
     LLMAuthenticationError,
     LLMInvalidRequestError,
@@ -160,11 +161,8 @@ class Step0KeywordSelection(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client (Gemini for step0)
-        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm: LLMInterface = get_llm_client(llm_provider, model=llm_model)
 
         # REVIEW-001: LLMCallMetadata を必須で注入（トレーサビリティ確保）
@@ -176,7 +174,7 @@ class Step0KeywordSelection(BaseActivity):
         )
 
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 4000),
+            max_tokens=config.get("max_tokens", 6000),
             temperature=config.get("temperature", 0.7),
         )
 
@@ -185,7 +183,13 @@ class Step0KeywordSelection(BaseActivity):
             try:
                 return await llm.generate(
                     messages=[{"role": "user", "content": prompt}],
-                    system_prompt="You are a keyword analysis assistant.",
+                    system_prompt=(
+                        "あなたはSEO記事生成パイプラインの工程0を担当するキーワード分析・CTA設計の専門家です。"
+                        "神経科学（3フェーズ: 扁桃体→前頭前野→線条体）、行動経済学（6原則）、"
+                        "LLMO（AI検索最適化）、KGI（CVR目標）の4本柱フレームワークに基づき、"
+                        "キーワードを多角的に分析し、記事全体の戦略を設計してください。"
+                        "出力は必ず指定されたJSON形式で返してください。"
+                    ),
                     config=llm_config,
                     metadata=metadata,
                 )
@@ -249,6 +253,21 @@ class Step0KeywordSelection(BaseActivity):
         word_count_config_data = step0_input.word_count_config.model_dump() if step0_input.word_count_config else None
         cta_specification_data = step0_input.cta_specification.model_dump() if step0_input.cta_specification else None
 
+        # CTA: LLM出力の cta_design があれば CTA仕様に反映（config未設定時のフォールバック）
+        cta_specification_data = self._merge_cta_from_llm(parsed_data, cta_specification_data)
+
+        # フィールド名の互換性: suggested_topics → recommended_angles
+        recommended_angles = parsed_data.get("recommended_angles", [])
+        if not recommended_angles:
+            recommended_angles = parsed_data.get("suggested_topics", [])
+
+        # フィールド名の互換性: difficulty → difficulty_score (1-10)
+        difficulty_score = parsed_data.get("difficulty_score", None)
+        if difficulty_score is None:
+            difficulty_raw = parsed_data.get("difficulty", "medium")
+            difficulty_map = {"low": 3, "medium": 5, "high": 8}
+            difficulty_score = difficulty_map.get(difficulty_raw, 5) if isinstance(difficulty_raw, str) else 5
+
         # Build structured output
         return {
             "step": self.step_id,
@@ -256,9 +275,9 @@ class Step0KeywordSelection(BaseActivity):
             "analysis": content,
             # 既存フィールド（後方互換性）
             "search_intent": parsed_data.get("search_intent", ""),
-            "difficulty_score": parsed_data.get("difficulty_score", 5),
-            "recommended_angles": parsed_data.get("recommended_angles", []),
-            "target_audience": parsed_data.get("target_audience", ""),
+            "difficulty_score": difficulty_score,
+            "recommended_angles": recommended_angles,
+            "target_audience": parsed_data.get("target_audience", parsed_data.get("target_persona", "")),
             "content_type_suggestion": parsed_data.get("content_type_suggestion", ""),
             # blog.System Ver8.3: 拡張フィールド
             "four_pillars_evaluation": four_pillars_data,
@@ -341,6 +360,9 @@ class Step0KeywordSelection(BaseActivity):
 
         # CTA設定
         cta_specification_data = config.get("cta_specification", {})
+        if not cta_specification_data:
+            # Fallback: extract from UI hearing input format (config.input.data.cta)
+            cta_specification_data = self._extract_cta_from_hearing_input(config)
         cta_specification = CTASpecification(**cta_specification_data) if cta_specification_data else None
 
         return Step0Input(
@@ -355,6 +377,54 @@ class Step0KeywordSelection(BaseActivity):
             word_count_config=word_count_config or WordCountConfig(),
             cta_specification=cta_specification or CTASpecification(),
         )
+
+    @staticmethod
+    def _extract_cta_from_hearing_input(config: dict[str, Any]) -> dict[str, Any]:
+        """Extract CTA specification from UI hearing input format.
+
+        The UI sends CTA data as config.input.data.cta with structure:
+        { type: "single"|"staged", single: {url, text}, staged: {early, mid, final} }
+
+        This maps it to CTASpecification format:
+        { design_type: "staged", placements: { early: {url, text}, mid: {url, text}, final: {url, text} } }
+        """
+        input_data = config.get("input", {})
+        hearing_data = input_data.get("data", {})
+        cta_input = hearing_data.get("cta", {})
+        if not cta_input:
+            return {}
+
+        cta_type = cta_input.get("type", "single")
+
+        if cta_type == "single":
+            single = cta_input.get("single", {})
+            url = single.get("url", "")
+            text = single.get("text", "")
+            if not url:
+                return {}
+            # Apply same URL/text to all 3 placements
+            return {
+                "design_type": "staged",
+                "placements": {
+                    "early": {"position": 650, "url": url, "text": text},
+                    "mid": {"position": 2800, "url": url, "text": text},
+                    "final": {"position": "target_word_count - 500", "url": url, "text": text},
+                },
+            }
+        elif cta_type == "staged":
+            staged = cta_input.get("staged", {})
+            placements = {}
+            positions = {"early": 650, "mid": 2800, "final": "target_word_count - 500"}
+            for phase in ("early", "mid", "final"):
+                item = staged.get(phase, {})
+                placements[phase] = {
+                    "position": positions[phase],
+                    "url": item.get("url", ""),
+                    "text": item.get("text", ""),
+                }
+            return {"design_type": "staged", "placements": placements}
+
+        return {}
 
     def _build_render_variables(self, step0_input: Step0Input) -> dict[str, Any]:
         """Build variables for prompt rendering.
@@ -444,6 +514,48 @@ class Step0KeywordSelection(BaseActivity):
         except Exception:
             # パースエラー時はデフォルト値を返す
             return ArticleStrategy().model_dump()
+
+    def _merge_cta_from_llm(
+        self, parsed_data: dict[str, Any], cta_data: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
+        """LLM出力の cta_design を CTA仕様にマージする.
+
+        configでCTA URL/textが未設定の場合、LLMが生成した cta_design から補完する。
+
+        Args:
+            parsed_data: LLMのパース済みJSON出力
+            cta_data: 現在のCTA仕様（config由来）
+
+        Returns:
+            マージ済みのCTA仕様 dict
+        """
+        if cta_data is None:
+            return None
+
+        cta_design = parsed_data.get("cta_design")
+        if not cta_design or not isinstance(cta_design, dict):
+            return cta_data
+
+        placements = cta_data.get("placements", {})
+
+        # LLMの cta_design から text を補完（URL/textが空の場合のみ）
+        mapping = {
+            "early": "early_cta",
+            "mid": "mid_cta",
+            "final": "final_cta",
+        }
+        for placement_key, design_key in mapping.items():
+            placement = placements.get(placement_key, {})
+            design = cta_design.get(design_key, {})
+            if isinstance(design, dict) and isinstance(placement, dict):
+                if not placement.get("text") and design.get("text"):
+                    placement["text"] = design["text"]
+                if not placement.get("url") and cta_design.get("cta_url_placeholder"):
+                    placement["url"] = cta_design["cta_url_placeholder"]
+            placements[placement_key] = placement
+
+        cta_data["placements"] = placements
+        return cta_data
 
 
 # Activity function for Temporal registration

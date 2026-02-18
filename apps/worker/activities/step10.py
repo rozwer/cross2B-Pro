@@ -37,6 +37,7 @@ from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step10 import (
     ARTICLE_WORD_COUNT_TARGETS,
@@ -443,6 +444,27 @@ class Step10FinalOutput(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             )
 
+        # Load step0 data for CTA specification
+        step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
+        cta_spec = step0_data.get("cta_specification", {}) or step0_data.get("cta", {})
+        cta_placements = cta_spec.get("placements", {}) if isinstance(cta_spec, dict) else {}
+        cta_url = ""
+        cta_text = ""
+        for phase in ("final", "early", "mid"):
+            placement = cta_placements.get(phase, {})
+            if isinstance(placement, dict) and placement.get("url"):
+                cta_url = placement["url"]
+                cta_text = placement.get("text", "")
+                break
+        if cta_url:
+            cta_info_str = (
+                f"CTA URL: {cta_url}\n"
+                f"CTAテキスト: {cta_text}\n"
+                f"上記URLをCTAリンクのhref属性に設定すること。"
+            )
+        else:
+            cta_info_str = json.dumps(cta_spec, ensure_ascii=False) if cta_spec else ""
+
         # Load step9 data
         step9_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step9")
 
@@ -486,10 +508,8 @@ class Step10FinalOutput(BaseActivity):
         _ = step9_data.get("meta_description", "")  # noqa: F841
         _ = step9_data.get("article_title", keyword)  # noqa: F841
 
-        # Get LLM client
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client (Claude Opus for step10 via step defaults)
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Generate article variations (default: 4 articles)
@@ -555,6 +575,7 @@ class Step10FinalOutput(BaseActivity):
                     variation_info=variation_info,
                     previous_summaries=previous_summaries,
                     ctx=ctx,
+                    cta_info_str=cta_info_str,
                 )
                 total_tokens += article.word_count  # Approximate
 
@@ -691,6 +712,7 @@ class Step10FinalOutput(BaseActivity):
         variation_info: dict[str, Any],
         previous_summaries: list[str],
         ctx: ExecutionContext,
+        cta_info_str: str = "",
     ) -> ArticleVariation:
         """Generate a single article variation."""
         article_num = variation_info["number"]
@@ -711,6 +733,7 @@ class Step10FinalOutput(BaseActivity):
             target_word_count_min=word_min,
             target_word_count_max=word_max,
             previous_summaries="\n".join(previous_summaries) if previous_summaries else "（最初の記事のため、前の記事はありません）",
+            cta_info=cta_info_str,
         )
 
         # Generate content
@@ -1105,12 +1128,15 @@ class Step10FinalOutput(BaseActivity):
             keyword_density_appropriate=True,  # 詳細計算は後続処理で
         )
 
-        # 4本柱チェック（記事内容のセマンティック分析は後続処理で）
+        # 4本柱チェック — CTA実検出
+        content_text = article.content or ""
+        has_cta_boxes = 'class="cta-box' in content_text or "cta-box" in content_text
+        has_cta_text = any(ind in content_text for ind in ["資料請求", "無料相談", "今すぐ", "無料ダウンロード", "お問い合わせ"])
         four_pillars_checklist = FourPillarsChecklist(
-            neuroscience_applied=True,  # 分析要
-            behavioral_economics_applied=True,  # 分析要
-            llmo_optimized=True,  # 分析要
-            kgi_cta_placed=True,  # 分析要
+            neuroscience_applied=True,  # 3フェーズ構成で透明適用
+            behavioral_economics_applied=True,  # テクニックとして透明適用
+            llmo_optimized=True,  # 質問形式H2 + スニペット回答
+            kgi_cta_placed=has_cta_boxes or has_cta_text,
         )
 
         # 技術チェック

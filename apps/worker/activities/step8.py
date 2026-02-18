@@ -19,6 +19,7 @@ Integrated helpers:
 """
 
 import logging
+import re
 from typing import Any
 
 from temporalio import activity
@@ -27,6 +28,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step8 import (
@@ -63,6 +65,46 @@ FAQ_ANSWER_MIN_LENGTH = 120
 FAQ_ANSWER_MAX_LENGTH = 180
 
 
+def _parse_claims_from_text(content: str) -> list[Claim]:
+    """Fallback: extract claims from non-JSON text (markdown/plain text).
+
+    Handles patterns like:
+    - Numbered lists: "1. クレームテキスト" or "1) クレームテキスト"
+    - Bullet lists: "- クレームテキスト" or "* クレームテキスト"
+    - Labeled items: "クレーム1: テキスト" or "Claim 1: テキスト"
+    """
+    claims: list[Claim] = []
+    lines = content.strip().split("\n")
+
+    for line in lines:
+        line = line.strip()
+        if not line or len(line) < 10:
+            continue
+
+        # Skip markdown headers and code markers
+        if line.startswith("#") or line.startswith("```"):
+            continue
+
+        # Match numbered/bulleted list items
+        match = re.match(
+            r"^(?:\d+[.)]\s*|[-*]\s+|クレーム\d*[:：]\s*|[Cc]laim\s*\d*[:：]\s*)(.*)",
+            line,
+        )
+        if match:
+            text = match.group(1).strip()
+            if len(text) >= 10:
+                claims.append(
+                    Claim(
+                        claim_id=f"C{len(claims) + 1}",
+                        text=text,
+                        source_section="",
+                        claim_type="fact",
+                    )
+                )
+
+    return claims
+
+
 def _parse_claims_from_response(
     parser: OutputParser,
     content: str,
@@ -71,7 +113,12 @@ def _parse_claims_from_response(
     parse_result = parser.parse_json(content)
 
     if not parse_result.success or not parse_result.data:
-        logger.warning("[STEP8] Failed to parse claims JSON, returning empty list")
+        logger.warning("[STEP8] Failed to parse claims JSON, trying text fallback")
+        fallback_claims = _parse_claims_from_text(content)
+        if fallback_claims:
+            logger.info(f"[STEP8] Text fallback extracted {len(fallback_claims)} claims")
+            return fallback_claims
+        logger.warning("[STEP8] Text fallback also failed, returning empty list")
         return []
 
     claims_data = parse_result.data
@@ -82,17 +129,24 @@ def _parse_claims_from_response(
     else:
         return []
 
+    _VALID_CLAIM_TYPES = {"statistic", "fact", "opinion", "definition"}
+    _VALID_VERIFICATION_CATEGORIES = {"numeric_data", "source_accuracy", "timeline_consistency", "logical_consistency"}
+
     claims: list[Claim] = []
     for i, item in enumerate(claims_list):
         if isinstance(item, dict):
+            raw_type = item.get("claim_type", "fact")
+            claim_type = raw_type if raw_type in _VALID_CLAIM_TYPES else "fact"
+            raw_cat = item.get("verification_category")
+            verification_category = raw_cat if raw_cat in _VALID_VERIFICATION_CATEGORIES else None
             claims.append(
                 Claim(
                     claim_id=item.get("claim_id", f"C{i + 1}"),
                     text=item.get("text", ""),
                     source_section=item.get("source_section", ""),
-                    claim_type=item.get("claim_type", "fact"),
+                    claim_type=claim_type,
                     # blog.System extensions
-                    verification_category=item.get("verification_category"),
+                    verification_category=verification_category,
                     data_anchor_id=item.get("data_anchor_id"),
                 )
             )
@@ -118,13 +172,17 @@ def _parse_verification_from_response(
     else:
         return []
 
+    _VALID_STATUSES = {"verified", "unverified", "contradicted", "partially_verified"}
+
     results: list[VerificationResult] = []
     for item in results_list or []:
         if isinstance(item, dict):
+            raw_status = item.get("status", "unverified")
+            status = raw_status if raw_status in _VALID_STATUSES else "unverified"
             results.append(
                 VerificationResult(
                     claim_id=item.get("claim_id", ""),
-                    status=item.get("status", "unverified"),
+                    status=status,
                     confidence=float(item.get("confidence", 0.5)),
                     evidence=item.get("evidence", ""),
                     source=item.get("source", ""),
@@ -527,10 +585,8 @@ class Step8FactCheck(BaseActivity):
         if validation_result.quality_issues:
             logger.warning(f"[STEP8] Input quality issues: {validation_result.quality_issues}")
 
-        # Get LLM client
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # Compute input digest for idempotency
@@ -544,7 +600,12 @@ class Step8FactCheck(BaseActivity):
             extracted_claims = _parse_claims_from_response(self.output_parser, claims_checkpoint.get("raw_response", ""))
             if not extracted_claims and claims_checkpoint.get("claims"):
                 extracted_claims = [Claim(**c) for c in claims_checkpoint.get("claims", [])]
-        else:
+            if not extracted_claims:
+                # Checkpoint has no valid claims - invalidate and re-run
+                logger.warning("[STEP8] Checkpoint has empty claims, re-running LLM call")
+                claims_checkpoint = None
+
+        if not claims_checkpoint:
             try:
                 claims_prompt = prompt_pack.get_prompt("step8_claims")
                 claims_request = claims_prompt.render(content=polished_content)

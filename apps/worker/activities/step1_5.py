@@ -117,6 +117,61 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
         step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
         recommended_angles = step0_data.get("recommended_angles", [])
 
+        # === Google Ads Related Keywords Enrichment ===
+        # Use multiple seed keywords for better coverage:
+        # 1. Main keyword as-is
+        # 2. Shortened main keyword (first 2 words for broader results)
+        # 3. Up to 3 recommended_angles from step0
+        main_keyword = config.get("keyword", "")
+        google_ads_related: list[str] = []
+        if main_keyword:
+            seed_keywords: list[str] = [main_keyword]
+
+            # Add shortened version (long-tail KWs return few results)
+            parts = main_keyword.split()
+            if len(parts) > 2:
+                seed_keywords.append(" ".join(parts[:2]))
+
+            # Add shortened recommended_angles as additional seeds
+            # Google Ads Keyword Planner works best with 1-3 word queries,
+            # so we extract the first 2 words from each angle
+            for angle in recommended_angles[:5]:
+                angle_str = angle.get("keyword", "") if isinstance(angle, dict) else str(angle) if isinstance(angle, str) else ""
+                angle_str = angle_str.strip()
+                if not angle_str:
+                    continue
+                # Shorten to first 2 words for broader results
+                angle_parts = angle_str.split()
+                shortened = " ".join(angle_parts[:2]) if len(angle_parts) > 2 else angle_str
+                if shortened not in seed_keywords:
+                    seed_keywords.append(shortened)
+
+            try:
+                ads_registry = ToolRegistry()
+                related_kw_tool = ads_registry.get("related_keywords")
+                seen: set[str] = set()
+
+                for seed in seed_keywords:
+                    ads_result = await related_kw_tool.execute(keyword=seed, limit=30)
+                    if ads_result.success and ads_result.data:
+                        for kw in ads_result.data.get("related", []):
+                            if kw not in seen:
+                                seen.add(kw)
+                                google_ads_related.append(kw)
+                        logger.info(
+                            f"[STEP1.5] Google Ads '{seed}': "
+                            f"{len(ads_result.data.get('related', []))} keywords "
+                            f"(source: {ads_result.data.get('source', 'unknown')})"
+                        )
+                    else:
+                        logger.warning(f"[STEP1.5] Google Ads '{seed}' failed: {ads_result.error_message}")
+
+                logger.info(f"[STEP1.5] Google Ads total unique related keywords: {len(google_ads_related)}")
+            except Exception as e:
+                logger.warning(f"[STEP1.5] Google Ads related_keywords tool error (non-fatal): {e}")
+        else:
+            logger.info("[STEP1.5] No main keyword for Google Ads enrichment")
+
         # If no user-provided related_keywords, try to derive from step0 as fallback
         if not related_keywords and recommended_angles:
             logger.info("[STEP1.5] No user-provided keywords, deriving from step0 recommended_angles as fallback")
@@ -145,17 +200,20 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
                 logger.info("[STEP1.5] No valid keywords derived from step0")
 
         # スキップ条件: related_keywordsが空の場合
+        # Note: Google Ads data is still included even when SERP processing is skipped
         if not related_keywords:
-            logger.info("[STEP1.5] Skipped: No related keywords provided")
+            logger.info("[STEP1.5] Skipped SERP processing: No related keywords provided")
             output_data = {
                 "step": self.step_id,
                 "related_keywords_analyzed": 0,
                 "related_competitor_data": [],
+                "google_ads_related_keywords": google_ads_related,
                 "metadata": {
                     "fetched_at": datetime.utcnow().isoformat(),
-                    "source": "skipped",
+                    "source": "skipped" if not google_ads_related else "google_ads_only",
                     "total_keywords_processed": 0,
                     "total_articles_fetched": 0,
+                    "google_ads_keyword_count": len(google_ads_related),
                 },
                 "skipped": True,
                 "skip_reason": "no_related_keywords",
@@ -234,11 +292,13 @@ class Step1_5RelatedKeywordExtraction(BaseActivity):
             "step": self.step_id,
             "related_keywords_analyzed": len(all_competitor_data),
             "related_competitor_data": all_competitor_data,
+            "google_ads_related_keywords": google_ads_related,
             "metadata": {
                 "fetched_at": datetime.utcnow().isoformat(),
                 "source": "serp_fetch",
                 "total_keywords_processed": len(all_competitor_data),
                 "total_articles_fetched": total_articles,
+                "google_ads_keyword_count": len(google_ads_related),
             },
             "skipped": False,
             "skip_reason": None,

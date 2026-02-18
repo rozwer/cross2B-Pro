@@ -23,6 +23,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
@@ -143,9 +144,7 @@ class Step5PrimaryCollection(BaseActivity):
             activity.logger.info(f"Loaded {len(search_queries)} queries from checkpoint")
         else:
             # Step 5.1: Generate search queries using LLM
-            model_config = config.get("model_config", {})
-            llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
-            llm_model = model_config.get("model", config.get("llm_model"))
+            llm_provider, llm_model = get_step_model_config(self.step_id, config)
             llm = get_llm_client(llm_provider, model=llm_model)
 
             try:
@@ -249,6 +248,10 @@ class Step5PrimaryCollection(BaseActivity):
         primary_collector = registry.get("primary_collector")
         failed_queries: list[dict[str, Any]] = []
 
+        # Reset domain failure tracking for fresh run
+        if primary_collector and hasattr(primary_collector, "reset_failed_domains"):
+            primary_collector.reset_failed_domains()
+
         if primary_collector:
             for query in search_queries[:12]:  # Expanded from 5 to 12 for better source coverage
                 if query in completed_queries_set:
@@ -309,16 +312,24 @@ class Step5PrimaryCollection(BaseActivity):
                     verify_result = await url_verify.execute(url=source.get("url", ""))
 
                     data = verify_result.data or {}
-                    if verify_result.success and data.get("status") == 200:
+                    # Use is_accessible (200-399) instead of exact status==200
+                    if verify_result.success and data.get("is_accessible", False):
                         source["verified"] = True
                         verified_sources.append(source)
-                    else:
+                    elif verify_result.success:
+                        # URL resolved but returned error status (404, 403, etc.)
                         source["verified"] = False
                         invalid_sources.append(source)
+                    else:
+                        # Verification failed (timeout, network error) - keep as unverified but usable
+                        source["verified"] = False
+                        verified_sources.append(source)
+                        activity.logger.info(f"URL verification inconclusive for {source.get('url', '')}, keeping as unverified")
                 except Exception as e:
                     activity.logger.warning(f"URL verification failed for {source.get('url', '')}: {e}")
+                    # Keep source as unverified but usable
                     source["verified"] = False
-                    invalid_sources.append(source)
+                    verified_sources.append(source)
         else:
             # If no verification tool, mark all as unverified
             for source in collected_sources:

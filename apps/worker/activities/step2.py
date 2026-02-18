@@ -486,16 +486,24 @@ class Step2CSVValidation(BaseActivity):
             h3_count = 0
 
             for heading in headings:
-                # Markdown style or HTML style
-                if heading.startswith("## ") or heading.lower().startswith("<h2"):
-                    h2_count += 1
-                elif heading.startswith("### ") or heading.lower().startswith("<h3"):
-                    h3_count += 1
-
-                # Extract heading text for pattern analysis
-                text = self._extract_heading_text(heading)
-                if text:
-                    all_headings.append(text.lower())
+                # Support both dict format {"level": 2, "text": "..."} and string format "## ..."
+                if isinstance(heading, dict):
+                    level = heading.get("level", 0)
+                    text = heading.get("text", "")
+                    if level == 2:
+                        h2_count += 1
+                    elif level == 3:
+                        h3_count += 1
+                    if text:
+                        all_headings.append(text.lower())
+                elif isinstance(heading, str):
+                    if heading.startswith("## ") or heading.lower().startswith("<h2"):
+                        h2_count += 1
+                    elif heading.startswith("### ") or heading.lower().startswith("<h3"):
+                        h3_count += 1
+                    text = self._extract_heading_text(heading)
+                    if text:
+                        all_headings.append(text.lower())
 
             h2_counts.append(h2_count)
             h3_counts.append(h3_count)

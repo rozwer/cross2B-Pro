@@ -26,6 +26,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.llm.exceptions import (
     LLMAuthenticationError,
     LLMInvalidRequestError,
@@ -245,6 +246,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
         step1_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1") or {}
         step2_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step2") or {}
+        step1_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step1_5") or {}
         competitors = step1_data.get("competitors", [])
 
         if not keyword:
@@ -300,6 +302,12 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         # Pre-analyze competitors for keyword extraction hints
         keyword_hints = self._pre_analyze_competitors(keyword, competitor_full_texts, step2_data)
 
+        # Enrich keyword_hints with Google Ads related keywords from step1.5
+        google_ads_keywords = step1_5_data.get("google_ads_related_keywords", [])
+        if google_ads_keywords:
+            keyword_hints["google_ads_related_keywords"] = google_ads_keywords
+            logger.info(f"Enriched keyword_hints with {len(google_ads_keywords)} Google Ads related keywords")
+
         # Render prompt with blog.System requirements
         try:
             prompt_template = prompt_pack.get_prompt("step3b")
@@ -327,11 +335,8 @@ class Step3BCooccurrenceExtraction(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client (Gemini for step3b - grounding enabled)
-        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config (expanded max_tokens for larger output)

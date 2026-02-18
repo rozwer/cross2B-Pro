@@ -517,3 +517,46 @@ class TestCombinedFixes:
 
         assert result.success is True
         assert result.data == {"key": "value"}
+
+
+class TestNestedBackticks:
+    """Tests for JSON containing nested backtick code blocks."""
+
+    def test_json_with_nested_markdown_code_block(self) -> None:
+        """JSON value containing ```python...``` should parse via greedy fallback."""
+        parser = OutputParser()
+        content = (
+            '```json\n'
+            '{"final_content": "# Title\\n\\n```python\\nprint(1)\\n```\\n\\nMore text"}\n'
+            '```'
+        )
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert "final_content" in result.data
+        assert "greedy_code_block_extraction" in result.fixes_applied
+
+    def test_json_with_multiple_nested_code_blocks(self) -> None:
+        """JSON with multiple nested code blocks should parse correctly."""
+        parser = OutputParser()
+        content = (
+            '```json\n'
+            '{"content": "## Section\\n\\n```bash\\necho hello\\n```\\n\\n'
+            '```js\\nconsole.log(1)\\n```\\n\\nEnd"}\n'
+            '```'
+        )
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert "content" in result.data
+        assert "greedy_code_block_extraction" in result.fixes_applied
+
+    def test_simple_json_block_still_uses_nongreedy(self) -> None:
+        """Normal JSON without nested backticks should use non-greedy (no greedy fix)."""
+        parser = OutputParser()
+        content = '```json\n{"key": "value"}\n```'
+        result = parser.parse_json(content)
+
+        assert result.success is True
+        assert result.data == {"key": "value"}
+        assert "greedy_code_block_extraction" not in result.fixes_applied

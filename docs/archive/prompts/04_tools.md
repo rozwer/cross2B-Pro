@@ -397,7 +397,7 @@ class RelatedKeywordsTool(ToolInterface):
 
 ```bash
 # .env に追加
-USE_MOCK_GOOGLE_ADS=true  # Google Ads API 未取得のため true
+USE_MOCK_GOOGLE_ADS=false  # Google Ads API 未取得のため true
 ```
 
 将来 Google Ads API を取得した場合:

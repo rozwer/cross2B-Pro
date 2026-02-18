@@ -215,10 +215,24 @@ def _extract_text_from_html(html: str) -> dict[str, Any]:
     h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", html, re.IGNORECASE | re.DOTALL)
     h1 = re.sub(r"<[^>]+>", "", h1_match.group(1)).strip() if h1_match else ""
 
+    # H2/H3抽出（競合記事の見出し構造分析用）
+    h2_matches = re.findall(r"<h2[^>]*>(.*?)</h2>", html, re.IGNORECASE | re.DOTALL)
+    h2_list = [re.sub(r"<[^>]+>", "", h).strip() for h in h2_matches if h.strip()]
+    h3_matches = re.findall(r"<h3[^>]*>(.*?)</h3>", html, re.IGNORECASE | re.DOTALL)
+    h3_list = [re.sub(r"<[^>]+>", "", h).strip() for h in h3_matches if h.strip()]
+
+    # 見出し階層構造を構築
+    headings = [{"level": 2, "text": h} for h in h2_list] + [{"level": 3, "text": h} for h in h3_list]
+
     return {
         "title": title,
         "description": description,
         "h1": h1,
+        "h2": h2_list,
+        "h3": h3_list,
+        "headings": headings,
+        "h2_count": len(h2_list),
+        "h3_count": len(h3_list),
         "body_text": text,
         "word_count": len(text.split()),
     }
@@ -648,9 +662,39 @@ class PrimaryCollectorTool(ToolInterface):
 
     指定されたクエリに対して、SERP取得 + ページ取得 + 抽出を
     一連の流れで実行し、一次情報を収集する。
+
+    Domain failure tracking: after a URL from a domain times out,
+    subsequent URLs from the same base domain are skipped to avoid
+    wasting time on known-unreachable sites (e.g., meti.go.jp).
     """
 
     tool_id = "primary_collector"
+
+    # Class-level failed domain tracking (shared across instances within same process)
+    _failed_domains: set[str] = set()
+
+    @staticmethod
+    def _get_base_domain(url: str) -> str:
+        """Extract base domain for failure tracking.
+
+        For government sites like chusho.meti.go.jp, returns 'meti.go.jp'.
+        For regular sites, returns the last 2 parts (e.g., 'example.com').
+        """
+        try:
+            hostname = urlparse(url).hostname or ""
+            parts = hostname.split(".")
+            # For .go.jp domains, use last 3 parts (e.g., meti.go.jp)
+            if len(parts) >= 3 and parts[-1] == "jp" and parts[-2] == "go":
+                return ".".join(parts[-3:])
+            # For regular domains, use last 2 parts
+            return ".".join(parts[-2:]) if len(parts) >= 2 else hostname
+        except Exception:
+            return url
+
+    @classmethod
+    def reset_failed_domains(cls) -> None:
+        """Reset failed domain tracking (e.g., between workflow runs)."""
+        cls._failed_domains.clear()
 
     async def execute(  # type: ignore[override]
         self,
@@ -703,6 +747,12 @@ class PrimaryCollectorTool(ToolInterface):
             if not url:
                 continue
 
+            # Skip URLs from known-failed domains
+            base_domain = self._get_base_domain(url)
+            if base_domain in self._failed_domains:
+                logger.info(f"primary_collector: Skipping {url} (domain {base_domain} previously failed)")
+                continue
+
             # PDF判定
             is_pdf = url.lower().endswith(".pdf")
 
@@ -723,7 +773,15 @@ class PrimaryCollectorTool(ToolInterface):
                 if result.evidence:
                     all_evidence.extend(result.evidence)
             else:
-                logger.warning(f"primary_collector: Failed to fetch {url}: {result.error_message}")
+                error_msg = result.error_message or ""
+                # Track domain failures for timeout/network errors
+                if "timeout" in error_msg.lower() or "network" in error_msg.lower() or "connect" in error_msg.lower():
+                    self._failed_domains.add(base_domain)
+                    logger.warning(
+                        f"primary_collector: Domain {base_domain} marked as failed after timeout: {url}"
+                    )
+                else:
+                    logger.warning(f"primary_collector: Failed to fetch {url}: {error_msg}")
 
         logger.info(f"primary_collector: Collected {len(collected_sources)} sources for '{query}'")
 
