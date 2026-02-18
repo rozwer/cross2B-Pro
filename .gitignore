@@ -94,8 +94,12 @@ tooling-config-export.json
 test_steps_demo.py
 
 # ── Dev-only docs & specs ─────────────────────
-docs/archive/
+docs/
 仕様書/
+blog.System_prompts/
+
+# ── Tests ────────────────────────────────────
+tests/
 
 # ── Dev-only scripts ──────────────────────────
 scripts/test_*.py
