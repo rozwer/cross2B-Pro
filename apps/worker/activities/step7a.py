@@ -22,6 +22,7 @@ from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step7a import (
     BehavioralEconomicsImplementation,
@@ -126,7 +127,30 @@ class Step7ADraftGeneration(BaseActivity):
         step6_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step6_5") or {}
         step3_5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step3_5") or {}
         step5_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step5") or {}
+        step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
         enable_step3_5 = config.get("enable_step3_5", True)
+
+        # Load CTA specification from step0 for URL injection
+        cta_spec = step0_data.get("cta_specification", {})
+        cta_placements = cta_spec.get("placements", {})
+        cta_url = ""
+        cta_text = ""
+        for phase in ("final", "early", "mid"):
+            placement = cta_placements.get(phase, {})
+            if isinstance(placement, dict) and placement.get("url"):
+                cta_url = placement["url"]
+                cta_text = placement.get("text", "")
+                break
+        if cta_url:
+            cta_info = (
+                f"\n**重要: 以下のCTA情報を必ず使用してください:**\n"
+                f"CTA URL: {cta_url}\n"
+                f"CTAテキスト: {cta_text}\n"
+                f"上記URLとテキストをCTAリンクのhref属性に必ず設定すること。"
+                f"「[リンク先URL]」等のプレースホルダーは禁止。"
+            )
+        else:
+            cta_info = ""
 
         # Extract and format primary sources for citation embedding
         # Use verified sources first, fallback to invalid_sources if empty
@@ -153,10 +177,8 @@ class Step7ADraftGeneration(BaseActivity):
         integration_package = step6_5_data.get("integration_package", "")
         human_touch_elements = self._extract_human_touch_elements(step3_5_data)
 
-        # モデル設定を取得（成果物に保存用）
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # モデル設定を取得（Claude Opus for step7a via step defaults）
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
 
         # === CheckpointManager統合: 部分生成のチェックポイント ===
         draft_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress")
@@ -187,6 +209,7 @@ class Step7ADraftGeneration(BaseActivity):
                 prompt_pack,
                 human_touch_elements=human_touch_elements,
                 primary_sources=primary_sources,
+                cta_info=cta_info,
             )
 
         # === OutputParser統合 (ハイブリッド) ===
@@ -746,6 +769,7 @@ class Step7ADraftGeneration(BaseActivity):
         prompt_pack: Any,
         human_touch_elements: str,
         primary_sources: str = "",
+        cta_info: str = "",
     ) -> str:
         """Generate draft from scratch."""
         # Render prompt
@@ -756,6 +780,7 @@ class Step7ADraftGeneration(BaseActivity):
                 integration_package=integration_package,
                 human_touch_elements=human_touch_elements,
                 primary_sources=primary_sources,
+                cta_info=cta_info,
             )
         except Exception as e:
             raise ActivityError(
@@ -763,10 +788,8 @@ class Step7ADraftGeneration(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         try:
@@ -813,10 +836,8 @@ class Step7ADraftGeneration(BaseActivity):
 - JSON形式ではなく、マークダウン形式で出力してください
 """
 
-        # Get LLM client
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         try:

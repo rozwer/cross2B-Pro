@@ -16,6 +16,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.llm.exceptions import (
     LLMAuthenticationError,
     LLMInvalidRequestError,
@@ -136,10 +137,12 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             raw_hooks = {}
 
         return {
-            "loss_aversion_hook": raw_hooks.get("loss_aversion_hook", ""),
-            "social_proof_hook": raw_hooks.get("social_proof_hook", ""),
-            "authority_hook": raw_hooks.get("authority_hook", ""),
-            "scarcity_hook": raw_hooks.get("scarcity_hook", ""),
+            "loss_aversion_hook": raw_hooks.get("loss_aversion", raw_hooks.get("loss_aversion_hook", "")),
+            "social_proof_hook": raw_hooks.get("social_proof", raw_hooks.get("social_proof_hook", "")),
+            "authority_hook": raw_hooks.get("authority", raw_hooks.get("authority_hook", "")),
+            "scarcity_hook": raw_hooks.get("scarcity", raw_hooks.get("scarcity_hook", "")),
+            "consistency_hook": raw_hooks.get("consistency", raw_hooks.get("consistency_hook", "")),
+            "liking_hook": raw_hooks.get("liking", raw_hooks.get("liking_hook", "")),
         }
 
     def _extract_placement_instructions(self, parsed_data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -294,11 +297,8 @@ class Step3_5HumanTouchGeneration(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client (Gemini for step3_5 - natural expression)
-        # モデル設定を model_config から取得（後方互換性のため config 直下もフォールバック）
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "gemini"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         # LLM config - slightly higher temperature for creativity

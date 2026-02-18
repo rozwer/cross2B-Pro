@@ -22,6 +22,7 @@ from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step6 import (
     CitationFormat,
@@ -187,10 +188,8 @@ class Step6EnhancedOutline(BaseActivity):
                 category=ErrorCategory.NON_RETRYABLE,
             ) from e
 
-        # Get LLM client (Claude for step6)
-        model_config = config.get("model_config", {})
-        llm_provider = model_config.get("platform", config.get("llm_provider", "anthropic"))
-        llm_model = model_config.get("model", config.get("llm_model"))
+        # Get LLM client (Claude Opus for step6 via step defaults)
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
         llm = get_llm_client(llm_provider, model=llm_model)
 
         llm_config = LLMRequestConfig(

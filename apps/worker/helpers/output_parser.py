@@ -24,6 +24,15 @@ class OutputParser:
         r"```\s*(.*?)\s*```",
         re.DOTALL,
     )
+    # Greedy variants: match outermost code block (handles nested ``` in JSON values)
+    _JSON_BLOCK_PATTERN_GREEDY = re.compile(
+        r"```json\s*(.*)\s*```",
+        re.DOTALL | re.IGNORECASE,
+    )
+    _GENERIC_BLOCK_PATTERN_GREEDY = re.compile(
+        r"```\s*(.*)\s*```",
+        re.DOTALL,
+    )
     # Pattern for truncated JSON blocks (no closing ```)
     _TRUNCATED_JSON_BLOCK_PATTERN = re.compile(
         r"```json\s*(.*)",
@@ -89,6 +98,37 @@ class OutputParser:
         except json.JSONDecodeError:
             pass
 
+        # Step 2.5: Try greedy code block extraction (handles nested ``` in JSON values)
+        greedy_extracted, was_greedy = self._extract_greedy_code_block(content)
+        if was_greedy and greedy_extracted != extracted:
+            try:
+                data = json.loads(greedy_extracted)
+                fixes_applied.append("greedy_code_block_extraction")
+                return ParseResult(
+                    success=True,
+                    data=data,
+                    raw=content,
+                    format_detected="json",
+                    fixes_applied=fixes_applied,
+                )
+            except json.JSONDecodeError:
+                # Try deterministic fixes on greedy result
+                g_fixed, g_fix_names = self.apply_deterministic_fixes(greedy_extracted)
+                if g_fixed is not None:
+                    try:
+                        data = json.loads(g_fixed)
+                        fixes_applied.append("greedy_code_block_extraction")
+                        fixes_applied.extend(g_fix_names)
+                        return ParseResult(
+                            success=True,
+                            data=data,
+                            raw=content,
+                            format_detected="json",
+                            fixes_applied=fixes_applied,
+                        )
+                    except json.JSONDecodeError:
+                        pass
+
         # Step 3: Apply deterministic fixes and retry
         fixed, fix_names = self.apply_deterministic_fixes(extracted)
         if fixed is not None:
@@ -135,6 +175,26 @@ class OutputParser:
         """
         extracted, _ = self._extract_from_code_block(content)
         return extracted
+
+    def _extract_greedy_code_block(self, content: str) -> tuple[str, bool]:
+        """
+        Extract content from code block using greedy matching.
+
+        Greedy patterns match the OUTERMOST code block, handling cases where
+        JSON values contain nested ``` markers (e.g., Markdown in final_content).
+
+        Returns:
+            tuple[str, bool]: (extracted content, whether extraction occurred)
+        """
+        match = self._JSON_BLOCK_PATTERN_GREEDY.search(content)
+        if match:
+            return match.group(1).strip(), True
+
+        match = self._GENERIC_BLOCK_PATTERN_GREEDY.search(content)
+        if match:
+            return match.group(1).strip(), True
+
+        return content.strip(), False
 
     def _extract_from_code_block(self, content: str) -> tuple[str, bool]:
         """

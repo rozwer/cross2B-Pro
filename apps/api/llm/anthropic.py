@@ -90,7 +90,7 @@ class AnthropicClient(LLMInterface):
                 max_connections=100,
                 max_keepalive_connections=20,
             ),
-            timeout=httpx.Timeout(timeout=120.0, connect=10.0),
+            timeout=httpx.Timeout(timeout=600.0, connect=30.0),
         )
         self.client = AsyncAnthropic(api_key=resolved_key, http_client=http_client)
         self._http_client = http_client

@@ -26,25 +26,25 @@ from .parallel import run_parallel_steps
 # Activity timeouts as defined in workflow.md
 # Extended for long-form content (30,000+ chars) per Codex review
 STEP_TIMEOUTS: dict[str, int] = {
-    "step0": 60,
-    "step1": 300,
-    "step1_5": 300,
-    "step2": 60,
-    "step3a": 300,  # LLM API calls can take 60-90+ seconds
-    "step3b": 300,
-    "step3c": 300,
-    "step3_5": 300,
-    "step4": 300,
-    "step5": 600,  # Extended: more queries (12 instead of 5)
-    "step6": 300,
-    "step6_5": 300,
-    "step7a": 900,  # Extended from 600: long-form content generation (30,000+ chars)
-    "step7b": 600,  # Extended from 300: detailed brushup for long articles
-    "step8": 600,  # Extended from 300: external verification + FAQ generation
-    "step9": 900,  # Extended from 300: max_tokens=32000 requires more time
-    "step10": 1200,  # Extended from 900: 4 article variations with quality checks
-    "step11": 600,  # 画像生成は時間がかかる
-    "step12": 300,
+    "step0": 300,
+    "step1": 600,
+    "step1_5": 600,
+    "step2": 300,
+    "step3a": 600,
+    "step3b": 900,   # quality retry + Google Ads API
+    "step3c": 600,
+    "step3_5": 600,
+    "step4": 600,
+    "step5": 900,    # 12 queries + URL verification
+    "step6": 600,
+    "step6_5": 600,
+    "step7a": 1800,  # long-form content generation with continuation
+    "step7b": 900,
+    "step8": 900,    # external verification + FAQ generation
+    "step9": 1800,   # max_tokens=32000 + quality retry
+    "step10": 1800,  # 4 article variations with quality checks
+    "step11": 900,
+    "step12": 600,
 }
 
 # Default retry policy: max 3 attempts with same conditions
