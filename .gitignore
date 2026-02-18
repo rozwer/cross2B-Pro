@@ -30,25 +30,77 @@ package-lock.json
 
 # LangGraph local runtime data
 **/.langgraph-data/
+.langgraph_api/
 
 # OS cruft
 .DS_Store
+Thumbs.db
 
 # Local git backups
 .git-backups/
 
-# Claude Code (local configuration)
+# ── AI / Dev tool configs ──────────────────────
+# Claude Code
 .claude/
 .claude-code-harness/
+.claude-code-harness-version
+.claude-making/
+CLAUDE.md
 
-# Playwright MCP
+# Codex CLI
+.codex/
+
+# Agents / AI meta
+AGENTS.md
+STRUCTURE.json
+Plans.md
+
+# ── IDE / Editor ───────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Git hooks (local dev) ─────────────────────
+.githooks/
+.lefthook/
+lefthook.yml
+
+# ── Playwright MCP ─────────────────────────────
 .playwright-mcp/
 
-# Screenshots (local only)
+# ── Screenshots (local only) ───────────────────
 *.png
 
-# Firebase
+# ── Firebase ───────────────────────────────────
 firebase-debug.log
 
-# mise (local overrides)
+# ── Tool version managers ──────────────────────
+.mise.toml
 .mise.local.toml
+.python-version
+.node-version
+.tool-versions
+
+# ── Database dumps / backups ───────────────────
+*.backup
+*.dump
+*.sql.gz
+
+# ── Dev-only analysis / tooling exports ──────
+fe_be_inconsistencies.json
+tooling-config-export.json
+test_steps_demo.py
+
+# ── Dev-only docs & specs ─────────────────────
+docs/archive/
+仕様書/
+
+# ── Dev-only scripts ──────────────────────────
+scripts/test_*.py
+scripts/clone_run_for_testing.sh
+scripts/init-claude-structure.sh
+scripts/setup-githooks.sh
+scripts/worktree.sh
+scripts/*.backup
