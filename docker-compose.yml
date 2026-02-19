@@ -214,6 +214,9 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.ui
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-28000}
+        NEXT_PUBLIC_WS_URL: ws://localhost:${API_PORT:-28000}
     container_name: seo-ui
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-28000}

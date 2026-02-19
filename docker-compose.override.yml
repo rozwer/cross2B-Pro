@@ -3,8 +3,8 @@ version: "3.8"
 services:
   api:
     environment:
-      GEMINI_DEFAULT_MODEL: gemini-3-pro-preview
+      GEMINI_DEFAULT_MODEL: gemini-2.5-pro
 
   worker:
     environment:
-      GEMINI_DEFAULT_MODEL: gemini-3-pro-preview
+      GEMINI_DEFAULT_MODEL: gemini-2.5-pro

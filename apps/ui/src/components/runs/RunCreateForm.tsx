@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,10 +8,11 @@ import { z } from "zod";
 import { Plus, X, AlertCircle, ExternalLink, Search, Globe, Shield, FileText } from "lucide-react";
 import Link from "next/link";
 import type { CreateRunInput } from "@/lib/types";
-import { WORKFLOW_STEPS, type StepConfig } from "@/components/workflow";
+import { type StepConfig } from "@/components/workflow";
 import { ProviderLogo } from "@/components/icons/ProviderLogos";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useStepConfigs } from "@/hooks/useStepConfigs";
 
 const createRunSchema = z.object({
   keyword: z.string().min(1, "キーワードは必須です"),
@@ -33,18 +34,7 @@ export function RunCreateForm() {
   const [competitorUrls, setCompetitorUrls] = useState<string[]>([""]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [stepConfigs, setStepConfigs] = useState<StepConfig[]>(WORKFLOW_STEPS);
-
-  useEffect(() => {
-    const savedConfig = localStorage.getItem("workflow-config");
-    if (savedConfig) {
-      try {
-        setStepConfigs(JSON.parse(savedConfig));
-      } catch (e) {
-        console.error("Failed to parse saved config:", e);
-      }
-    }
-  }, []);
+  const { stepConfigs } = useStepConfigs();
 
   const {
     register,

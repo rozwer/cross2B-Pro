@@ -18,12 +18,13 @@ import {
   Key,
   Github,
 } from "lucide-react";
-import { WORKFLOW_STEPS, type StepConfig } from "@/components/workflow";
+import { type StepConfig } from "@/components/workflow";
 import { ModelSettingsTab, ApiKeysTab, ModelsManagementTab, GitHubSettingsTab } from "@/components/tabs";
 import { TabBar, type TabItem } from "@/components/common/TabBar";
 import { Cpu } from "lucide-react";
 import api from "@/lib/api";
 import type { LLMPlatform, Prompt } from "@/lib/types";
+import { useStepConfigs } from "@/hooks/useStepConfigs";
 import { STEP_LABELS } from "@/lib/types";
 import { Loading } from "@/components/common";
 import { HelpButton } from "@/components/common/HelpButton";
@@ -45,8 +46,8 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
-  // Model settings state
-  const [stepConfigs, setStepConfigs] = useState<StepConfig[]>(WORKFLOW_STEPS);
+  // Model settings state (backend-aware with stale cache invalidation)
+  const { stepConfigs, setStepConfigs, isLoading: configsLoading, saveConfigs, resetConfigs } = useStepConfigs();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Prompts state
@@ -58,18 +59,7 @@ export default function SettingsPage() {
   const [stepFilter, setStepFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
 
-  // Load saved model config on mount
-  useEffect(() => {
-    const savedConfig = localStorage.getItem("workflow-config");
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        setStepConfigs(parsed);
-      } catch (e) {
-        console.error("Failed to parse saved config:", e);
-      }
-    }
-  }, []);
+  // Step config loading is handled by useStepConfigs hook
 
   // Load prompts when tab changes
   const loadPrompts = useCallback(async () => {
@@ -108,15 +98,14 @@ export default function SettingsPage() {
   }, []);
 
   const handleSaveConfig = useCallback(() => {
-    localStorage.setItem("workflow-config", JSON.stringify(stepConfigs));
+    saveConfigs(stepConfigs);
     setHasUnsavedChanges(false);
-  }, [stepConfigs]);
+  }, [stepConfigs, saveConfigs]);
 
   const handleResetConfig = useCallback(() => {
-    setStepConfigs(WORKFLOW_STEPS);
-    localStorage.removeItem("workflow-config");
+    resetConfigs();
     setHasUnsavedChanges(false);
-  }, []);
+  }, [resetConfigs]);
 
   const handleStartNewRun = useCallback(() => {
     handleSaveConfig();
@@ -284,7 +273,11 @@ export default function SettingsPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">モデル設定</h2>
             <HelpButton helpKey="settings.models" size="sm" />
           </div>
-          <ModelSettingsTab stepConfigs={stepConfigs} onConfigChange={handleConfigChange} />
+          {configsLoading ? (
+            <Loading text="モデル設定を読み込み中..." />
+          ) : (
+            <ModelSettingsTab stepConfigs={stepConfigs} onConfigChange={handleConfigChange} />
+          )}
         </div>
       )}
 

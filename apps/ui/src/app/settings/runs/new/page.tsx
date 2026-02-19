@@ -1,29 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { RunCreateForm } from "@/components/runs/RunCreateForm";
 import { RunCreateWizard } from "@/components/runs/wizard";
-import { WORKFLOW_STEPS, type StepConfig } from "@/components/workflow";
 import type { ModelConfig, StepModelConfig, ToolConfig } from "@/lib/types";
+import { useStepConfigs } from "@/hooks/useStepConfigs";
+import { Loading } from "@/components/common";
 
 type FormMode = "wizard" | "legacy";
 
 export default function NewRunPage() {
   const [formMode, setFormMode] = useState<FormMode>("wizard");
-  const [stepConfigs, setStepConfigs] = useState<StepConfig[]>(WORKFLOW_STEPS);
-
-  useEffect(() => {
-    const savedConfig = localStorage.getItem("workflow-config");
-    if (savedConfig) {
-      try {
-        setStepConfigs(JSON.parse(savedConfig));
-      } catch (e) {
-        console.error("Failed to parse saved config:", e);
-      }
-    }
-  }, []);
+  const { stepConfigs, isLoading } = useStepConfigs();
 
   // Build model config from step configs
   const configurableSteps = stepConfigs.filter(
@@ -110,7 +100,9 @@ export default function NewRunPage() {
       </div>
 
       {/* Form */}
-      {formMode === "wizard" ? (
+      {isLoading ? (
+        <Loading text="モデル設定を読み込み中..." />
+      ) : formMode === "wizard" ? (
         <RunCreateWizard
           modelConfig={modelConfig}
           stepConfigs={stepConfigsPayload}
