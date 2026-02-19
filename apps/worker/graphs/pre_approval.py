@@ -34,8 +34,8 @@ logger.setLevel(logging.DEBUG)
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
-from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMCallMetadata, LLMRequestConfig
+from apps.worker.helpers.model_config import get_config_llm_client
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
 from apps.worker.graphs.wrapper import create_node_function
@@ -85,10 +85,7 @@ async def step0_execute(
     # ===== DEBUG_LOG_END =====
 
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "gemini"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     # REVIEW-002: LLMCallMetadata を必須で注入
     metadata = LLMCallMetadata(
@@ -347,7 +344,7 @@ async def step3_parallel_execute(
 
     async def run_step3a() -> dict[str, Any]:
         """Step 3A: Query Analysis. REVIEW-002: metadata必須化"""
-        llm = get_llm_client("gemini")
+        llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
         metadata = LLMCallMetadata(
             run_id=ctx.run_id,
             step_id="step3a",
@@ -382,7 +379,7 @@ async def step3_parallel_execute(
 
     async def run_step3b() -> dict[str, Any]:
         """Step 3B: Co-occurrence (heart). REVIEW-002: metadata必須化"""
-        llm = get_llm_client("gemini")
+        llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
         metadata = LLMCallMetadata(
             run_id=ctx.run_id,
             step_id="step3b",
@@ -416,7 +413,7 @@ async def step3_parallel_execute(
 
     async def run_step3c() -> dict[str, Any]:
         """Step 3C: Competitor Analysis. REVIEW-002: metadata必須化"""
-        llm = get_llm_client("gemini")
+        llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
         metadata = LLMCallMetadata(
             run_id=ctx.run_id,
             step_id="step3c",

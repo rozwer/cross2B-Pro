@@ -22,8 +22,7 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.llm.base import get_llm_client
-from apps.worker.helpers.model_config import get_step_model_config
+from apps.worker.helpers.model_config import get_step_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
@@ -144,8 +143,7 @@ class Step5PrimaryCollection(BaseActivity):
             activity.logger.info(f"Loaded {len(search_queries)} queries from checkpoint")
         else:
             # Step 5.1: Generate search queries using LLM
-            llm_provider, llm_model = get_step_model_config(self.step_id, config)
-            llm = get_llm_client(llm_provider, model=llm_model)
+            llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
 
             try:
                 query_prompt = prompt_pack.get_prompt("step5_queries")

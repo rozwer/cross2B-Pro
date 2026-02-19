@@ -18,9 +18,8 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
-from apps.worker.helpers.model_config import get_step_model_config
+from apps.worker.helpers.model_config import get_step_llm_client
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step6_5 import (
     ComprehensiveBlueprint,
@@ -155,8 +154,7 @@ class Step65IntegrationPackage(BaseActivity):
             ) from e
 
         # Get LLM client (Claude Opus for step6.5 via step defaults)
-        llm_provider, llm_model = get_step_model_config(self.step_id, config)
-        llm = get_llm_client(llm_provider, model=llm_model)
+        llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
 
         # Execute LLM call
         try:

@@ -28,8 +28,8 @@ from langgraph.graph import END, START, StateGraph
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
-from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
+from apps.worker.helpers.model_config import get_config_llm_client
 from apps.api.storage.artifact_store import ArtifactStore
 from apps.api.storage.schemas import ArtifactRef
 from apps.api.tools.registry import ToolRegistry
@@ -151,10 +151,7 @@ async def step3_5_execute(
     Uses Gemini for natural, creative expression.
     """
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "gemini"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 4000),
@@ -195,10 +192,7 @@ async def step4_execute(
 ) -> dict[str, Any]:
     """Execute step 4: Strategic Outline."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 4000),
@@ -266,10 +260,7 @@ async def step6_execute(
 ) -> dict[str, Any]:
     """Execute step 6: Enhanced Outline."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 5000),
@@ -302,10 +293,7 @@ async def step6_5_execute(
 ) -> dict[str, Any]:
     """Execute step 6.5: Integration Package."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 6000),
@@ -345,10 +333,7 @@ async def step7a_execute(
 ) -> dict[str, Any]:
     """Execute step 7A: Draft Generation (longest step)."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
@@ -387,10 +372,7 @@ async def step7b_execute(
 ) -> dict[str, Any]:
     """Execute step 7B: Brush Up."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "gemini"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
@@ -427,10 +409,7 @@ async def step8_execute(
 ) -> dict[str, Any]:
     """Execute step 8: Fact Check."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "gemini"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     # Fact check
     llm_config = LLMRequestConfig(
@@ -462,10 +441,7 @@ async def step9_execute(
 ) -> dict[str, Any]:
     """Execute step 9: Final Rewrite."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     llm_config = LLMRequestConfig(
         max_tokens=config.get("max_tokens", 8000),
@@ -504,10 +480,7 @@ async def step10_execute(
 ) -> dict[str, Any]:
     """Execute step 10: Final Output."""
     config = ctx.config
-    llm = get_llm_client(
-        config.get("llm_provider", "anthropic"),
-        model=config.get("llm_model"),
-    )
+    llm = await get_config_llm_client(config, tenant_id=ctx.tenant_id)
 
     # Generate HTML
     llm_config = LLMRequestConfig(

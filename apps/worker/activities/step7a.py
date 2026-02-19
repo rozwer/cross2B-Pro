@@ -20,9 +20,8 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.api.llm.base import get_llm_client
 from apps.api.llm.schemas import LLMRequestConfig
-from apps.worker.helpers.model_config import get_step_model_config
+from apps.worker.helpers.model_config import get_step_llm_client
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step7a import (
     BehavioralEconomicsImplementation,
@@ -177,9 +176,6 @@ class Step7ADraftGeneration(BaseActivity):
         integration_package = step6_5_data.get("integration_package", "")
         human_touch_elements = self._extract_human_touch_elements(step3_5_data)
 
-        # モデル設定を取得（Claude Opus for step7a via step defaults）
-        llm_provider, llm_model = get_step_model_config(self.step_id, config)
-
         # === CheckpointManager統合: 部分生成のチェックポイント ===
         draft_checkpoint = await self.checkpoint.load(ctx.tenant_id, ctx.run_id, self.step_id, "draft_progress")
 
@@ -197,6 +193,7 @@ class Step7ADraftGeneration(BaseActivity):
                 current_draft,
                 integration_package,
                 human_touch_elements=human_touch_elements,
+                tenant_id=ctx.tenant_id,
             )
             current_draft = current_draft + "\n\n" + continuation
             continuation_used = True
@@ -210,6 +207,7 @@ class Step7ADraftGeneration(BaseActivity):
                 human_touch_elements=human_touch_elements,
                 primary_sources=primary_sources,
                 cta_info=cta_info,
+                tenant_id=ctx.tenant_id,
             )
 
         # === OutputParser統合 (ハイブリッド) ===
@@ -770,6 +768,7 @@ class Step7ADraftGeneration(BaseActivity):
         human_touch_elements: str,
         primary_sources: str = "",
         cta_info: str = "",
+        tenant_id: str | None = None,
     ) -> str:
         """Generate draft from scratch."""
         # Render prompt
@@ -789,8 +788,7 @@ class Step7ADraftGeneration(BaseActivity):
             ) from e
 
         # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
-        llm_provider, llm_model = get_step_model_config(self.step_id, config)
-        llm = get_llm_client(llm_provider, model=llm_model)
+        llm = await get_step_llm_client(self.step_id, config, tenant_id=tenant_id)
 
         try:
             llm_config = LLMRequestConfig(
@@ -816,6 +814,7 @@ class Step7ADraftGeneration(BaseActivity):
         current_draft: str,
         integration_package: str,
         human_touch_elements: str,
+        tenant_id: str | None = None,
     ) -> str:
         """Generate continuation of draft."""
         continuation_prompt = f"""
@@ -837,8 +836,7 @@ class Step7ADraftGeneration(BaseActivity):
 """
 
         # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
-        llm_provider, llm_model = get_step_model_config(self.step_id, config)
-        llm = get_llm_client(llm_provider, model=llm_model)
+        llm = await get_step_llm_client(self.step_id, config, tenant_id=tenant_id)
 
         try:
             llm_config = LLMRequestConfig(
