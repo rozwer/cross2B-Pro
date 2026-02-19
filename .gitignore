@@ -2,6 +2,7 @@
 **/.env
 **/.env.*
 !**/.env.example
+shared-api-keys.txt
 
 # Python
 **/__pycache__/
