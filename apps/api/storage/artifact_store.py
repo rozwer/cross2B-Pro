@@ -123,13 +123,13 @@ class ArtifactStore:
         """Initialize MinIO client.
 
         Args:
-            endpoint: MinIO endpoint (default: MINIO_ENDPOINT env or localhost:9000)
+            endpoint: MinIO endpoint (default: MINIO_ENDPOINT env or localhost:29000)
             access_key: Access key (default: MINIO_ACCESS_KEY env or minioadmin)
             secret_key: Secret key (default: MINIO_SECRET_KEY env or minioadmin)
             secure: Use HTTPS (default: MINIO_USE_SSL env or false)
             bucket: Bucket name (default: MINIO_BUCKET env or seo-gen-artifacts)
         """
-        self.endpoint: str = endpoint or os.getenv("MINIO_ENDPOINT") or "localhost:9000"
+        self.endpoint: str = endpoint or os.getenv("MINIO_ENDPOINT") or "localhost:29000"
         self.access_key: str = access_key or os.getenv("MINIO_ACCESS_KEY") or "minioadmin"
         self.secret_key: str = secret_key or os.getenv("MINIO_SECRET_KEY") or "minioadmin"
         self.secure: bool = secure if secure is not None else (os.getenv("MINIO_USE_SSL", "false").lower() == "true")

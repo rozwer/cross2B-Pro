@@ -16,7 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-25432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-seo} -d ${POSTGRES_DB:-seo_articles}"]
       interval: 5s
@@ -34,8 +34,8 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "${MINIO_PORT:-29000}:9000"
+      - "${MINIO_CONSOLE_PORT:-29001}:9001"
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
@@ -70,7 +70,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "${TEMPORAL_PORT:-7233}:7233"
+      - "${TEMPORAL_PORT:-27233}:7233"
     healthcheck:
       test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
       interval: 10s
@@ -84,12 +84,12 @@ services:
     container_name: seo-temporal-ui
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+      - TEMPORAL_CORS_ORIGINS=http://localhost:23000
     depends_on:
       temporal:
         condition: service_healthy
     ports:
-      - "${TEMPORAL_UI_PORT:-8080}:8080"
+      - "${TEMPORAL_UI_PORT:-28080}:8080"
     restart: unless-stopped
 
   # =============================================================================
@@ -134,7 +134,7 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # Application
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:23000}
       # Authentication (dev mode skips auth)
       ENVIRONMENT: ${ENVIRONMENT:-development}
       DEV_TENANT_ID: ${DEV_TENANT_ID:-dev-tenant-001}
@@ -148,7 +148,7 @@ services:
       temporal:
         condition: service_healthy
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${API_PORT:-28000}:8000"
     volumes:
       - ./apps:/app/apps:ro
     healthcheck:
@@ -216,15 +216,15 @@ services:
       dockerfile: docker/Dockerfile.ui
     container_name: seo-ui
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
-      NEXT_PUBLIC_WS_URL: ws://localhost:${API_PORT:-8000}
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-28000}
+      NEXT_PUBLIC_WS_URL: ws://localhost:${API_PORT:-28000}
       # Internal API URL for server-side rewrites (Docker network)
       INTERNAL_API_URL: http://api:8000
     depends_on:
       api:
         condition: service_healthy
     ports:
-      - "${UI_PORT:-3000}:3000"
+      - "${UI_PORT:-23000}:3000"
     restart: unless-stopped
 
 volumes:

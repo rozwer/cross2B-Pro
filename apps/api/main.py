@@ -199,11 +199,11 @@ app = FastAPI(
 )
 
 # CORS middleware (VULN-008: 許可オリジンを明示的に指定)
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:23000").split(",")
 # 空文字列を除去
 cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
 if not cors_origins:
-    cors_origins = ["http://localhost:3000"]
+    cors_origins = ["http://localhost:23000"]
 
 app.add_middleware(
     CORSMiddleware,

@@ -15,7 +15,7 @@ import { HelpButton } from "@/components/common/HelpButton";
 import type { GeneratedImage } from "@/lib/types";
 
 // APIベースURL
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://127.0.0.1:28000";
 
 interface ImageReview {
   index: number;

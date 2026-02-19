@@ -31,11 +31,11 @@ def get_url() -> str:
     if MIGRATION_MODE == "common":
         return os.getenv(
             "COMMON_DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/seo_gen_common",
+            "postgresql://postgres:postgres@localhost:25432/seo_gen_common",
         )
     return os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/seo_gen_tenant_default",
+        "postgresql://postgres:postgres@localhost:25432/seo_gen_tenant_default",
     )
 
 

@@ -33,6 +33,7 @@ dependencies = [
     "pynacl>=1.6.2",
     # Google Ads API (Keyword Planner)
     "google-ads>=25.1.0",
+    "psycopg2-binary>=2.9.11",
 ]
 
 [dependency-groups]

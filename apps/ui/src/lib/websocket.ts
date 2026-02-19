@@ -16,7 +16,7 @@ export interface WebSocketOptions {
   reconnectDelay?: number;
 }
 
-const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:28000";
 
 // 開発環境用の固定テナントID（本番では認証から取得）
 const DEV_TENANT_ID = "dev-tenant-001";
