@@ -109,7 +109,7 @@ class TenantDBManager:
             max_overflow: Max overflow connections
         """
         self.common_db_url: str = (
-            common_db_url or os.getenv("COMMON_DATABASE_URL") or "postgresql+asyncpg://postgres:postgres@localhost:5432/seo_gen_common"
+            common_db_url or os.getenv("COMMON_DATABASE_URL") or "postgresql+asyncpg://postgres:postgres@localhost:25432/seo_gen_common"
         )
         self.pool_size = pool_size
         self.max_overflow = max_overflow

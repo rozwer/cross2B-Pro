@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 function getApiUrl(): string {
   // Read at runtime, not at module load time
-  return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  return process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:28000";
 }
 
 export async function GET(

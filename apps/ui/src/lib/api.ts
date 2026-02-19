@@ -50,7 +50,7 @@ import type {
   ArticleDetail,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://127.0.0.1:28000";
 
 // Warn if localhost is used in production (likely misconfiguration)
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && API_BASE.includes("localhost")) {
