@@ -85,6 +85,24 @@ export function StepContentViewer({ content, stepName }: StepContentViewerProps)
   }
 }
 
+// 値を安全にReactで表示できる文字列に変換するヘルパー
+// APIがオブジェクトを返す場合があるため、直接JSXに渡す前に文字列化する
+function safeRenderValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "object") {
+    // オブジェクトの場合、各フィールドの値を「キー: 値」形式で結合
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length === 0) return "";
+    return entries
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => typeof v === "string" ? v : `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`)
+      .join("\n");
+  }
+  return String(value);
+}
+
 // 共通のセクションコンポーネント
 function Section({
   icon: Icon,
@@ -280,7 +298,7 @@ function Step0Viewer({ data }: { data: ParsedContent }) {
           {/* 検索意図 */}
           {searchIntent && (
             <Section icon={Search} title="検索意図">
-              <p className="text-sm text-gray-700 dark:text-gray-300">{searchIntent}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{safeRenderValue(searchIntent)}</p>
             </Section>
           )}
 
@@ -310,14 +328,14 @@ function Step0Viewer({ data }: { data: ParsedContent }) {
           {/* ターゲットオーディエンス */}
           {targetAudience && (
             <Section icon={Users} title="ターゲット" className="md:col-span-2">
-              <p className="text-sm text-gray-700 dark:text-gray-300">{targetAudience}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{safeRenderValue(targetAudience)}</p>
             </Section>
           )}
 
           {/* コンテンツタイプ提案 */}
           {contentTypeSuggestion && (
             <Section icon={FileText} title="推奨コンテンツタイプ" className="md:col-span-2">
-              <p className="text-sm text-gray-700 dark:text-gray-300">{contentTypeSuggestion}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{safeRenderValue(contentTypeSuggestion)}</p>
             </Section>
           )}
 
@@ -330,7 +348,7 @@ function Step0Viewer({ data }: { data: ParsedContent }) {
                     <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-medium">
                       {i + 1}
                     </span>
-                    {topic}
+                    {safeRenderValue(topic)}
                   </li>
                 ))}
               </ul>
@@ -850,14 +868,14 @@ function Step3aViewer({ data }: { data: ParsedContent }) {
           {analysisData.query_type && (
             <Section icon={Target} title="クエリタイプ">
               <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {analysisData.query_type}
+                {safeRenderValue(analysisData.query_type)}
               </span>
             </Section>
           )}
 
           {analysisData.user_intent && (
             <Section icon={Users} title="ユーザー意図">
-              <p className="text-sm text-gray-700 dark:text-gray-300">{analysisData.user_intent}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{safeRenderValue(analysisData.user_intent)}</p>
             </Section>
           )}
 
@@ -869,7 +887,7 @@ function Step3aViewer({ data }: { data: ParsedContent }) {
                     key={i}
                     className="px-3 py-1.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
-                    {query}
+                    {safeRenderValue(query)}
                   </span>
                 ))}
               </div>
@@ -878,7 +896,7 @@ function Step3aViewer({ data }: { data: ParsedContent }) {
 
           {analysisData.content_format_suggestion && (
             <Section icon={FileText} title="推奨コンテンツ形式" className="md:col-span-2">
-              <p className="text-sm text-gray-700 dark:text-gray-300">{analysisData.content_format_suggestion}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{safeRenderValue(analysisData.content_format_suggestion)}</p>
             </Section>
           )}
         </div>

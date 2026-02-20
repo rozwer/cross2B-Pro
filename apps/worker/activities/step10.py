@@ -36,7 +36,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.schemas import LLMRequestConfig
-from apps.worker.helpers.model_config import get_step_llm_client
+from apps.worker.helpers.model_config import get_step_llm_client, get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step10 import (
     ARTICLE_WORD_COUNT_TARGETS,
@@ -509,6 +509,7 @@ class Step10FinalOutput(BaseActivity):
 
         # Get LLM client (Claude Opus for step10 via step defaults)
         llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
 
         # Generate article variations (default: 4 articles)
         articles: list[ArticleVariation] = []
@@ -612,7 +613,7 @@ class Step10FinalOutput(BaseActivity):
         # Build output
         metadata = Step10Metadata(
             generated_at=datetime.now(UTC),
-            model=llm_provider,
+            model=llm_model or "",
             model_config_data={
                 "platform": llm_provider,
                 "model": llm_model or "",
@@ -640,7 +641,7 @@ class Step10FinalOutput(BaseActivity):
             metadata=metadata,
             publication_checklist=checklist,
             publication_readiness=publication_readiness,
-            model=llm_provider,
+            model=llm_model or "",
             token_usage={"input": 0, "output": total_tokens},
             warnings=warnings,
         )

@@ -214,6 +214,13 @@ class ApiClient {
       });
     },
 
+    approveStep1: async (id: string, comment?: string): Promise<{ success: boolean }> => {
+      const params = comment ? `?comment=${encodeURIComponent(comment)}` : "";
+      return this.request<{ success: boolean }>(`/api/runs/${id}/step1/approve${params}`, {
+        method: "POST",
+      });
+    },
+
     reject: async (id: string, reason: string): Promise<{ success: boolean }> => {
       return this.request<{ success: boolean }>(`/api/runs/${id}/reject`, {
         method: "POST",

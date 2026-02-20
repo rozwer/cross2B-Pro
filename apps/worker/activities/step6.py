@@ -328,8 +328,8 @@ class Step6EnhancedOutline(BaseActivity):
             sources_used=len(source_summaries),
             model=model_name,
             model_config_data={
-                "platform": llm_provider,
-                "model": llm_model or "",
+                "platform": response.provider if response else "",
+                "model": model_name,
             },
             token_usage=token_usage,
             warnings=enhancement_quality.warnings,

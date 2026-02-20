@@ -78,7 +78,7 @@ export default function RunDetailPage({
   const [showStep3ReviewDialog, setShowStep3ReviewDialog] = useState(false);
   const [stepCompletedCount, setStepCompletedCount] = useState(0);
 
-  const { run, loading, error, fetch, approve, reject, retry, resume, pause, continueRun, isPolling } = useRun(id);
+  const { run, loading, error, fetch, approve, approveStep1, reject, retry, resume, pause, continueRun, isPolling } = useRun(id);
 
   // 一時停止リクエスト後、実際にpausedになったらフラグをリセット
   useEffect(() => {
@@ -139,14 +139,18 @@ export default function RunDetailPage({
   const handleApprove = useCallback(async () => {
     setApprovalLoading(true);
     try {
-      await approve();
+      if (approvalType === "step1") {
+        await approveStep1();
+      } else {
+        await approve();
+      }
       setShowApprovalDialog(false);
     } catch (err) {
       console.error("Approval failed:", err);
     } finally {
       setApprovalLoading(false);
     }
-  }, [approve]);
+  }, [approve, approveStep1, approvalType]);
 
   const handleReject = useCallback(async (reason: string) => {
     setApprovalLoading(true);
@@ -193,9 +197,9 @@ export default function RunDetailPage({
   const handleImageGenSkip = useCallback(async () => {
     setImageGenLoading(true);
     try {
-      // waiting_approval状態の場合はTemporalにsignalを送る
-      // それ以外（completed等）の場合は直接DBを更新
-      if (run?.status === "waiting_approval") {
+      // アクティブなワークフロー（waiting_image_input/waiting_approval）はTemporalにsignalを送る
+      // それ以外（completed等レガシー）は直接DBを更新
+      if (run?.status === "waiting_image_input" || run?.status === "waiting_approval") {
         await api.runs.skipImageGeneration(id);
       } else {
         await api.runs.completeStep11(id);

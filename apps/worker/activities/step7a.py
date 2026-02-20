@@ -373,8 +373,8 @@ class Step7ADraftGeneration(BaseActivity):
             continued=continuation_used,
             model=model_name,
             model_config_data={
-                "platform": llm_provider,
-                "model": llm_model or "",
+                "platform": response.provider if response else "",
+                "model": model_name,
             },
             token_usage=token_usage,
             # blog.System Ver8.3 extensions

@@ -266,8 +266,8 @@ class Step65IntegrationPackage(BaseActivity):
             handoff_notes=quality.warnings,
             model=response.model,
             model_config_data={
-                "platform": llm_provider,
-                "model": llm_model or "",
+                "platform": response.provider if response else "",
+                "model": response.model if response else "",
             },
             token_usage={
                 "input": response.token_usage.input,

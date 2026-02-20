@@ -652,8 +652,8 @@ class Step9FinalRewrite(BaseActivity):
             quality_warnings=quality_warnings,
             model=response.model,
             model_config_data={
-                "platform": llm_provider,
-                "model": llm_model or "",
+                "platform": response.provider if response else "",
+                "model": response.model if response else "",
             },
             token_usage={
                 "input": response.token_usage.input,

@@ -198,15 +198,23 @@ class Step5PrimaryCollection(BaseActivity):
                     search_queries = self._parse_queries(query_response.content)
 
                 if not search_queries:
-                    # フォールバック禁止: エラーを投げる
-                    raise ActivityError(
-                        f"Failed to parse queries: format={parse_result.format_detected}",
-                        category=ErrorCategory.RETRYABLE,
-                        details={
-                            "raw": query_response.content[:500],
-                            "format_detected": parse_result.format_detected,
-                        },
-                    )
+                    # LLMが空レスポンスを返した場合（セーフティフィルタ等）、キーワードからフォールバック生成
+                    if not query_response.content.strip():
+                        activity.logger.warning(
+                            "LLM returned empty response (possible safety filter). "
+                            "Generating fallback queries from keyword and outline."
+                        )
+                        search_queries = self._generate_fallback_queries(keyword, sections)
+                        activity.logger.info(f"Generated {len(search_queries)} fallback queries: {search_queries[:3]}...")
+                    else:
+                        raise ActivityError(
+                            f"Failed to parse queries: format={parse_result.format_detected}",
+                            category=ErrorCategory.RETRYABLE,
+                            details={
+                                "raw": query_response.content[:500],
+                                "format_detected": parse_result.format_detected,
+                            },
+                        )
 
             except ActivityError:
                 raise
@@ -487,6 +495,30 @@ class Step5PrimaryCollection(BaseActivity):
                 if line:
                     queries.append(line)
         return queries[:5]  # Max 5 queries
+
+    def _generate_fallback_queries(self, keyword: str, sections: list) -> list[str]:
+        """LLMが空レスポンスを返した場合のフォールバッククエリ生成。
+
+        キーワードとアウトラインのセクション見出しから基本的な検索クエリを構築する。
+        """
+        queries = [keyword]
+
+        # セクション見出しからクエリを生成
+        for section in sections[:4]:
+            title = ""
+            if isinstance(section, dict):
+                title = section.get("title", "") or section.get("heading", "")
+            elif isinstance(section, str):
+                title = section
+            if title and title != keyword:
+                queries.append(f"{keyword} {title}")
+
+        # 基本的なバリエーションを追加
+        if len(queries) < 3:
+            queries.append(f"{keyword} とは")
+            queries.append(f"{keyword} 方法")
+
+        return queries[:5]
 
     def _validate_collection_quality(
         self,

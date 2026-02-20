@@ -42,6 +42,7 @@ interface UseRunReturn {
   error: string | null;
   fetch: () => Promise<Run | null>;
   approve: () => Promise<void>;
+  approveStep1: () => Promise<void>;
   reject: (reason: string) => Promise<void>;
   retry: (step: string) => Promise<{ new_attempt_id: string }>;
   resume: (step: string) => Promise<{ new_run_id: string }>;
@@ -201,6 +202,18 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
     }
   }, [runId, fetch]);
 
+  const approveStep1 = useCallback(async () => {
+    try {
+      setError(null);
+      await api.runs.approveStep1(runId);
+      await fetch();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to approve step1";
+      setError(message);
+      throw err; // Re-throw for caller handling
+    }
+  }, [runId, fetch]);
+
   const reject = useCallback(
     async (reason: string) => {
       try {
@@ -283,6 +296,7 @@ export function useRun(runId: string, options: UseRunOptions = {}): UseRunReturn
     error,
     fetch,
     approve,
+    approveStep1,
     reject,
     retry,
     resume,
