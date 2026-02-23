@@ -21,7 +21,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.schemas import LLMRequestConfig
-from apps.worker.helpers.model_config import get_step_llm_client
+from apps.worker.helpers.model_config import get_step_llm_client, get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step7a import (
     BehavioralEconomicsImplementation,
@@ -373,8 +373,8 @@ class Step7ADraftGeneration(BaseActivity):
             continued=continuation_used,
             model=model_name,
             model_config_data={
-                "platform": response.provider if response else "",
-                "model": model_name,
+                "platform": llm_provider,
+                "model": llm_model or "",
             },
             token_usage=token_usage,
             # blog.System Ver8.3 extensions
@@ -789,6 +789,7 @@ class Step7ADraftGeneration(BaseActivity):
 
         # Get LLM client - uses 3-tier priority: UI per-step > step defaults > global config
         llm = await get_step_llm_client(self.step_id, config, tenant_id=tenant_id)
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
 
         try:
             llm_config = LLMRequestConfig(

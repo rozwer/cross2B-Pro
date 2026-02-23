@@ -32,7 +32,7 @@ from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
 from apps.api.llm.schemas import LLMRequestConfig
-from apps.worker.helpers.model_config import get_step_llm_client
+from apps.worker.helpers.model_config import get_step_llm_client, get_step_model_config
 from apps.api.prompts.loader import PromptPackLoader
 from apps.worker.activities.schemas.step9 import (
     FactcheckCorrection,
@@ -378,6 +378,7 @@ class Step9FinalRewrite(BaseActivity):
 
         # Get LLM client (Claude Opus for step9 via step defaults)
         llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
 
         # Enhanced system prompt for blog.System Ver8.3
         system_prompt = """あなたは最終リライト・品質向上の専門家です。
@@ -652,8 +653,8 @@ class Step9FinalRewrite(BaseActivity):
             quality_warnings=quality_warnings,
             model=response.model,
             model_config_data={
-                "platform": response.provider if response else "",
-                "model": response.model if response else "",
+                "platform": llm_provider,
+                "model": llm_model or "",
             },
             token_usage={
                 "input": response.token_usage.input,
