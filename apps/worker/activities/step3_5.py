@@ -302,7 +302,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
 
         # LLM config - slightly higher temperature for creativity
         llm_config = LLMRequestConfig(
-            max_tokens=config.get("max_tokens", 4000),
+            max_tokens=config.get("max_tokens", 8000),
             temperature=config.get("temperature", 0.7),
         )
         metadata = LLMCallMetadata(

@@ -652,7 +652,7 @@ class Step8FactCheck(BaseActivity):
             try:
                 claims_prompt = prompt_pack.get_prompt("step8_claims")
                 claims_request = claims_prompt.render(content=polished_content)
-                claims_config = LLMRequestConfig(max_tokens=4000, temperature=0.3)
+                claims_config = LLMRequestConfig(max_tokens=8000, temperature=0.3)
                 claims_response = await llm.generate(
                     messages=[{"role": "user", "content": claims_request}],
                     system_prompt="Extract claims from the provided content.",

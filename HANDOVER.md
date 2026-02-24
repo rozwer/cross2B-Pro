@@ -58,10 +58,18 @@ python -c "import secrets, base64; print(base64.b64encode(secrets.token_bytes(32
 
 ### 任意（Gemini以外のLLMを使う場合）
 
-| 変数名 | 説明 |
-|--------|------|
-| `OPENAI_API_KEY` | OpenAI API キー |
-| `ANTHROPIC_API_KEY` | Anthropic Claude API キー |
+| 変数名 | 説明 | 取得方法 |
+|--------|------|----------|
+| `OPENAI_API_KEY` | OpenAI API キー | [OpenAI Platform](https://platform.openai.com/api-keys) |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API キー | [Anthropic Console](https://console.anthropic.com/settings/keys) |
+
+### GitHub連携（任意）
+
+| 変数名 | 説明 | 取得方法 |
+|--------|------|----------|
+| `GITHUB_TOKEN` | GitHub Personal Access Token（`repo`スコープ必須） | [GitHub Settings](https://github.com/settings/tokens/new) |
+
+> 記事のGitHubリポジトリ連携（ブランチ管理・Issue管理）に使用します。未設定でも記事生成は動作します。
 
 ### Google Ads（キーワードプランナー）
 

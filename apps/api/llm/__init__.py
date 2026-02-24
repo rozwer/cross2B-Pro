@@ -25,6 +25,7 @@ from .exceptions import (
     LLMRateLimitError,
     LLMServiceUnavailableError,
     LLMTimeoutError,
+    LLMTokenInsufficientError,
     LLMValidationError,
 )
 from .gemini import GeminiClient
@@ -87,5 +88,6 @@ __all__ = [
     "LLMValidationError",
     "LLMJSONParseError",
     "LLMServiceUnavailableError",
+    "LLMTokenInsufficientError",
     "LLMConfigurationError",
 ]

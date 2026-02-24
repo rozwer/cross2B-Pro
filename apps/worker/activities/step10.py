@@ -924,7 +924,7 @@ class Step10FinalOutput(BaseActivity):
 メタディスクリプションのみを出力してください。説明や補足は不要です。"""
 
         meta_config = LLMRequestConfig(
-            max_tokens=200,
+            max_tokens=4000,
             temperature=0.5,
         )
 
@@ -974,7 +974,7 @@ class Step10FinalOutput(BaseActivity):
         prompt_text = summary_prompt.render(content=content[:3000])
 
         summary_config = LLMRequestConfig(
-            max_tokens=300,
+            max_tokens=4000,
             temperature=0.3,
         )
 
@@ -1005,7 +1005,7 @@ class Step10FinalOutput(BaseActivity):
         checklist_prompt = prompt_pack.get_prompt("step10_checklist")
         prompt_text = checklist_prompt.render(keyword=keyword)
 
-        checklist_config = LLMRequestConfig(max_tokens=1000, temperature=0.3)
+        checklist_config = LLMRequestConfig(max_tokens=4000, temperature=0.3)
 
         try:
             response = await llm.generate(

@@ -28,6 +28,7 @@ from .exceptions import (
     LLMRateLimitError,
     LLMServiceUnavailableError,
     LLMTimeoutError,
+    LLMTokenInsufficientError,
     LLMValidationError,
 )
 from .schemas import (
@@ -763,6 +764,32 @@ class GeminiClient(LLMInterface):
 
         # finish_reason検証とログ出力
         self._validate_finish_reason(finish_reason, output_tokens, max_tokens)
+
+        # 致命的なレスポンス異常を検出して例外を投げる
+        finish_upper = (finish_reason or "").upper()
+
+        # MAX_TOKENS + 空レスポンス = thinkingトークンが出力容量を消費
+        if finish_upper == "MAX_TOKENS" and not text.strip():
+            raise LLMTokenInsufficientError(
+                message=(
+                    f"max_output_tokens={max_tokens} was exhausted "
+                    f"(likely by thinking tokens), producing empty response. "
+                    f"Increase max_tokens or simplify the prompt."
+                ),
+                provider=self.PROVIDER_NAME,
+                model=self._model,
+                max_tokens=max_tokens,
+                finish_reason=finish_reason,
+            )
+
+        # SAFETY/RECITATION/BLOCKLIST = コンテンツブロック
+        if finish_upper in ("SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT"):
+            raise LLMContentFilterError(
+                message=f"Content blocked by Gemini: {finish_reason}",
+                provider=self.PROVIDER_NAME,
+                model=self._model,
+                blocked_reason=finish_reason,
+            )
 
         # Grounding情報を取得
         grounding_metadata = None

@@ -67,6 +67,12 @@ const STATUS_CONFIG: Record<
     icon: <AlertTriangle className="h-3.5 w-3.5" />,
     label: "承認待ち",
   },
+  waiting_step1_approval: {
+    bg: "bg-yellow-100",
+    text: "text-yellow-700",
+    icon: <AlertTriangle className="h-3.5 w-3.5" />,
+    label: "Step1承認待ち",
+  },
   completed: {
     bg: "bg-green-100",
     text: "text-green-700",
@@ -294,7 +300,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalLoading, setApprovalLoading] = useState(false);
 
-  const { run, loading, error, fetch, approve, reject, retry } = useRun(runId);
+  const { run, loading, error, fetch, approve, approveStep1, reject, retry } = useRun(runId);
   const { artifacts, fetch: fetchArtifacts } = useArtifacts(runId);
   const { events, wsStatus } = useRunProgress(runId, {
     onEvent: async (event) => {
@@ -353,7 +359,11 @@ function RunDetailPanel({ runId }: { runId: string }) {
   const handleApprove = async () => {
     setApprovalLoading(true);
     try {
-      await approve();
+      if (run?.status === "waiting_step1_approval") {
+        await approveStep1();
+      } else {
+        await approve();
+      }
       setShowApprovalDialog(false);
     } catch (err) {
       console.error("Approval failed:", err);
@@ -479,7 +489,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
         </div>
 
         {/* Approval Actions */}
-        {run.status === "waiting_approval" && (
+        {(run.status === "waiting_approval" || run.status === "waiting_step1_approval") && (
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -506,6 +516,7 @@ function RunDetailPanel({ runId }: { runId: string }) {
           runId={runId}
           artifacts={artifacts}
           loading={approvalLoading}
+          approvalType={run.status === "waiting_step1_approval" ? "step1" : "step3"}
         />
       </div>
 

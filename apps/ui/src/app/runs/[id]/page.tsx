@@ -551,7 +551,7 @@ export default function RunDetailPage({
                 runStatus={run.status}
                 waitingApproval={run.status === "waiting_approval"}
                 waitingImageGeneration={isWaitingForImageGeneration()}
-                onApprove={approve}
+                onApprove={run.status === "waiting_step1_approval" ? approveStep1 : approve}
                 onReject={reject}
                 onRetry={handleRetry}
                 onResumeFrom={handleResume}

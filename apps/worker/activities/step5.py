@@ -161,7 +161,7 @@ class Step5PrimaryCollection(BaseActivity):
                     keyword=keyword,
                     outline=outline,
                 )
-                llm_config = LLMRequestConfig(max_tokens=2000, temperature=0.5)
+                llm_config = LLMRequestConfig(max_tokens=8000, temperature=0.5)
                 query_response = await llm.generate(
                     messages=[{"role": "user", "content": query_request}],
                     system_prompt="Generate search queries for primary source collection.",
@@ -208,23 +208,20 @@ class Step5PrimaryCollection(BaseActivity):
                     search_queries = self._parse_queries(query_response.content)
 
                 if not search_queries:
-                    # LLMが空レスポンスを返した場合（セーフティフィルタ等）、キーワードからフォールバック生成
+                    # LLMが空レスポンスまたは解析不能レスポンスを返した場合、キーワードからフォールバック生成
                     if not query_response.content.strip():
                         activity.logger.warning(
                             "LLM returned empty response (possible safety filter). "
                             "Generating fallback queries from keyword and outline."
                         )
-                        search_queries = self._generate_fallback_queries(keyword, sections)
-                        activity.logger.info(f"Generated {len(search_queries)} fallback queries: {search_queries[:3]}...")
                     else:
-                        raise ActivityError(
-                            f"Failed to parse queries: format={parse_result.format_detected}",
-                            category=ErrorCategory.RETRYABLE,
-                            details={
-                                "raw": query_response.content[:500],
-                                "format_detected": parse_result.format_detected,
-                            },
+                        activity.logger.warning(
+                            f"LLM response unparseable (format={parse_result.format_detected}). "
+                            f"Content preview: {query_response.content[:200]!r}. "
+                            "Generating fallback queries from keyword and outline."
                         )
+                    search_queries = self._generate_fallback_queries(keyword, sections)
+                    activity.logger.info(f"Generated {len(search_queries)} fallback queries: {search_queries[:3]}...")
 
             except ActivityError:
                 raise

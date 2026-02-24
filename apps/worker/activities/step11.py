@@ -666,7 +666,7 @@ class Step11ImageGeneration(BaseActivity):
             "required": ["analysis_summary", "positions"],
         }
 
-        config = LLMRequestConfig(temperature=0.3, max_tokens=4096)
+        config = LLMRequestConfig(temperature=0.3, max_tokens=8000)
 
         try:
             # generate_json_with_usage でトークン使用量も取得
@@ -787,7 +787,7 @@ class Step11ImageGeneration(BaseActivity):
 プロンプトのみを出力してください（説明不要）。
 """
 
-        config = LLMRequestConfig(temperature=0.5, max_tokens=500)
+        config = LLMRequestConfig(temperature=0.5, max_tokens=4000)
 
         try:
             response = await gemini.generate(

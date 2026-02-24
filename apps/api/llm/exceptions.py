@@ -207,6 +207,29 @@ class LLMServiceUnavailableError(LLMError):
         )
 
 
+class LLMTokenInsufficientError(LLMError):
+    """トークン不足エラー（thinkingトークンが出力容量を消費した場合等、リトライ可能）"""
+
+    def __init__(
+        self,
+        message: str = "Output tokens exhausted (likely consumed by thinking)",
+        provider: str | None = None,
+        model: str | None = None,
+        max_tokens: int | None = None,
+        finish_reason: str | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            category=ErrorCategory.RETRYABLE,
+            provider=provider,
+            model=model,
+            details={
+                "max_tokens": max_tokens,
+                "finish_reason": finish_reason,
+            },
+        )
+
+
 class LLMConfigurationError(LLMError):
     """設定エラー（リトライ不可）"""
 
