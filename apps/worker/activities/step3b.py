@@ -43,6 +43,12 @@ from apps.worker.helpers import (
     QualityRetryLoop,
 )
 
+from apps.worker.helpers.truncation_limits import (
+    MAX_COMPETITORS,
+    MAX_GAPS,
+    MAX_KEYWORDS_COOCCURRENCE,
+)
+
 from .base import ActivityError, BaseActivity, load_step_data
 from .schemas.step3b import (
     BehavioralEconomicsTriggers,
@@ -499,21 +505,21 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         Expanded for blog.System: Uses all 10 competitors with more content.
         """
         summaries = []
-        for comp in competitors[:10]:  # Use all 10 competitors
+        for comp in competitors[:MAX_COMPETITORS]:  # Use all 10 competitors
             summaries.append(
                 {
                     "title": comp.get("title", ""),
                     "url": comp.get("url", ""),
                     "content_preview": (comp.get("content") or "")[:1000],  # Expanded
                     "word_count": comp.get("word_count", 0),
-                    "headings": comp.get("headings", [])[:10],
+                    "headings": comp.get("headings", [])[:MAX_COMPETITORS],
                 }
             )
         return summaries
 
     def _extract_full_texts(self, competitors: list[dict[str, Any]]) -> list[str]:
         """Extract full texts from competitors for keyword analysis."""
-        return [comp.get("content", "") for comp in competitors[:10]]
+        return [comp.get("content", "") for comp in competitors[:MAX_COMPETITORS]]
 
     def _pre_analyze_competitors(
         self,
@@ -552,7 +558,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
                 phase_hints["phase3"].append(word)
 
         return {
-            "top_frequent_words": top_words[:50],
+            "top_frequent_words": top_words[:MAX_KEYWORDS_COOCCURRENCE],
             "phase_hints": phase_hints,
             "total_word_count": len(words),
             "unique_words": len(set(words)),
@@ -768,7 +774,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
         gaps = []
         total_competitors = len(competitor_texts)
 
-        for kw in keywords[:50]:  # Limit analysis
+        for kw in keywords[:MAX_KEYWORDS_COOCCURRENCE]:  # Limit analysis
             coverage = sum(1 for text in competitor_texts if kw in text)
             coverage_rate = coverage / total_competitors if total_competitors > 0 else 0
 
@@ -784,7 +790,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
 
         # Sort by differentiation score
         gaps.sort(key=lambda g: g.differentiation_score, reverse=True)
-        return gaps[:20]
+        return gaps[:MAX_GAPS]
 
     def _categorize_keywords(self, keywords: list[str], competitor_texts: list[str]) -> KeywordCategorization:
         """Categorize keywords by competitor coverage."""

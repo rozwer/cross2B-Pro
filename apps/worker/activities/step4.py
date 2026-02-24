@@ -39,6 +39,9 @@ from apps.worker.activities.schemas.step4 import (
     WordCountTracking,
 )
 from apps.worker.helpers import (
+    CTA_POSITION_EARLY,
+    CTA_POSITION_FINAL_OFFSET,
+    CTA_POSITION_MID,
     CheckpointManager,
     CompletenessValidator,
     CompositeValidator,
@@ -48,6 +51,14 @@ from apps.worker.helpers import (
     OutputParser,
     QualityRetryLoop,
     StructureValidator,
+)
+from apps.worker.helpers.truncation_limits import (
+    MAX_EPISODES,
+    MAX_HOOKS,
+    MAX_PATTERNS,
+    PROMPT_ANALYSIS_LIMIT,
+    PROMPT_EXCERPT_MEDIUM,
+    PROMPT_RAW_OUTPUT_LIMIT,
 )
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
@@ -420,10 +431,10 @@ class Step4StrategicOutline(BaseActivity):
         """Integrate analysis data from previous steps."""
         return {
             "keyword": keyword,
-            "query_analysis_summary": query_analysis[:500] if query_analysis else "",
-            "cooccurrence_summary": cooccurrence[:500] if cooccurrence else "",
-            "competitor_summary": competitor[:500] if competitor else "",
-            "human_touch_summary": human_touch[:500] if human_touch else "",
+            "query_analysis_summary": query_analysis[:PROMPT_EXCERPT_MEDIUM] if query_analysis else "",
+            "cooccurrence_summary": cooccurrence[:PROMPT_EXCERPT_MEDIUM] if cooccurrence else "",
+            "competitor_summary": competitor[:PROMPT_EXCERPT_MEDIUM] if competitor else "",
+            "human_touch_summary": human_touch[:PROMPT_EXCERPT_MEDIUM] if human_touch else "",
             "integrated": True,
         }
 
@@ -458,7 +469,7 @@ class Step4StrategicOutline(BaseActivity):
         patterns = step3_5_data.get("human_touch_patterns", [])
         if patterns and isinstance(patterns, list):
             pattern_strs = []
-            for p in patterns[:5]:  # Limit to avoid too long prompt
+            for p in patterns[:MAX_PATTERNS]:  # Limit to avoid too long prompt
                 if isinstance(p, dict) and p.get("content"):
                     pattern_strs.append(f"- {p.get('type', 'general')}: {p['content']}")
             if pattern_strs:
@@ -468,7 +479,7 @@ class Step4StrategicOutline(BaseActivity):
         episodes = step3_5_data.get("experience_episodes", [])
         if episodes and isinstance(episodes, list):
             episode_strs = []
-            for ep in episodes[:3]:  # Limit to avoid too long prompt
+            for ep in episodes[:MAX_EPISODES]:  # Limit to avoid too long prompt
                 if isinstance(ep, dict) and ep.get("narrative"):
                     episode_strs.append(f"- {ep.get('scenario', '')}: {ep['narrative']}")
             if episode_strs:
@@ -477,12 +488,12 @@ class Step4StrategicOutline(BaseActivity):
         # Extract emotional_hooks (list of strings)
         hooks = step3_5_data.get("emotional_hooks", [])
         if hooks and isinstance(hooks, list):
-            hooks_str = ", ".join(hooks[:5]) if all(isinstance(h, str) for h in hooks[:5]) else str(hooks[:5])
+            hooks_str = ", ".join(hooks[:MAX_HOOKS]) if all(isinstance(h, str) for h in hooks[:MAX_HOOKS]) else str(hooks[:MAX_HOOKS])
             parts.append(f"感情フック: {hooks_str}")
 
         # Fallback to raw_output if structured fields are empty
         if not parts and step3_5_data.get("raw_output"):
-            return str(step3_5_data["raw_output"])[:2000]
+            return str(step3_5_data["raw_output"])[:PROMPT_RAW_OUTPUT_LIMIT]
 
         return "\n\n".join(parts)
 
@@ -496,13 +507,13 @@ class Step4StrategicOutline(BaseActivity):
         """Build a compact analysis summary for prompt context."""
         parts: list[str] = []
         if step0_data.get("analysis"):
-            parts.append(f"キーワード分析: {str(step0_data.get('analysis'))[:800]}")
+            parts.append(f"キーワード分析: {str(step0_data.get('analysis'))[:PROMPT_ANALYSIS_LIMIT]}")
         if step3a_data.get("query_analysis"):
-            parts.append(f"クエリ分析: {str(step3a_data.get('query_analysis'))[:800]}")
+            parts.append(f"クエリ分析: {str(step3a_data.get('query_analysis'))[:PROMPT_ANALYSIS_LIMIT]}")
         if step3b_data.get("cooccurrence_analysis"):
-            parts.append(f"共起語分析: {str(step3b_data.get('cooccurrence_analysis'))[:800]}")
+            parts.append(f"共起語分析: {str(step3b_data.get('cooccurrence_analysis'))[:PROMPT_ANALYSIS_LIMIT]}")
         if step3c_data.get("competitor_analysis"):
-            parts.append(f"競合分析: {str(step3c_data.get('competitor_analysis'))[:800]}")
+            parts.append(f"競合分析: {str(step3c_data.get('competitor_analysis'))[:PROMPT_ANALYSIS_LIMIT]}")
         return "\n\n".join(parts)
 
     # ==========================================================================
@@ -661,10 +672,10 @@ class Step4StrategicOutline(BaseActivity):
         final_section = h2_sections[-1] if len(h2_sections) > 0 else ""
 
         return CTAPlacements(
-            early=CTAPosition(position=650, section=early_section, cta_type="資料請求"),
-            mid=CTAPosition(position=2800, section=mid_section, cta_type="無料相談"),
+            early=CTAPosition(position=CTA_POSITION_EARLY, section=early_section, cta_type="資料請求"),
+            mid=CTAPosition(position=CTA_POSITION_MID, section=mid_section, cta_type="無料相談"),
             final=CTAPosition(
-                position=max(0, target_word_count - 500),
+                position=max(0, target_word_count - CTA_POSITION_FINAL_OFFSET),
                 section=final_section,
                 cta_type="問い合わせ",
             ),

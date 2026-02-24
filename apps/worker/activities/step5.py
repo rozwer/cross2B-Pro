@@ -43,6 +43,14 @@ from apps.worker.helpers import (
 )
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+from apps.worker.helpers.truncation_limits import (
+    MAX_EPISODES,
+    MAX_HOOKS,
+    MAX_PATTERNS,
+    MAX_SEARCH_QUERIES,
+    PROMPT_EXCERPT_MEDIUM,
+    PROMPT_RAW_OUTPUT_LIMIT,
+)
 
 from .base import ActivityError, BaseActivity, load_step_data
 
@@ -267,7 +275,7 @@ class Step5PrimaryCollection(BaseActivity):
             primary_collector.reset_failed_domains()
 
         if primary_collector:
-            for query in search_queries[:12]:  # Expanded from 5 to 12 for better source coverage
+            for query in search_queries[:MAX_SEARCH_QUERIES]:  # Expanded from 5 to 12 for better source coverage
                 if query in completed_queries_set:
                     continue
 
@@ -388,7 +396,7 @@ class Step5PrimaryCollection(BaseActivity):
                     url=s.get("url", ""),
                     title=s.get("title", ""),
                     source_type=normalized_type,
-                    excerpt=s.get("excerpt", "")[:500] if s.get("excerpt") else "",
+                    excerpt=s.get("excerpt", "")[:PROMPT_EXCERPT_MEDIUM] if s.get("excerpt") else "",
                     credibility_score=s.get("credibility_score", 0.5),
                     verified=s.get("verified", False),
                     phase_alignment=phase,
@@ -402,7 +410,7 @@ class Step5PrimaryCollection(BaseActivity):
                 url=s.get("url", ""),
                 title=s.get("title", ""),
                 source_type=s.get("source_type", "other"),
-                excerpt=s.get("excerpt", "")[:500] if s.get("excerpt") else "",
+                excerpt=s.get("excerpt", "")[:PROMPT_EXCERPT_MEDIUM] if s.get("excerpt") else "",
                 credibility_score=s.get("credibility_score", 0.5),
                 verified=False,
             )
@@ -433,7 +441,7 @@ class Step5PrimaryCollection(BaseActivity):
         output = Step5Output(
             step=self.step_id,
             keyword=keyword,
-            search_queries=search_queries[:12],  # Expanded from 5 to 12
+            search_queries=search_queries[:MAX_SEARCH_QUERIES],  # Expanded from 5 to 12
             sources=primary_sources,
             invalid_sources=invalid_primary_sources,
             failed_queries=failed_queries,
@@ -522,7 +530,7 @@ class Step5PrimaryCollection(BaseActivity):
                     line = line[1:].strip()
                 if line:
                     queries.append(line)
-        return queries[:5]  # Max 5 queries
+        return queries[:MAX_FALLBACK_QUERIES]  # Max 5 queries
 
     def _generate_fallback_queries(self, keyword: str, sections: list) -> list[str]:
         """LLMが空レスポンスを返した場合のフォールバッククエリ生成。
@@ -546,7 +554,7 @@ class Step5PrimaryCollection(BaseActivity):
             queries.append(f"{keyword} とは")
             queries.append(f"{keyword} 方法")
 
-        return queries[:5]
+        return queries[:MAX_FALLBACK_QUERIES]
 
     def _validate_collection_quality(
         self,

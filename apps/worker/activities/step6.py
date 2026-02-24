@@ -44,6 +44,12 @@ from apps.worker.helpers import (
 )
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+from apps.worker.helpers.truncation_limits import (
+    MAX_DATA_PLACEMENTS,
+    MAX_SOURCES_IN_PROMPT,
+    PROMPT_EXCERPT_LIMIT,
+    PROMPT_EXCERPT_MEDIUM,
+)
 
 from .base import ActivityError, BaseActivity, load_step_data
 
@@ -144,7 +150,7 @@ class Step6EnhancedOutline(BaseActivity):
         input_digest = self.checkpoint.compute_digest(
             {
                 "keyword": keyword,
-                "outline": original_outline[:500],
+                "outline": original_outline[:PROMPT_EXCERPT_MEDIUM],
                 "sources_count": len(sources),
             }
         )
@@ -360,14 +366,14 @@ class Step6EnhancedOutline(BaseActivity):
         source_summaries = []
         url_to_id: dict[str, list[str]] = {}
 
-        for i, s in enumerate(sources[:10]):  # Top 10 sources
+        for i, s in enumerate(sources[:MAX_SOURCES_IN_PROMPT]):  # Top 10 sources
             source_id = f"[S{i + 1}]"
             url = s.get("url", "")
             summary = {
                 "id": source_id,
                 "url": url,
                 "title": s.get("title", ""),
-                "excerpt": (s.get("excerpt") or "")[:200],
+                "excerpt": (s.get("excerpt") or "")[:PROMPT_EXCERPT_LIMIT],
             }
             source_summaries.append(summary)
 
@@ -467,7 +473,7 @@ class Step6EnhancedOutline(BaseActivity):
                         )
                     )
 
-        return placements[:20]  # Limit to top 20
+        return placements[:MAX_DATA_PLACEMENTS]  # Limit to top 20
 
     def _verify_four_pillars(
         self,

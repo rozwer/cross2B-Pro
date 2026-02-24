@@ -45,6 +45,9 @@ from apps.worker.activities.schemas.step0 import (
     WordCountConfig,
 )
 from apps.worker.helpers import (
+    CTA_POSITION_EARLY,
+    CTA_POSITION_FINAL_OFFSET,
+    CTA_POSITION_MID,
     ArticleStrategyValidator,
     ContentMetrics,
     FourPillarsValidator,
@@ -406,15 +409,15 @@ class Step0KeywordSelection(BaseActivity):
             return {
                 "design_type": "staged",
                 "placements": {
-                    "early": {"position": 650, "url": url, "text": text},
-                    "mid": {"position": 2800, "url": url, "text": text},
-                    "final": {"position": "target_word_count - 500", "url": url, "text": text},
+                    "early": {"position": CTA_POSITION_EARLY, "url": url, "text": text},
+                    "mid": {"position": CTA_POSITION_MID, "url": url, "text": text},
+                    "final": {"position": f"target_word_count - {CTA_POSITION_FINAL_OFFSET}", "url": url, "text": text},
                 },
             }
         elif cta_type == "staged":
             staged = cta_input.get("staged", {})
             placements = {}
-            positions = {"early": 650, "mid": 2800, "final": "target_word_count - 500"}
+            positions = {"early": CTA_POSITION_EARLY, "mid": CTA_POSITION_MID, "final": f"target_word_count - {CTA_POSITION_FINAL_OFFSET}"}
             for phase in ("early", "mid", "final"):
                 item = staged.get(phase, {})
                 placements[phase] = {

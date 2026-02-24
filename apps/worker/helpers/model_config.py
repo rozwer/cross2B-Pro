@@ -24,6 +24,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Explicit default — logged when config omits provider so operators can spot misconfigurations
+DEFAULT_LLM_PROVIDER = "gemini"
+
 # Lazy singleton for DB access in worker process
 _tenant_manager: Any = None
 
@@ -61,7 +64,10 @@ def get_step_model_config(step_id: str, config: dict) -> tuple[str, str | None]:
 
     # 3. Fall back to global model_config
     model_config = config.get("model_config", {})
-    provider = model_config.get("platform", config.get("llm_provider", "gemini"))
+    provider = model_config.get("platform", config.get("llm_provider"))
+    if not provider:
+        provider = DEFAULT_LLM_PROVIDER
+        logger.warning(f"[{step_id}] No llm_provider in config — defaulting to '{DEFAULT_LLM_PROVIDER}'")
     model = model_config.get("model", config.get("llm_model"))
     return provider, model
 
@@ -129,7 +135,10 @@ async def get_config_llm_client(
     """
     from apps.api.llm import get_llm_client_with_settings
 
-    provider = config.get("llm_provider", "gemini")
+    provider = config.get("llm_provider")
+    if not provider:
+        provider = DEFAULT_LLM_PROVIDER
+        logger.warning(f"No llm_provider in config — defaulting to '{DEFAULT_LLM_PROVIDER}'")
     model = config.get("llm_model")
 
     kwargs: dict[str, Any] = {}

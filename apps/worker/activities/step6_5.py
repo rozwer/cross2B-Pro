@@ -39,6 +39,15 @@ from apps.worker.helpers import (
 )
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+from apps.worker.helpers.truncation_limits import (
+    MAX_DATA_PLACEMENTS,
+    MAX_EPISODES,
+    MAX_HOOKS,
+    MAX_PATTERNS,
+    MAX_SOURCES_IN_PROMPT,
+    PROMPT_OUTLINE_LIMIT,
+    PROMPT_RAW_OUTPUT_LIMIT,
+)
 
 from .base import ActivityError, BaseActivity, load_step_data
 
@@ -394,7 +403,7 @@ class Step65IntegrationPackage(BaseActivity):
         patterns = step3_5_data.get("human_touch_patterns", [])
         if patterns and isinstance(patterns, list):
             pattern_strs = []
-            for p in patterns[:5]:
+            for p in patterns[:MAX_PATTERNS]:
                 if isinstance(p, dict) and p.get("content"):
                     pattern_strs.append(f"- {p.get('type', 'general')}: {p['content']}")
             if pattern_strs:
@@ -404,7 +413,7 @@ class Step65IntegrationPackage(BaseActivity):
         episodes = step3_5_data.get("experience_episodes", [])
         if episodes and isinstance(episodes, list):
             episode_strs = []
-            for ep in episodes[:3]:
+            for ep in episodes[:MAX_EPISODES]:
                 if isinstance(ep, dict) and ep.get("narrative"):
                     episode_strs.append(f"- {ep.get('scenario', '')}: {ep['narrative']}")
             if episode_strs:
@@ -413,12 +422,12 @@ class Step65IntegrationPackage(BaseActivity):
         # Extract emotional_hooks (list of strings)
         hooks = step3_5_data.get("emotional_hooks", [])
         if hooks and isinstance(hooks, list):
-            hooks_str = ", ".join(hooks[:5]) if all(isinstance(h, str) for h in hooks[:5]) else str(hooks[:5])
+            hooks_str = ", ".join(hooks[:MAX_HOOKS]) if all(isinstance(h, str) for h in hooks[:MAX_HOOKS]) else str(hooks[:MAX_HOOKS])
             parts.append(f"感情フック: {hooks_str}")
 
         # Fallback to raw_output if structured fields are empty
         if not parts and step3_5_data.get("raw_output"):
-            return str(step3_5_data["raw_output"])[:2000]
+            return str(step3_5_data["raw_output"])[:PROMPT_RAW_OUTPUT_LIMIT]
 
         return "\n\n".join(parts)
 
@@ -465,7 +474,7 @@ class Step65IntegrationPackage(BaseActivity):
         """包括的構成案を構築."""
         # パート1: 構成案概要
         outline = integration_input.get("enhanced_outline", "")
-        part1_outline = f"# 構成案概要\n\n{outline[:2000]}" if outline else ""
+        part1_outline = f"# 構成案概要\n\n{outline[:PROMPT_OUTLINE_LIMIT]}" if outline else ""
 
         # パート2: 参照データ集
         keywords: list[str] = []
@@ -478,13 +487,13 @@ class Step65IntegrationPackage(BaseActivity):
         cooccurrence = step3b_data.get("cooccurrence_analysis", "")
         if cooccurrence:
             # 共起語から主要キーワードを抽出（簡易版）
-            keywords = [kw.strip() for kw in cooccurrence.split(",")[:10] if kw.strip()]
+            keywords = [kw.strip() for kw in cooccurrence.split(",")[:MAX_SOURCES_IN_PROMPT] if kw.strip()]
 
         # ソース収集
         step5_data = all_data.get("step5", {})
         raw_sources = step5_data.get("sources", [])
         if isinstance(raw_sources, list):
-            for src in raw_sources[:10]:
+            for src in raw_sources[:MAX_SOURCES_IN_PROMPT]:
                 if isinstance(src, dict):
                     sources.append(src.get("title", src.get("url", "")))
                 elif isinstance(src, str):
@@ -494,7 +503,7 @@ class Step65IntegrationPackage(BaseActivity):
         step3_5_data = all_data.get("step3_5", {})
         patterns = step3_5_data.get("human_touch_patterns", [])
         if isinstance(patterns, list):
-            for p in patterns[:5]:
+            for p in patterns[:MAX_PATTERNS]:
                 if isinstance(p, dict) and p.get("content"):
                     human_touch_elements.append(p["content"])
 
@@ -532,13 +541,13 @@ class Step65IntegrationPackage(BaseActivity):
         # キーワード収集
         step3b_data = all_data.get("step3b", {})
         cooccurrence = step3b_data.get("cooccurrence_analysis", "")
-        all_keywords = [kw.strip() for kw in cooccurrence.split(",")[:20] if kw.strip()]
+        all_keywords = [kw.strip() for kw in cooccurrence.split(",")[:MAX_DATA_PLACEMENTS] if kw.strip()]
 
         # ソース収集
         step5_data = all_data.get("step5", {})
         raw_sources = step5_data.get("sources", [])
         all_sources: list[str] = []
-        for src in raw_sources[:10]:
+        for src in raw_sources[:MAX_SOURCES_IN_PROMPT]:
             if isinstance(src, dict):
                 all_sources.append(src.get("title", src.get("url", "")))
             elif isinstance(src, str):
@@ -548,7 +557,7 @@ class Step65IntegrationPackage(BaseActivity):
         step3_5_data = all_data.get("step3_5", {})
         patterns = step3_5_data.get("human_touch_patterns", [])
         all_human_touch: list[str] = []
-        for p in patterns[:10]:
+        for p in patterns[:MAX_SOURCES_IN_PROMPT]:
             if isinstance(p, dict) and p.get("content"):
                 all_human_touch.append(p["content"])
 
@@ -689,20 +698,23 @@ class Step65IntegrationPackage(BaseActivity):
         kgi_coverage = kgi_count / max(1, total_sections)
 
         # 適合チェック
-        if neuroscience_coverage < 0.8:
+        FOUR_PILLARS_COVERAGE_THRESHOLD = 0.8
+        KGI_COVERAGE_THRESHOLD = 0.3
+
+        if neuroscience_coverage < FOUR_PILLARS_COVERAGE_THRESHOLD:
             issues.append(f"神経科学カバー率不足: {neuroscience_coverage:.0%}")
             recommendations.append("各セクションに認知負荷設定を追加")
 
-        if behavioral_coverage < 0.8:
+        if behavioral_coverage < FOUR_PILLARS_COVERAGE_THRESHOLD:
             issues.append(f"行動経済学カバー率不足: {behavioral_coverage:.0%}")
             recommendations.append("各セクションに行動経済学原則を追加")
 
-        if llmo_coverage < 0.8:
+        if llmo_coverage < FOUR_PILLARS_COVERAGE_THRESHOLD:
             issues.append(f"LLMOカバー率不足: {llmo_coverage:.0%}")
             recommendations.append("各セクションにLLMO設定を追加")
 
         # KGIは全セクションに必要ではない（CTA配置は特定位置のみ）
-        if kgi_coverage < 0.3:
+        if kgi_coverage < KGI_COVERAGE_THRESHOLD:
             issues.append(f"KGI/CTAカバー率低: {kgi_coverage:.0%}")
             recommendations.append("Early/Mid/FinalのCTA配置を確認")
 

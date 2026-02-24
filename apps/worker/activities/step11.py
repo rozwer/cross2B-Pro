@@ -533,7 +533,8 @@ class Step11ImageGeneration(BaseActivity):
                 tenant_id=ctx.tenant_id,
                 run_id=ctx.run_id,
                 step=self.step_id,
-            ).replace("/output.json", "/preview.html")
+                filename="preview.html",
+            )
             await self.store.put(
                 content=final_html.encode("utf-8"),
                 path=preview_path,
@@ -1168,6 +1169,7 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
         }
 
     config = args.get("config", {})
+    llm_provider, llm_model = get_step_model_config("step11", config)
     image_count = config.get("step11_image_count", 3)
     position_request = config.get("step11_position_request", "")
 
@@ -1214,7 +1216,7 @@ async def step11_analyze_positions(args: dict[str, Any]) -> dict[str, Any]:
         "positions": positions,
         "analysis_summary": " / ".join(summaries) if summaries else "",
         "sections": sections,
-        "model": "gemini",
+        "model": llm_provider,
     }
 
     await save_step_data(

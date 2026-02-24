@@ -26,6 +26,12 @@ from apps.worker.activities.schemas.step12 import (
     YoastSeoMetadata,
 )
 
+from apps.worker.helpers.truncation_limits import (
+    META_DESCRIPTION_TRUNCATE,
+    SEO_TITLE_MAX,
+    SLUG_MAX_LENGTH,
+)
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 logger = logging.getLogger(__name__)
@@ -597,7 +603,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         slug = re.sub(r"-+", "-", slug)
         slug = slug.strip("-")
 
-        return slug[:50]  # 最大50文字
+        return slug[:SLUG_MAX_LENGTH]  # 最大50文字
 
     def _generate_yoast_metadata(
         self,
@@ -618,12 +624,12 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             YoastSeoMetadata
         """
         # SEOタイトル生成（60文字以内推奨）
-        seo_title = title[:60] if len(title) > 60 else title
+        seo_title = title[:SEO_TITLE_MAX] if len(title) > SEO_TITLE_MAX else title
 
         # メタディスクリプション調整（155文字以内推奨）
         adjusted_description = meta_description
-        if len(meta_description) > 155:
-            adjusted_description = meta_description[:152] + "..."
+        if len(meta_description) > META_DESCRIPTION_TRUNCATE:
+            adjusted_description = meta_description[:META_DESCRIPTION_TRUNCATE - 3] + "..."
 
         # 可読性スコア算出（簡易実装）
         readability_score = self._calculate_readability_score(content)

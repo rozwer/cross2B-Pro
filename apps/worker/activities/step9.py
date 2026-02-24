@@ -46,6 +46,8 @@ from apps.worker.activities.schemas.step9 import (
     Step9Output,
     WordCountFinal,
 )
+from apps.worker.helpers import CTA_SPEC_KEY
+from apps.worker.helpers.truncation_limits import META_DESCRIPTION_MAX
 from apps.worker.helpers.checkpoint_manager import CheckpointManager
 from apps.worker.helpers.content_metrics import ContentMetrics
 from apps.worker.helpers.input_validator import InputValidator
@@ -143,7 +145,7 @@ def _validate_rewrite_quality(
 
     # FAQ integration check
     faq_data = step8_data.get("faq_items", [])
-    if faq_data:
+    if faq_data and isinstance(faq_data, list):
         faq_indicators = ["FAQ", "よくある質問", "Q&A", "Q:"]
         has_faq = any(ind in final for ind in faq_indicators)
         if not has_faq:
@@ -175,12 +177,12 @@ def _extract_or_generate_meta_description(
     """
     # Use extracted meta if available
     if extracted_meta:
-        return extracted_meta[:160]
+        return extracted_meta[:META_DESCRIPTION_MAX]
 
     # Try to extract from content
     match = META_DESCRIPTION_PATTERN.search(content)
     if match:
-        return match.group(1).strip()[:160]
+        return match.group(1).strip()[:META_DESCRIPTION_MAX]
 
     # Generate from first paragraph
     paragraphs = content.split("\n\n")
@@ -191,13 +193,13 @@ def _extract_or_generate_meta_description(
             sentences = p.split("。")
             description = ""
             for s in sentences:
-                if len(description) + len(s) + 1 <= 160:
+                if len(description) + len(s) + 1 <= META_DESCRIPTION_MAX:
                     description += s + "。"
                 else:
                     break
             if description:
                 return description
-            return p[:160]
+            return p[:META_DESCRIPTION_MAX]
 
     return ""
 
@@ -284,9 +286,17 @@ class Step9FinalRewrite(BaseActivity):
             if not faq_content:
                 faq_items = step8_data.get("faq_items", [])
                 if faq_items:
-                    faq_content = "\n\n".join(
-                        f"Q: {item.get('question', '')}\nA: {item.get('answer', '')}" for item in faq_items if isinstance(item, dict)
-                    )
+                    parts = []
+                    for item in faq_items:
+                        if isinstance(item, dict):
+                            q = item.get("question", "")
+                            a = item.get("answer", "")
+                        else:
+                            q = getattr(item, "question", "")
+                            a = getattr(item, "answer", "")
+                        if q or a:
+                            parts.append(f"Q: {q}\nA: {a}")
+                    faq_content = "\n\n".join(parts)
             # Read verification_results from step8 output
             verification = ""
             verification_results = step8_data.get("verification_results", [])
@@ -348,7 +358,7 @@ class Step9FinalRewrite(BaseActivity):
 
         target_word_count = step3c_data.get("target_word_count") or step0_data.get("target_word_count", 6000)
         current_word_count = len(polished_content)
-        cta_spec = step0_data.get("cta_specification", {}) or step0_data.get("cta", {})
+        cta_spec = step0_data.get(CTA_SPEC_KEY, {})
         cta_placements = cta_spec.get("placements", {}) if isinstance(cta_spec, dict) else {}
         cta_url = ""
         cta_text = ""

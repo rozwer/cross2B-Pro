@@ -50,6 +50,14 @@ from apps.worker.helpers import (
 )
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+from apps.worker.helpers.truncation_limits import (
+    MAX_EPISODES,
+    MAX_HOOKS,
+    MAX_PATTERNS,
+    MAX_SOURCES_EXTENDED,
+    PROMPT_EXCERPT_LIMIT,
+    PROMPT_RAW_OUTPUT_LIMIT,
+)
 
 from .base import ActivityError, BaseActivity, load_step_data
 
@@ -431,11 +439,11 @@ class Step7ADraftGeneration(BaseActivity):
             return ""
 
         formatted_sources: list[str] = []
-        for i, src in enumerate(sources[:15], start=1):  # Limit to 15 most relevant
+        for i, src in enumerate(sources[:MAX_SOURCES_EXTENDED], start=1):  # Limit to 15 most relevant
             url = src.get("url", "")
             title = src.get("title", "")
             source_type = src.get("source_type", "other")
-            excerpt = (src.get("excerpt") or "")[:200]
+            excerpt = (src.get("excerpt") or "")[:PROMPT_EXCERPT_LIMIT]
             phase = src.get("phase_alignment", "")
 
             # Format each source with citation ID
@@ -496,7 +504,7 @@ class Step7ADraftGeneration(BaseActivity):
         patterns = step3_5_data.get("human_touch_patterns", [])
         if patterns and isinstance(patterns, list):
             pattern_strs = []
-            for p in patterns[:5]:
+            for p in patterns[:MAX_PATTERNS]:
                 if isinstance(p, dict) and p.get("content"):
                     pattern_strs.append(f"- {p.get('type', 'general')}: {p['content']}")
             if pattern_strs:
@@ -506,7 +514,7 @@ class Step7ADraftGeneration(BaseActivity):
         episodes = step3_5_data.get("experience_episodes", [])
         if episodes and isinstance(episodes, list):
             episode_strs = []
-            for ep in episodes[:3]:
+            for ep in episodes[:MAX_EPISODES]:
                 if isinstance(ep, dict) and ep.get("narrative"):
                     episode_strs.append(f"- {ep.get('scenario', '')}: {ep['narrative']}")
             if episode_strs:
@@ -515,12 +523,12 @@ class Step7ADraftGeneration(BaseActivity):
         # Extract emotional_hooks (list of strings)
         hooks = step3_5_data.get("emotional_hooks", [])
         if hooks and isinstance(hooks, list):
-            hooks_str = ", ".join(hooks[:5]) if all(isinstance(h, str) for h in hooks[:5]) else str(hooks[:5])
+            hooks_str = ", ".join(hooks[:MAX_HOOKS]) if all(isinstance(h, str) for h in hooks[:MAX_HOOKS]) else str(hooks[:MAX_HOOKS])
             parts.append(f"感情フック: {hooks_str}")
 
         # Fallback to raw_output if structured fields are empty
         if not parts and step3_5_data.get("raw_output"):
-            return str(step3_5_data["raw_output"])[:2000]
+            return str(step3_5_data["raw_output"])[:PROMPT_RAW_OUTPUT_LIMIT]
 
         return "\n\n".join(parts)
 
@@ -852,10 +860,10 @@ class Step7ADraftGeneration(BaseActivity):
 {current_draft[-500:]}
 
 ## 統合パッケージ（参照用）
-{integration_package[:2000]}
+{integration_package[:PROMPT_RAW_OUTPUT_LIMIT]}
 
 ## 人間味要素（参考）
-{human_touch_elements[:2000] if human_touch_elements else ""}
+{human_touch_elements[:PROMPT_RAW_OUTPUT_LIMIT] if human_touch_elements else ""}
 
 ## 指示
 - 既存の内容と自然につながるように続きを書いてください

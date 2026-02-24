@@ -56,6 +56,7 @@ from apps.worker.activities.schemas.step10 import (
     WordCountReport,
 )
 from apps.worker.helpers import (
+    CTA_SPEC_KEY,
     CheckpointManager,
     CompositeValidator,
     ContentMetrics,
@@ -63,13 +64,15 @@ from apps.worker.helpers import (
     OutputParser,
     QualityResult,
 )
+from apps.worker.helpers.truncation_limits import (
+    META_DESCRIPTION_TRUNCATE,
+    PROMPT_EXPANDED_LIMIT,
+    PROMPT_META_CONTEXT_LIMIT,
+)
 
 from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
 
-from .base import ActivityError, BaseActivity, load_step_data
-
-# API base URL for internal communication (Worker -> API)
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://api:8000")
+from .base import API_BASE_URL, ActivityError, BaseActivity, load_step_data
 
 
 class ArticleVariationInfo(TypedDict):
@@ -439,7 +442,7 @@ class Step10FinalOutput(BaseActivity):
 
         # Load step0 data for CTA specification
         step0_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step0") or {}
-        cta_spec = step0_data.get("cta_specification", {}) or step0_data.get("cta", {})
+        cta_spec = step0_data.get(CTA_SPEC_KEY, {})
         cta_placements = cta_spec.get("placements", {}) if isinstance(cta_spec, dict) else {}
         cta_url = ""
         cta_text = ""
@@ -650,7 +653,8 @@ class Step10FinalOutput(BaseActivity):
                 tenant_id=ctx.tenant_id,
                 run_id=ctx.run_id,
                 step=self.step_id,
-            ).replace("/output.json", f"/article_{article.article_number}.md")
+                filename=f"article_{article.article_number}.md",
+            )
 
             await self.store.put(
                 content=article.content.encode("utf-8"),
@@ -673,7 +677,8 @@ class Step10FinalOutput(BaseActivity):
                 tenant_id=ctx.tenant_id,
                 run_id=ctx.run_id,
                 step=self.step_id,
-            ).replace("/output.json", "/preview.html")
+                filename="preview.html",
+            )
             await self.store.put(
                 content=main_article.html_content.encode("utf-8"),
                 path=preview_path,
@@ -716,7 +721,7 @@ class Step10FinalOutput(BaseActivity):
         variation_prompt = prompt_pack.get_prompt("step10_article_variation")
         prompt_text = variation_prompt.render(
             keyword=keyword,
-            base_content=base_content[:20000],  # Expanded from 8000 to 20000 for long articles
+            base_content=base_content[:PROMPT_EXPANDED_LIMIT],  # Expanded from 8000 to 20000 for long articles
             article_number=article_num,
             variation_type=variation_type.value,
             target_audience=target_audience,
@@ -790,7 +795,8 @@ class Step10FinalOutput(BaseActivity):
             tenant_id=ctx.tenant_id,
             run_id=ctx.run_id,
             step=self.step_id,
-        ).replace("/output.json", f"/article_{article_num}.md")
+            filename=f"article_{article_num}.md",
+        )
 
         output_digest = hashlib.sha256(content.encode()).hexdigest()[:16]
 
@@ -897,7 +903,7 @@ class Step10FinalOutput(BaseActivity):
             Meta description (120-160 characters)
         """
         # Use first 2000 chars of content for context
-        content_preview = content[:2000]
+        content_preview = content[:PROMPT_META_CONTEXT_LIMIT]
 
         prompt = f"""以下の記事に対して、SEOに最適化されたメタディスクリプションを生成してください。
 
@@ -939,7 +945,7 @@ class Step10FinalOutput(BaseActivity):
 
             # Truncate if too long (Google displays ~155-160 chars)
             if len(meta_description) > 160:
-                meta_description = meta_description[:157] + "..."
+                meta_description = meta_description[:META_DESCRIPTION_TRUNCATE] + "..."
 
             return meta_description
 
@@ -954,7 +960,7 @@ class Step10FinalOutput(BaseActivity):
             # Fallback: use first 155 chars of content
             fallback = re.sub(r"^#.*\n", "", content)  # Remove title
             fallback = re.sub(r"\s+", " ", fallback).strip()  # Normalize whitespace
-            return fallback[:155] + "..." if len(fallback) > 155 else fallback
+            return fallback[:META_DESCRIPTION_TRUNCATE] + "..." if len(fallback) > META_DESCRIPTION_TRUNCATE else fallback
 
     async def _generate_article_summary(
         self,

@@ -1,5 +1,11 @@
 """Helper utilities for worker activities."""
 
+# CTA placement positions (word count offsets)
+CTA_POSITION_EARLY = 650
+CTA_POSITION_MID = 2800
+CTA_POSITION_FINAL_OFFSET = 500
+CTA_SPEC_KEY = "cta_specification"
+
 from apps.worker.helpers.checkpoint_manager import CheckpointManager
 from apps.worker.helpers.content_metrics import ContentMetrics
 from apps.worker.helpers.input_validator import InputValidator
@@ -58,4 +64,9 @@ __all__ = [
     "CheckpointMetadata",
     # Schemas - Output
     "StepOutputBase",
+    # CTA Constants
+    "CTA_POSITION_EARLY",
+    "CTA_POSITION_MID",
+    "CTA_POSITION_FINAL_OFFSET",
+    "CTA_SPEC_KEY",
 ]
