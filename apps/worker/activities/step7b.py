@@ -44,6 +44,8 @@ from apps.worker.helpers.quality_validator import (
     StructureValidator,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 logger = logging.getLogger(__name__)
@@ -321,6 +323,13 @@ class Step7BBrushUp(BaseActivity):
                 system_prompt="You are a content polishing expert.",
                 config=llm_config,
             )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            logger.error(f"[STEP7B] LLM temporary failure: {type(e).__name__}: {e}")
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             logger.error(f"[STEP7B] LLM call exception: {type(e).__name__}: {e}")
             raise ActivityError(

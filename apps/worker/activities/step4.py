@@ -50,6 +50,8 @@ from apps.worker.helpers import (
     StructureValidator,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 
@@ -244,11 +246,18 @@ class Step4StrategicOutline(BaseActivity):
         keyword_validator = KeywordValidator(min_density=0.0, max_density=5.0)
 
         async def llm_call(prompt_text: str) -> str:
-            response = await llm.generate(
-                messages=[{"role": "user", "content": prompt_text}],
-                system_prompt="You are an SEO content strategist.",
-                config=llm_config,
-            )
+            try:
+                response = await llm.generate(
+                    messages=[{"role": "user", "content": prompt_text}],
+                    system_prompt="You are an SEO content strategist.",
+                    config=llm_config,
+                )
+            except (LLMRateLimitError, LLMTimeoutError) as e:
+                raise ActivityError(
+                    f"LLM temporary failure: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                    details={"llm_error": str(e)},
+                ) from e
             # Store response metadata for later use
             self._last_response = response
             return response.content

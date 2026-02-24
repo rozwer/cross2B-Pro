@@ -47,6 +47,8 @@ from apps.worker.helpers.checkpoint_manager import CheckpointManager
 from apps.worker.helpers.input_validator import InputValidator
 from apps.worker.helpers.output_parser import OutputParser
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 logger = logging.getLogger(__name__)
@@ -185,6 +187,15 @@ def _parse_claims_from_response(
     return claims
 
 
+def _safe_float(value, default: float = 0.5) -> float:
+    """Safely convert a value to float, clamping to [0.0, 1.0]."""
+    try:
+        result = float(value)
+        return max(0.0, min(1.0, result))
+    except (ValueError, TypeError):
+        return default
+
+
 def _parse_verification_from_response(
     parser: OutputParser,
     content: str,
@@ -215,7 +226,7 @@ def _parse_verification_from_response(
                 VerificationResult(
                     claim_id=item.get("claim_id", ""),
                     status=status,
-                    confidence=float(item.get("confidence", 0.5)),
+                    confidence=_safe_float(item.get("confidence", 0.5)),
                     evidence=item.get("evidence", ""),
                     source=item.get("source", ""),
                     recommendation=item.get("recommendation", ""),
@@ -661,6 +672,12 @@ class Step8FactCheck(BaseActivity):
                     },
                     input_digest,
                 )
+            except (LLMRateLimitError, LLMTimeoutError) as e:
+                raise ActivityError(
+                    f"LLM temporary failure: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                    details={"llm_error": str(e)},
+                ) from e
             except Exception as e:
                 raise ActivityError(
                     f"Failed to extract claims: {e}",
@@ -722,6 +739,12 @@ class Step8FactCheck(BaseActivity):
                     },
                     input_digest,
                 )
+            except (LLMRateLimitError, LLMTimeoutError) as e:
+                raise ActivityError(
+                    f"LLM temporary failure: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                    details={"llm_error": str(e)},
+                ) from e
             except Exception as e:
                 raise ActivityError(
                     f"Failed to verify claims: {e}",
@@ -742,6 +765,12 @@ class Step8FactCheck(BaseActivity):
                 config=faq_config,
             )
             faq_items = _parse_faq_from_response(self.output_parser, faq_response.content)
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"Failed to generate FAQ: {e}",

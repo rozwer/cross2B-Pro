@@ -57,6 +57,8 @@ from apps.worker.helpers.quality_validator import (
 )
 from apps.worker.helpers.schemas import QualityResult
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 logger = logging.getLogger(__name__)
@@ -140,7 +142,7 @@ def _validate_rewrite_quality(
         )
 
     # FAQ integration check
-    faq_data = step8_data.get("faq_items", step8_data.get("faq", []))
+    faq_data = step8_data.get("faq_items", [])
     if faq_data:
         faq_indicators = ["FAQ", "よくある質問", "Q&A", "Q:"]
         has_faq = any(ind in final for ind in faq_indicators)
@@ -277,15 +279,26 @@ class Step9FinalRewrite(BaseActivity):
             logger.info(f"[STEP9] step8_data keys: {list(step8_data.keys()) if step8_data else 'None'}")
 
             polished_content = step7b_data.get("polished", "")
-            faq_content = step8_data.get("faq", "")
+            # Use faq_section_markdown first, then reconstruct from faq_items
+            faq_content = step8_data.get("faq_section_markdown", "")
             if not faq_content:
-                # Try to extract from faq_items
                 faq_items = step8_data.get("faq_items", [])
                 if faq_items:
                     faq_content = "\n\n".join(
                         f"Q: {item.get('question', '')}\nA: {item.get('answer', '')}" for item in faq_items if isinstance(item, dict)
                     )
-            verification = step8_data.get("verification", "")
+            # Read verification_results from step8 output
+            verification = ""
+            verification_results = step8_data.get("verification_results", [])
+            if verification_results:
+                parts = []
+                for vr in verification_results:
+                    if isinstance(vr, dict):
+                        claim = vr.get("claim", "")
+                        status = vr.get("status", "")
+                        evidence = vr.get("evidence", "")
+                        parts.append(f"- [{status}] {claim}: {evidence}")
+                verification = "\n".join(parts)
 
             # Cache inputs
             await self.checkpoint_manager.save(
@@ -305,9 +318,9 @@ class Step9FinalRewrite(BaseActivity):
 
         # Input validation - step7b is required, step8 is recommended
         validation_result = self.input_validator.validate(
-            data={"keyword": keyword, "polished": polished_content},
+            data={"keyword": keyword, "polished": polished_content, "faq_content": faq_content, "verification": verification},
             required=["keyword", "polished"],
-            recommended=["faq", "verification"],
+            recommended=["faq_content", "verification"],
             min_lengths={"polished": MIN_POLISHED_LENGTH},
         )
 
@@ -403,6 +416,12 @@ class Step9FinalRewrite(BaseActivity):
                 system_prompt=system_prompt,
                 config=llm_config,
             )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"LLM call failed: {e}",
@@ -415,7 +434,7 @@ class Step9FinalRewrite(BaseActivity):
         parsed_data = self._parse_json_response(response.content)
 
         # Extract final content
-        final_content = parsed_data.get("final_content", "").strip()
+        final_content = (parsed_data.get("final_content") or "").strip()
 
         if not final_content:
             raise ActivityError(

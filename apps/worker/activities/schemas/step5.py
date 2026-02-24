@@ -112,6 +112,7 @@ class Step5Output(BaseModel):
     invalid_sources: list[PrimarySource] = Field(default_factory=list)
     failed_queries: list[dict[str, str]] = Field(default_factory=list)
     collection_stats: CollectionStats = Field(default_factory=CollectionStats)
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     # blog.System Ver8.3 拡張
     phase_specific_data: PhaseSpecificData | None = None
     knowledge_gaps_filled: list[KnowledgeGap] = Field(default_factory=list)

@@ -43,6 +43,8 @@ from apps.worker.helpers import (
     StructureValidator,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 
@@ -198,11 +200,18 @@ class Step6EnhancedOutline(BaseActivity):
 
         # === QualityRetryLoop統合 ===
         async def llm_call(prompt_text: str) -> str:
-            response = await llm.generate(
-                messages=[{"role": "user", "content": prompt_text}],
-                system_prompt="You are an SEO content outline specialist.",
-                config=llm_config,
-            )
+            try:
+                response = await llm.generate(
+                    messages=[{"role": "user", "content": prompt_text}],
+                    system_prompt="You are an SEO content outline specialist.",
+                    config=llm_config,
+                )
+            except (LLMRateLimitError, LLMTimeoutError) as e:
+                raise ActivityError(
+                    f"LLM temporary failure: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                    details={"llm_error": str(e)},
+                ) from e
             self._last_response = response
             return response.content
 
@@ -358,7 +367,7 @@ class Step6EnhancedOutline(BaseActivity):
                 "id": source_id,
                 "url": url,
                 "title": s.get("title", ""),
-                "excerpt": s.get("excerpt", "")[:200],
+                "excerpt": (s.get("excerpt") or "")[:200],
             }
             source_summaries.append(summary)
 

@@ -38,6 +38,8 @@ from apps.worker.helpers import (
     QualityResult,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 
@@ -168,6 +170,12 @@ class Step65IntegrationPackage(BaseActivity):
                 system_prompt="You are an SEO content integration specialist.",
                 config=llm_config,
             )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"LLM call failed: {e}",

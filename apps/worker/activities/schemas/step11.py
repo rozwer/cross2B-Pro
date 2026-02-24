@@ -194,6 +194,7 @@ class Step11Output(BaseModel):
         description="画像挿入後のHTMLコンテンツ",
     )
     model: str = Field(default="", description="使用したモデル")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     token_usage: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
@@ -393,6 +394,7 @@ class Step11OutputV2(BaseModel):
         description="画像挿入後のHTMLコンテンツ",
     )
     model: str = Field(default="", description="使用したモデル")
+    model_config_data: dict[str, str] = Field(default_factory=dict, description="モデル設定（platform, model）")
     token_usage: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 

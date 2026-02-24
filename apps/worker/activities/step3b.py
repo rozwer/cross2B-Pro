@@ -504,7 +504,7 @@ class Step3BCooccurrenceExtraction(BaseActivity):
                 {
                     "title": comp.get("title", ""),
                     "url": comp.get("url", ""),
-                    "content_preview": comp.get("content", "")[:1000],  # Expanded
+                    "content_preview": (comp.get("content") or "")[:1000],  # Expanded
                     "word_count": comp.get("word_count", 0),
                     "headings": comp.get("headings", [])[:10],
                 }

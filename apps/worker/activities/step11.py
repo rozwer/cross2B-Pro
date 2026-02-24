@@ -25,6 +25,7 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
 from apps.api.llm import GeminiClient, LLMRequestConfig, NanoBananaClient
+from apps.worker.helpers.model_config import get_step_model_config
 from apps.worker.activities.schemas.step11 import (
     EnhancedImageInsertionPosition,
     GeneratedImage,
@@ -38,7 +39,11 @@ from apps.worker.activities.schemas.step11 import (
     Step11Output,
 )
 
-from .base import BaseActivity, load_step_data, save_step_data
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
+from .base import ActivityError, BaseActivity, load_step_data, save_step_data
+
+from apps.api.core.errors import ErrorCategory
 
 
 class Step11ImageGeneration(BaseActivity):
@@ -384,11 +389,15 @@ class Step11ImageGeneration(BaseActivity):
                 }
             ]
 
+        # Get model config for output metadata
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
+
         if not articles_data:
             # 画像生成をスキップ
             return Step11Output(
                 step=self.step_id,
                 enabled=False,
+                model_config_data={"platform": llm_provider, "model": llm_model or ""},
                 warnings=["step10_data_missing"],
             ).model_dump()
 
@@ -407,6 +416,7 @@ class Step11ImageGeneration(BaseActivity):
                 enabled=False,
                 markdown_with_images=first_article.get("content", first_article.get("markdown_content", "")),
                 html_with_images=first_article.get("html_content", ""),
+                model_config_data={"platform": llm_provider, "model": llm_model or ""},
             ).model_dump()
 
         activity.logger.info(
@@ -538,7 +548,8 @@ class Step11ImageGeneration(BaseActivity):
             "images": [img.model_dump() for img in all_generated_images],
             "markdown_with_images": final_markdown,
             "html_with_images": final_html,
-            "model": "gemini-2.5-flash-image",
+            "model": llm_model or "",
+            "model_config_data": {"platform": llm_provider, "model": llm_model or ""},
             "token_usage": {
                 "input": total_analysis_input_tokens,
                 "output": total_analysis_output_tokens + total_tokens,
@@ -689,6 +700,12 @@ class Step11ImageGeneration(BaseActivity):
                 },
             )
 
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             activity.logger.error(f"Position analysis failed: {e}")
             return PositionAnalysisResult(
@@ -791,6 +808,12 @@ No text or watermarks in the image."""
 
             return f"{prompt}{style_suffix}"
 
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             activity.logger.error(f"Prompt creation failed: {e}")
             # フォールバック禁止: 例外を再スロー
@@ -1074,12 +1097,15 @@ async def step11_mark_skipped(args: dict[str, Any]) -> dict[str, Any]:
     # Load step10 data to pass through markdown/html unchanged
     step10_data = await load_step_data(step.store, args["tenant_id"], args["run_id"], "step10") or {}
 
+    config = args.get("config", {})
+    llm_provider, llm_model = get_step_model_config("step11", config)
     output = Step11Output(
         step="step11",
         enabled=False,
         image_count=0,
         markdown_with_images=step10_data.get("markdown_content", ""),
         html_with_images=step10_data.get("html_content", ""),
+        model_config_data={"platform": llm_provider, "model": llm_model or ""},
         warnings=["skipped_by_user"],
     )
 
@@ -1572,6 +1598,8 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
         )
 
     # Create output
+    config = args.get("config", {})
+    llm_provider, llm_model = get_step_model_config("step11", config)
     output = Step11Output(
         step="step11",
         enabled=True,
@@ -1579,7 +1607,8 @@ async def step11_insert_images(args: dict[str, Any]) -> dict[str, Any]:
         images=generated_images,
         markdown_with_images=final_markdown,
         html_with_images=final_html,
-        model="gemini-2.5-flash-image",
+        model=llm_model or "",
+        model_config_data={"platform": llm_provider, "model": llm_model or ""},
         token_usage={},
     )
 

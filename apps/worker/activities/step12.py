@@ -15,7 +15,6 @@ from temporalio import activity
 
 from apps.api.core.context import ExecutionContext
 from apps.api.core.state import GraphState
-from apps.api.llm import AnthropicClient
 from apps.worker.activities.schemas.step12 import (
     ArticleImage,
     ArticleMetadata,
@@ -42,17 +41,10 @@ class Step12WordPressHtmlGeneration(BaseActivity):
     def __init__(self) -> None:
         """Initialize with helpers."""
         super().__init__()
-        self._anthropic_client: AnthropicClient | None = None
 
     @property
     def step_id(self) -> str:
         return "step12"
-
-    def _get_anthropic_client(self) -> AnthropicClient:
-        """AnthropicClientを取得（遅延初期化）."""
-        if self._anthropic_client is None:
-            self._anthropic_client = AnthropicClient()
-        return self._anthropic_client
 
     async def execute(
         self,
@@ -157,7 +149,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             # blog.System 統合: 構造化データ生成
             # step8のFAQデータがあれば使用
             step8_data = await load_step_data(self.store, ctx.tenant_id, ctx.run_id, "step8") or {}
-            faq_data = step8_data.get("faqs", [])
+            faq_data = step8_data.get("faq_items", [])
             structured_data = self._generate_structured_data(
                 title=title,
                 meta_description=meta_description,
@@ -203,7 +195,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
         total_images = sum(len(a.images) for a in wordpress_articles)
         generation_metadata = GenerationMetadata(
             generated_at=ctx.started_at,
-            model="claude-3-5-sonnet",
+            model="",
             wordpress_version_target="6.0+",
             total_articles=len(wordpress_articles),
             total_images=total_images,
@@ -215,7 +207,7 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             articles=wordpress_articles,
             common_assets=common_assets,
             generation_metadata=generation_metadata,
-            model="claude-3-5-sonnet",
+            model="",
             token_usage={"input": 0, "output": total_tokens},
             warnings=warnings,
         )
@@ -497,9 +489,11 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             return html_content
 
         for img_data in images:
-            position_data = img_data.get("position", {})
+            # GeneratedImage.model_dump() nests position/alt_text under "request"
+            request_data = img_data.get("request", {}) or {}
+            position_data = request_data.get("position", img_data.get("position", {}))
             section_title = position_data.get("section_title", "") if isinstance(position_data, dict) else ""
-            alt_text = img_data.get("alt_text", "")
+            alt_text = request_data.get("alt_text", img_data.get("alt_text", ""))
             image_base64 = img_data.get("image_base64", "")
             image_path = img_data.get("image_path", "")
 
@@ -563,14 +557,16 @@ class Step12WordPressHtmlGeneration(BaseActivity):
             if img_article_number is not None and img_article_number != article_number:
                 continue
 
-            position_data = img_data.get("position", {})
+            # GeneratedImage.model_dump() nests position/alt_text under "request"
+            request_data = img_data.get("request", {}) or {}
+            position_data = request_data.get("position", img_data.get("position", {}))
             section_title = position_data.get("section_title", "") if isinstance(position_data, dict) else ""
 
             image_idx += 1
             article_images.append(
                 ArticleImage(
                     position=section_title,
-                    alt_text=img_data.get("alt_text", ""),
+                    alt_text=request_data.get("alt_text", img_data.get("alt_text", "")),
                     suggested_filename=f"image_{article_number}_{image_idx}.png",
                     image_path=img_data.get("image_path", ""),
                     image_base64=img_data.get("image_base64", ""),

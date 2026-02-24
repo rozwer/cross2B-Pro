@@ -64,6 +64,8 @@ from apps.worker.helpers import (
     QualityResult,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 # API base URL for internal communication (Worker -> API)
@@ -370,14 +372,6 @@ class Step10FinalOutput(BaseActivity):
             elif len(meta_desc) > 300:
                 warnings.append(f"step9.meta_description is too long: {len(meta_desc)} chars (recommended < 160)")
 
-        # article_title の検証（推奨）
-        article_title = step9_data.get("article_title")
-        if article_title:
-            if not isinstance(article_title, str):
-                warnings.append(f"step9.article_title has invalid type: expected str, got {type(article_title).__name__}")
-            elif len(article_title) > 200:
-                warnings.append(f"step9.article_title is unusually long: {len(article_title)} chars")
-
         return True, errors, warnings
 
     def _build_error_details(
@@ -503,9 +497,6 @@ class Step10FinalOutput(BaseActivity):
             )
 
         base_content = step9_data.get("final_content", "")
-        # meta_description と article_title は将来的に使用予定（per-article meta生成時）
-        _ = step9_data.get("meta_description", "")  # noqa: F841
-        _ = step9_data.get("article_title", keyword)  # noqa: F841
 
         # Get LLM client (Claude Opus for step10 via step defaults)
         llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
@@ -741,11 +732,18 @@ class Step10FinalOutput(BaseActivity):
             temperature=0.7,  # Slightly higher for variation
         )
 
-        response = await llm.generate(
-            messages=[{"role": "user", "content": prompt_text}],
-            system_prompt="あなたはSEO記事のバリエーション生成の専門家です。",
-            config=llm_config,
-        )
+        try:
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt_text}],
+                system_prompt="あなたはSEO記事のバリエーション生成の専門家です。",
+                config=llm_config,
+            )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
 
         content = str(response.content)
 
@@ -849,11 +847,18 @@ class Step10FinalOutput(BaseActivity):
             temperature=0.3,
         )
 
-        response = await llm.generate(
-            messages=[{"role": "user", "content": prompt_text}],
-            system_prompt="You are an HTML formatting expert.",
-            config=html_config,
-        )
+        try:
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt_text}],
+                system_prompt="You are an HTML formatting expert.",
+                config=html_config,
+            )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
 
         html_content = str(response.content)
 
@@ -938,6 +943,12 @@ class Step10FinalOutput(BaseActivity):
 
             return meta_description
 
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             activity.logger.warning(f"Meta description generation failed: {e}")
             # Fallback: use first 155 chars of content
@@ -961,11 +972,18 @@ class Step10FinalOutput(BaseActivity):
             temperature=0.3,
         )
 
-        response = await llm.generate(
-            messages=[{"role": "user", "content": prompt_text}],
-            system_prompt="簡潔に要約してください。",
-            config=summary_config,
-        )
+        try:
+            response = await llm.generate(
+                messages=[{"role": "user", "content": prompt_text}],
+                system_prompt="簡潔に要約してください。",
+                config=summary_config,
+            )
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
 
         return str(response.content).strip()
 
@@ -990,6 +1008,12 @@ class Step10FinalOutput(BaseActivity):
                 config=checklist_config,
             )
             return str(response.content)
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             activity.logger.error(f"Checklist generation failed: {e}")
             warnings.append("checklist_generation_failed")

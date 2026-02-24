@@ -49,11 +49,29 @@ from apps.worker.helpers import (
     StructureValidator,
 )
 
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
+
 from .base import ActivityError, BaseActivity, load_step_data
 
 # 定数
 MIN_WORD_COUNT = 1000
 MIN_SECTION_COUNT = 3
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    """Safely convert LLM-authored value to int."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """Safely convert LLM-authored value to float."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 class Step7ADraftGeneration(BaseActivity):
@@ -336,6 +354,9 @@ class Step7ADraftGeneration(BaseActivity):
             "output": response.token_usage.output if response else 0,
         }
 
+        # Get model config for output metadata
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
+
         # === blog.System Ver8.3 Extensions ===
         # Get target word count from config (default 5000)
         target_word_count = config.get("target_word_count", 5000)
@@ -414,7 +435,7 @@ class Step7ADraftGeneration(BaseActivity):
             url = src.get("url", "")
             title = src.get("title", "")
             source_type = src.get("source_type", "other")
-            excerpt = src.get("excerpt", "")[:200]
+            excerpt = (src.get("excerpt") or "")[:200]
             phase = src.get("phase_alignment", "")
 
             # Format each source with citation ID
@@ -618,7 +639,7 @@ class Step7ADraftGeneration(BaseActivity):
                         "principles_used": [str(p) for p in principles[:4]],
                     },
                     "llmo": {
-                        "token_count": int(llmo_data.get("token_count", 0)),
+                        "token_count": _safe_int(llmo_data.get("token_count", 0)),
                         "is_independent": bool(llmo_data.get("is_independent", False)),
                     },
                     "kgi": {
@@ -649,15 +670,15 @@ class Step7ADraftGeneration(BaseActivity):
                 final = raw.get("final", {})
                 return {
                     "early": {
-                        "position": int(early.get("position", 0)) if isinstance(early, dict) else 0,
+                        "position": _safe_int(early.get("position", 0)) if isinstance(early, dict) else 0,
                         "implemented": bool(early.get("implemented", False)) if isinstance(early, dict) else False,
                     },
                     "mid": {
-                        "position": int(mid.get("position", 0)) if isinstance(mid, dict) else 0,
+                        "position": _safe_int(mid.get("position", 0)) if isinstance(mid, dict) else 0,
                         "implemented": bool(mid.get("implemented", False)) if isinstance(mid, dict) else False,
                     },
                     "final": {
-                        "position": int(final.get("position", 0)) if isinstance(final, dict) else 0,
+                        "position": _safe_int(final.get("position", 0)) if isinstance(final, dict) else 0,
                         "implemented": bool(final.get("implemented", False)) if isinstance(final, dict) else False,
                     },
                 }
@@ -705,10 +726,10 @@ class Step7ADraftGeneration(BaseActivity):
             raw = parsed_data["word_count_tracking"]
             if isinstance(raw, dict):
                 return {
-                    "target": int(raw.get("target", target_word_count)),
-                    "current": int(raw.get("current", actual_word_count)),
-                    "remaining": int(raw.get("remaining", max(0, target_word_count - actual_word_count))),
-                    "progress_percent": float(raw.get("progress_percent", 0.0)),
+                    "target": _safe_int(raw.get("target", target_word_count), target_word_count),
+                    "current": _safe_int(raw.get("current", actual_word_count), actual_word_count),
+                    "remaining": _safe_int(raw.get("remaining", max(0, target_word_count - actual_word_count)), max(0, target_word_count - actual_word_count)),
+                    "progress_percent": _safe_float(raw.get("progress_percent", 0.0)),
                 }
 
         # Calculate from actual values
@@ -734,8 +755,8 @@ class Step7ADraftGeneration(BaseActivity):
         if parsed_data and parsed_data.get("split_generation"):
             raw = parsed_data["split_generation"]
             if isinstance(raw, dict):
-                total = int(raw.get("total_parts", 1))
-                current = int(raw.get("current_part", 1))
+                total = _safe_int(raw.get("total_parts", 1), 1)
+                current = _safe_int(raw.get("current_part", 1), 1)
                 completed = raw.get("completed_sections", [])
                 if not isinstance(completed, list):
                     completed = []
@@ -803,6 +824,12 @@ class Step7ADraftGeneration(BaseActivity):
             )
             self._last_response = response
             return response.content
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"LLM call failed: {e}",
@@ -850,6 +877,12 @@ class Step7ADraftGeneration(BaseActivity):
                 config=llm_config,
             )
             return response.content
+        except (LLMRateLimitError, LLMTimeoutError) as e:
+            raise ActivityError(
+                f"LLM temporary failure: {e}",
+                category=ErrorCategory.RETRYABLE,
+                details={"llm_error": str(e)},
+            ) from e
         except Exception as e:
             raise ActivityError(
                 f"Continuation generation failed: {e}",

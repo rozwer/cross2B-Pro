@@ -22,7 +22,7 @@ from temporalio import activity
 from apps.api.core.context import ExecutionContext
 from apps.api.core.errors import ErrorCategory
 from apps.api.core.state import GraphState
-from apps.worker.helpers.model_config import get_step_llm_client
+from apps.worker.helpers.model_config import get_step_llm_client, get_step_model_config
 from apps.api.llm.schemas import LLMRequestConfig
 from apps.api.prompts.loader import PromptPackLoader
 from apps.api.tools.registry import ToolRegistry
@@ -41,6 +41,8 @@ from apps.worker.helpers import (
     OutputParser,
     QualityResult,
 )
+
+from apps.api.llm.exceptions import LLMRateLimitError, LLMTimeoutError
 
 from .base import ActivityError, BaseActivity, load_step_data
 
@@ -218,6 +220,12 @@ class Step5PrimaryCollection(BaseActivity):
 
             except ActivityError:
                 raise
+            except (LLMRateLimitError, LLMTimeoutError) as e:
+                raise ActivityError(
+                    f"LLM temporary failure: {e}",
+                    category=ErrorCategory.RETRYABLE,
+                    details={"llm_error": str(e)},
+                ) from e
             except Exception as e:
                 # フォールバック禁止: エラーを投げる
                 raise ActivityError(
@@ -359,11 +367,27 @@ class Step5PrimaryCollection(BaseActivity):
             phase = self._classify_phase(s)
             freshness = self._calculate_freshness_score(pub_date)
 
+            # Normalize source_type to match schema Literal values
+            raw_type = s.get("source_type", "other")
+            source_type_map = {
+                "government": "government_report",
+                "academic": "academic_paper",
+                "official": "official_document",
+                "statistics": "statistics",
+                "industry": "industry_report",
+                "news": "news_article",
+            }
+            normalized_type = source_type_map.get(raw_type, raw_type) if isinstance(raw_type, str) else "other"
+            # Final validation: ensure it's a valid Literal value
+            valid_types = {"academic_paper", "government_report", "statistics", "official_document", "industry_report", "news_article", "other"}
+            if normalized_type not in valid_types:
+                normalized_type = "other"
+
             primary_sources.append(
                 PrimarySource(
                     url=s.get("url", ""),
                     title=s.get("title", ""),
-                    source_type=s.get("source_type", "other"),
+                    source_type=normalized_type,
                     excerpt=s.get("excerpt", "")[:500] if s.get("excerpt") else "",
                     credibility_score=s.get("credibility_score", 0.5),
                     verified=s.get("verified", False),
@@ -402,6 +426,9 @@ class Step5PrimaryCollection(BaseActivity):
 
         activity.logger.info(f"Phase distribution: phase1={phase1_count}, phase2={phase2_count}, phase3={phase3_count}")
 
+        # Get model config for output metadata
+        llm_provider, llm_model = get_step_model_config(self.step_id, config)
+
         # Build structured output
         output = Step5Output(
             step=self.step_id,
@@ -418,6 +445,7 @@ class Step5PrimaryCollection(BaseActivity):
                 phase2_count=phase2_count,
                 phase3_count=phase3_count,
             ),
+            model_config_data={"platform": llm_provider, "model": llm_model or ""},
             phase_specific_data=phase_specific_data,
             knowledge_gaps_filled=knowledge_gaps,
             section_source_mapping=section_mapping,
@@ -597,7 +625,7 @@ class Step5PrimaryCollection(BaseActivity):
             high_trust_count = sum(
                 1
                 for s in sources
-                if s.get("source_type") in ("government", "academic", "official")
+                if s.get("source_type") in ("government", "academic", "official", "government_report", "academic_paper", "official_document")
                 or any(domain in s.get("url", "") for domain in [".go.jp", ".ac.jp", ".gov", ".edu", ".who.int", ".oecd.org"])
             )
             high_trust_ratio = high_trust_count / len(sources)
@@ -623,8 +651,8 @@ class Step5PrimaryCollection(BaseActivity):
         Phase 2 (理解納得): 解決策、方法、効果
         Phase 3 (行動決定): 成功事例、導入実績、費用対効果
         """
-        excerpt = source.get("excerpt", "").lower()
-        title = source.get("title", "").lower()
+        excerpt = (source.get("excerpt") or "").lower()
+        title = (source.get("title") or "").lower()
         combined_text = f"{title} {excerpt}"
 
         # Phase 1 indicators (不安喚起)
