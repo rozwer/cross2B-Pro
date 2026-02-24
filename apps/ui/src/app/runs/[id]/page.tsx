@@ -408,14 +408,23 @@ export default function RunDetailPage({
                 続行
               </button>
             )}
-            {/* 画像生成待ち（step10完了後）の場合は画像生成ボタン */}
+            {/* 画像生成待ち（step10完了後）の場合は画像生成ボタン＋スキップボタン */}
             {isWaitingForImageGeneration() ? (
-              <button
-                onClick={() => setShowImageGenDialog(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-              >
-                画像を生成
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleImageGenSkip}
+                  disabled={imageGenLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
+                >
+                  スキップ
+                </button>
+                <button
+                  onClick={() => setShowImageGenDialog(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                >
+                  画像を生成
+                </button>
+              </div>
             ) : isWaitingForStep3Review() ? (
               /* Step3レビュー待ちの場合はレビューボタン */
               <div className="flex items-center gap-2">
