@@ -19,7 +19,7 @@ const STATUS_FILTERS: Array<{ value: RunStatus | "all"; label: string; color: st
 ];
 
 // Statuses that can be deleted (all statuses are deletable)
-const DELETABLE_STATUSES: RunStatus[] = ["pending", "running", "waiting_approval", "waiting_image_input", "completed", "failed", "cancelled"];
+const DELETABLE_STATUSES: RunStatus[] = ["pending", "running", "waiting_approval", "waiting_step1_approval", "waiting_image_input", "completed", "failed", "cancelled"];
 
 // Polling interval in milliseconds (10 seconds)
 const POLLING_INTERVAL = 10000;

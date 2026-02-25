@@ -384,6 +384,44 @@ async def create_run(
         raise HTTPException(status_code=500, detail="Failed to create run") from e
 
 
+@router.get("/stats")
+async def get_run_stats(
+    user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Get run count statistics grouped by status."""
+    tenant_id = user.tenant_id
+    db_manager = _get_tenant_db_manager()
+
+    try:
+        async with db_manager.get_session(tenant_id) as session:
+            result = await session.execute(
+                select(Run.status, func.count())
+                .where(Run.tenant_id == tenant_id)
+                .group_by(Run.status)
+            )
+            counts = dict(result.all())
+            total = sum(counts.values())
+
+            return {
+                "total": total,
+                "completed": counts.get("completed", 0),
+                "running": counts.get("running", 0),
+                "failed": counts.get("failed", 0),
+                "waiting": counts.get("waiting_approval", 0)
+                    + counts.get("waiting_step1_approval", 0)
+                    + counts.get("waiting_image_input", 0),
+                "pending": counts.get("pending", 0),
+                "cancelled": counts.get("cancelled", 0),
+            }
+
+    except TenantIdValidationError as e:
+        logger.error(f"Invalid tenant_id: {e}")
+        raise HTTPException(status_code=400, detail="Invalid tenant ID") from e
+    except Exception as e:
+        logger.error(f"Failed to get run stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get run stats") from e
+
+
 @router.get("")
 async def list_runs(
     status: str | None = None,

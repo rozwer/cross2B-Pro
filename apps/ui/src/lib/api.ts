@@ -50,12 +50,11 @@ import type {
   ArticleDetail,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://127.0.0.1:28000";
-
-// Warn if localhost is used in production (likely misconfiguration)
-if (typeof window !== "undefined" && process.env.NODE_ENV === "production" && API_BASE.includes("localhost")) {
-  console.warn("WARNING: Using localhost API in production mode - check NEXT_PUBLIC_API_URL");
-}
+// Browser: use relative paths (proxied through Next.js rewrite → backend)
+// Server:  use direct backend URL (internal Docker network or localhost)
+const API_BASE = typeof window !== "undefined"
+  ? ""
+  : (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL?.trim() || "http://127.0.0.1:28000");
 
 // 開発環境用の固定テナントID（本番では認証から取得）
 const DEV_TENANT_ID = "dev-tenant-001";
@@ -116,9 +115,10 @@ class ApiClient {
     } catch (error) {
       // ネットワークエラー（接続拒否、タイムアウト等）
       const cause = error instanceof Error ? error : undefined;
+      const displayUrl = this.baseUrl || window?.location?.origin || "(proxy)";
       throw new ApiConnectionError(
-        `APIサーバーに接続できません。サーバーが起動していることを確認してください。(${this.baseUrl})`,
-        this.baseUrl,
+        `APIサーバーに接続できません。サーバーが起動していることを確認してください。(${displayUrl})`,
+        displayUrl,
         cause
       );
     }
@@ -194,6 +194,16 @@ class ApiClient {
         limit,
         has_more,
       };
+    },
+
+    stats: async (): Promise<{
+      total: number;
+      completed: number;
+      running: number;
+      failed: number;
+      waiting: number;
+    }> => {
+      return this.request(`/api/runs/stats`);
     },
 
     get: async (id: string): Promise<Run> => {

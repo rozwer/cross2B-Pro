@@ -1,22 +1,20 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Activity, CheckCircle, Clock, XCircle, TrendingUp } from "lucide-react";
 import { RunList } from "@/components/runs/RunList";
-import { useRuns } from "@/hooks/useRuns";
+import { api } from "@/lib/api";
 
 export default function Home() {
-  const { runs, loading } = useRuns();
+  const [stats, setStats] = useState({ total: 0, completed: 0, running: 0, waiting: 0, failed: 0 });
+  const [loading, setLoading] = useState(true);
 
-  // Calculate statistics
-  const stats = {
-    total: runs.length,
-    completed: runs.filter((r) => r.status === "completed").length,
-    running: runs.filter((r) => r.status === "running").length,
-    waiting: runs.filter(
-      (r) => r.status === "waiting_approval" || r.status === "waiting_image_input"
-    ).length,
-    failed: runs.filter((r) => r.status === "failed").length,
-  };
+  useEffect(() => {
+    api.runs.stats()
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const successRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 

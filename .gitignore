@@ -102,5 +102,6 @@ blog.System_prompts/
 # ── Tests ────────────────────────────────────
 tests/
 
-# ── Scripts (dev-only, delivery copies in 納品用_scripts/) ──
-scripts/
+# ── Scripts ──────────────────────────────────
+# DB初期化・シード・テストスクリプトは追跡対象
+# 個人バックアップのみ除外（*.backup は上のセクションで除外済み）
