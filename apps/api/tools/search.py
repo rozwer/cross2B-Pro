@@ -88,6 +88,12 @@ def _build_keyword_ideas_request(client: Any, customer_id: str, keyword: str) ->
     return request
 
 
+def _map_competition(comp_name: str) -> str:
+    """Map Google Ads competition enum name to low/medium/high."""
+    mapping = {"LOW": "low", "MEDIUM": "medium", "HIGH": "high"}
+    return mapping.get(comp_name, "medium")
+
+
 @ToolRegistry.register(
     tool_id="serp_fetch",
     description="SERP（検索結果ページ）から上位N件のURLを取得",
@@ -324,11 +330,19 @@ class SearchVolumeTool(ToolInterface):
             # 簡易的な推定（キーワード長に基づく擬似値）
             volume = max(100, 10000 - len(keyword) * 500)
 
-        logger.info(f"SearchVolume (MOCK): {keyword} -> {volume}")
+        # Derive mock competition from volume
+        if volume >= 5000:
+            competition = "high"
+        elif volume >= 1000:
+            competition = "medium"
+        else:
+            competition = "low"
+
+        logger.info(f"SearchVolume (MOCK): {keyword} -> {volume} (competition={competition})")
 
         return ToolResult(
             success=True,
-            data={"keyword": keyword, "volume": volume, "source": "mock"},
+            data={"keyword": keyword, "volume": volume, "competition": competition, "source": "mock"},
             is_mock=True,
         )
 
@@ -352,19 +366,23 @@ class SearchVolumeTool(ToolInterface):
 
             # Find exact keyword match or take the first result
             volume = 0
+            competition = "medium"
             for idea in response.results:
                 if idea.text.lower() == keyword.lower():
                     volume = idea.keyword_idea_metrics.avg_monthly_searches
+                    competition = _map_competition(idea.keyword_idea_metrics.competition.name)
                     break
             else:
                 if response.results:
-                    volume = response.results[0].keyword_idea_metrics.avg_monthly_searches
+                    first = response.results[0]
+                    volume = first.keyword_idea_metrics.avg_monthly_searches
+                    competition = _map_competition(first.keyword_idea_metrics.competition.name)
 
-            logger.info(f"SearchVolume (REAL): {keyword} -> {volume}")
+            logger.info(f"SearchVolume (REAL): {keyword} -> {volume} (competition={competition})")
 
             return ToolResult(
                 success=True,
-                data={"keyword": keyword, "volume": volume, "source": "google_ads"},
+                data={"keyword": keyword, "volume": volume, "competition": competition, "source": "google_ads"},
                 is_mock=False,
             )
 
