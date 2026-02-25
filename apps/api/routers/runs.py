@@ -224,6 +224,9 @@ async def create_run(
     competitor_urls = input_data.get("competitor_urls")
     additional_requirements = input_data.get("additional_requirements")
 
+    # Extract keyword metadata from hearing input for workflow consumption
+    keyword_data = input_data.get("data", {}).get("keyword", {})
+
     # Build workflow config
     workflow_config = {
         "model_config": data.model_config_data.model_dump(),
@@ -236,6 +239,10 @@ async def create_run(
         "target_audience": target_audience,
         "competitor_urls": competitor_urls,
         "additional_requirements": additional_requirements,
+        # Google Ads keyword metadata (previously missing → always None in step0)
+        "search_volume": keyword_data.get("monthly_search_volume"),
+        "competition": keyword_data.get("competition_level"),
+        "related_keywords": keyword_data.get("related_keywords", []),
     }
 
     db_manager = _get_tenant_db_manager()
