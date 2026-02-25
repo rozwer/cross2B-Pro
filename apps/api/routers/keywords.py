@@ -7,12 +7,14 @@ import logging
 import os
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from apps.api.auth import get_current_user
 from apps.api.auth.schemas import AuthUser
 from apps.api.llm import GeminiClient, LLMError, sanitize_user_input
 from apps.worker.helpers import OutputParser
+from pydantic import BaseModel
+
 from apps.api.schemas.article_hearing import (
     CompetitionLevel,
     KeywordSuggestion,
@@ -21,6 +23,14 @@ from apps.api.schemas.article_hearing import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class KeywordVolumeResponse(BaseModel):
+    """Response for keyword volume lookup."""
+    keyword: str
+    volume: int
+    competition: str  # "high" | "medium" | "low"
+    source: str  # "google_ads" | "mock"
 
 router = APIRouter(prefix="/api/keywords", tags=["keywords"])
 
@@ -219,3 +229,29 @@ async def suggest_keywords(
             status_code=500,
             detail="Failed to generate keyword suggestions",
         ) from e
+
+
+@router.get("/volume", response_model=KeywordVolumeResponse)
+async def get_keyword_volume(
+    keyword: str = Query(..., min_length=1, description="検索キーワード"),
+    user: AuthUser = Depends(get_current_user),
+) -> KeywordVolumeResponse:
+    """Get search volume and competition for a keyword from Google Ads."""
+    from apps.api.tools.search import SearchVolumeTool
+
+    tool = SearchVolumeTool()
+    result = await tool.execute(keyword=keyword)
+
+    if not result.success:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to fetch keyword volume: {result.error_message}",
+        )
+
+    data = result.data or {}
+    return KeywordVolumeResponse(
+        keyword=data.get("keyword", keyword),
+        volume=data.get("volume", 0),
+        competition=data.get("competition", "medium"),
+        source=data.get("source", "unknown"),
+    )
