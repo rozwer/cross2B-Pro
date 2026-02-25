@@ -21,6 +21,7 @@ import type {
   GeneratedImage,
   KeywordSuggestionRequest,
   KeywordSuggestionResponse,
+  KeywordVolumeResponse,
   HearingTemplate,
   HearingTemplateCreate,
   HearingTemplateUpdate,
@@ -862,6 +863,15 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify(request),
       });
+    },
+
+    /**
+     * キーワードの検索ボリュームを取得
+     */
+    volume: async (keyword: string): Promise<KeywordVolumeResponse> => {
+      return this.request<KeywordVolumeResponse>(
+        `/api/keywords/volume?keyword=${encodeURIComponent(keyword)}`
+      );
     },
   };
 

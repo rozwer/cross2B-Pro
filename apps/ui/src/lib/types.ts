@@ -165,6 +165,13 @@ export interface KeywordSuggestionResponse {
   generated_at: string;
 }
 
+export interface KeywordVolumeResponse {
+  keyword: string;
+  volume: number;
+  competition: CompetitionLevel;
+  source: string;
+}
+
 // =============================================================================
 // Content Suggestion Types
 // =============================================================================
