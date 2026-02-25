@@ -72,6 +72,7 @@ lefthook.yml
 
 # ── Screenshots (local only) ───────────────────
 *.png
+e2e-screenshots/
 
 # ── Firebase ───────────────────────────────────
 firebase-debug.log
@@ -97,6 +98,7 @@ test_steps_demo.py
 docs/
 仕様書/
 blog.System_prompts/
+SEO_SCORE_IMPROVEMENT_REPORT.md
 
 # ── Tests ────────────────────────────────────
 tests/
