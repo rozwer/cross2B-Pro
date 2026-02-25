@@ -316,7 +316,8 @@ export function RunCreateWizard({
   }, [formData.keyword.theme_topics, formData.business.description, formData.business.target_audience]);
 
   // Select a keyword from suggestions
-  const handleSelectKeyword = useCallback((suggestion: KeywordSuggestion) => {
+  const handleSelectKeyword = useCallback(async (suggestion: KeywordSuggestion) => {
+    // Immediately set selection with LLM estimates
     updateFormData("keyword", {
       selected_keyword: {
         keyword: suggestion.keyword,
@@ -325,6 +326,23 @@ export function RunCreateWizard({
         relevance_score: suggestion.relevance_score,
       },
     });
+
+    // Background: fetch real volume from Google Ads
+    try {
+      const result = await api.keywords.volume(suggestion.keyword);
+      // Update with real data (overwrite LLM estimates)
+      updateFormData("keyword", {
+        selected_keyword: {
+          keyword: suggestion.keyword,
+          estimated_volume: String(result.volume),
+          estimated_competition: result.competition,
+          relevance_score: suggestion.relevance_score,
+        },
+      });
+    } catch (error) {
+      // Silent failure: keep LLM estimates
+      console.warn("Failed to fetch real volume for selected keyword:", error);
+    }
   }, [updateFormData]);
 
   // Handle template selection
