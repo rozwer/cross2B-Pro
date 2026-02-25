@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vpzY1VA1dPrn1Mo3GKw8RJk8S5CuyBDtQO3iDP66dqxogcp4fg8ScJjIukRh581
+\restrict 2cnEZMEdTPWUKOEByLC1enO4QLfeUfNf6bmutiNdWrCltWlP8SWUu5KkwbWkOdN
 
 -- Dumped from database version 16.11
 -- Dumped by pg_dump version 16.11
@@ -17,6 +17,17 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Data for Name: api_settings; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.api_settings (id, tenant_id, service, api_key_encrypted, default_model, config, is_active, verified_at, created_at, updated_at) FROM stdin;
+1	dev-tenant-001	serp	f9gWpZgwW+Oz6l3aMh/q9k096OJ9dj3a0ibobsvyr55LI8YHYxmFeycasGUwqgLnnv/t48bKj61fX/647zpAheURARCJuyrTNcBKL6Z0FGZKBcGK3YSRoi/+WUg=	\N	\N	t	2026-01-20 03:25:20.072392+00	2026-01-20 03:24:46.133581+00	2026-01-20 03:25:20.073055+00
+3	dev-tenant-001	gemini	UU97qGbvIGPylMmoPpd1AHzO/kzOuiScMoUpxenLl4ESaNBhNfpypgkXVorH2TnuGoKvu0sPrGpqaTV2m2ehGBURxg==	\N	\N	t	2026-02-24 02:36:45.914821+00	2026-02-24 02:32:27.980127+00	2026-02-24 02:36:45.915783+00
+2	dev-tenant-001	github	K+9406RcZksJD73U0Yu7gOGSSEJrZNc/se2rwop1kzSOv5iCJhzg9LXTRFs6yJ6DzwmijXMPawFbX5mkXUmqrfc/DVE=	\N	\N	t	2026-02-24 13:53:12.374986+00	2026-01-21 11:09:19.981944+00	2026-02-24 13:53:12.375374+00
+\.
+
 
 --
 -- Data for Name: hearing_templates; Type: TABLE DATA; Schema: public; Owner: -
@@ -102,7 +113,6 @@ COPY public.llm_models (id, provider_id, model_name, model_class, cost_per_1k_in
 7	anthropic	claude-opus-4-6	pro	\N	\N	t
 8	gemini	gemini-2.5-flash	standard	\N	\N	t
 9	gemini	gemini-2.5-pro	pro	\N	\N	t
-10	openai	gpt-5.2	standard	\N	\N	t
 11	openai	gpt-5.2-pro	pro	\N	\N	t
 12	openai	gpt-5.1	standard	\N	\N	t
 13	anthropic	claude-sonnet-4-5-20250929	standard	\N	\N	t
@@ -113,7 +123,40 @@ COPY public.llm_models (id, provider_id, model_name, model_class, cost_per_1k_in
 18	openai	gpt-5.1-codex-mini	standard	\N	\N	t
 19	openai	gpt-5-codex	pro	\N	\N	t
 20	anthropic	claude-haiku-4-5	standard	\N	\N	t
+10	openai	gpt-5.2	standard	\N	\N	t
 \.
+
+
+--
+-- Data for Name: prompts; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.prompts (id, step_name, version, content, variables, is_active, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: step_llm_defaults; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.step_llm_defaults (step, provider_id, model_class) FROM stdin;
+\.
+
+
+--
+-- Data for Name: tenants; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.tenants (id, name, database_url, is_active, created_at, updated_at) FROM stdin;
+dev-tenant-001	Development Tenant	postgresql+asyncpg://seo:seo_password@postgres:5432/seo_articles	t	2026-02-06 07:51:22.546823+00	2026-02-06 07:51:22.546823+00
+\.
+
+
+--
+-- Name: api_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.api_settings_id_seq', 3, true);
 
 
 --
@@ -127,12 +170,12 @@ SELECT pg_catalog.setval('public.help_contents_id_seq', 42, true);
 -- Name: llm_models_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.llm_models_id_seq', 17, true);
+SELECT pg_catalog.setval('public.llm_models_id_seq', 21, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vpzY1VA1dPrn1Mo3GKw8RJk8S5CuyBDtQO3iDP66dqxogcp4fg8ScJjIukRh581
+\unrestrict 2cnEZMEdTPWUKOEByLC1enO4QLfeUfNf6bmutiNdWrCltWlP8SWUu5KkwbWkOdN
 

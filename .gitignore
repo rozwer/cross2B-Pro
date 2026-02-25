@@ -41,12 +41,11 @@ Thumbs.db
 .git-backups/
 
 # ── AI / Dev tool configs ──────────────────────
-# Claude Code
+# Claude Code (CLAUDE.md は開発ルール・セットアップ手順を含むため追跡対象)
 .claude/
 .claude-code-harness/
 .claude-code-harness-version
 .claude-making/
-CLAUDE.md
 
 # Codex CLI
 .codex/

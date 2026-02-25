@@ -66,14 +66,21 @@ if [ "$1" = "--reset" ]; then
 fi
 
 # ── Step 1: Apply schema ────────────────────────
-echo "[1/2] Applying schema..."
+echo "[1/3] Applying schema..."
 docker exec -i "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$SCHEMA_FILE" > /dev/null 2>&1
 echo "  Schema applied successfully."
 
 # ── Step 2: Load seed data ──────────────────────
-echo "[2/2] Loading seed data..."
+echo "[2/3] Loading seed data..."
 docker exec -i "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$SEED_FILE" > /dev/null 2>&1
 echo "  Seed data loaded successfully."
+
+# ── Step 3: Reset sequences to match seed data ──
+echo "[3/3] Resetting sequences..."
+docker exec "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -c "
+    SELECT setval('llm_models_id_seq', COALESCE((SELECT MAX(id) FROM llm_models), 0));
+" > /dev/null 2>&1
+echo "  Sequences reset successfully."
 
 # ── Verify ──────────────────────────────────────
 echo ""
