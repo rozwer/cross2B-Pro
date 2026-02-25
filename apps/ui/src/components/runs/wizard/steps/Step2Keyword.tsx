@@ -53,6 +53,31 @@ export function Step2Keyword({
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
   const [relatedSuggestions, setRelatedSuggestions] = useState<RelatedKeywordSuggestionItem[]>([]);
   const [relatedError, setRelatedError] = useState<string | null>(null);
+  const [isLoadingVolume, setIsLoadingVolume] = useState(false);
+  const [volumeError, setVolumeError] = useState<string | null>(null);
+  const [volumeSource, setVolumeSource] = useState<string | null>(null);
+
+  const handleFetchVolume = async () => {
+    const keyword = data.main_keyword?.trim();
+    if (!keyword || keyword.length < 2) return;
+
+    setIsLoadingVolume(true);
+    setVolumeError(null);
+
+    try {
+      const result = await api.keywords.volume(keyword);
+      onChange({
+        monthly_search_volume: String(result.volume),
+        competition_level: result.competition,
+      });
+      setVolumeSource(result.source);
+    } catch (error) {
+      setVolumeError("ボリュームの取得に失敗しました。手動入力してください。");
+      console.error("Failed to fetch keyword volume:", error);
+    } finally {
+      setIsLoadingVolume(false);
+    }
+  };
 
   const mainKeyword = data.main_keyword || data.selected_keyword?.keyword || "";
   const canSuggestRelated = mainKeyword.length >= 2 && businessDescription.length >= 10;
@@ -186,52 +211,86 @@ export function Step2Keyword({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="monthly_search_volume"
-                className="block text-sm font-medium text-gray-700"
-              >
-                月間検索ボリューム
-              </label>
-              <input
-                type="text"
-                id="monthly_search_volume"
-                value={data.monthly_search_volume || ""}
-                onChange={(e) =>
-                  onChange({ monthly_search_volume: e.target.value })
-                }
-                placeholder="例: 100-200"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                競合性
-              </label>
-              <div className="mt-1 flex gap-2">
-                {(["high", "medium", "low"] as CompetitionLevel[]).map(
-                  (level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => onChange({ competition_level: level })}
-                      className={`
-                        px-3 py-1.5 text-sm rounded-md border
-                        ${
-                          data.competition_level === level
-                            ? "border-primary-500 bg-primary-50 text-primary-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                        }
-                      `}
-                    >
-                      {COMPETITION_LABELS[level]}
-                    </button>
-                  )
-                )}
+          <div className="space-y-3">
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <label
+                  htmlFor="monthly_search_volume"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  月間検索ボリューム
+                </label>
+                <input
+                  type="text"
+                  id="monthly_search_volume"
+                  value={data.monthly_search_volume || ""}
+                  onChange={(e) =>
+                    onChange({ monthly_search_volume: e.target.value })
+                  }
+                  placeholder="例: 1600"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  競合性
+                </label>
+                <div className="mt-1 flex gap-2">
+                  {(["high", "medium", "low"] as CompetitionLevel[]).map(
+                    (level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => onChange({ competition_level: level })}
+                        className={`
+                          px-3 py-1.5 text-sm rounded-md border
+                          ${
+                            data.competition_level === level
+                              ? "border-primary-500 bg-primary-50 text-primary-700"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }
+                        `}
+                      >
+                        {COMPETITION_LABELS[level]}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleFetchVolume}
+                disabled={isLoadingVolume || !data.main_keyword || data.main_keyword.trim().length < 2}
+                className={`
+                  inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border whitespace-nowrap
+                  ${
+                    isLoadingVolume || !data.main_keyword || data.main_keyword.trim().length < 2
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                      : "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                  }
+                `}
+              >
+                {isLoadingVolume ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    取得中...
+                  </>
+                ) : (
+                  "ボリュームを取得"
+                )}
+              </button>
             </div>
+            {volumeSource && (
+              <p className="text-xs text-green-600">
+                Google Ads から取得済み
+              </p>
+            )}
+            {volumeError && (
+              <p className="text-xs text-red-600">{volumeError}</p>
+            )}
           </div>
         </>
       )}
