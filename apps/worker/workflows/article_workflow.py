@@ -278,7 +278,10 @@ class ArticleWorkflow:
     async def step11_skip(self) -> None:
         """Skip image generation entirely."""
         # Phase validation: can skip before starting or in early phases
-        if self.step11_phase not in ("idle", "waiting", "waiting_11A", "11A", "11B", "waiting_11B"):
+        if self.step11_phase not in (
+            "idle", "waiting", "waiting_11A", "11A", "11B", "waiting_11B",
+            "waiting_11C", "waiting_11D", "waiting_11E",
+        ):
             workflow.logger.warning(f"step11_skip ignored: wrong phase {self.step11_phase}")
             return
         self.step11_phase = "skipped"
@@ -1129,9 +1132,14 @@ class ArticleWorkflow:
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_position_review")
 
             await workflow.wait_condition(
-                lambda: self.step11_positions_confirmed_seq > self.step11_positions_confirmed_seen,
+                lambda: self.step11_positions_confirmed_seq > self.step11_positions_confirmed_seen
+                or self.step11_phase == "skipped",
                 timeout=timedelta(days=7),
             )
+            if self.step11_phase == "skipped":
+                self.current_step = "step11"
+                skip_args = {**activity_args, "config": {**config, "step11_enabled": False}}
+                return await self._execute_activity("step11_mark_skipped", skip_args, "step11")
             self.step11_positions_confirmed_seen = self.step11_positions_confirmed_seq
             confirmed_payload = self.step11_positions_confirmed or {}
 
@@ -1178,9 +1186,14 @@ class ArticleWorkflow:
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_instructions")
 
             await workflow.wait_condition(
-                lambda: self.step11_instructions_seq > self.step11_instructions_seen,
+                lambda: self.step11_instructions_seq > self.step11_instructions_seen
+                or self.step11_phase == "skipped",
                 timeout=timedelta(days=7),
             )
+            if self.step11_phase == "skipped":
+                self.current_step = "step11"
+                skip_args = {**activity_args, "config": {**config, "step11_enabled": False}}
+                return await self._execute_activity("step11_mark_skipped", skip_args, "step11")
             self.step11_instructions_seen = self.step11_instructions_seq
 
             # ========== Phase 11D: Generate images and wait for review ==========
@@ -1215,9 +1228,14 @@ class ArticleWorkflow:
                 await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_image_review")
 
                 await workflow.wait_condition(
-                    lambda: self.step11_image_reviews_seq > self.step11_image_reviews_seen,
+                    lambda: self.step11_image_reviews_seq > self.step11_image_reviews_seen
+                    or self.step11_phase == "skipped",
                     timeout=timedelta(days=7),
                 )
+                if self.step11_phase == "skipped":
+                    self.current_step = "step11"
+                    skip_args = {**activity_args, "config": {**config, "step11_enabled": False}}
+                    return await self._execute_activity("step11_mark_skipped", skip_args, "step11")
                 self.step11_image_reviews_seen = self.step11_image_reviews_seq
 
                 # Process retries with index bounds validation
@@ -1314,9 +1332,14 @@ class ArticleWorkflow:
             await self._sync_run_status(tenant_id, run_id, "waiting_image_input", "step11_preview")
 
             await workflow.wait_condition(
-                lambda: self.step11_finalized_seq > self.step11_finalized_seen,
+                lambda: self.step11_finalized_seq > self.step11_finalized_seen
+                or self.step11_phase == "skipped",
                 timeout=timedelta(days=7),
             )
+            if self.step11_phase == "skipped":
+                self.current_step = "step11"
+                skip_args = {**activity_args, "config": {**config, "step11_enabled": False}}
+                return await self._execute_activity("step11_mark_skipped", skip_args, "step11")
             self.step11_finalized_seen = self.step11_finalized_seq
 
             # Check if restart requested

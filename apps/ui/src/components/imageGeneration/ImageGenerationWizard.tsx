@@ -133,7 +133,12 @@ export function ImageGenerationWizard({
           skipped: "skipped",
         };
 
-        const uiPhase = phaseMap[data.phase] || currentPhase || "waiting_11A";
+        let uiPhase = phaseMap[data.phase] || currentPhase || "waiting_11A";
+
+        // completed Runでスキップ済みの場合は設定画面にリセット（画像追加フロー開始）
+        if (isCompletedRun && (uiPhase === "skipped" || uiPhase === "completed")) {
+          uiPhase = "waiting_11A";
+        }
 
         setState((prev) => ({
           ...prev,

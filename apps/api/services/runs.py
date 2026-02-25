@@ -569,7 +569,16 @@ async def sync_run_with_temporal(
 
         # Update status based on Temporal state
         if workflow_execution_status == WorkflowExecutionStatus.COMPLETED:
-            if run.status != RunStatus.COMPLETED.value:
+            # Before marking as completed, check if ImageAdditionWorkflow is running
+            image_wf_running = await _check_image_addition_workflow(
+                temporal_client, str(run.id), WorkflowExecutionStatus,
+            )
+            if image_wf_running:
+                # ImageAdditionWorkflow is active — use its state instead
+                db_updated = await _sync_from_image_addition_workflow(
+                    run, temporal_client, str(run.id), now,
+                )
+            elif run.status != RunStatus.COMPLETED.value:
                 run.status = RunStatus.COMPLETED.value
                 run.completed_at = now
                 run.updated_at = now
@@ -604,6 +613,67 @@ async def sync_run_with_temporal(
     except Exception as e:
         # Temporal query failed - workflow may not exist or be terminated
         logger.debug(f"Failed to sync with Temporal for run {run.id}: {e}")
+        return False
+
+
+async def _check_image_addition_workflow(
+    temporal_client: Any,
+    run_id: str,
+    wf_status_enum: Any,
+) -> bool:
+    """Check if an ImageAdditionWorkflow is running for this run."""
+    try:
+        image_wf_handle = temporal_client.get_workflow_handle(f"image-addition-{run_id}")
+        image_wf_desc = await image_wf_handle.describe()
+        return image_wf_desc.status == wf_status_enum.RUNNING
+    except Exception:
+        return False
+
+
+async def _sync_from_image_addition_workflow(
+    run: Run,
+    temporal_client: Any,
+    run_id: str,
+    now: Any,
+) -> bool:
+    """Sync run state from the active ImageAdditionWorkflow."""
+    try:
+        image_wf_handle = temporal_client.get_workflow_handle(f"image-addition-{run_id}")
+        image_wf_status = await image_wf_handle.query("get_status")
+        image_current_step = image_wf_status.get("current_step", "")
+
+        db_updated = False
+        if image_current_step and run.current_step != image_current_step:
+            run.current_step = image_current_step
+            run.updated_at = now
+            db_updated = True
+
+        # Clear stale step11_state.phase so _handle_running_workflow doesn't
+        # block the status update (original "skipped"/"completed" is from
+        # ArticleWorkflow, not the active ImageAdditionWorkflow).
+        if run.step11_state and isinstance(run.step11_state, dict):
+            old_phase = run.step11_state.get("phase")
+            if old_phase in ("completed", "skipped"):
+                run.step11_state["phase"] = "idle"
+                run.updated_at = now
+                db_updated = True
+
+        db_updated |= _handle_running_workflow(
+            run=run,
+            current_step=image_current_step,
+            rejected=False,
+            rejection_reason=None,
+            now=now,
+        )
+
+        if db_updated:
+            logger.info(
+                f"Run {run_id} synced from ImageAdditionWorkflow: "
+                f"step={image_current_step}, status={run.status}"
+            )
+        return db_updated
+    except Exception as e:
+        logger.debug(f"Failed to query ImageAdditionWorkflow for run {run_id}: {e}")
         return False
 
 

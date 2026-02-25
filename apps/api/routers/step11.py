@@ -63,6 +63,31 @@ async def get_temporal_client() -> Any:
     return _temporal_client
 
 
+async def _get_step11_workflow_handle(temporal_client: Any, run_id: str) -> Any:
+    """Get the correct Temporal workflow handle for step11 signals.
+
+    ImageAdditionWorkflow (image-addition-{run_id}) runs separately from
+    ArticleWorkflow ({run_id}).  When the user triggers step11 actions on a
+    completed run, signals must reach the ImageAdditionWorkflow.
+
+    Strategy: try ImageAdditionWorkflow first; fall back to ArticleWorkflow.
+    """
+    image_wf_id = f"image-addition-{run_id}"
+    try:
+        handle = temporal_client.get_workflow_handle(image_wf_id)
+        desc = await handle.describe()
+        from temporalio.client import WorkflowExecutionStatus
+
+        if desc.status == WorkflowExecutionStatus.RUNNING:
+            logger.debug(f"Using ImageAdditionWorkflow handle for run {run_id}")
+            return handle
+    except Exception:
+        pass  # workflow doesn't exist or query failed
+
+    logger.debug(f"Using ArticleWorkflow handle for run {run_id}")
+    return temporal_client.get_workflow_handle(run_id)
+
+
 # WebSocket manager（lazy initialization）
 _ws_manager: Any = None
 
@@ -829,7 +854,7 @@ async def submit_settings(
     # Send Temporal signal to start step11 workflow
     try:
         temporal_client = await get_temporal_client()
-        workflow_handle = temporal_client.get_workflow_handle(run_id)
+        workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
         signal_payload = {
             "image_count": data.image_count,
             "position_request": data.position_request or "",
@@ -854,17 +879,65 @@ async def get_state(
     run_id: str,
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Step11の現在の状態を取得（ウィザード復元用）"""
+    """Step11の現在の状態を取得（ウィザード復元用）
+
+    ImageAdditionWorkflowが進行中の場合、run.current_stepから
+    実際のフェーズを推定し、MinIOからデータを補完する。
+    """
     run, state = await get_run_and_state(run_id, user)
 
+    # ImageAdditionWorkflowの進行状況をcurrent_stepから推定
+    _STEP_TO_PHASE: dict[str, str] = {
+        "step11_analyzing": "11B_analyzing",
+        "step11_position_review": "11B",
+        "step11_image_instructions": "11C",
+        "step11_generating": "11D_generating",
+        "step11_image_review": "11D",
+        "step11_inserting": "11E_inserting",
+        "step11_preview": "11E",
+    }
+    effective_phase = state.phase
+    if run.current_step in _STEP_TO_PHASE:
+        effective_phase = _STEP_TO_PHASE[run.current_step]
+
+    # フェーズが進行しているのにpositionsが空の場合、MinIOから補完
+    positions = state.positions
+    sections = state.sections
+    analysis_summary = state.analysis_summary
+    if effective_phase in ("11B", "11C", "11D", "11D_generating", "11E", "11E_inserting") and not positions:
+        try:
+            store = get_artifact_store()
+            pos_data = await store.get_by_path(run.tenant_id, str(run.id), "step11", "positions.json")
+            if pos_data:
+                pos_obj = json.loads(pos_data.decode("utf-8"))
+                # positions.json wraps data under "position_analysis" key
+                pa = pos_obj.get("position_analysis", pos_obj)
+                positions = pa.get("positions", [])
+                sections = pa.get("sections", sections)
+                analysis_summary = pa.get("analysis_summary", analysis_summary)
+        except Exception as e:
+            logger.warning(f"Failed to load positions from MinIO: {e}", extra={"run_id": run_id})
+
+    # フェーズが11D以降でimagesが空の場合、MinIOから補完
+    images = [img.model_dump() if isinstance(img, GeneratedImage) else img for img in state.images]
+    if effective_phase in ("11D", "11E", "11E_inserting") and not images:
+        try:
+            store = get_artifact_store()
+            img_data = await store.get_by_path(run.tenant_id, str(run.id), "step11", "images.json")
+            if img_data:
+                img_obj = json.loads(img_data.decode("utf-8"))
+                images = img_obj.get("generated_images", [])
+        except Exception as e:
+            logger.warning(f"Failed to load images from MinIO: {e}", extra={"run_id": run_id})
+
     return {
-        "phase": state.phase,
+        "phase": effective_phase,
         "settings": state.settings.model_dump() if state.settings else None,
-        "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions],
+        "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in positions] if positions and isinstance(positions[0], ImagePosition) else positions,
         "instructions": [i.model_dump() if isinstance(i, ImageInstruction) else i for i in state.instructions],
-        "images": [img.model_dump() if isinstance(img, GeneratedImage) else img for img in state.images],
-        "sections": state.sections,
-        "analysis_summary": state.analysis_summary,
+        "images": images,
+        "sections": sections,
+        "analysis_summary": analysis_summary,
         "error": state.error,
     }
 
@@ -924,10 +997,26 @@ async def get_positions(
     except Exception as e:
         logger.warning(f"Failed to get article markdown for visual selection: {e}")
 
+    # MinIO fallback when state.positions is empty (ImageAdditionWorkflow writes to MinIO, not step11_state)
+    positions = state.positions
+    sections = state.sections
+    analysis_summary = state.analysis_summary
+    if not positions:
+        try:
+            pos_data = await store.get_by_path(tenant_id, run_id, "step11", "positions.json")
+            if pos_data:
+                pos_obj = json.loads(pos_data.decode("utf-8"))
+                pa = pos_obj.get("position_analysis", pos_obj)
+                positions = pa.get("positions", [])
+                sections = pa.get("sections", sections)
+                analysis_summary = pa.get("analysis_summary", analysis_summary)
+        except Exception as e:
+            logger.warning(f"Failed to load positions from MinIO: {e}", extra={"run_id": run_id})
+
     return {
-        "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in state.positions],
-        "sections": state.sections,
-        "analysis_summary": state.analysis_summary,
+        "positions": [p.model_dump() if isinstance(p, ImagePosition) else p for p in positions] if positions and isinstance(positions[0], ImagePosition) else (positions or []),
+        "sections": sections,
+        "analysis_summary": analysis_summary,
         "articles": articles_response,
         "article_markdown": article_markdown,
     }
@@ -998,7 +1087,7 @@ async def confirm_positions(
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
-            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
             payload = {
                 "approved": data.approved,
                 "reanalyze": data.reanalyze,
@@ -1071,7 +1160,7 @@ async def submit_instructions(
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
-            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
             payload = {
                 "instructions": [instr.model_dump() for instr in data.instructions],
             }
@@ -1282,7 +1371,7 @@ async def review_images(
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
-            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
             payload = {
                 "reviews": [r.model_dump() for r in data.reviews],
             }
@@ -1580,7 +1669,7 @@ async def finalize_images(
         workflow_already_completed = False
         try:
             temporal_client = await get_temporal_client()
-            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
             payload = {
                 "confirmed": True,
                 "image_count": len(images),
@@ -1743,7 +1832,7 @@ async def skip_image_generation(
         # Temporal signalを送信してWorkflowを再開
         try:
             temporal_client = await get_temporal_client()
-            workflow_handle = temporal_client.get_workflow_handle(run_id)
+            workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
             await workflow_handle.signal("step11_skip")
             logger.info("Temporal step11_skip signal sent", extra={"run_id": run_id})
         except Exception as sig_error:
@@ -1894,7 +1983,7 @@ async def start_image_generation(
             # Temporal signalを送信
             try:
                 temporal_client = await get_temporal_client()
-                workflow_handle = temporal_client.get_workflow_handle(run_id)
+                workflow_handle = await _get_step11_workflow_handle(temporal_client, run_id)
                 config = {
                     "enabled": data.enabled,
                     "step11_image_count": data.image_count,
@@ -2176,11 +2265,17 @@ async def add_images_to_completed_run(
             # ImageAdditionWorkflowを起動
             try:
                 temporal_client = await get_temporal_client()
-                workflow_config = {
+                workflow_config: dict[str, Any] = {
                     "image_count": data.image_count,
                     "position_request": data.position_request,
                     "article_markdown": article_markdown,
                 }
+                # Runの元のmodel_config/step_configsを引き継ぐ
+                if run.config:
+                    if run.config.get("model_config"):
+                        workflow_config["model_config"] = run.config["model_config"]
+                    if run.config.get("step_configs"):
+                        workflow_config["step_configs"] = run.config["step_configs"]
 
                 await temporal_client.start_workflow(
                     "ImageAdditionWorkflow",
