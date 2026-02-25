@@ -508,7 +508,7 @@ class Step10FinalOutput(BaseActivity):
         # Generate article variations (default: 4 articles)
         articles: list[ArticleVariation] = []
         previous_summaries: list[str] = []
-        total_tokens = 0
+        self._accumulated_tokens: list[tuple[int, int, int]] = []
         variations = ARTICLE_VARIATIONS if enable_4articles else ARTICLE_VARIATIONS[:1]
 
         if not enable_4articles:
@@ -570,8 +570,6 @@ class Step10FinalOutput(BaseActivity):
                     ctx=ctx,
                     cta_info_str=cta_info_str,
                 )
-                total_tokens += article.word_count  # Approximate
-
                 # Save checkpoint
                 await self.checkpoint.save(
                     ctx.tenant_id,
@@ -636,7 +634,11 @@ class Step10FinalOutput(BaseActivity):
             publication_checklist=checklist,
             publication_readiness=publication_readiness,
             model=llm_model or "",
-            token_usage={"input": 0, "output": total_tokens},
+            token_usage={
+                "input": sum(t[0] for t in self._accumulated_tokens),
+                "output": sum(t[1] for t in self._accumulated_tokens),
+                "thinking": sum(t[2] for t in self._accumulated_tokens),
+            },
             warnings=warnings,
         )
 
@@ -743,6 +745,11 @@ class Step10FinalOutput(BaseActivity):
                 system_prompt="あなたはSEO記事のバリエーション生成の専門家です。",
                 config=llm_config,
             )
+            self._accumulated_tokens.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(
                 f"LLM temporary failure: {e}",
@@ -859,6 +866,11 @@ class Step10FinalOutput(BaseActivity):
                 system_prompt="You are an HTML formatting expert.",
                 config=html_config,
             )
+            self._accumulated_tokens.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(
                 f"LLM temporary failure: {e}",
@@ -934,6 +946,11 @@ class Step10FinalOutput(BaseActivity):
                 system_prompt="あなたはSEOメタディスクリプション生成の専門家です。",
                 config=meta_config,
             )
+            self._accumulated_tokens.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
 
             meta_description = str(response.content).strip()
 
@@ -984,6 +1001,11 @@ class Step10FinalOutput(BaseActivity):
                 system_prompt="簡潔に要約してください。",
                 config=summary_config,
             )
+            self._accumulated_tokens.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(
                 f"LLM temporary failure: {e}",
@@ -1013,6 +1035,11 @@ class Step10FinalOutput(BaseActivity):
                 system_prompt="You are a publication checklist expert.",
                 config=checklist_config,
             )
+            self._accumulated_tokens.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
             return str(response.content)
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(

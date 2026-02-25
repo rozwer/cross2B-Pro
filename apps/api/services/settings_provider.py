@@ -169,11 +169,22 @@ class SettingsProvider:
                 logger.error(f"Failed to decrypt API key for {service}: {e}")
                 return None
 
+            config = dict(setting.config or {})
+            # Decrypt encrypted fields in Google Ads config
+            if service == "google_ads":
+                for secret_field in ("client_secret", "refresh_token"):
+                    if secret_field in config and config[secret_field]:
+                        try:
+                            config[secret_field] = decrypt(config[secret_field])
+                        except EncryptionError:
+                            logger.warning(f"Failed to decrypt {secret_field} in Google Ads config")
+                            config[secret_field] = ""
+
             return ServiceSettings(
                 service=service,
                 api_key=decrypted_key,
                 default_model=setting.default_model,
-                config=setting.config or {},
+                config=config,
                 is_active=setting.is_active,
                 source="db",
             )

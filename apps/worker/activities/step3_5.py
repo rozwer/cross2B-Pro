@@ -468,6 +468,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
         output_data = {
             "step": self.step_id,
             "keyword": keyword,
+            "model": response.model,
             # Structured fields conforming to Step3_5Output schema
             "emotional_analysis": emotional_analysis,
             "human_touch_patterns": human_touch_patterns,
@@ -498,6 +499,7 @@ class Step3_5HumanTouchGeneration(BaseActivity):
             "token_usage": {
                 "input": response.token_usage.input,
                 "output": response.token_usage.output,
+                "thinking": response.token_usage.thinking,
             },
         }
         output_data["output_path"] = self.store.build_path(ctx.tenant_id, ctx.run_id, self.step_id)

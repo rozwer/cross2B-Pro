@@ -124,10 +124,62 @@ function ServiceCard({ service, setting, onUpdate, onDelete, onTest }: ServiceCa
   const [isSaving, setIsSaving] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Google Ads multi-field state
+  const [gadsClientId, setGadsClientId] = useState(setting?.config?.client_id || "");
+  const [gadsClientSecret, setGadsClientSecret] = useState(setting?.config?.client_secret || "");
+  const [gadsRefreshToken, setGadsRefreshToken] = useState(setting?.config?.refresh_token || "");
+  const [gadsCustomerId, setGadsCustomerId] = useState(setting?.config?.customer_id || "");
+  const [showGadsSecrets, setShowGadsSecrets] = useState(false);
+  const [isOAuthInProgress, setIsOAuthInProgress] = useState(false);
 
   const hasKey = setting?.api_key_masked && setting.api_key_masked !== "";
   const isEnvFallback = setting?.env_fallback;
   const isVerified = setting?.verified_at !== null;
+
+  // Listen for OAuth callback postMessage (Google Ads refresh token)
+  useEffect(() => {
+    if (!isOAuthInProgress) return;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "google-ads-oauth-callback" && event.data?.refresh_token) {
+        setGadsRefreshToken(event.data.refresh_token);
+        setIsOAuthInProgress(false);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [isOAuthInProgress]);
+
+  const handleOAuthRefreshToken = async () => {
+    if (!gadsClientId || !gadsClientSecret) {
+      setError("Refresh Token の取得には Client ID と Client Secret が必要です");
+      return;
+    }
+    setIsOAuthInProgress(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/settings/google-ads/oauth-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_id: gadsClientId, client_secret: gadsClientSecret }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ detail: "OAuth開始に失敗しました" }));
+        throw new Error(data.detail || "OAuth開始に失敗しました");
+      }
+      const data = await res.json();
+      const popup = window.open(data.auth_url, "google_ads_oauth", "width=600,height=700,left=200,top=100");
+      // Monitor popup close to reset state
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed);
+          setIsOAuthInProgress(false);
+        }
+      }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "OAuth開始に失敗しました");
+      setIsOAuthInProgress(false);
+    }
+  };
 
   const handleTest = async () => {
     setIsTesting(true);
@@ -148,11 +200,21 @@ function ServiceCard({ service, setting, onUpdate, onDelete, onTest }: ServiceCa
     setIsSaving(true);
     setError(null);
     try {
-      await onUpdate(service, {
-        api_key: apiKey || undefined,  // Only send if not empty
+      const updateData: ApiSettingUpdateRequest = {
+        api_key: apiKey || undefined,
         default_model: info.isLLM ? defaultModel || undefined : undefined,
         is_active: true,
-      });
+      };
+      // Google Ads: save additional credentials in config
+      if (service === "google_ads") {
+        updateData.config = {
+          client_id: gadsClientId || undefined,
+          client_secret: gadsClientSecret || undefined,
+          refresh_token: gadsRefreshToken || undefined,
+          customer_id: gadsCustomerId || undefined,
+        };
+      }
+      await onUpdate(service, updateData);
       setApiKey("");
       setIsEditing(false);
       // Auto-test after save
@@ -275,41 +337,142 @@ function ServiceCard({ service, setting, onUpdate, onDelete, onTest }: ServiceCa
           {/* Edit form */}
           {isEditing ? (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  APIキー
-                </label>
-                <div className="relative">
-                  <input
-                    type={showApiKey ? "text" : "password"}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={hasKey ? "新しいキーを入力（空欄で既存キーを保持）" : "APIキーを入力"}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  >
-                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+              {/* Google Ads: 5-field form */}
+              {service === "google_ads" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Developer Token
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showGadsSecrets ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder={hasKey ? "新しいトークンを入力（空欄で既存を保持）" : "Developer Token を入力"}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      OAuth Client ID
+                    </label>
+                    <input
+                      type="text"
+                      value={gadsClientId}
+                      onChange={(e) => setGadsClientId(e.target.value)}
+                      placeholder="例: 123456789-xxxxx.apps.googleusercontent.com"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      OAuth Client Secret
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showGadsSecrets ? "text" : "password"}
+                        value={gadsClientSecret}
+                        onChange={(e) => setGadsClientSecret(e.target.value)}
+                        placeholder="GOCSPX-..."
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Refresh Token
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showGadsSecrets ? "text" : "password"}
+                        value={gadsRefreshToken}
+                        onChange={(e) => setGadsRefreshToken(e.target.value)}
+                        placeholder="1//0e..."
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleOAuthRefreshToken}
+                      disabled={isOAuthInProgress}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50 disabled:opacity-50 transition-colors"
+                    >
+                      {isOAuthInProgress ? (
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      )}
+                      {isOAuthInProgress ? "認証中..." : "Google アカウントから取得"}
+                    </button>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      OAuth認証でRefresh Tokenを自動取得します（要: Google Cloud Consoleでリダイレクト URI を登録）
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Customer ID
+                    </label>
+                    <input
+                      type="text"
+                      value={gadsCustomerId}
+                      onChange={(e) => setGadsCustomerId(e.target.value)}
+                      placeholder="例: 123-456-7890"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowGadsSecrets(!showGadsSecrets)}
+                      className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      {showGadsSecrets ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showGadsSecrets ? "シークレットを隠す" : "シークレットを表示"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Default: single API key field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      APIキー
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showApiKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder={hasKey ? "新しいキーを入力（空欄で既存キーを保持）" : "APIキーを入力"}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      >
+                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-              {info.isLLM && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    デフォルトモデル（任意）
-                  </label>
-                  <input
-                    type="text"
-                    value={defaultModel}
-                    onChange={(e) => setDefaultModel(e.target.value)}
-                    placeholder={`例: ${service === "gemini" ? "gemini-2.5-flash" : service === "openai" ? "gpt-4o" : "claude-3-5-sonnet"}`}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
+                  {info.isLLM && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        デフォルトモデル（任意）
+                      </label>
+                      <input
+                        type="text"
+                        value={defaultModel}
+                        onChange={(e) => setDefaultModel(e.target.value)}
+                        placeholder={`例: ${service === "gemini" ? "gemini-2.5-flash" : service === "openai" ? "gpt-4o" : "claude-3-5-sonnet"}`}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="flex items-center gap-2">

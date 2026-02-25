@@ -5,25 +5,29 @@ Generates an OAuth2 refresh token for the Google Ads API.
 This is a one-time setup script.
 
 Usage:
-    python scripts/google_ads_auth.py
-    python scripts/google_ads_auth.py --client-id=XXX --client-secret=YYY
+    set -a && source .env && set +a && uv run python scripts/google_ads_auth.py
 
 The script will:
-1. Open a browser for Google OAuth consent
-2. Wait for you to paste the authorization code
-3. Exchange the code for a refresh token
-4. Print the refresh token for .env configuration
+1. Start a local HTTP server on port 8085
+2. Open a browser for Google OAuth consent
+3. Capture the authorization code via redirect
+4. Exchange the code for a refresh token
+5. Print the refresh token for .env configuration
 
 Prerequisites:
     - Google Cloud Console project with Google Ads API enabled
     - OAuth 2.0 Client ID (Desktop app type)
+    - Authorized redirect URI: http://localhost:8085 in Google Cloud Console
     - pip install requests (already in project dependencies)
 """
 
 import argparse
 import os
 import sys
+import threading
 import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
 try:
     import requests
@@ -34,8 +38,46 @@ except ImportError:
 OAUTH_SCOPE = "https://www.googleapis.com/auth/adwords"
 AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/auth"
 TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
-# OOB redirect for manual copy-paste flow (simplest for CLI scripts)
-REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+REDIRECT_PORT = 8085
+REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}"
+
+# Global to capture auth code from callback
+_auth_code: str | None = None
+_auth_error: str | None = None
+
+
+class OAuthCallbackHandler(BaseHTTPRequestHandler):
+    """Handle OAuth redirect callback."""
+
+    def do_GET(self):
+        global _auth_code, _auth_error
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+
+        if "code" in params:
+            _auth_code = params["code"][0]
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(
+                b"<html><body><h2>OK</h2>"
+                b"<p>Authorization code received. You can close this tab.</p>"
+                b"</body></html>"
+            )
+        elif "error" in params:
+            _auth_error = params["error"][0]
+            self.send_response(400)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(
+                f"<html><body><h2>Error: {_auth_error}</h2></body></html>".encode()
+            )
+        else:
+            self.send_response(400)
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        pass  # suppress logs
 
 
 def get_authorization_url(client_id: str) -> str:
@@ -84,25 +126,45 @@ def main() -> None:
     print("=" * 60)
     print("Google Ads OAuth Refresh Token Generator")
     print("=" * 60)
+    print(f"\nRedirect URI: {REDIRECT_URI}")
+    print("Make sure this URI is registered in Google Cloud Console")
+    print("  -> APIs & Services -> Credentials -> OAuth 2.0 Client ID")
+    print("  -> Authorized redirect URIs\n")
+
+    # Start local server to capture callback
+    server = HTTPServer(("localhost", REDIRECT_PORT), OAuthCallbackHandler)
+    server_thread = threading.Thread(target=server.handle_request, daemon=True)
+    server_thread.start()
 
     auth_url = get_authorization_url(client_id)
-
-    print(f"\n1. Opening browser for authorization...")
+    print(f"1. Opening browser for authorization...")
     print(f"   URL: {auth_url}\n")
 
     try:
         webbrowser.open(auth_url)
     except Exception:
-        print("   (Could not open browser automatically. Please open the URL manually.)")
+        print("   (Could not open browser. Please open the URL manually.)")
 
     print("2. Sign in with your Google account and authorize the application.")
-    print("3. Copy the authorization code and paste it below.\n")
+    print("   Waiting for redirect callback...\n")
 
-    auth_code = input("Authorization code: ").strip()
+    server_thread.join(timeout=120)
+    server.server_close()
 
-    if not auth_code:
-        print("Error: No authorization code provided.")
+    if _auth_error:
+        print(f"Error: OAuth error: {_auth_error}")
         sys.exit(1)
+
+    if not _auth_code:
+        print("Error: Timed out waiting for authorization (120s).")
+        print("Alternatively, paste the authorization code manually:")
+        manual_code = input("Authorization code: ").strip()
+        if not manual_code:
+            sys.exit(1)
+        auth_code = manual_code
+    else:
+        auth_code = _auth_code
+        print("Authorization code received!")
 
     print("\nExchanging code for tokens...")
 
@@ -117,7 +179,7 @@ def main() -> None:
     refresh_token = tokens.get("refresh_token")
 
     if not refresh_token:
-        print("\nError: No refresh token in response. Try adding 'prompt=consent' or revoking previous access.")
+        print("\nError: No refresh token in response.")
         print(f"Response: {tokens}")
         sys.exit(1)
 

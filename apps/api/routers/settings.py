@@ -10,12 +10,16 @@ SECURITY:
 - All changes are logged to audit_logs
 """
 
+import asyncio
 import logging
 import os
-from datetime import UTC, datetime
+import secrets
+from datetime import UTC, datetime, timedelta
 from typing import Any
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -44,6 +48,11 @@ class ServiceConfig(BaseModel):
     default_repo_url: str | None = None  # Default repository URL
     default_dir_path: str | None = None  # Default directory path in repo
     repository_urls: list[str] | None = None  # Saved repository URLs for dropdown
+    # Google Ads-specific options (stored encrypted in config JSON)
+    client_id: str | None = None
+    client_secret: str | None = None
+    refresh_token: str | None = None
+    customer_id: str | None = None
 
 
 class SettingResponse(BaseModel):
@@ -167,6 +176,39 @@ async def _get_setting(
         return result.scalar_one_or_none()
 
 
+def _build_google_ads_config_from_env() -> ServiceConfig | None:
+    """Build Google Ads config from environment variables (masked)."""
+    client_id = os.getenv("GOOGLE_ADS_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_ADS_CLIENT_SECRET")
+    refresh_token = os.getenv("GOOGLE_ADS_REFRESH_TOKEN")
+    customer_id = os.getenv("GOOGLE_ADS_CUSTOMER_ID")
+    if not any([client_id, client_secret, refresh_token, customer_id]):
+        return None
+    return ServiceConfig(
+        client_id=mask_api_key(client_id, "google_ads") if client_id else None,
+        client_secret=mask_api_key(client_secret, "google_ads") if client_secret else None,
+        refresh_token=mask_api_key(refresh_token, "google_ads") if refresh_token else None,
+        customer_id=customer_id,  # Not a secret, show full value
+    )
+
+
+def _mask_google_ads_config(config_data: dict) -> ServiceConfig:
+    """Mask sensitive fields in Google Ads config from DB."""
+    masked = dict(config_data)
+    for secret_field in ("client_secret", "refresh_token"):
+        if secret_field in masked and masked[secret_field]:
+            try:
+                decrypted = decrypt(masked[secret_field])
+                masked[secret_field] = mask_api_key(decrypted, "google_ads")
+            except EncryptionError:
+                masked[secret_field] = "****"
+    # client_id: not encrypted, mask it
+    if "client_id" in masked and masked["client_id"]:
+        masked["client_id"] = mask_api_key(masked["client_id"], "google_ads")
+    # customer_id: not a secret, show full
+    return ServiceConfig(**masked)
+
+
 def _setting_to_response(
     setting: ApiSetting | None,
     service: str,
@@ -177,11 +219,18 @@ def _setting_to_response(
         try:
             decrypted_key = decrypt(setting.api_key_encrypted)
             masked_key = mask_api_key(decrypted_key, service)
+            # For Google Ads, mask sensitive config fields
+            config = None
+            if setting.config:
+                if service == "google_ads":
+                    config = _mask_google_ads_config(setting.config)
+                else:
+                    config = ServiceConfig(**(setting.config))
             return SettingResponse(
                 service=service,
                 api_key_masked=masked_key,
                 default_model=setting.default_model,
-                config=ServiceConfig(**(setting.config or {})) if setting.config else None,
+                config=config,
                 is_active=setting.is_active,
                 verified_at=setting.verified_at.isoformat() if setting.verified_at else None,
                 env_fallback=False,
@@ -194,11 +243,13 @@ def _setting_to_response(
     env_key, default_model = _get_env_fallback(service)
     if env_key:
         masked_key = mask_api_key(env_key, service)
+        # For Google Ads, also return env-sourced config (masked)
+        config = _build_google_ads_config_from_env() if service == "google_ads" else None
         return SettingResponse(
             service=service,
             api_key_masked=masked_key,
             default_model=default_model,
-            config=None,
+            config=config,
             is_active=True,
             verified_at=None,
             env_fallback=True,
@@ -311,7 +362,13 @@ async def update_setting(
             setting.default_model = request.default_model
 
         if request.config is not None:
-            setting.config = request.config.model_dump(exclude_none=True)
+            config_data = request.config.model_dump(exclude_none=True)
+            # Encrypt sensitive Google Ads fields in config
+            if service == "google_ads":
+                for secret_field in ("client_secret", "refresh_token"):
+                    if secret_field in config_data and config_data[secret_field]:
+                        config_data[secret_field] = encrypt(config_data[secret_field])
+            setting.config = config_data
 
         setting.is_active = request.is_active
         setting.updated_at = datetime.now(UTC)
@@ -607,3 +664,196 @@ async def remove_repository_url(
             )
 
     return RepoListResponse(repository_urls=[], default_repo_url=None)
+
+
+# =============================================================================
+# Google Ads OAuth (Refresh Token Acquisition)
+# =============================================================================
+
+GOOGLE_OAUTH_SCOPE = "https://www.googleapis.com/auth/adwords"
+GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/auth"
+GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+
+# Temporary in-memory store for OAuth state tokens (TTL: 5 minutes)
+_oauth_states: dict[str, dict[str, Any]] = {}
+
+
+class OAuthStartRequest(BaseModel):
+    """Request to start Google Ads OAuth flow."""
+
+    client_id: str = Field(..., description="OAuth Client ID")
+    client_secret: str = Field(..., description="OAuth Client Secret")
+
+
+class OAuthStartResponse(BaseModel):
+    """Response with OAuth authorization URL."""
+
+    auth_url: str
+    state: str
+
+
+def _get_oauth_redirect_uri() -> str:
+    """Get the OAuth redirect URI for Google Ads OAuth flow."""
+    base_url = os.getenv("API_BASE_URL", "http://localhost:28000")
+    return f"{base_url}/api/settings/google-ads/oauth-callback"
+
+
+def _cleanup_expired_oauth_states() -> None:
+    """Remove OAuth states older than 5 minutes."""
+    cutoff = datetime.now(UTC) - timedelta(minutes=5)
+    expired = [k for k, v in _oauth_states.items() if v["created_at"] < cutoff]
+    for k in expired:
+        del _oauth_states[k]
+
+
+@router.post("/google-ads/oauth-start", response_model=OAuthStartResponse)
+async def google_ads_oauth_start(request: OAuthStartRequest) -> OAuthStartResponse:
+    """Start Google Ads OAuth flow to obtain a refresh token.
+
+    Generates an authorization URL and stores credentials temporarily
+    for the callback to use when exchanging the authorization code.
+
+    NOTE: The redirect URI must be registered in Google Cloud Console:
+    APIs & Services > Credentials > OAuth 2.0 Client ID > Authorized redirect URIs
+    """
+    _cleanup_expired_oauth_states()
+
+    state = secrets.token_urlsafe(32)
+    _oauth_states[state] = {
+        "client_id": request.client_id,
+        "client_secret": request.client_secret,
+        "created_at": datetime.now(UTC),
+    }
+
+    redirect_uri = _get_oauth_redirect_uri()
+    params = urlencode({
+        "client_id": request.client_id,
+        "redirect_uri": redirect_uri,
+        "scope": GOOGLE_OAUTH_SCOPE,
+        "response_type": "code",
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": state,
+    })
+    auth_url = f"{GOOGLE_AUTH_ENDPOINT}?{params}"
+
+    return OAuthStartResponse(auth_url=auth_url, state=state)
+
+
+@router.get("/google-ads/oauth-callback", response_class=HTMLResponse)
+async def google_ads_oauth_callback(
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+) -> HTMLResponse:
+    """Handle Google OAuth callback.
+
+    Exchanges the authorization code for tokens and returns an HTML page
+    that communicates the refresh token back to the opener window via postMessage.
+    """
+    if error:
+        return HTMLResponse(content=_oauth_error_html(f"OAuth error: {error}"), status_code=400)
+
+    if not code or not state:
+        return HTMLResponse(content=_oauth_error_html("Missing code or state parameter"), status_code=400)
+
+    _cleanup_expired_oauth_states()
+
+    if state not in _oauth_states:
+        return HTMLResponse(
+            content=_oauth_error_html("認証セッションが無効または期限切れです。もう一度お試しください。"),
+            status_code=400,
+        )
+
+    creds = _oauth_states.pop(state)
+    redirect_uri = _get_oauth_redirect_uri()
+
+    try:
+        import requests as http_requests
+
+        def _exchange_code() -> dict:
+            resp = http_requests.post(
+                GOOGLE_TOKEN_ENDPOINT,
+                data={
+                    "client_id": creds["client_id"],
+                    "client_secret": creds["client_secret"],
+                    "code": code,
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code",
+                },
+                timeout=30,
+            )
+            return resp.json()
+
+        tokens = await asyncio.to_thread(_exchange_code)
+    except Exception as e:
+        logger.error(f"OAuth token exchange failed: {e}")
+        return HTMLResponse(content=_oauth_error_html(f"Token exchange failed: {e}"), status_code=500)
+
+    refresh_token = tokens.get("refresh_token")
+    if not refresh_token:
+        error_desc = tokens.get("error_description", tokens.get("error", "No refresh token in response"))
+        return HTMLResponse(content=_oauth_error_html(error_desc), status_code=400)
+
+    return HTMLResponse(content=_oauth_success_html(refresh_token))
+
+
+def _oauth_success_html(refresh_token: str) -> str:
+    """Generate HTML page that sends refresh token via postMessage."""
+    escaped_token = refresh_token.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
+    return f"""<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>OAuth 認証成功</title>
+<style>
+  body {{ font-family: system-ui, sans-serif; display: flex; justify-content: center;
+         align-items: center; min-height: 100vh; margin: 0; background: #f0fdf4; }}
+  .card {{ background: white; padding: 2rem; border-radius: 12px;
+           box-shadow: 0 4px 12px rgba(0,0,0,.1); text-align: center; max-width: 400px; }}
+  .icon {{ font-size: 3rem; margin-bottom: 1rem; }}
+  h2 {{ color: #166534; margin: 0 0 0.5rem; }}
+  p {{ color: #6b7280; margin: 0; }}
+</style></head>
+<body>
+<div class="card">
+  <div class="icon">&#10004;</div>
+  <h2>認証成功</h2>
+  <p>Refresh Token を取得しました。<br>このタブは自動的に閉じます...</p>
+</div>
+<script>
+  if (window.opener) {{
+    window.opener.postMessage({{
+      type: 'google-ads-oauth-callback',
+      refresh_token: '{escaped_token}'
+    }}, '*');
+    setTimeout(function() {{ window.close(); }}, 2000);
+  }}
+</script>
+</body></html>"""
+
+
+def _oauth_error_html(error_message: str) -> str:
+    """Generate HTML page for OAuth errors."""
+    from html import escape
+
+    escaped = escape(error_message)
+    return f"""<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>OAuth エラー</title>
+<style>
+  body {{ font-family: system-ui, sans-serif; display: flex; justify-content: center;
+         align-items: center; min-height: 100vh; margin: 0; background: #fef2f2; }}
+  .card {{ background: white; padding: 2rem; border-radius: 12px;
+           box-shadow: 0 4px 12px rgba(0,0,0,.1); text-align: center; max-width: 400px; }}
+  .icon {{ font-size: 3rem; margin-bottom: 1rem; }}
+  h2 {{ color: #991b1b; margin: 0 0 0.5rem; }}
+  p {{ color: #6b7280; margin: 0; }}
+  .error {{ color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem; }}
+</style></head>
+<body>
+<div class="card">
+  <div class="icon">&#10060;</div>
+  <h2>認証エラー</h2>
+  <p class="error">{escaped}</p>
+  <p style="margin-top: 1rem;">このタブを閉じて、もう一度お試しください。</p>
+</div>
+</body></html>"""

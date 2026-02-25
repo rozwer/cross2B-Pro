@@ -109,6 +109,25 @@ def get_google_ads_client(
     return client, customer_id
 
 
+def build_credentials_from_settings(api_key: str, config: dict) -> dict[str, str]:
+    """Build Google Ads credentials dict from SettingsProvider output.
+
+    Args:
+        api_key: Developer token (from ServiceSettings.api_key)
+        config: Config dict with client_id, client_secret, refresh_token, customer_id
+
+    Returns:
+        Credentials dict suitable for get_google_ads_client()
+    """
+    return {
+        "developer_token": api_key,
+        "client_id": config.get("client_id", ""),
+        "client_secret": config.get("client_secret", ""),
+        "refresh_token": config.get("refresh_token", ""),
+        "login_customer_id": config.get("customer_id", ""),
+    }
+
+
 def reset_client_cache() -> None:
     """Reset the cached client. For testing."""
     global _cached_client, _cached_customer_id

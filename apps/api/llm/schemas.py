@@ -16,11 +16,12 @@ class TokenUsage(BaseModel):
 
     input: int = Field(..., ge=0, description="入力トークン数")
     output: int = Field(..., ge=0, description="出力トークン数")
+    thinking: int = Field(default=0, ge=0, description="思考/推論トークン数")
 
     @property
     def total(self) -> int:
         """合計トークン数"""
-        return self.input + self.output
+        return self.input + self.output + self.thinking
 
 
 class LLMResponse(BaseModel):

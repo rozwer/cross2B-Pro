@@ -632,6 +632,11 @@ class Step8FactCheck(BaseActivity):
         llm = await get_step_llm_client(self.step_id, config, tenant_id=ctx.tenant_id)
         llm_provider, llm_model = get_step_model_config(self.step_id, config)
 
+        # Token usage accumulators for all LLM calls
+        total_input_tokens = 0
+        total_output_tokens = 0
+        total_thinking_tokens = 0
+
         # Compute input digest for idempotency
         input_digest = CheckpointManager.compute_digest({"keyword": keyword, "polished": polished_content[:1000]})
 
@@ -659,6 +664,9 @@ class Step8FactCheck(BaseActivity):
                     config=claims_config,
                 )
                 extracted_claims = _parse_claims_from_response(self.output_parser, claims_response.content)
+                total_input_tokens += claims_response.token_usage.input
+                total_output_tokens += claims_response.token_usage.output
+                total_thinking_tokens += claims_response.token_usage.thinking
 
                 # Save checkpoint
                 await self.checkpoint_manager.save(
@@ -726,6 +734,9 @@ class Step8FactCheck(BaseActivity):
                     config=verify_config,
                 )
                 verification_results = _parse_verification_from_response(self.output_parser, verify_response.content)
+                total_input_tokens += verify_response.token_usage.input
+                total_output_tokens += verify_response.token_usage.output
+                total_thinking_tokens += verify_response.token_usage.thinking
 
                 # Save checkpoint
                 await self.checkpoint_manager.save(
@@ -765,6 +776,9 @@ class Step8FactCheck(BaseActivity):
                 config=faq_config,
             )
             faq_items = _parse_faq_from_response(self.output_parser, faq_response.content)
+            total_input_tokens += faq_response.token_usage.input
+            total_output_tokens += faq_response.token_usage.output
+            total_thinking_tokens += faq_response.token_usage.thinking
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(
                 f"LLM temporary failure: {e}",
@@ -824,8 +838,9 @@ class Step8FactCheck(BaseActivity):
                 "model": llm_model or "",
             },
             token_usage={
-                "input": 0,  # Token tracking simplified
-                "output": 0,
+                "input": total_input_tokens,
+                "output": total_output_tokens,
+                "thinking": total_thinking_tokens,
             },
             # blog.System Ver8.3 extensions
             verification_categories=verification_categories,

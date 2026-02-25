@@ -757,10 +757,11 @@ class GeminiClient(LLMInterface):
         if usage_metadata:
             input_tokens = getattr(usage_metadata, "prompt_token_count", 0) or 0
             output_tokens = getattr(usage_metadata, "candidates_token_count", 0) or 0
+            thinking_tokens = getattr(usage_metadata, "thoughts_token_count", 0) or 0
         else:
-            # 推定（実際にはAPIから取得すべき）
             input_tokens = 0
             output_tokens = 0
+            thinking_tokens = 0
 
         # finish_reason検証とログ出力
         self._validate_finish_reason(finish_reason, output_tokens, max_tokens)
@@ -812,7 +813,7 @@ class GeminiClient(LLMInterface):
 
         return LLMResponse(
             content=text,
-            token_usage=TokenUsage(input=input_tokens, output=output_tokens),
+            token_usage=TokenUsage(input=input_tokens, output=output_tokens, thinking=thinking_tokens),
             model=self._model,
             finish_reason=finish_reason,
             created_at=datetime.now(),

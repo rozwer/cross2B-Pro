@@ -74,18 +74,20 @@ class CostResponse(BaseModel):
 
 
 # Default cost rates (per 1K tokens)
-# Rates from official pricing pages as of 2025-01
-# thinking: rate for reasoning/thinking tokens (different pricing tier)
+# Rates from official pricing pages as of 2026-02
+# thinking: rate for reasoning/thinking tokens (same as input for most models)
 DEFAULT_COST_RATES: dict[str, dict[str, float]] = {
     # Gemini models
-    "gemini-1.5-pro": {"input": 0.00125, "output": 0.005, "thinking": 0.00125},
-    "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003, "thinking": 0.000075},
-    "gemini-2.0-flash": {"input": 0.0001, "output": 0.0004, "thinking": 0.0001},
-    "gemini-2.0-flash-exp": {"input": 0.0001, "output": 0.0004, "thinking": 0.0001},
-    "gemini-2.0-flash-lite": {"input": 0.000075, "output": 0.0003, "thinking": 0.000075},
+    "gemini-3-pro-preview": {"input": 0.002, "output": 0.012, "thinking": 0.002},
+    "gemini-3-flash-preview": {"input": 0.0005, "output": 0.003, "thinking": 0.0005},
     "gemini-2.5-pro": {"input": 0.00125, "output": 0.01, "thinking": 0.00125},
     "gemini-2.5-flash": {"input": 0.00015, "output": 0.0006, "thinking": 0.00015},
     "gemini-2.5-flash-preview-05-20": {"input": 0.00015, "output": 0.0035, "thinking": 0.00015},
+    "gemini-2.0-flash": {"input": 0.0001, "output": 0.0004, "thinking": 0.0001},
+    "gemini-2.0-flash-exp": {"input": 0.0001, "output": 0.0004, "thinking": 0.0001},
+    "gemini-2.0-flash-lite": {"input": 0.000075, "output": 0.0003, "thinking": 0.000075},
+    "gemini-1.5-pro": {"input": 0.00125, "output": 0.005, "thinking": 0.00125},
+    "gemini-1.5-flash": {"input": 0.000075, "output": 0.0003, "thinking": 0.000075},
     # OpenAI models
     "gpt-4o": {"input": 0.0025, "output": 0.01, "thinking": 0.0025},
     "gpt-4o-mini": {"input": 0.00015, "output": 0.0006, "thinking": 0.00015},
@@ -97,17 +99,43 @@ DEFAULT_COST_RATES: dict[str, dict[str, float]] = {
     "o1-pro": {"input": 0.15, "output": 0.6, "thinking": 0.15},
     "o3-mini": {"input": 0.0011, "output": 0.0044, "thinking": 0.0011},
     # Anthropic models
-    "claude-3-5-sonnet-20241022": {"input": 0.003, "output": 0.015, "thinking": 0.003},
-    "claude-3-5-haiku-20241022": {"input": 0.0008, "output": 0.004, "thinking": 0.0008},
-    "claude-3-7-sonnet": {"input": 0.003, "output": 0.015, "thinking": 0.003},
+    "claude-opus-4-6": {"input": 0.005, "output": 0.025, "thinking": 0.005},
+    "claude-sonnet-4-6": {"input": 0.003, "output": 0.015, "thinking": 0.003},
     "claude-sonnet-4": {"input": 0.003, "output": 0.015, "thinking": 0.003},
     "claude-opus-4": {"input": 0.015, "output": 0.075, "thinking": 0.015},
+    "claude-haiku-4-5": {"input": 0.001, "output": 0.005, "thinking": 0.001},
+    "claude-3-7-sonnet": {"input": 0.003, "output": 0.015, "thinking": 0.003},
+    "claude-3-5-sonnet-20241022": {"input": 0.003, "output": 0.015, "thinking": 0.003},
+    "claude-3-5-haiku-20241022": {"input": 0.0008, "output": 0.004, "thinking": 0.0008},
 }
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
+
+def _normalize_model_name(model: str) -> str:
+    """Normalize model name for pricing lookup.
+
+    Handles:
+    - "models/gemini-3-pro-preview" → "gemini-3-pro-preview"
+    - "gemini-3-pro-preview-0225" → "gemini-3-pro-preview"
+    """
+    # Strip "models/" prefix (Gemini API sometimes returns this)
+    if model.startswith("models/"):
+        model = model[len("models/"):]
+
+    if model in DEFAULT_COST_RATES:
+        return model
+
+    # Prefix match: find the longest key that is a prefix of the model name
+    best_match = ""
+    for key in DEFAULT_COST_RATES:
+        if model.startswith(key) and len(key) > len(best_match):
+            best_match = key
+
+    return best_match if best_match else model
 
 
 def _extract_step_name(path: str) -> str:
@@ -138,8 +166,12 @@ def _calculate_step_cost(
     output_tokens = usage.get("output", usage.get("output_tokens", 0))
     thinking_tokens = usage.get("thinking", usage.get("thinking_tokens", 0))
 
-    # Get rates for this model (with fallback for unknown models)
-    rates = DEFAULT_COST_RATES.get(model, {"input": 0.001, "output": 0.002, "thinking": 0.001})
+    # Normalize model name and get rates
+    normalized = _normalize_model_name(model)
+    rates = DEFAULT_COST_RATES.get(normalized)
+    if rates is None:
+        logger.warning(f"No pricing for model '{model}', using default rates")
+        rates = {"input": 0.001, "output": 0.002, "thinking": 0.001}
 
     cost = (
         (input_tokens / 1000) * rates.get("input", 0.001)
@@ -219,7 +251,22 @@ async def get_run_cost(
                     logger.debug(f"No token_usage in {step_name}")
                     continue
 
-                model = content.get("model", "unknown")
+                # Skip steps with zero tokens (non-LLM steps like step12)
+                input_val = usage.get("input", usage.get("input_tokens", 0))
+                output_val = usage.get("output", usage.get("output_tokens", 0))
+                thinking_val = usage.get("thinking", usage.get("thinking_tokens", 0))
+                if input_val == 0 and output_val == 0 and thinking_val == 0:
+                    logger.debug(f"Zero tokens in {step_name}, skipping")
+                    continue
+
+                # Resolve model: top-level > metadata.model > fallback
+                model = content.get("model") or ""
+                if not model:
+                    metadata = content.get("metadata")
+                    if isinstance(metadata, dict):
+                        model = metadata.get("model") or ""
+                if not model:
+                    model = "unknown"
 
                 # Calculate cost
                 input_tok, output_tok, thinking_tok, step_cost = _calculate_step_cost(usage, model)

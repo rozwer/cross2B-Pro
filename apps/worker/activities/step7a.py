@@ -92,6 +92,7 @@ class Step7ADraftGeneration(BaseActivity):
         self.parser = OutputParser()
         self.metrics = ContentMetrics()
         self.checkpoint = CheckpointManager(self.store)
+        self._token_accumulator: list[tuple[int, int, int]] = []
 
         # ドラフト品質検証
         self.draft_validator = CompositeValidator(
@@ -358,8 +359,9 @@ class Step7ADraftGeneration(BaseActivity):
         response = getattr(self, "_last_response", None)
         model_name = response.model if response else ""
         token_usage = {
-            "input": response.token_usage.input if response else 0,
-            "output": response.token_usage.output if response else 0,
+            "input": sum(t[0] for t in self._token_accumulator),
+            "output": sum(t[1] for t in self._token_accumulator),
+            "thinking": sum(t[2] for t in self._token_accumulator),
         }
 
         # Get model config for output metadata
@@ -831,6 +833,11 @@ class Step7ADraftGeneration(BaseActivity):
                 config=llm_config,
             )
             self._last_response = response
+            self._token_accumulator.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
             return response.content
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(
@@ -884,6 +891,11 @@ class Step7ADraftGeneration(BaseActivity):
                 system_prompt="Continue the article draft.",
                 config=llm_config,
             )
+            self._token_accumulator.append((
+                response.token_usage.input,
+                response.token_usage.output,
+                response.token_usage.thinking,
+            ))
             return response.content
         except (LLMRateLimitError, LLMTimeoutError) as e:
             raise ActivityError(

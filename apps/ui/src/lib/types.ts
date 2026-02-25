@@ -994,6 +994,11 @@ export interface ServiceConfig {
   // GitHub-specific config
   default_repo_url?: string;
   default_dir_path?: string;
+  // Google Ads-specific config
+  client_id?: string;
+  client_secret?: string;
+  refresh_token?: string;
+  customer_id?: string;
 }
 
 /** API setting response */
