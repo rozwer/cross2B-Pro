@@ -429,6 +429,21 @@ class Step0KeywordSelection(BaseActivity):
 
         return {}
 
+    @staticmethod
+    def _build_volume_context(search_volume: str | None, competition: str | None) -> str:
+        """Build strategic context string from volume and competition data."""
+        if not search_volume and not competition:
+            return ""
+
+        parts = []
+        if search_volume:
+            parts.append(f"月間検索ボリューム: {search_volume}")
+        if competition:
+            comp_labels = {"high": "高", "medium": "中", "low": "低"}
+            parts.append(f"競合性: {comp_labels.get(competition, competition)}")
+
+        return "\n".join(parts)
+
     def _build_render_variables(self, step0_input: Step0Input) -> dict[str, Any]:
         """Build variables for prompt rendering.
 
@@ -453,6 +468,10 @@ class Step0KeywordSelection(BaseActivity):
             "search_volume": step0_input.search_volume or "",
             "competition": step0_input.competition or "",
             "related_keywords": ", ".join(step0_input.related_keywords) if step0_input.related_keywords else "",
+            # 検索ボリューム・競合度に基づく戦略コンテキスト
+            "volume_context": self._build_volume_context(
+                step0_input.search_volume, step0_input.competition
+            ),
             # 記事戦略
             "strategy": step0_input.strategy,
             "cluster_topics": ", ".join(step0_input.cluster_topics) if step0_input.cluster_topics else "",
